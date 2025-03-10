@@ -7,19 +7,21 @@ import { resgateSchema, type ResgateFormData } from '@/schemas/resgateSchema';
 import { defaultResgateForm } from '@/constants/defaultResgateForm';
 import { regioes } from '@/constants/regioes';
 import { buscarEspeciePorId, type Especie } from '@/services/especieService';
+import { supabase } from '@/integrations/supabase/client';
 
 export { regioes } from '@/constants/regioes';
 
 export const useFormResgateData = () => {
   const [especieSelecionada, setEspecieSelecionada] = useState<Especie | null>(null);
   const [carregandoEspecie, setCarregandoEspecie] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<ResgateFormData>({
     resolver: zodResolver(resgateSchema),
     defaultValues: defaultResgateForm
   });
 
-  const { watch, setValue, formState } = form;
+  const { watch, setValue, formState, reset } = form;
   const formData = watch();
   const { errors } = formState;
 
@@ -63,13 +65,73 @@ export const useFormResgateData = () => {
     );
   };
 
-  const handleSubmit = form.handleSubmit((data) => {
+  const salvarRegistroNoBanco = async (data: ResgateFormData) => {
+    if (!especieSelecionada) {
+      console.error("Espécie não selecionada");
+      return false;
+    }
+
+    try {
+      const { error } = await supabase.from('registros').insert({
+        data: new Date(data.data),
+        classe_taxonomica: data.classeTaxonomica,
+        nome_cientifico: especieSelecionada.nome_cientifico,
+        nome_popular: especieSelecionada.nome_popular,
+        regiao_administrativa: data.regiaoAdministrativa,
+        origem: data.origem,
+        latitude_origem: data.latitudeOrigem,
+        longitude_origem: data.longitudeOrigem,
+        desfecho_apreensao: data.desfechoApreensao || null,
+        numero_tco: data.numeroTCO || null,
+        outro_desfecho: data.outroDesfecho || null,
+        estado_saude: data.estadoSaude,
+        atropelamento: data.atropelamento,
+        estagio_vida: data.estagioVida,
+        quantidade: data.quantidade,
+        destinacao: data.destinacao,
+        numero_termo_entrega: data.numeroTermoEntrega || null,
+        hora_guarda_ceapa: data.horaGuardaCEAPA || null,
+        motivo_entrega_ceapa: data.motivoEntregaCEAPA || null,
+        latitude_soltura: data.latitudeSoltura || null,
+        longitude_soltura: data.longitudeSoltura || null,
+        outro_destinacao: data.outroDestinacao || null
+      });
+
+      if (error) {
+        console.error("Erro ao salvar registro:", error);
+        toast.error("Erro ao salvar registro: " + error.message);
+        return false;
+      }
+
+      console.log("Registro salvo com sucesso!");
+      return true;
+    } catch (error) {
+      console.error("Erro ao salvar registro:", error);
+      toast.error("Erro ao salvar registro no banco de dados");
+      return false;
+    }
+  };
+
+  const handleSubmit = form.handleSubmit(async (data) => {
     console.log('Form submitted:', data);
-    toast.success('Registro de resgate cadastrado com sucesso!');
     
-    // Resetar formulário após envio
-    form.reset();
-    setEspecieSelecionada(null);
+    setIsSubmitting(true);
+    try {
+      const sucesso = await salvarRegistroNoBanco(data);
+      
+      if (sucesso) {
+        toast.success('Registro de resgate cadastrado com sucesso!');
+        
+        // Resetar formulário após envio bem-sucedido
+        reset();
+        setEspecieSelecionada(null);
+      }
+    } catch (error) {
+      console.error("Erro ao processar submissão:", error);
+      toast.error("Ocorreu um erro ao processar o cadastro");
+    } finally {
+      setIsSubmitting(false);
+    }
   });
 
   return {
@@ -81,6 +143,7 @@ export const useFormResgateData = () => {
     handleQuantidadeChange,
     handleSubmit,
     especieSelecionada,
-    carregandoEspecie
+    carregandoEspecie,
+    isSubmitting
   };
 };

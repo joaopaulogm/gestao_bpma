@@ -3,6 +3,7 @@ import React from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Loader2 } from 'lucide-react';
 import FormField from '@/components/resgate/FormField';
 import FormSection from '@/components/resgate/FormSection';
 import RegiaoAdministrativaField from '@/components/resgate/RegiaoAdministrativaField';
@@ -25,7 +26,8 @@ const ResgateCadastro = () => {
     handleQuantidadeChange,
     handleSubmit,
     especieSelecionada,
-    carregandoEspecie
+    carregandoEspecie,
+    isSubmitting
   } = useFormResgateData();
 
   return (
@@ -46,9 +48,9 @@ const ResgateCadastro = () => {
                 <Input
                   id="data"
                   name="data"
+                  type="date"
                   value={formData.data}
                   onChange={handleChange}
-                  placeholder="DD/MM/AAAA"
                   className={errors.data ? "border-red-500" : ""}
                 />
               </FormField>
@@ -178,8 +180,16 @@ const ResgateCadastro = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-fauna-blue hover:bg-opacity-90 text-white"
+                disabled={isSubmitting}
               >
-                Salvar Registro
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar Registro'
+                )}
               </Button>
             </div>
           </form>

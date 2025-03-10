@@ -39,6 +39,87 @@ export type Database = {
         }
         Relationships: []
       }
+      registros: {
+        Row: {
+          atropelamento: string
+          classe_taxonomica: string
+          created_at: string
+          data: string
+          desfecho_apreensao: string | null
+          destinacao: string
+          estado_saude: string
+          estagio_vida: string
+          hora_guarda_ceapa: string | null
+          id: string
+          latitude_origem: string
+          latitude_soltura: string | null
+          longitude_origem: string
+          longitude_soltura: string | null
+          motivo_entrega_ceapa: string | null
+          nome_cientifico: string
+          nome_popular: string
+          numero_tco: string | null
+          numero_termo_entrega: string | null
+          origem: string
+          outro_desfecho: string | null
+          outro_destinacao: string | null
+          quantidade: number
+          regiao_administrativa: string
+        }
+        Insert: {
+          atropelamento: string
+          classe_taxonomica: string
+          created_at?: string
+          data?: string
+          desfecho_apreensao?: string | null
+          destinacao: string
+          estado_saude: string
+          estagio_vida: string
+          hora_guarda_ceapa?: string | null
+          id?: string
+          latitude_origem: string
+          latitude_soltura?: string | null
+          longitude_origem: string
+          longitude_soltura?: string | null
+          motivo_entrega_ceapa?: string | null
+          nome_cientifico: string
+          nome_popular: string
+          numero_tco?: string | null
+          numero_termo_entrega?: string | null
+          origem: string
+          outro_desfecho?: string | null
+          outro_destinacao?: string | null
+          quantidade: number
+          regiao_administrativa: string
+        }
+        Update: {
+          atropelamento?: string
+          classe_taxonomica?: string
+          created_at?: string
+          data?: string
+          desfecho_apreensao?: string | null
+          destinacao?: string
+          estado_saude?: string
+          estagio_vida?: string
+          hora_guarda_ceapa?: string | null
+          id?: string
+          latitude_origem?: string
+          latitude_soltura?: string | null
+          longitude_origem?: string
+          longitude_soltura?: string | null
+          motivo_entrega_ceapa?: string | null
+          nome_cientifico?: string
+          nome_popular?: string
+          numero_tco?: string | null
+          numero_termo_entrega?: string | null
+          origem?: string
+          outro_desfecho?: string | null
+          outro_destinacao?: string | null
+          quantidade?: number
+          regiao_administrativa?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

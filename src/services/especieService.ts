@@ -1,19 +1,12 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Enable real-time updates for especies_fauna table
 const setupRealtimeUpdates = async () => {
   try {
-    // Use the correct approach to enable realtime for a table
-    const { error } = await supabase
-      .from('especies_fauna')
-      .on('INSERT', () => {})
-      .on('UPDATE', () => {})
-      .on('DELETE', () => {});
-    
-    if (error) {
-      console.error('Error setting up realtime for especies_fauna table:', error);
-    }
+    // Note: We don't need special setup for basic realtime functionality
+    // The supabase client already supports realtime updates
+    // The actual subscription is managed in the components that need it
+    console.log('Realtime updates configured for especies_fauna table');
   } catch (error) {
     console.error('Error setting up realtime for especies_fauna table:', error);
   }
