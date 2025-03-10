@@ -10,7 +10,6 @@ import OrigemField from '@/components/resgate/OrigemField';
 import DesfechoApreensaoField from '@/components/resgate/DesfechoApreensaoField';
 import AnimalInfoFields from '@/components/resgate/AnimalInfoFields';
 import DestinacaoField from '@/components/resgate/DestinacaoField';
-import EspeciesField from '@/components/resgate/EspeciesField';
 import { useFormResgateData, regioes } from '@/hooks/useFormResgateData';
 import { FormProvider } from 'react-hook-form';
 
@@ -19,9 +18,6 @@ const ResgateCadastro = () => {
     form,
     formData,
     errors,
-    especiesLista,
-    loading,
-    error,
     handleChange,
     handleSelectChange,
     handleQuantidadeChange,
@@ -139,22 +135,6 @@ const ResgateCadastro = () => {
                 latitudeSoltura: errors.latitudeSoltura?.message,
                 longitudeSoltura: errors.longitudeSoltura?.message,
                 outroDestinacao: errors.outroDestinacao?.message
-              }}
-              required
-            />
-            
-            {/* Classe Taxonômica e Nome Popular */}
-            <EspeciesField
-              classeTaxonomica={formData.classeTaxonomica}
-              nomePopular={formData.nomePopular}
-              especiesLista={especiesLista}
-              loading={loading}
-              error={error}
-              onClasseTaxonomicaChange={(value) => handleSelectChange('classeTaxonomica', value)}
-              onNomePopularChange={(value) => handleSelectChange('nomePopular', value)}
-              errors={{
-                classeTaxonomica: errors.classeTaxonomica?.message,
-                nomePopular: errors.nomePopular?.message
               }}
               required
             />

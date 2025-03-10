@@ -24,6 +24,4 @@ export const defaultResgateForm: ResgateFormData = {
   latitudeSoltura: '',
   longitudeSoltura: '',
   outroDestinacao: '',
-  classeTaxonomica: '',
-  nomePopular: ''
 };
