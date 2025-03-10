@@ -1,0 +1,41 @@
+
+/**
+ * Lista de regiões administrativas do Distrito Federal
+ */
+export const regioes = [
+  'Água Quente (RA XXXV)',
+  'Arapoanga (RA XXXIV)',
+  'Águas Claras (RA XX)',
+  'Arniqueira (RA XXXIII)',
+  'Brazlândia (RA IV)',
+  'Candangolândia (RA XIX)',
+  'Ceilândia (RA IX)',
+  'Cruzeiro (RA XI)',
+  'Fercal (RA XXXI)',
+  'Gama (RA II)',
+  'Guará (RA X)',
+  'Itapoã (RA XXVIII)',
+  'Jardim Botânico (RA XXVII)',
+  'Lago Norte (RA XVIII)',
+  'Lago Sul (RA XVI)',
+  'Núcleo Bandeirante (RA VIII)',
+  'Paranoá (RA VII)',
+  'Park Way (RA XXIV)',
+  'Planaltina (RA VI)',
+  'Plano Piloto (RA I)',
+  'Recanto das Emas (XV)',
+  'Riacho Fundo (RA XVII)',
+  'Riacho Fundo II (RA XXI)',
+  'Samambaia (RA XII)',
+  'Santa Maria (RA XIII)',
+  'São Sebastião (RA XIV)',
+  'SCIA/Estrutural (RA XXV)',
+  'SIA (RA XXIX)',
+  'Sobradinho (RA V)',
+  'Sobradinho II (RA XXVI)',
+  'Sol Nascente e Pôr do Sol ( RA XXXII)',
+  'Sudoeste/Octogonal (RA XXII)',
+  'Taguatinga (RA III)',
+  'Varjão (RA XXIII)',
+  'Vicente Pires (RA XXX)'
+];
