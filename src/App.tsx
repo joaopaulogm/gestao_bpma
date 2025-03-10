@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Hotspots from "./pages/Hotspots";
 import Registros from "./pages/Registros";
 import Relatorios from "./pages/Relatorios";
+import RegistroDetalhes from "./pages/RegistroDetalhes";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/hotspots" element={<Hotspots />} />
           <Route path="/registros" element={<Registros />} />
+          <Route path="/registro-detalhes/:id" element={<RegistroDetalhes />} />
           <Route path="/relatorios" element={<Relatorios />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

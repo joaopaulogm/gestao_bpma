@@ -1,39 +1,83 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Filter, Search } from 'lucide-react';
+import { Eye, Filter, Search, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
-// Mock data for demonstration
-const MOCK_REGISTROS = [
-  { id: 1, data: '12/05/2023', local: 'Av. Paulista, São Paulo', tipo: 'Resgate', especies: 3, responsavel: 'João Silva' },
-  { id: 2, data: '25/05/2023', local: 'Parque Ibirapuera, São Paulo', tipo: 'Apreensão', especies: 5, responsavel: 'Maria Santos' },
-  { id: 3, data: '08/06/2023', local: 'Zona Norte, São Paulo', tipo: 'Entrega', especies: 1, responsavel: 'Carlos Oliveira' },
-  { id: 4, data: '17/06/2023', local: 'Santo André, SP', tipo: 'Resgate', especies: 2, responsavel: 'Ana Costa' },
-  { id: 5, data: '02/07/2023', local: 'Guarulhos, SP', tipo: 'Apreensão', especies: 7, responsavel: 'Pedro Souza' },
-  { id: 6, data: '16/07/2023', local: 'Osasco, SP', tipo: 'Resgate', especies: 2, responsavel: 'Fernanda Lima' },
-  { id: 7, data: '29/07/2023', local: 'Diadema, SP', tipo: 'Entrega', especies: 1, responsavel: 'Ricardo Nunes' },
-];
+interface Registro {
+  id: string;
+  data: string;
+  regiao_administrativa: string;
+  origem: string;
+  nome_popular: string;
+  quantidade: number;
+  estado_saude: string;
+  destinacao: string;
+}
 
 const Registros = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTipo, setFilterTipo] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [registros, setRegistros] = useState<Registro[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
   
-  const filteredRegistros = MOCK_REGISTROS.filter(registro => {
+  useEffect(() => {
+    const fetchRegistros = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('registros')
+          .select('*')
+          .order('data', { ascending: false });
+        
+        if (error) {
+          throw error;
+        }
+        
+        setRegistros(data || []);
+      } catch (error) {
+        console.error('Erro ao buscar registros:', error);
+        toast.error('Erro ao carregar os registros');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchRegistros();
+  }, []);
+  
+  const filteredRegistros = registros.filter(registro => {
     const matchesSearch = searchTerm === '' || 
-      registro.local.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      registro.responsavel.toLowerCase().includes(searchTerm.toLowerCase());
+      registro.regiao_administrativa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      registro.nome_popular.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesTipo = filterTipo === '' || 
-      registro.tipo.toLowerCase() === filterTipo.toLowerCase();
+      registro.origem.toLowerCase() === filterTipo.toLowerCase();
     
     return matchesSearch && matchesTipo;
   });
+
+  const formatDateTime = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'dd/MM/yyyy');
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  const handleViewDetails = (id: string) => {
+    navigate(`/registro-detalhes/${id}`);
+  };
 
   return (
     <Layout title="Lista de Registros" showBackButton>
@@ -42,7 +86,7 @@ const Registros = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
             <Input
-              placeholder="Buscar por local ou responsável"
+              placeholder="Buscar por região administrativa ou espécie"
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -94,48 +138,66 @@ const Registros = () => {
         )}
         
         <div className="border border-fauna-border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Local</TableHead>
-                <TableHead className="hidden md:table-cell">Tipo</TableHead>
-                <TableHead className="hidden md:table-cell">Espécies</TableHead>
-                <TableHead className="hidden md:table-cell">Responsável</TableHead>
-                <TableHead className="text-right">Detalhes</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRegistros.length > 0 ? (
-                filteredRegistros.map((registro) => (
-                  <TableRow key={registro.id}>
-                    <TableCell>{registro.data}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{registro.local}</TableCell>
-                    <TableCell className="hidden md:table-cell">{registro.tipo}</TableCell>
-                    <TableCell className="hidden md:table-cell">{registro.especies}</TableCell>
-                    <TableCell className="hidden md:table-cell">{registro.responsavel}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        <Eye className="h-4 w-4 text-fauna-blue" />
-                        <span className="hidden sm:inline">Ver</span>
-                      </Button>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-fauna-blue" />
+              <span className="ml-2">Carregando registros...</span>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Região Administrativa</TableHead>
+                  <TableHead className="hidden md:table-cell">Tipo</TableHead>
+                  <TableHead className="hidden md:table-cell">Espécie</TableHead>
+                  <TableHead className="hidden md:table-cell">Qtd.</TableHead>
+                  <TableHead className="hidden md:table-cell">Estado</TableHead>
+                  <TableHead className="hidden md:table-cell">Destinação</TableHead>
+                  <TableHead className="text-right">Detalhes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRegistros.length > 0 ? (
+                  filteredRegistros.map((registro) => (
+                    <TableRow key={registro.id}>
+                      <TableCell>{formatDateTime(registro.data)}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{registro.regiao_administrativa}</TableCell>
+                      <TableCell className="hidden md:table-cell">{registro.origem}</TableCell>
+                      <TableCell className="hidden md:table-cell">{registro.nome_popular}</TableCell>
+                      <TableCell className="hidden md:table-cell">{registro.quantidade}</TableCell>
+                      <TableCell className="hidden md:table-cell">{registro.estado_saude}</TableCell>
+                      <TableCell className="hidden md:table-cell">{registro.destinacao}</TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="gap-1"
+                          onClick={() => handleViewDetails(registro.id)}
+                        >
+                          <Eye className="h-4 w-4 text-fauna-blue" />
+                          <span className="hidden sm:inline">Ver</span>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      {searchTerm || filterTipo
+                        ? 'Nenhum registro encontrado com os filtros atuais.'
+                        : 'Nenhum registro cadastrado ainda.'}
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
-                    Nenhum registro encontrado com os filtros atuais.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </div>
         
         <div className="flex justify-between items-center">
           <div className="text-sm text-gray-500">
-            Mostrando {filteredRegistros.length} de {MOCK_REGISTROS.length} registros
+            Mostrando {filteredRegistros.length} de {registros.length} registros
           </div>
           
           <div className="space-x-2">
