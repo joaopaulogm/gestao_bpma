@@ -92,7 +92,7 @@ const EspeciesField: React.FC<EspeciesFieldProps> = ({
               <SelectTrigger className={errors.nomePopular ? "border-red-500" : ""}>
                 <SelectValue placeholder={`Selecione a espécie de ${classeTaxonomica.toLowerCase()}`} />
               </SelectTrigger>
-              <SelectContent className="max-h-80 bg-background">
+              <SelectContent className="max-h-80 bg-background z-50">
                 {Array.isArray(especiesLista) && especiesLista.length > 0 ? (
                   especiesLista.map((especie, index) => (
                     <SelectItem key={index} value={especie.nome_popular || `especie-${index}`}>
