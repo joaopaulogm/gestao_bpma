@@ -67,4 +67,3 @@ export const buscarEspeciesPorClasse = async (classeTaxonomica: string): Promise
     return { data: [], error: 'Ocorreu um erro ao carregar a lista de espécies' };
   }
 };
-

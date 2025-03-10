@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Select, 
   SelectContent, 
@@ -40,6 +40,18 @@ const EspeciesField: React.FC<EspeciesFieldProps> = ({
   errors = {},
   required = false
 }) => {
+  // Log para debug
+  useEffect(() => {
+    console.log('EspeciesField renderizado com valores:', {
+      classeTaxonomica,
+      nomePopular,
+      especiesListaLength: especiesLista.length,
+      especiesLista,
+      loading,
+      error
+    });
+  }, [classeTaxonomica, nomePopular, especiesLista, loading, error]);
+
   return (
     <FormSection>
       <FormField id="classeTaxonomica" label="Classe Taxonômica" error={errors.classeTaxonomica} required={required}>
@@ -88,7 +100,7 @@ const EspeciesField: React.FC<EspeciesFieldProps> = ({
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="nenhuma-especie">
+                  <SelectItem value="nenhuma-especie" disabled>
                     Nenhuma espécie encontrada
                   </SelectItem>
                 )}
