@@ -1,6 +1,20 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Enable real-time updates for especies_fauna table
+const setupRealtimeUpdates = async () => {
+  // Add the table to the realtime subscription
+  await supabase.rpc('supabase_functions.create_table_publication', {
+    table_name: 'especies_fauna',
+    schema: 'public'
+  }).catch(error => {
+    console.error('Error setting up realtime for especies_fauna table:', error);
+  });
+};
+
+// Call this function immediately to ensure realtime is set up
+setupRealtimeUpdates();
+
 export interface Especie {
   id: string;
   classe_taxonomica: string;

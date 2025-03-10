@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Especie, 
   buscarTodasEspecies,
@@ -42,7 +43,32 @@ export const useFaunaTable = () => {
 
   useEffect(() => {
     fetchEspecies();
-  }, [fetchEspecies]);
+    
+    // Subscribe to real-time changes in the especies_fauna table
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { 
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'especies_fauna'
+        },
+        (payload) => {
+          console.log('Real-time update:', payload);
+          // Refresh data on any database changes
+          fetchEspecies();
+          // Also invalidate any cached data
+          queryClient.invalidateQueries({ queryKey: ['especies'] });
+        }
+      )
+      .subscribe();
+    
+    // Cleanup subscription when component unmounts
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchEspecies, queryClient]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -50,8 +76,7 @@ export const useFaunaTable = () => {
       
       if (success) {
         toast.success('Espécie excluída com sucesso');
-        await fetchEspecies();
-        queryClient.invalidateQueries({ queryKey: ['especies'] });
+        // The fetchEspecies will be triggered automatically by the real-time subscription
       } else {
         toast.error('Erro ao excluir espécie');
       }

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { faunaSchema, type FaunaFormData } from '@/schemas/faunaSchema';
 import { cadastrarEspecie, atualizarEspecie, buscarEspeciePorId } from '@/services/especieService';
 
@@ -12,6 +13,7 @@ export const useFormFaunaData = () => {
   const { id } = useParams<{ id: string }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
   
   const form = useForm<FaunaFormData>({
     resolver: zodResolver(faunaSchema),
@@ -78,6 +80,8 @@ export const useFormFaunaData = () => {
         result = await atualizarEspecie(id, especieData);
         if (result) {
           toast.success('Espécie atualizada com sucesso!');
+          // Invalidate cache to ensure real-time updates
+          queryClient.invalidateQueries({ queryKey: ['especies'] });
         } else {
           toast.error('Erro ao atualizar espécie');
         }
@@ -86,6 +90,8 @@ export const useFormFaunaData = () => {
         result = await cadastrarEspecie(especieData);
         if (result) {
           toast.success('Espécie cadastrada com sucesso!');
+          // Invalidate cache to ensure real-time updates
+          queryClient.invalidateQueries({ queryKey: ['especies'] });
         } else {
           toast.error('Erro ao cadastrar espécie');
         }
