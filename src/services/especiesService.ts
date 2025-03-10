@@ -16,21 +16,21 @@ export const buscarEspeciesPorClasse = async (classeTaxonomica: string): Promise
     return { data: [], error: null };
   }
   
-  console.log(`Buscando espécies para: ${classeTaxonomica}`);
+  console.log(`Buscando espécies para classe: ${classeTaxonomica}`);
   
   let tabela = '';
   switch (classeTaxonomica) {
     case 'Ave':
-      tabela = 'lista_ave';
+      tabela = 'aves';
       break;
     case 'Mamífero':
-      tabela = 'lista_mamifero';
+      tabela = 'mamiferos';
       break;
     case 'Réptil':
-      tabela = 'lista_reptil';
+      tabela = 'repteis';
       break;
     case 'Peixe':
-      tabela = 'lista_peixe';
+      tabela = 'peixes';
       break;
     default:
       return { data: [], error: null };
@@ -45,20 +45,22 @@ export const buscarEspeciesPorClasse = async (classeTaxonomica: string): Promise
     if (error) {
       console.error('Erro ao buscar espécies:', error);
       return { data: [], error: error.message };
-    } else {
-      console.log('Espécies carregadas:', data?.length || 0);
-      console.log('Exemplo de espécie:', data?.[0]);
-      
-      // Garantir que os dados têm a estrutura correta
-      if (data && Array.isArray(data)) {
-        // Verificar se cada item tem a propriedade nome_popular
-        const listaFiltrada = data.filter(item => item && typeof item === 'object' && 'nome_popular' in item && item.nome_popular);
-        return { data: listaFiltrada, error: null };
-      } else {
-        console.log('Dados não estão no formato esperado:', data);
-        return { data: [], error: 'Dados de espécies em formato inválido' };
-      }
     }
+    
+    console.log('Dados recebidos:', data);
+    
+    if (!data || !Array.isArray(data)) {
+      console.log('Nenhum dado encontrado ou formato inválido');
+      return { data: [], error: null };
+    }
+    
+    // Garantir que os dados têm a estrutura correta
+    const listaFiltrada = data
+      .filter(item => item && typeof item === 'object' && 'nome_popular' in item)
+      .map(item => ({ nome_popular: item.nome_popular }));
+      
+    console.log('Lista filtrada:', listaFiltrada);
+    return { data: listaFiltrada, error: null };
   } catch (err) {
     console.error('Exceção ao buscar espécies:', err);
     return { data: [], error: 'Ocorreu um erro ao carregar a lista de espécies' };
