@@ -10,6 +10,8 @@ import OrigemField from '@/components/resgate/OrigemField';
 import DesfechoApreensaoField from '@/components/resgate/DesfechoApreensaoField';
 import AnimalInfoFields from '@/components/resgate/AnimalInfoFields';
 import DestinacaoField from '@/components/resgate/DestinacaoField';
+import ClasseTaxonomicaField from '@/components/resgate/ClasseTaxonomicaField';
+import EspecieField from '@/components/resgate/EspecieField';
 import { useFormResgateData, regioes } from '@/hooks/useFormResgateData';
 import { FormProvider } from 'react-hook-form';
 
@@ -21,7 +23,9 @@ const ResgateCadastro = () => {
     handleChange,
     handleSelectChange,
     handleQuantidadeChange,
-    handleSubmit
+    handleSubmit,
+    especieSelecionada,
+    carregandoEspecie
   } = useFormResgateData();
 
   return (
@@ -59,6 +63,37 @@ const ResgateCadastro = () => {
                 error={errors.regiaoAdministrativa?.message}
                 required
               />
+            </FormSection>
+            
+            {/* Classe Taxonômica e Espécie */}
+            <FormSection title="Informações da Espécie">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <ClasseTaxonomicaField
+                  value={formData.classeTaxonomica}
+                  onChange={(value) => handleSelectChange('classeTaxonomica', value)}
+                  error={errors.classeTaxonomica?.message}
+                  required
+                />
+                <EspecieField
+                  classeTaxonomica={formData.classeTaxonomica}
+                  value={formData.especieId}
+                  onChange={(value) => handleSelectChange('especieId', value)}
+                  error={errors.especieId?.message}
+                  required
+                />
+              </div>
+              
+              {especieSelecionada && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Detalhes da Espécie Selecionada</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    <div><span className="font-semibold">Nome Científico:</span> {especieSelecionada.nome_cientifico}</div>
+                    <div><span className="font-semibold">Ordem Taxonômica:</span> {especieSelecionada.ordem_taxonomica}</div>
+                    <div><span className="font-semibold">Estado de Conservação:</span> {especieSelecionada.estado_de_conservacao}</div>
+                    <div><span className="font-semibold">Tipo de Fauna:</span> {especieSelecionada.tipo_de_fauna}</div>
+                  </div>
+                </div>
+              )}
             </FormSection>
             
             {/* Origem e Coordenadas */}

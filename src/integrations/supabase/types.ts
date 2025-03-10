@@ -9,7 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      especies_fauna: {
+        Row: {
+          classe_taxonomica: string
+          estado_de_conservacao: string
+          id: string
+          nome_cientifico: string
+          nome_popular: string
+          ordem_taxonomica: string
+          tipo_de_fauna: string
+        }
+        Insert: {
+          classe_taxonomica: string
+          estado_de_conservacao: string
+          id?: string
+          nome_cientifico: string
+          nome_popular: string
+          ordem_taxonomica: string
+          tipo_de_fauna: string
+        }
+        Update: {
+          classe_taxonomica?: string
+          estado_de_conservacao?: string
+          id?: string
+          nome_cientifico?: string
+          nome_popular?: string
+          ordem_taxonomica?: string
+          tipo_de_fauna?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

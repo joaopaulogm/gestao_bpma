@@ -29,6 +29,8 @@ export const resgateSchema = z.object({
   latitudeSoltura: z.string().optional(),
   longitudeSoltura: z.string().optional(),
   outroDestinacao: z.string().optional(),
+  classeTaxonomica: z.string().min(1, "Classe Taxonômica é obrigatória"),
+  especieId: z.string().min(1, "Espécie é obrigatória"),
 }).refine(data => {
   // Validate desfechoApreensao fields based on origem
   if (data.origem === "Apreensão") {
