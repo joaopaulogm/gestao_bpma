@@ -26,6 +26,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/resgate-cadastro" element={<ResgateCadastro />} />
           <Route path="/fauna-cadastro" element={<FaunaCadastro />} />
+          <Route path="/fauna-cadastro/:id" element={<FaunaCadastro />} />
           <Route path="/fauna-cadastrada" element={<FaunaCadastrada />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/hotspots" element={<Hotspots />} />
