@@ -45,7 +45,7 @@ const EspeciesField: React.FC<EspeciesFieldProps> = ({
     console.log('EspeciesField renderizado com valores:', {
       classeTaxonomica,
       nomePopular,
-      especiesListaLength: especiesLista.length,
+      especiesListaLength: especiesLista?.length || 0,
       especiesLista,
       loading,
       error
@@ -87,13 +87,13 @@ const EspeciesField: React.FC<EspeciesFieldProps> = ({
             <Select 
               onValueChange={onNomePopularChange}
               value={nomePopular}
-              disabled={loading || especiesLista.length === 0}
+              disabled={loading || especiesLista?.length === 0}
             >
               <SelectTrigger className={errors.nomePopular ? "border-red-500" : ""}>
                 <SelectValue placeholder={`Selecione a espécie de ${classeTaxonomica.toLowerCase()}`} />
               </SelectTrigger>
-              <SelectContent className="max-h-80">
-                {especiesLista.length > 0 ? (
+              <SelectContent className="max-h-80 bg-background">
+                {Array.isArray(especiesLista) && especiesLista.length > 0 ? (
                   especiesLista.map((especie, index) => (
                     <SelectItem key={index} value={especie.nome_popular || `especie-${index}`}>
                       {especie.nome_popular || `Espécie ${index + 1}`}

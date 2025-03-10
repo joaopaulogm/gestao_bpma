@@ -27,22 +27,32 @@ export const useFormResgateData = () => {
   // Carregar lista de espécies com base na classe taxonômica selecionada
   useEffect(() => {
     const fetchEspecies = async () => {
-      if (!formData.classeTaxonomica) return;
-      
-      setLoading(true);
-      setError('');
-      setEspeciesLista([]);
-      
-      const { data, error } = await buscarEspeciesPorClasse(formData.classeTaxonomica);
-      
-      if (error) {
-        setError(error);
-        toast.error(`Erro ao carregar lista de espécies: ${error}`);
-      } else {
-        setEspeciesLista(data);
+      if (!formData.classeTaxonomica) {
+        setEspeciesLista([]);
+        return;
       }
       
-      setLoading(false);
+      console.log(`Iniciando busca de espécies para: ${formData.classeTaxonomica}`);
+      setLoading(true);
+      setError('');
+      
+      try {
+        const { data, error } = await buscarEspeciesPorClasse(formData.classeTaxonomica);
+        
+        if (error) {
+          console.error('Erro na busca de espécies:', error);
+          setError(error);
+          toast.error(`Erro ao carregar lista de espécies: ${error}`);
+        } else {
+          console.log(`Espécies carregadas: ${data.length}`);
+          setEspeciesLista(data);
+        }
+      } catch (err) {
+        console.error('Exceção na busca de espécies:', err);
+        setError('Erro ao carregar espécies');
+      } finally {
+        setLoading(false);
+      }
     };
     
     fetchEspecies();

@@ -39,6 +39,9 @@ export const buscarEspeciesPorClasse = async (classeTaxonomica: string): Promise
   try {
     console.log(`Buscando dados da tabela: ${tabela}`);
     
+    // Adicionando log detalhado da consulta
+    console.log(`SELECT nome_popular FROM ${tabela} ORDER BY nome_popular`);
+    
     const { data, error } = await supabase
       .from(tabela)
       .select('nome_popular')
