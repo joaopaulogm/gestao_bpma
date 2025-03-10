@@ -1,221 +1,157 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { toast } from 'sonner';
+import FormField from '@/components/resgate/FormField';
+import FormSection from '@/components/resgate/FormSection';
+import { useFormFaunaData } from '@/hooks/useFormFaunaData';
+import { FormProvider } from 'react-hook-form';
+
+const CLASSES_TAXONOMICAS = ['AVE', 'MAMIFERO', 'REPTIL', 'PEIXE'];
+const ESTADOS_CONSERVACAO = [
+  'Pouco Preocupante',
+  'Quase Ameaçada',
+  'Vulnerável',
+  'Em Perigo',
+  'Criticamente Ameaçado',
+  'Dados Insuficientes'
+];
+const TIPOS_FAUNA = ['Silvestre', 'Exótico'];
 
 const FaunaCadastro = () => {
-  const [formData, setFormData] = useState({
-    nomeComum: '',
-    nomeCientifico: '',
-    grupo: '',
-    status: '',
-    sexo: '',
-    idade: '',
-    peso: '',
-    altura: '',
-    condicao: '',
-    observacoes: ''
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Form submitted:', formData);
-    toast.success('Fauna cadastrada com sucesso!');
-    setFormData({
-      nomeComum: '',
-      nomeCientifico: '',
-      grupo: '',
-      status: '',
-      sexo: '',
-      idade: '',
-      peso: '',
-      altura: '',
-      condicao: '',
-      observacoes: ''
-    });
-  };
+  const { form, errors, isSubmitting, handleSubmit } = useFormFaunaData();
 
   return (
-    <Layout title="Cadastrar Fauna" showBackButton>
+    <Layout title="Cadastrar Nova Espécie" showBackButton>
       <div className="bg-white rounded-lg border border-fauna-border p-6 animate-fade-in">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="nomeComum">Nome Comum</Label>
-              <Input
-                id="nomeComum"
-                name="nomeComum"
-                value={formData.nomeComum}
-                onChange={handleChange}
+        <FormProvider {...form}>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <FormSection title="Informações Taxonômicas">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  id="classe_taxonomica"
+                  label="Classe Taxonômica"
+                  error={errors.classe_taxonomica?.message}
+                  required
+                >
+                  <Select
+                    onValueChange={(value) => form.setValue('classe_taxonomica', value)}
+                    value={form.watch('classe_taxonomica')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a classe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CLASSES_TAXONOMICAS.map((classe) => (
+                        <SelectItem key={classe} value={classe}>
+                          {classe}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormField>
+
+                <FormField
+                  id="ordem_taxonomica"
+                  label="Ordem Taxonômica"
+                  error={errors.ordem_taxonomica?.message}
+                  required
+                >
+                  <Input
+                    {...form.register('ordem_taxonomica')}
+                    placeholder="Ex: Carnivora"
+                  />
+                </FormField>
+              </div>
+
+              <FormField
+                id="nome_popular"
+                label="Nome Popular"
+                error={errors.nome_popular?.message}
                 required
-                placeholder="Ex: Onça-pintada"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="nomeCientifico">Nome Científico</Label>
-              <Input
-                id="nomeCientifico"
-                name="nomeCientifico"
-                value={formData.nomeCientifico}
-                onChange={handleChange}
+              >
+                <Input
+                  {...form.register('nome_popular')}
+                  placeholder="Ex: Onça-pintada"
+                />
+              </FormField>
+
+              <FormField
+                id="nome_cientifico"
+                label="Nome Científico"
+                error={errors.nome_cientifico?.message}
                 required
-                placeholder="Ex: Panthera onca"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="grupo">Grupo Taxonômico</Label>
-              <Select 
-                onValueChange={(value) => handleSelectChange('grupo', value)}
-                value={formData.grupo}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o grupo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="mamifero">Mamífero</SelectItem>
-                  <SelectItem value="ave">Ave</SelectItem>
-                  <SelectItem value="reptil">Réptil</SelectItem>
-                  <SelectItem value="anfibio">Anfíbio</SelectItem>
-                  <SelectItem value="peixe">Peixe</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="status">Status de Conservação</Label>
-              <Select 
-                onValueChange={(value) => handleSelectChange('status', value)}
-                value={formData.status}
+                <Input
+                  {...form.register('nome_cientifico')}
+                  placeholder="Ex: Panthera onca"
+                />
+              </FormField>
+            </FormSection>
+
+            <FormSection title="Status e Classificação">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  id="estado_de_conservacao"
+                  label="Estado de Conservação"
+                  error={errors.estado_de_conservacao?.message}
+                  required
+                >
+                  <Select
+                    onValueChange={(value) => form.setValue('estado_de_conservacao', value)}
+                    value={form.watch('estado_de_conservacao')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ESTADOS_CONSERVACAO.map((estado) => (
+                        <SelectItem key={estado} value={estado}>
+                          {estado}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormField>
+
+                <FormField
+                  id="tipo_de_fauna"
+                  label="Tipo de Fauna"
+                  error={errors.tipo_de_fauna?.message}
+                  required
+                >
+                  <Select
+                    onValueChange={(value) => form.setValue('tipo_de_fauna', value)}
+                    value={form.watch('tipo_de_fauna')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIPOS_FAUNA.map((tipo) => (
+                        <SelectItem key={tipo} value={tipo}>
+                          {tipo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormField>
+              </div>
+            </FormSection>
+
+            <div className="pt-4">
+              <Button 
+                type="submit"
+                className="w-full bg-fauna-blue hover:bg-opacity-90 text-white"
+                disabled={isSubmitting}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="lc">Pouco Preocupante (LC)</SelectItem>
-                  <SelectItem value="nt">Quase Ameaçada (NT)</SelectItem>
-                  <SelectItem value="vu">Vulnerável (VU)</SelectItem>
-                  <SelectItem value="en">Em Perigo (EN)</SelectItem>
-                  <SelectItem value="cr">Criticamente em Perigo (CR)</SelectItem>
-                </SelectContent>
-              </Select>
+                {isSubmitting ? 'Cadastrando...' : 'Cadastrar Espécie'}
+              </Button>
             </div>
-            
-            <div className="space-y-2">
-              <Label>Sexo</Label>
-              <RadioGroup 
-                defaultValue={formData.sexo} 
-                onValueChange={(value) => handleSelectChange('sexo', value)}
-                className="flex space-x-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="macho" id="macho" />
-                  <Label htmlFor="macho">Macho</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="femea" id="femea" />
-                  <Label htmlFor="femea">Fêmea</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="indeterminado" id="indeterminado" />
-                  <Label htmlFor="indeterminado">Indeterminado</Label>
-                </div>
-              </RadioGroup>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="idade">Idade Estimada</Label>
-              <Input
-                id="idade"
-                name="idade"
-                value={formData.idade}
-                onChange={handleChange}
-                placeholder="Ex: 2 anos"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="peso">Peso (kg)</Label>
-              <Input
-                id="peso"
-                name="peso"
-                type="number"
-                step="0.01"
-                value={formData.peso}
-                onChange={handleChange}
-                placeholder="Ex: 10.5"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="altura">Altura/Comprimento (cm)</Label>
-              <Input
-                id="altura"
-                name="altura"
-                type="number"
-                value={formData.altura}
-                onChange={handleChange}
-                placeholder="Ex: 120"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="condicao">Condição de Saúde</Label>
-              <Select 
-                onValueChange={(value) => handleSelectChange('condicao', value)}
-                value={formData.condicao}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a condição" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="otima">Ótima</SelectItem>
-                  <SelectItem value="boa">Boa</SelectItem>
-                  <SelectItem value="regular">Regular</SelectItem>
-                  <SelectItem value="ruim">Ruim</SelectItem>
-                  <SelectItem value="critica">Crítica</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="observacoes">Observações</Label>
-            <Textarea
-              id="observacoes"
-              name="observacoes"
-              value={formData.observacoes}
-              onChange={handleChange}
-              placeholder="Informações adicionais importantes"
-              rows={4}
-            />
-          </div>
-          
-          <div className="pt-4">
-            <Button 
-              type="submit" 
-              className="w-full bg-fauna-blue hover:bg-opacity-90 text-white"
-            >
-              Cadastrar Fauna
-            </Button>
-          </div>
-        </form>
+          </form>
+        </FormProvider>
       </div>
     </Layout>
   );

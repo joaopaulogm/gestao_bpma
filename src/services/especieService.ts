@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Especie {
@@ -72,6 +71,26 @@ export const buscarEspeciePorId = async (id: string): Promise<Especie | null> =>
     return data;
   } catch (error) {
     console.error("Erro ao buscar espécie por ID:", error);
+    return null;
+  }
+};
+
+export const cadastrarEspecie = async (especie: Omit<Especie, 'id'>): Promise<Especie | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("especies_fauna")
+      .insert([especie])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Erro ao cadastrar espécie:", error);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Erro ao cadastrar espécie:", error);
     return null;
   }
 };
