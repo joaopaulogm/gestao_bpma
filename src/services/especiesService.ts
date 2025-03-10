@@ -58,7 +58,7 @@ export const buscarEspeciesPorClasse = async (classeTaxonomica: string): Promise
     }
     
     const listaFiltrada = data
-      .filter(item => item && typeof item === 'object' && 'nome_popular' in item)
+      .filter(item => item && typeof item === 'object' && 'nome_popular' in item && item.nome_popular)
       .map(item => ({ nome_popular: item.nome_popular || 'Nome não disponível' }));
       
     console.log(`Lista filtrada de ${tabela}:`, listaFiltrada);
