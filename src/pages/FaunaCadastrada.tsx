@@ -5,7 +5,7 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Pencil, Search, Trash } from 'lucide-react';
+import { Pencil, Search, Trash } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import DeleteConfirmationDialog from '@/components/fauna/DeleteConfirmationDialog';
@@ -110,14 +110,6 @@ const FaunaCadastrada = () => {
                       <TableCell className="hidden md:table-cell">{especie.estado_de_conservacao}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            title="Ver detalhes"
-                            onClick={() => navigate(`/fauna-detalhe/${especie.id}`)}
-                          >
-                            <Eye className="h-4 w-4 text-fauna-blue" />
-                          </Button>
                           <Button 
                             variant="ghost" 
                             size="icon" 
