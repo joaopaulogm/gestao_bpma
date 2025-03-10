@@ -1,20 +1,19 @@
 
 import React from 'react';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Loader2 } from 'lucide-react';
-import FormField from '@/components/resgate/FormField';
-import FormSection from '@/components/resgate/FormSection';
+import { FormProvider } from 'react-hook-form';
+import { useFormResgateData } from '@/hooks/useFormResgateData';
+
+// Component imports
+import ResgateFormHeader from '@/components/resgate/ResgateFormHeader';
+import ResgateFormSubmitButton from '@/components/resgate/ResgateFormSubmitButton';
+import DataField from '@/components/resgate/DataField';
 import RegiaoAdministrativaField from '@/components/resgate/RegiaoAdministrativaField';
+import EspecieTaxonomicaFields from '@/components/resgate/EspecieTaxonomicaFields';
 import OrigemField from '@/components/resgate/OrigemField';
 import DesfechoApreensaoField from '@/components/resgate/DesfechoApreensaoField';
 import AnimalInfoFields from '@/components/resgate/AnimalInfoFields';
 import DestinacaoField from '@/components/resgate/DestinacaoField';
-import ClasseTaxonomicaField from '@/components/resgate/ClasseTaxonomicaField';
-import EspecieField from '@/components/resgate/EspecieField';
-import { useFormResgateData, regioes } from '@/hooks/useFormResgateData';
-import { FormProvider } from 'react-hook-form';
 
 const ResgateCadastro = () => {
   const {
@@ -33,70 +32,41 @@ const ResgateCadastro = () => {
   return (
     <Layout title="Registro de Atividade de Resgate de Fauna" showBackButton>
       <div className="bg-white rounded-lg border border-fauna-border p-6 animate-fade-in">
-        <h2 className="text-lg text-gray-600 mb-6">Preencha os dados do registro de atividade</h2>
+        <ResgateFormHeader />
         
         <FormProvider {...form}>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Data */}
-            <FormSection>
-              <FormField 
-                id="data" 
-                label="Data" 
-                error={errors.data?.message}
-                required
-              >
-                <Input
-                  id="data"
-                  name="data"
-                  type="date"
-                  value={formData.data}
-                  onChange={handleChange}
-                  className={errors.data ? "border-red-500" : ""}
-                />
-              </FormField>
-            </FormSection>
+            <DataField
+              value={formData.data}
+              onChange={handleChange}
+              error={errors.data?.message}
+              required
+            />
             
             {/* Região Administrativa */}
-            <FormSection>
-              <RegiaoAdministrativaField
-                regioes={regioes}
-                value={formData.regiaoAdministrativa}
-                onChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
-                error={errors.regiaoAdministrativa?.message}
-                required
-              />
-            </FormSection>
+            <RegiaoAdministrativaField
+              regioes={regioes}
+              value={formData.regiaoAdministrativa}
+              onChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
+              error={errors.regiaoAdministrativa?.message}
+              required
+            />
             
             {/* Classe Taxonômica e Espécie */}
-            <FormSection title="Informações da Espécie">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <ClasseTaxonomicaField
-                  value={formData.classeTaxonomica}
-                  onChange={(value) => handleSelectChange('classeTaxonomica', value)}
-                  error={errors.classeTaxonomica?.message}
-                  required
-                />
-                <EspecieField
-                  classeTaxonomica={formData.classeTaxonomica}
-                  value={formData.especieId}
-                  onChange={(value) => handleSelectChange('especieId', value)}
-                  error={errors.especieId?.message}
-                  required
-                />
-              </div>
-              
-              {especieSelecionada && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-md">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Detalhes da Espécie Selecionada</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                    <div><span className="font-semibold">Nome Científico:</span> {especieSelecionada.nome_cientifico}</div>
-                    <div><span className="font-semibold">Ordem Taxonômica:</span> {especieSelecionada.ordem_taxonomica}</div>
-                    <div><span className="font-semibold">Estado de Conservação:</span> {especieSelecionada.estado_de_conservacao}</div>
-                    <div><span className="font-semibold">Tipo de Fauna:</span> {especieSelecionada.tipo_de_fauna}</div>
-                  </div>
-                </div>
-              )}
-            </FormSection>
+            <EspecieTaxonomicaFields
+              classeTaxonomica={formData.classeTaxonomica}
+              especieId={formData.especieId}
+              onClasseTaxonomicaChange={(value) => handleSelectChange('classeTaxonomica', value)}
+              onEspecieChange={(value) => handleSelectChange('especieId', value)}
+              especieSelecionada={especieSelecionada}
+              carregandoEspecie={carregandoEspecie}
+              errors={{
+                classeTaxonomica: errors.classeTaxonomica?.message,
+                especieId: errors.especieId?.message
+              }}
+              required
+            />
             
             {/* Origem e Coordenadas */}
             <OrigemField
@@ -176,22 +146,7 @@ const ResgateCadastro = () => {
               required
             />
             
-            <div className="pt-4">
-              <Button 
-                type="submit" 
-                className="w-full bg-fauna-blue hover:bg-opacity-90 text-white"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  'Salvar Registro'
-                )}
-              </Button>
-            </div>
+            <ResgateFormSubmitButton isSubmitting={isSubmitting} />
           </form>
         </FormProvider>
       </div>
