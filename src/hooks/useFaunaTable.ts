@@ -15,7 +15,7 @@ export const useFaunaTable = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterClasse, setFilterClasse] = useState('');
+  const [filterClasse, setFilterClasse] = useState('all');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const fetchEspecies = useCallback(async () => {
@@ -23,7 +23,7 @@ export const useFaunaTable = () => {
     try {
       let data: Especie[];
       
-      if (filterClasse) {
+      if (filterClasse && filterClasse !== 'all') {
         data = await buscarEspeciesPorClasse(filterClasse);
       } else {
         data = await buscarTodasEspecies();

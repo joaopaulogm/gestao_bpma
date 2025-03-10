@@ -55,7 +55,7 @@ const FaunaCadastrada = () => {
                 <SelectValue placeholder="Filtrar por classe" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as classes</SelectItem>
+                <SelectItem value="all">Todas as classes</SelectItem>
                 <SelectItem value="AVE">Ave</SelectItem>
                 <SelectItem value="MAMIFERO">Mamífero</SelectItem>
                 <SelectItem value="REPTIL">Réptil</SelectItem>
