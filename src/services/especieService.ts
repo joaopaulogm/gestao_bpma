@@ -3,13 +3,20 @@ import { supabase } from "@/integrations/supabase/client";
 
 // Enable real-time updates for especies_fauna table
 const setupRealtimeUpdates = async () => {
-  // Add the table to the realtime subscription
-  await supabase.rpc('supabase_functions.create_table_publication', {
-    table_name: 'especies_fauna',
-    schema: 'public'
-  }).catch(error => {
+  try {
+    // Use the correct approach to enable realtime for a table
+    const { error } = await supabase
+      .from('especies_fauna')
+      .on('INSERT', () => {})
+      .on('UPDATE', () => {})
+      .on('DELETE', () => {});
+    
+    if (error) {
+      console.error('Error setting up realtime for especies_fauna table:', error);
+    }
+  } catch (error) {
     console.error('Error setting up realtime for especies_fauna table:', error);
-  });
+  }
 };
 
 // Call this function immediately to ensure realtime is set up
