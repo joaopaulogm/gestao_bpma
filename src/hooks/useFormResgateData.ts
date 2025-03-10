@@ -73,10 +73,10 @@ export const useFormResgateData = () => {
 
     try {
       // Converter a data para formato ISO string para o banco de dados
-      const dataFormatada = new Date(data.data).toISOString();
+      const dataFormatada = new Date(data.data);
       
       const { error } = await supabase.from('registros').insert({
-        data: dataFormatada,
+        data: dataFormatada.toISOString(),
         classe_taxonomica: data.classeTaxonomica,
         nome_cientifico: especieSelecionada.nome_cientifico,
         nome_popular: especieSelecionada.nome_popular,

@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -86,6 +86,10 @@ const RegistroDetalhes = () => {
       </div>
     );
   };
+  
+  const handleExportPDF = () => {
+    toast.info('Funcionalidade de exportação para PDF em desenvolvimento');
+  };
 
   if (isLoading) {
     return (
@@ -119,14 +123,25 @@ const RegistroDetalhes = () => {
   return (
     <Layout title={`Detalhes do Registro: ${registro.nome_popular}`} showBackButton>
       <div className="space-y-6 animate-fade-in">
-        <Button
-          variant="outline"
-          className="mb-4"
-          onClick={() => navigate('/registros')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar para lista
-        </Button>
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => navigate('/registros')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para lista
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleExportPDF}
+          >
+            <Download className="h-4 w-4" />
+            Exportar PDF
+          </Button>
+        </div>
 
         <Card className="border border-fauna-border">
           <CardHeader>
