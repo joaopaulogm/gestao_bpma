@@ -38,42 +38,8 @@ export const buscarEspeciesPorClasse = async (classeTaxonomica: string): Promise
   
   try {
     console.log(`Buscando dados da tabela: ${tabela}`);
-    
-    // Adicionando logs detalhados da consulta e verificação de conexão
     console.log(`SELECT nome_popular FROM ${tabela} ORDER BY nome_popular`);
-    console.log('Verificando objeto supabase:', supabase ? 'Inicializado' : 'Não inicializado');
     
-    // Consulta de teste para ver se o tabela existe
-    const { data: tableExists, error: tableError } = await supabase
-      .from(tabela)
-      .select('*')
-      .limit(1);
-      
-    if (tableError) {
-      console.error(`Erro ao verificar se a tabela ${tabela} existe:`, tableError);
-      return { 
-        data: [], 
-        error: `Erro ao verificar a tabela ${tabela}: ${tableError.message}` 
-      };
-    }
-    
-    console.log(`Tabela ${tabela} existe:`, tableExists !== null);
-    
-    // Vamos testar dados mockados caso a tabela esteja vazia
-    if (!tableExists || tableExists.length === 0) {
-      console.log(`Tabela ${tabela} vazia ou não encontrada, usando dados mockados`);
-      
-      // Dados mockados para teste
-      const mockData: Especie[] = [
-        { nome_popular: "Espécie de teste 1" },
-        { nome_popular: "Espécie de teste 2" },
-        { nome_popular: "Espécie de teste 3" }
-      ];
-      
-      return { data: mockData, error: null };
-    }
-    
-    // Continuamos com a consulta normal
     const { data, error } = await supabase
       .from(tabela)
       .select('nome_popular')
