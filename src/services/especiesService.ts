@@ -39,7 +39,6 @@ export const buscarEspeciesPorClasse = async (classeTaxonomica: string): Promise
   try {
     console.log(`Buscando dados da tabela: ${tabela}`);
     
-    // Buscar diretamente os dados sem verificar a existência da tabela primeiro
     const { data, error } = await supabase
       .from(tabela)
       .select('nome_popular')
@@ -57,7 +56,6 @@ export const buscarEspeciesPorClasse = async (classeTaxonomica: string): Promise
       return { data: [], error: null };
     }
     
-    // Garantir que os dados têm a estrutura correta
     const listaFiltrada = data
       .filter(item => item && typeof item === 'object' && 'nome_popular' in item)
       .map(item => ({ nome_popular: item.nome_popular || 'Nome não disponível' }));
@@ -69,3 +67,4 @@ export const buscarEspeciesPorClasse = async (classeTaxonomica: string): Promise
     return { data: [], error: 'Ocorreu um erro ao carregar a lista de espécies' };
   }
 };
+
