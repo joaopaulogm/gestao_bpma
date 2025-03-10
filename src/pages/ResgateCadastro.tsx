@@ -2,7 +2,7 @@
 import React from 'react';
 import Layout from '@/components/Layout';
 import { FormProvider } from 'react-hook-form';
-import { useFormResgateData } from '@/hooks/useFormResgateData';
+import { useFormResgateData, regioes } from '@/hooks/useFormResgateData';
 
 // Component imports
 import ResgateFormHeader from '@/components/resgate/ResgateFormHeader';
