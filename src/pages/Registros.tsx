@@ -1,16 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Filter, Search, Loader2, Download } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { format } from 'date-fns';
+import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import RegistrosActions from '@/components/registros/RegistrosActions';
+import RegistrosFilters from '@/components/registros/RegistrosFilters';
+import RegistrosTable from '@/components/registros/RegistrosTable';
 
 interface Registro {
   id: string;
@@ -40,10 +37,10 @@ interface Registro {
 
 const Registros = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterTipo, setFilterTipo] = useState('');
-  const [filterEstado, setFilterEstado] = useState('');
-  const [filterDestinacao, setFilterDestinacao] = useState('');
-  const [filterClasse, setFilterClasse] = useState('');
+  const [filterTipo, setFilterTipo] = useState('all');
+  const [filterEstado, setFilterEstado] = useState('all');
+  const [filterDestinacao, setFilterDestinacao] = useState('all');
+  const [filterClasse, setFilterClasse] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,10 +55,7 @@ const Registros = () => {
           .select('*')
           .order('data', { ascending: false });
         
-        if (error) {
-          throw error;
-        }
-        
+        if (error) throw error;
         setRegistros(data || []);
       } catch (error) {
         console.error('Erro ao buscar registros:', error);
@@ -80,35 +74,26 @@ const Registros = () => {
       registro.nome_popular.toLowerCase().includes(searchTerm.toLowerCase()) ||
       registro.nome_cientifico.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesTipo = filterTipo === '' || 
-      registro.origem.toLowerCase() === filterTipo.toLowerCase();
+    const matchesTipo = filterTipo === 'all' || 
+      registro.origem === filterTipo;
       
-    const matchesEstado = filterEstado === '' || 
-      registro.estado_saude.toLowerCase() === filterEstado.toLowerCase();
+    const matchesEstado = filterEstado === 'all' || 
+      registro.estado_saude === filterEstado;
       
-    const matchesDestinacao = filterDestinacao === '' || 
-      registro.destinacao.toLowerCase() === filterDestinacao.toLowerCase();
+    const matchesDestinacao = filterDestinacao === 'all' || 
+      registro.destinacao === filterDestinacao;
       
-    const matchesClasse = filterClasse === '' || 
-      registro.classe_taxonomica.toLowerCase() === filterClasse.toLowerCase();
+    const matchesClasse = filterClasse === 'all' || 
+      registro.classe_taxonomica === filterClasse;
     
     return matchesSearch && matchesTipo && matchesEstado && matchesDestinacao && matchesClasse;
   });
-
-  const formatDateTime = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy');
-    } catch (error) {
-      return dateString;
-    }
-  };
 
   const handleViewDetails = (id: string) => {
     navigate(`/registro-detalhes/${id}`);
   };
   
   const handleExportCSV = () => {
-    // Convert the data to CSV
     const headers = [
       'Data', 'Região Administrativa', 'Tipo', 'Latitude', 'Longitude',
       'Classe Taxonômica', 'Nome Científico', 'Nome Popular',
@@ -119,8 +104,8 @@ const Registros = () => {
     const csvRows = [
       headers.join(','),
       ...filteredRegistros.map(registro => [
-        formatDateTime(registro.data),
-        `"${registro.regiao_administrativa}"`, // Escape strings with quotes to handle commas
+        format(new Date(registro.data), 'dd/MM/yyyy'),
+        `"${registro.regiao_administrativa}"`,
         registro.origem,
         registro.latitude_origem,
         registro.longitude_origem,
@@ -136,8 +121,6 @@ const Registros = () => {
     ];
     
     const csvString = csvRows.join('\n');
-    
-    // Create a blob and download it
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -151,117 +134,24 @@ const Registros = () => {
   return (
     <Layout title="Lista de Registros" showBackButton>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex flex-col sm:flex-row justify-between gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-            <Input
-              placeholder="Buscar por região, nome popular ou científico"
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              className="gap-2"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4" />
-              Filtros
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="gap-2"
-              onClick={handleExportCSV}
-            >
-              <Download className="h-4 w-4" />
-              Exportar CSV
-            </Button>
-          </div>
-        </div>
+        <RegistrosActions
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+          onExportCSV={handleExportCSV}
+        />
         
         {showFilters && (
-          <Card className="border border-fauna-border">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium text-fauna-blue">Filtros avançados</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <Select 
-                  onValueChange={setFilterTipo}
-                  value={filterTipo}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tipo de ocorrência" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todos os tipos</SelectItem>
-                    <SelectItem value="Resgate de Fauna">Resgate de Fauna</SelectItem>
-                    <SelectItem value="Apreensão">Apreensão</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Select 
-                  onValueChange={setFilterEstado}
-                  value={filterEstado}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Estado de saúde" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todos os estados</SelectItem>
-                    <SelectItem value="Bom">Bom</SelectItem>
-                    <SelectItem value="Regular">Regular</SelectItem>
-                    <SelectItem value="Ruim">Ruim</SelectItem>
-                    <SelectItem value="Óbito">Óbito</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Select 
-                  onValueChange={setFilterClasse}
-                  value={filterClasse}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Classe taxonômica" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todas as classes</SelectItem>
-                    <SelectItem value="Aves">Aves</SelectItem>
-                    <SelectItem value="Mamíferos">Mamíferos</SelectItem>
-                    <SelectItem value="Répteis">Répteis</SelectItem>
-                    <SelectItem value="Anfíbios">Anfíbios</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Select 
-                  onValueChange={setFilterDestinacao}
-                  value={filterDestinacao}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Destinação" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todas as destinações</SelectItem>
-                    <SelectItem value="CETAS/IBAMA">CETAS/IBAMA</SelectItem>
-                    <SelectItem value="HFAUS/IBRAM">HFAUS/IBRAM</SelectItem>
-                    <SelectItem value="CEAPA/BPMA">CEAPA/BPMA</SelectItem>
-                    <SelectItem value="Soltura">Soltura</SelectItem>
-                    <SelectItem value="Óbito">Óbito</SelectItem>
-                    <SelectItem value="Outros">Outros</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+          <RegistrosFilters
+            filterTipo={filterTipo}
+            setFilterTipo={setFilterTipo}
+            filterEstado={filterEstado}
+            setFilterEstado={setFilterEstado}
+            filterDestinacao={filterDestinacao}
+            setFilterDestinacao={setFilterDestinacao}
+            filterClasse={filterClasse}
+            setFilterClasse={setFilterClasse}
+          />
         )}
         
         <div className="border border-fauna-border rounded-lg overflow-hidden">
@@ -271,62 +161,10 @@ const Registros = () => {
               <span className="ml-2">Carregando registros...</span>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Região</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Espécie</TableHead>
-                    <TableHead>Nome Científico</TableHead>
-                    <TableHead>Classe</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Estágio de Vida</TableHead>
-                    <TableHead>Qtd.</TableHead>
-                    <TableHead>Destinação</TableHead>
-                    <TableHead className="text-right">Detalhes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRegistros.length > 0 ? (
-                    filteredRegistros.map((registro) => (
-                      <TableRow key={registro.id}>
-                        <TableCell>{formatDateTime(registro.data)}</TableCell>
-                        <TableCell className="max-w-[150px] truncate">{registro.regiao_administrativa}</TableCell>
-                        <TableCell>{registro.origem}</TableCell>
-                        <TableCell className="max-w-[150px] truncate">{registro.nome_popular}</TableCell>
-                        <TableCell className="max-w-[150px] truncate italic">{registro.nome_cientifico}</TableCell>
-                        <TableCell>{registro.classe_taxonomica}</TableCell>
-                        <TableCell>{registro.estado_saude}</TableCell>
-                        <TableCell>{registro.estagio_vida}</TableCell>
-                        <TableCell>{registro.quantidade}</TableCell>
-                        <TableCell className="max-w-[150px] truncate">{registro.destinacao}</TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="gap-1"
-                            onClick={() => handleViewDetails(registro.id)}
-                          >
-                            <Eye className="h-4 w-4 text-fauna-blue" />
-                            <span className="hidden sm:inline">Ver</span>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={11} className="text-center py-8">
-                        {searchTerm || filterTipo || filterEstado || filterDestinacao || filterClasse
-                          ? 'Nenhum registro encontrado com os filtros atuais.'
-                          : 'Nenhum registro cadastrado ainda.'}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            <RegistrosTable
+              registros={filteredRegistros}
+              onViewDetails={handleViewDetails}
+            />
           )}
         </div>
         
@@ -341,3 +179,4 @@ const Registros = () => {
 };
 
 export default Registros;
+
