@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 import RegistrosActions from '@/components/registros/RegistrosActions';
 import RegistrosFilters from '@/components/registros/RegistrosFilters';
 import RegistrosTable from '@/components/registros/RegistrosTable';

@@ -1,13 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Loader2, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import RegistroLoading from '@/components/registros/RegistroLoading';
+import RegistroNotFound from '@/components/registros/RegistroNotFound';
+import RegistroActionsBar from '@/components/registros/RegistroActionsBar';
+import InformacoesGeraisCard from '@/components/registros/InformacoesGeraisCard';
+import InformacoesEspecieCard from '@/components/registros/InformacoesEspecieCard';
+import InformacoesDestinacaoCard from '@/components/registros/InformacoesDestinacaoCard';
 
 interface Registro {
   id: string;
@@ -37,7 +40,6 @@ interface Registro {
 
 const RegistroDetalhes = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [registro, setRegistro] = useState<Registro | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -59,14 +61,13 @@ const RegistroDetalhes = () => {
       } catch (error) {
         console.error('Erro ao buscar detalhes do registro:', error);
         toast.error('Erro ao carregar os detalhes do registro');
-        navigate('/registros');
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchRegistro();
-  }, [id, navigate]);
+  }, [id]);
 
   const formatDateTime = (dateString: string) => {
     try {
@@ -75,135 +76,55 @@ const RegistroDetalhes = () => {
       return dateString;
     }
   };
-
-  const DetailsField = ({ label, value }: { label: string; value: string | number | null }) => {
-    if (value === null || value === '') return null;
-    
-    return (
-      <div className="mb-4">
-        <p className="text-sm font-medium text-gray-500">{label}</p>
-        <p className="text-gray-900">{value}</p>
-      </div>
-    );
-  };
   
   const handleExportPDF = () => {
     toast.info('Funcionalidade de exportação para PDF em desenvolvimento');
   };
 
   if (isLoading) {
-    return (
-      <Layout title="Detalhes do Registro" showBackButton>
-        <div className="flex justify-center items-center py-32">
-          <Loader2 className="h-8 w-8 animate-spin text-fauna-blue" />
-          <span className="ml-2">Carregando detalhes...</span>
-        </div>
-      </Layout>
-    );
+    return <RegistroLoading />;
   }
 
   if (!registro) {
-    return (
-      <Layout title="Detalhes do Registro" showBackButton>
-        <div className="text-center py-32">
-          <p className="text-xl text-gray-600">Registro não encontrado</p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            onClick={() => navigate('/registros')}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar para lista
-          </Button>
-        </div>
-      </Layout>
-    );
+    return <RegistroNotFound />;
   }
 
   return (
     <Layout title={`Detalhes do Registro: ${registro.nome_popular}`} showBackButton>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex flex-col sm:flex-row justify-between gap-4">
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={() => navigate('/registros')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar para lista
-          </Button>
-          
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={handleExportPDF}
-          >
-            <Download className="h-4 w-4" />
-            Exportar PDF
-          </Button>
-        </div>
+        <RegistroActionsBar onExportPDF={handleExportPDF} />
 
-        <Card className="border border-fauna-border">
-          <CardHeader>
-            <CardTitle className="text-fauna-blue">Informações Gerais</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <DetailsField label="Data" value={formatDateTime(registro.data)} />
-              <DetailsField label="Região Administrativa" value={registro.regiao_administrativa} />
-              <DetailsField label="Origem" value={registro.origem} />
-              <DetailsField label="Latitude da Origem" value={registro.latitude_origem} />
-              <DetailsField label="Longitude da Origem" value={registro.longitude_origem} />
-            </div>
-            <div>
-              {registro.origem === 'Apreensão' && (
-                <>
-                  <DetailsField label="Desfecho da Apreensão" value={registro.desfecho_apreensao} />
-                  <DetailsField label="Número do TCO" value={registro.numero_tco} />
-                  <DetailsField label="Outro Desfecho" value={registro.outro_desfecho} />
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <InformacoesGeraisCard 
+          data={registro.data}
+          regiao_administrativa={registro.regiao_administrativa}
+          origem={registro.origem}
+          latitude_origem={registro.latitude_origem}
+          longitude_origem={registro.longitude_origem}
+          desfecho_apreensao={registro.desfecho_apreensao}
+          numero_tco={registro.numero_tco}
+          outro_desfecho={registro.outro_desfecho}
+          formatDateTime={formatDateTime}
+        />
 
-        <Card className="border border-fauna-border">
-          <CardHeader>
-            <CardTitle className="text-fauna-blue">Informações da Espécie</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <DetailsField label="Classe Taxonômica" value={registro.classe_taxonomica} />
-              <DetailsField label="Nome Científico" value={registro.nome_cientifico} />
-              <DetailsField label="Nome Popular" value={registro.nome_popular} />
-            </div>
-            <div>
-              <DetailsField label="Estado de Saúde" value={registro.estado_saude} />
-              <DetailsField label="Atropelamento" value={registro.atropelamento} />
-              <DetailsField label="Estágio de Vida" value={registro.estagio_vida} />
-              <DetailsField label="Quantidade" value={registro.quantidade} />
-            </div>
-          </CardContent>
-        </Card>
+        <InformacoesEspecieCard 
+          classe_taxonomica={registro.classe_taxonomica}
+          nome_cientifico={registro.nome_cientifico}
+          nome_popular={registro.nome_popular}
+          estado_saude={registro.estado_saude}
+          atropelamento={registro.atropelamento}
+          estagio_vida={registro.estagio_vida}
+          quantidade={registro.quantidade}
+        />
 
-        <Card className="border border-fauna-border">
-          <CardHeader>
-            <CardTitle className="text-fauna-blue">Informações de Destinação</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <DetailsField label="Destinação" value={registro.destinacao} />
-              <DetailsField label="Número do Termo de Entrega" value={registro.numero_termo_entrega} />
-              <DetailsField label="Hora da Guarda CEAPA" value={registro.hora_guarda_ceapa} />
-              <DetailsField label="Motivo da Entrega CEAPA" value={registro.motivo_entrega_ceapa} />
-            </div>
-            <div>
-              <DetailsField label="Latitude da Soltura" value={registro.latitude_soltura} />
-              <DetailsField label="Longitude da Soltura" value={registro.longitude_soltura} />
-              <DetailsField label="Outras Informações de Destinação" value={registro.outro_destinacao} />
-            </div>
-          </CardContent>
-        </Card>
+        <InformacoesDestinacaoCard 
+          destinacao={registro.destinacao}
+          numero_termo_entrega={registro.numero_termo_entrega}
+          hora_guarda_ceapa={registro.hora_guarda_ceapa}
+          motivo_entrega_ceapa={registro.motivo_entrega_ceapa}
+          latitude_soltura={registro.latitude_soltura}
+          longitude_soltura={registro.longitude_soltura}
+          outro_destinacao={registro.outro_destinacao}
+        />
       </div>
     </Layout>
   );
