@@ -1,7 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { resgateSchema, type ResgateFormData } from '@/schemas/resgateSchema';
 
 // Initialize Supabase client
 const supabaseUrl = 'https://oiwwptnqaunsyhpkwbrz.supabase.co';
@@ -47,62 +49,45 @@ export const regioes = [
   'Vicente Pires (RA XXX)'
 ];
 
-interface FormData {
-  data: string;
-  regiaoAdministrativa: string;
-  origem: string;
-  latitudeOrigem: string;
-  longitudeOrigem: string;
-  desfechoApreensao: string;
-  numeroTCO: string;
-  outroDesfecho: string;
-  estadoSaude: string;
-  atropelamento: string;
-  estagioVida: string;
-  quantidade: number;
-  destinacao: string;
-  numeroTermoEntrega: string;
-  horaGuardaCEAPA: string;
-  motivoEntregaCEAPA: string;
-  latitudeSoltura: string;
-  longitudeSoltura: string;
-  outroDestinacao: string;
-  classeTaxonomica: string;
-  nomePopular: string;
-}
-
 interface Especie {
   nome_popular: string;
 }
 
 export const useFormResgateData = () => {
-  const [formData, setFormData] = useState<FormData>({
-    data: '',
-    regiaoAdministrativa: '',
-    origem: '',
-    latitudeOrigem: '',
-    longitudeOrigem: '',
-    desfechoApreensao: '',
-    numeroTCO: '',
-    outroDesfecho: '',
-    estadoSaude: '',
-    atropelamento: '',
-    estagioVida: '',
-    quantidade: 1,
-    destinacao: '',
-    numeroTermoEntrega: '',
-    horaGuardaCEAPA: '',
-    motivoEntregaCEAPA: '',
-    latitudeSoltura: '',
-    longitudeSoltura: '',
-    outroDestinacao: '',
-    classeTaxonomica: '',
-    nomePopular: ''
-  });
-
   const [especiesLista, setEspeciesLista] = useState<Especie[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const form = useForm<ResgateFormData>({
+    resolver: zodResolver(resgateSchema),
+    defaultValues: {
+      data: '',
+      regiaoAdministrativa: '',
+      origem: '',
+      latitudeOrigem: '',
+      longitudeOrigem: '',
+      desfechoApreensao: '',
+      numeroTCO: '',
+      outroDesfecho: '',
+      estadoSaude: '',
+      atropelamento: '',
+      estagioVida: '',
+      quantidade: 1,
+      destinacao: '',
+      numeroTermoEntrega: '',
+      horaGuardaCEAPA: '',
+      motivoEntregaCEAPA: '',
+      latitudeSoltura: '',
+      longitudeSoltura: '',
+      outroDestinacao: '',
+      classeTaxonomica: '',
+      nomePopular: ''
+    }
+  });
+
+  const { watch, setValue, formState } = form;
+  const formData = watch();
+  const { errors } = formState;
 
   // Carregar lista de espécies com base na classe taxonômica selecionada
   useEffect(() => {
@@ -171,66 +156,44 @@ export const useFormResgateData = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setValue(name as any, value);
   };
 
   const handleSelectChange = (name: string, value: string) => {
+    setValue(name as any, value);
+    
     if (name === 'classeTaxonomica') {
       // Resetar nome popular quando mudar classe taxonômica
-      setFormData(prev => ({ ...prev, [name]: value, nomePopular: '' }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setValue('nomePopular', '');
     }
   };
 
   const handleQuantidadeChange = (operacao: 'aumentar' | 'diminuir') => {
-    setFormData(prev => ({
-      ...prev,
-      quantidade: operacao === 'aumentar' 
-        ? prev.quantidade + 1 
-        : Math.max(1, prev.quantidade - 1)
-    }));
+    const currentValue = formData.quantidade;
+    setValue('quantidade', operacao === 'aumentar' 
+      ? currentValue + 1 
+      : Math.max(1, currentValue - 1)
+    );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Form submitted:', formData);
+  const handleSubmit = form.handleSubmit((data) => {
+    console.log('Form submitted:', data);
     toast.success('Registro de resgate cadastrado com sucesso!');
+    
     // Resetar formulário após envio
-    setFormData({
-      data: '',
-      regiaoAdministrativa: '',
-      origem: '',
-      latitudeOrigem: '',
-      longitudeOrigem: '',
-      desfechoApreensao: '',
-      numeroTCO: '',
-      outroDesfecho: '',
-      estadoSaude: '',
-      atropelamento: '',
-      estagioVida: '',
-      quantidade: 1,
-      destinacao: '',
-      numeroTermoEntrega: '',
-      horaGuardaCEAPA: '',
-      motivoEntregaCEAPA: '',
-      latitudeSoltura: '',
-      longitudeSoltura: '',
-      outroDestinacao: '',
-      classeTaxonomica: '',
-      nomePopular: ''
-    });
-  };
+    form.reset();
+  });
 
   return {
+    form,
     formData,
+    errors,
     especiesLista,
     loading,
     error,
     handleChange,
     handleSelectChange,
     handleQuantidadeChange,
-    handleSubmit,
-    setFormData
+    handleSubmit
   };
 };

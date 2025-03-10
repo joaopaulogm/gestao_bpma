@@ -22,6 +22,11 @@ interface EspeciesFieldProps {
   error: string;
   onClasseTaxonomicaChange: (value: string) => void;
   onNomePopularChange: (value: string) => void;
+  errors?: {
+    classeTaxonomica?: string;
+    nomePopular?: string;
+  };
+  required?: boolean;
 }
 
 const EspeciesField: React.FC<EspeciesFieldProps> = ({
@@ -31,16 +36,18 @@ const EspeciesField: React.FC<EspeciesFieldProps> = ({
   loading,
   error,
   onClasseTaxonomicaChange,
-  onNomePopularChange
+  onNomePopularChange,
+  errors = {},
+  required = false
 }) => {
   return (
     <FormSection>
-      <FormField id="classeTaxonomica" label="Classe Taxonômica">
+      <FormField id="classeTaxonomica" label="Classe Taxonômica" error={errors.classeTaxonomica} required={required}>
         <Select 
           onValueChange={onClasseTaxonomicaChange}
           value={classeTaxonomica}
         >
-          <SelectTrigger>
+          <SelectTrigger className={errors.classeTaxonomica ? "border-red-500" : ""}>
             <SelectValue placeholder="Selecione a classe taxonômica" />
           </SelectTrigger>
           <SelectContent>
@@ -56,8 +63,9 @@ const EspeciesField: React.FC<EspeciesFieldProps> = ({
         <FormField 
           id="nomePopular" 
           label="Nome Popular" 
-          error={error}
+          error={error || errors.nomePopular}
           loading={loading}
+          required={required}
         >
           {loading ? (
             <div className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground">
@@ -69,7 +77,7 @@ const EspeciesField: React.FC<EspeciesFieldProps> = ({
               value={nomePopular}
               disabled={loading || especiesLista.length === 0}
             >
-              <SelectTrigger>
+              <SelectTrigger className={errors.nomePopular ? "border-red-500" : ""}>
                 <SelectValue placeholder={`Selecione a espécie de ${classeTaxonomica.toLowerCase()}`} />
               </SelectTrigger>
               <SelectContent className="max-h-80">

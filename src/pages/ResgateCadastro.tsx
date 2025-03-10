@@ -12,10 +12,13 @@ import AnimalInfoFields from '@/components/resgate/AnimalInfoFields';
 import DestinacaoField from '@/components/resgate/DestinacaoField';
 import EspeciesField from '@/components/resgate/EspeciesField';
 import { useFormResgateData, regioes } from '@/hooks/useFormResgateData';
+import { FormProvider } from 'react-hook-form';
 
 const ResgateCadastro = () => {
   const {
+    form,
     formData,
+    errors,
     especiesLista,
     loading,
     error,
@@ -30,99 +33,142 @@ const ResgateCadastro = () => {
       <div className="bg-white rounded-lg border border-fauna-border p-6 animate-fade-in">
         <h2 className="text-lg text-gray-600 mb-6">Preencha os dados do registro de atividade</h2>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Data */}
-          <FormSection>
-            <FormField id="data" label="Data">
-              <Input
-                id="data"
-                name="data"
-                value={formData.data}
-                onChange={handleChange}
-                placeholder="DD/MM/AAAA"
+        <FormProvider {...form}>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Data */}
+            <FormSection>
+              <FormField 
+                id="data" 
+                label="Data" 
+                error={errors.data?.message}
+                required
+              >
+                <Input
+                  id="data"
+                  name="data"
+                  value={formData.data}
+                  onChange={handleChange}
+                  placeholder="DD/MM/AAAA"
+                  className={errors.data ? "border-red-500" : ""}
+                />
+              </FormField>
+            </FormSection>
+            
+            {/* Região Administrativa */}
+            <FormSection>
+              <RegiaoAdministrativaField
+                regioes={regioes}
+                value={formData.regiaoAdministrativa}
+                onChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
+                error={errors.regiaoAdministrativa?.message}
                 required
               />
-            </FormField>
-          </FormSection>
-          
-          {/* Região Administrativa */}
-          <FormSection>
-            <RegiaoAdministrativaField
-              regioes={regioes}
-              value={formData.regiaoAdministrativa}
-              onChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
+            </FormSection>
+            
+            {/* Origem e Coordenadas */}
+            <OrigemField
+              origem={formData.origem}
+              latitudeOrigem={formData.latitudeOrigem}
+              longitudeOrigem={formData.longitudeOrigem}
+              onOrigemChange={(value) => handleSelectChange('origem', value)}
+              onLatitudeChange={handleChange}
+              onLongitudeChange={handleChange}
+              errors={{
+                origem: errors.origem?.message,
+                latitudeOrigem: errors.latitudeOrigem?.message,
+                longitudeOrigem: errors.longitudeOrigem?.message
+              }}
+              required
             />
-          </FormSection>
-          
-          {/* Origem e Coordenadas */}
-          <OrigemField
-            origem={formData.origem}
-            latitudeOrigem={formData.latitudeOrigem}
-            longitudeOrigem={formData.longitudeOrigem}
-            onOrigemChange={(value) => handleSelectChange('origem', value)}
-            onLatitudeChange={handleChange}
-            onLongitudeChange={handleChange}
-          />
-          
-          {/* Desfecho da Apreensão (condicional) */}
-          <DesfechoApreensaoField
-            origem={formData.origem}
-            desfechoApreensao={formData.desfechoApreensao}
-            numeroTCO={formData.numeroTCO}
-            outroDesfecho={formData.outroDesfecho}
-            onDesfechoChange={(value) => handleSelectChange('desfechoApreensao', value)}
-            onNumeroTCOChange={handleChange}
-            onOutroDesfechoChange={handleChange}
-          />
-          
-          {/* Estado de Saúde, Atropelamento, Estágio da Vida, Quantidade */}
-          <AnimalInfoFields
-            estadoSaude={formData.estadoSaude}
-            atropelamento={formData.atropelamento}
-            estagioVida={formData.estagioVida}
-            quantidade={formData.quantidade}
-            onEstadoSaudeChange={(value) => handleSelectChange('estadoSaude', value)}
-            onAtropelamentoChange={(value) => handleSelectChange('atropelamento', value)}
-            onEstagioVidaChange={(value) => handleSelectChange('estagioVida', value)}
-            onQuantidadeChange={handleChange}
-            onQuantidadeDecrease={() => handleQuantidadeChange('diminuir')}
-            onQuantidadeIncrease={() => handleQuantidadeChange('aumentar')}
-          />
-          
-          {/* Destinação e campos relacionados */}
-          <DestinacaoField
-            destinacao={formData.destinacao}
-            numeroTermoEntrega={formData.numeroTermoEntrega}
-            horaGuardaCEAPA={formData.horaGuardaCEAPA}
-            motivoEntregaCEAPA={formData.motivoEntregaCEAPA}
-            latitudeSoltura={formData.latitudeSoltura}
-            longitudeSoltura={formData.longitudeSoltura}
-            outroDestinacao={formData.outroDestinacao}
-            onDestinacaoChange={(value) => handleSelectChange('destinacao', value)}
-            onInputChange={handleChange}
-            onTextareaChange={handleChange}
-          />
-          
-          {/* Classe Taxonômica e Nome Popular */}
-          <EspeciesField
-            classeTaxonomica={formData.classeTaxonomica}
-            nomePopular={formData.nomePopular}
-            especiesLista={especiesLista}
-            loading={loading}
-            error={error}
-            onClasseTaxonomicaChange={(value) => handleSelectChange('classeTaxonomica', value)}
-            onNomePopularChange={(value) => handleSelectChange('nomePopular', value)}
-          />
-          
-          <div className="pt-4">
-            <Button 
-              type="submit" 
-              className="w-full bg-fauna-blue hover:bg-opacity-90 text-white"
-            >
-              Salvar Registro
-            </Button>
-          </div>
-        </form>
+            
+            {/* Desfecho da Apreensão (condicional) */}
+            <DesfechoApreensaoField
+              origem={formData.origem}
+              desfechoApreensao={formData.desfechoApreensao}
+              numeroTCO={formData.numeroTCO}
+              outroDesfecho={formData.outroDesfecho}
+              onDesfechoChange={(value) => handleSelectChange('desfechoApreensao', value)}
+              onNumeroTCOChange={handleChange}
+              onOutroDesfechoChange={handleChange}
+              errors={{
+                desfechoApreensao: errors.desfechoApreensao?.message,
+                numeroTCO: errors.numeroTCO?.message,
+                outroDesfecho: errors.outroDesfecho?.message
+              }}
+              required
+            />
+            
+            {/* Estado de Saúde, Atropelamento, Estágio da Vida, Quantidade */}
+            <AnimalInfoFields
+              estadoSaude={formData.estadoSaude}
+              atropelamento={formData.atropelamento}
+              estagioVida={formData.estagioVida}
+              quantidade={formData.quantidade}
+              onEstadoSaudeChange={(value) => handleSelectChange('estadoSaude', value)}
+              onAtropelamentoChange={(value) => handleSelectChange('atropelamento', value)}
+              onEstagioVidaChange={(value) => handleSelectChange('estagioVida', value)}
+              onQuantidadeChange={handleChange}
+              onQuantidadeDecrease={() => handleQuantidadeChange('diminuir')}
+              onQuantidadeIncrease={() => handleQuantidadeChange('aumentar')}
+              errors={{
+                estadoSaude: errors.estadoSaude?.message,
+                atropelamento: errors.atropelamento?.message,
+                estagioVida: errors.estagioVida?.message,
+                quantidade: errors.quantidade?.message
+              }}
+              required
+            />
+            
+            {/* Destinação e campos relacionados */}
+            <DestinacaoField
+              destinacao={formData.destinacao}
+              numeroTermoEntrega={formData.numeroTermoEntrega}
+              horaGuardaCEAPA={formData.horaGuardaCEAPA}
+              motivoEntregaCEAPA={formData.motivoEntregaCEAPA}
+              latitudeSoltura={formData.latitudeSoltura}
+              longitudeSoltura={formData.longitudeSoltura}
+              outroDestinacao={formData.outroDestinacao}
+              onDestinacaoChange={(value) => handleSelectChange('destinacao', value)}
+              onInputChange={handleChange}
+              onTextareaChange={handleChange}
+              errors={{
+                destinacao: errors.destinacao?.message,
+                numeroTermoEntrega: errors.numeroTermoEntrega?.message,
+                horaGuardaCEAPA: errors.horaGuardaCEAPA?.message,
+                motivoEntregaCEAPA: errors.motivoEntregaCEAPA?.message,
+                latitudeSoltura: errors.latitudeSoltura?.message,
+                longitudeSoltura: errors.longitudeSoltura?.message,
+                outroDestinacao: errors.outroDestinacao?.message
+              }}
+              required
+            />
+            
+            {/* Classe Taxonômica e Nome Popular */}
+            <EspeciesField
+              classeTaxonomica={formData.classeTaxonomica}
+              nomePopular={formData.nomePopular}
+              especiesLista={especiesLista}
+              loading={loading}
+              error={error}
+              onClasseTaxonomicaChange={(value) => handleSelectChange('classeTaxonomica', value)}
+              onNomePopularChange={(value) => handleSelectChange('nomePopular', value)}
+              errors={{
+                classeTaxonomica: errors.classeTaxonomica?.message,
+                nomePopular: errors.nomePopular?.message
+              }}
+              required
+            />
+            
+            <div className="pt-4">
+              <Button 
+                type="submit" 
+                className="w-full bg-fauna-blue hover:bg-opacity-90 text-white"
+              >
+                Salvar Registro
+              </Button>
+            </div>
+          </form>
+        </FormProvider>
       </div>
     </Layout>
   );

@@ -20,6 +20,12 @@ interface DesfechoApreensaoFieldProps {
   onDesfechoChange: (value: string) => void;
   onNumeroTCOChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onOutroDesfechoChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  errors?: {
+    desfechoApreensao?: string;
+    numeroTCO?: string;
+    outroDesfecho?: string;
+  };
+  required?: boolean;
 }
 
 const DesfechoApreensaoField: React.FC<DesfechoApreensaoFieldProps> = ({
@@ -29,18 +35,20 @@ const DesfechoApreensaoField: React.FC<DesfechoApreensaoFieldProps> = ({
   outroDesfecho,
   onDesfechoChange,
   onNumeroTCOChange,
-  onOutroDesfechoChange
+  onOutroDesfechoChange,
+  errors = {},
+  required = false
 }) => {
   if (origem !== 'Apreensão') return null;
 
   return (
     <FormSection>
-      <FormField id="desfechoApreensao" label="Desfecho da Apreensão">
+      <FormField id="desfechoApreensao" label="Desfecho da Apreensão" error={errors.desfechoApreensao} required={required}>
         <Select 
           onValueChange={onDesfechoChange}
           value={desfechoApreensao}
         >
-          <SelectTrigger>
+          <SelectTrigger className={errors.desfechoApreensao ? "border-red-500" : ""}>
             <SelectValue placeholder="Selecione o desfecho" />
           </SelectTrigger>
           <SelectContent>
@@ -52,37 +60,37 @@ const DesfechoApreensaoField: React.FC<DesfechoApreensaoFieldProps> = ({
       </FormField>
       
       {desfechoApreensao === 'TCO PMDF' && (
-        <FormField id="numeroTCO" label="Nº TCO PMDF">
+        <FormField id="numeroTCO" label="Nº TCO PMDF" error={errors.numeroTCO} required={required}>
           <Input
             id="numeroTCO"
             name="numeroTCO"
             value={numeroTCO}
             onChange={onNumeroTCOChange}
-            required
+            className={errors.numeroTCO ? "border-red-500" : ""}
           />
         </FormField>
       )}
       
       {desfechoApreensao === 'TCO PCDF' && (
-        <FormField id="numeroTCO" label="Nº TCO PCDF">
+        <FormField id="numeroTCO" label="Nº TCO PCDF" error={errors.numeroTCO} required={required}>
           <Input
             id="numeroTCO"
             name="numeroTCO"
             value={numeroTCO}
             onChange={onNumeroTCOChange}
-            required
+            className={errors.numeroTCO ? "border-red-500" : ""}
           />
         </FormField>
       )}
       
       {desfechoApreensao === 'Outros' && (
-        <FormField id="outroDesfecho" label="Descreva o Desfecho">
+        <FormField id="outroDesfecho" label="Descreva o Desfecho" error={errors.outroDesfecho} required={required}>
           <Textarea
             id="outroDesfecho"
             name="outroDesfecho"
             value={outroDesfecho}
             onChange={onOutroDesfechoChange}
-            required
+            className={errors.outroDesfecho ? "border-red-500" : ""}
           />
         </FormField>
       )}

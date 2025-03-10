@@ -8,6 +8,7 @@ interface FormFieldProps {
   children: React.ReactNode;
   error?: string;
   loading?: boolean;
+  required?: boolean;
 }
 
 /**
@@ -18,20 +19,22 @@ const FormField: React.FC<FormFieldProps> = ({
   label, 
   children, 
   error, 
-  loading 
+  loading,
+  required = false
 }) => {
   return (
     <div className="space-y-2">
       <Label htmlFor={id} className="flex items-center">
         {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
         {loading && <span className="ml-2 text-gray-500 text-sm">(Carregando...)</span>}
       </Label>
+      
+      {children}
       
       {error && (
         <div className="text-red-500 text-sm">{error}</div>
       )}
-      
-      {children}
     </div>
   );
 };

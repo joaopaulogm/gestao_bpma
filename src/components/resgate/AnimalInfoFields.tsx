@@ -25,6 +25,13 @@ interface AnimalInfoFieldsProps {
   onQuantidadeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onQuantidadeDecrease: () => void;
   onQuantidadeIncrease: () => void;
+  errors?: {
+    estadoSaude?: string;
+    atropelamento?: string;
+    estagioVida?: string;
+    quantidade?: string;
+  };
+  required?: boolean;
 }
 
 const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
@@ -37,16 +44,18 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
   onEstagioVidaChange,
   onQuantidadeChange,
   onQuantidadeDecrease,
-  onQuantidadeIncrease
+  onQuantidadeIncrease,
+  errors = {},
+  required = false
 }) => {
   return (
     <FormSection>
-      <FormField id="estadoSaude" label="Estado de Saúde">
+      <FormField id="estadoSaude" label="Estado de Saúde" error={errors.estadoSaude} required={required}>
         <Select 
           onValueChange={onEstadoSaudeChange}
           value={estadoSaude}
         >
-          <SelectTrigger>
+          <SelectTrigger className={errors.estadoSaude ? "border-red-500" : ""}>
             <SelectValue placeholder="Selecione o estado de saúde" />
           </SelectTrigger>
           <SelectContent>
@@ -59,7 +68,13 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
       </FormField>
       
       <div className="space-y-2">
-        <Label>Animal sofreu atropelamento?</Label>
+        <Label className="flex items-center">
+          Animal sofreu atropelamento?
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </Label>
+        {errors.atropelamento && (
+          <div className="text-red-500 text-sm">{errors.atropelamento}</div>
+        )}
         <RadioGroup 
           value={atropelamento} 
           onValueChange={onAtropelamentoChange}
@@ -76,12 +91,12 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
         </RadioGroup>
       </div>
       
-      <FormField id="estagioVida" label="Estágio da Vida">
+      <FormField id="estagioVida" label="Estágio da Vida" error={errors.estagioVida} required={required}>
         <Select 
           onValueChange={onEstagioVidaChange}
           value={estagioVida}
         >
-          <SelectTrigger>
+          <SelectTrigger className={errors.estagioVida ? "border-red-500" : ""}>
             <SelectValue placeholder="Selecione o estágio da vida" />
           </SelectTrigger>
           <SelectContent>
@@ -91,7 +106,7 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
         </Select>
       </FormField>
       
-      <FormField id="quantidade" label="Quantidade">
+      <FormField id="quantidade" label="Quantidade" error={errors.quantidade} required={required}>
         <div className="flex items-center space-x-2">
           <Button 
             type="button" 
@@ -107,9 +122,8 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
             type="number"
             value={quantidade}
             onChange={onQuantidadeChange}
-            className="text-center"
+            className={`text-center ${errors.quantidade ? "border-red-500" : ""}`}
             min="1"
-            required
           />
           <Button 
             type="button" 

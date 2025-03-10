@@ -18,6 +18,12 @@ interface OrigemFieldProps {
   onOrigemChange: (value: string) => void;
   onLatitudeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onLongitudeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  errors?: {
+    origem?: string;
+    latitudeOrigem?: string;
+    longitudeOrigem?: string;
+  };
+  required?: boolean;
 }
 
 const OrigemField: React.FC<OrigemFieldProps> = ({
@@ -26,16 +32,18 @@ const OrigemField: React.FC<OrigemFieldProps> = ({
   longitudeOrigem,
   onOrigemChange,
   onLatitudeChange,
-  onLongitudeChange
+  onLongitudeChange,
+  errors = {},
+  required = false
 }) => {
   return (
     <FormSection>
-      <FormField id="origem" label="Origem">
+      <FormField id="origem" label="Origem" error={errors.origem} required={required}>
         <Select 
           onValueChange={onOrigemChange}
           value={origem}
         >
-          <SelectTrigger>
+          <SelectTrigger className={errors.origem ? "border-red-500" : ""}>
             <SelectValue placeholder="Selecione a origem" />
           </SelectTrigger>
           <SelectContent>
@@ -47,24 +55,24 @@ const OrigemField: React.FC<OrigemFieldProps> = ({
       
       {(origem === 'Resgate de Fauna' || origem === 'Apreensão') && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField id="latitudeOrigem" label={`Latitude do ${origem} (DD - Decimal Degres)`}>
+          <FormField id="latitudeOrigem" label={`Latitude do ${origem} (DD - Decimal Degres)`} error={errors.latitudeOrigem} required={required}>
             <Input
               id="latitudeOrigem"
               name="latitudeOrigem"
               value={latitudeOrigem}
               onChange={onLatitudeChange}
               placeholder="Ex: -15.7801"
-              required
+              className={errors.latitudeOrigem ? "border-red-500" : ""}
             />
           </FormField>
-          <FormField id="longitudeOrigem" label={`Longitude do ${origem} (DD - Decimal Degres)`}>
+          <FormField id="longitudeOrigem" label={`Longitude do ${origem} (DD - Decimal Degres)`} error={errors.longitudeOrigem} required={required}>
             <Input
               id="longitudeOrigem"
               name="longitudeOrigem"
               value={longitudeOrigem}
               onChange={onLongitudeChange}
               placeholder="Ex: -47.9292"
-              required
+              className={errors.longitudeOrigem ? "border-red-500" : ""}
             />
           </FormField>
         </div>

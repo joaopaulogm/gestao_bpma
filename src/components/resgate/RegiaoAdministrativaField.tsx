@@ -7,12 +7,16 @@ interface RegiaoAdministrativaFieldProps {
   regioes: string[];
   value: string;
   onChange: (value: string) => void;
+  error?: string;
+  required?: boolean;
 }
 
 const RegiaoAdministrativaField: React.FC<RegiaoAdministrativaFieldProps> = ({ 
   regioes, 
   value, 
-  onChange 
+  onChange,
+  error,
+  required = false
 }) => {
   const [filtro, setFiltro] = useState('');
   const [regioesFiltradas, setRegioesFiltradas] = useState(regioes);
@@ -40,7 +44,7 @@ const RegiaoAdministrativaField: React.FC<RegiaoAdministrativaFieldProps> = ({
   };
 
   return (
-    <FormField id="regiaoAdministrativa" label="Região Administrativa">
+    <FormField id="regiaoAdministrativa" label="Região Administrativa" error={error} required={required}>
       <div className="relative">
         <Input
           id="regiaoAdministrativa"
@@ -49,7 +53,7 @@ const RegiaoAdministrativaField: React.FC<RegiaoAdministrativaFieldProps> = ({
           onChange={handleInputChange}
           placeholder="Digite para buscar ou selecione uma região"
           autoComplete="off"
-          required
+          className={error ? "border-red-500" : ""}
         />
         {filtro && (
           <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md mt-1 max-h-60 overflow-y-auto">
