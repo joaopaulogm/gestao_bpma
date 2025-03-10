@@ -1,8 +1,13 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { FormProvider } from 'react-hook-form';
 import { useFormResgateData } from '@/hooks/useFormResgateData';
 import { regioes } from '@/constants/regioes';
+import { Filter } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Component imports
 import ResgateFormHeader from '@/components/resgate/ResgateFormHeader';
@@ -16,6 +21,12 @@ import AnimalInfoFields from '@/components/resgate/AnimalInfoFields';
 import DestinacaoField from '@/components/resgate/DestinacaoField';
 
 const ResgateCadastro = () => {
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterTipo, setFilterTipo] = useState('');
+  const [filterEstado, setFilterEstado] = useState('');
+  const [filterDestinacao, setFilterDestinacao] = useState('');
+  const [filterClasse, setFilterClasse] = useState('');
+  
   const {
     form,
     formData,
@@ -29,8 +40,144 @@ const ResgateCadastro = () => {
     isSubmitting
   } = useFormResgateData();
 
+  // Apply filters to the form data
+  const applyFilters = () => {
+    if (filterTipo) {
+      handleSelectChange('origem', filterTipo);
+    }
+    
+    if (filterEstado) {
+      handleSelectChange('estadoSaude', filterEstado);
+    }
+    
+    if (filterDestinacao) {
+      handleSelectChange('destinacao', filterDestinacao);
+    }
+    
+    if (filterClasse) {
+      handleSelectChange('classeTaxonomica', filterClasse);
+    }
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setFilterTipo('');
+    setFilterEstado('');
+    setFilterDestinacao('');
+    setFilterClasse('');
+  };
+
   return (
     <Layout title="Registro de Atividade de Resgate de Fauna" showBackButton>
+      <div className="mb-6">
+        <div className="flex justify-end gap-2">
+          <Button 
+            variant="outline" 
+            className="gap-2"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4" />
+            Filtros Rápidos
+          </Button>
+        </div>
+        
+        {showFilters && (
+          <Card className="border border-fauna-border mt-4">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-medium text-fauna-blue">Pré-configurar formulário</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <Select 
+                  onValueChange={setFilterTipo}
+                  value={filterTipo}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tipo de ocorrência" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos os tipos</SelectItem>
+                    <SelectItem value="Resgate de Fauna">Resgate de Fauna</SelectItem>
+                    <SelectItem value="Apreensão">Apreensão</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Select 
+                  onValueChange={setFilterEstado}
+                  value={filterEstado}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Estado de saúde" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos os estados</SelectItem>
+                    <SelectItem value="Bom">Bom</SelectItem>
+                    <SelectItem value="Regular">Regular</SelectItem>
+                    <SelectItem value="Ruim">Ruim</SelectItem>
+                    <SelectItem value="Óbito">Óbito</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Select 
+                  onValueChange={setFilterClasse}
+                  value={filterClasse}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Classe taxonômica" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todas as classes</SelectItem>
+                    <SelectItem value="Aves">Aves</SelectItem>
+                    <SelectItem value="Mamíferos">Mamíferos</SelectItem>
+                    <SelectItem value="Répteis">Répteis</SelectItem>
+                    <SelectItem value="Anfíbios">Anfíbios</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Select 
+                  onValueChange={setFilterDestinacao}
+                  value={filterDestinacao}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Destinação" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todas as destinações</SelectItem>
+                    <SelectItem value="CETAS/IBAMA">CETAS/IBAMA</SelectItem>
+                    <SelectItem value="HFAUS/IBRAM">HFAUS/IBRAM</SelectItem>
+                    <SelectItem value="CEAPA/BPMA">CEAPA/BPMA</SelectItem>
+                    <SelectItem value="Soltura">Soltura</SelectItem>
+                    <SelectItem value="Óbito">Óbito</SelectItem>
+                    <SelectItem value="Outros">Outros</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="col-span-full flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={clearFilters}
+                >
+                  Limpar
+                </Button>
+                <Button
+                  variant="default"
+                  onClick={applyFilters}
+                >
+                  Aplicar aos Campos
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+      
       <div className="bg-white rounded-lg border border-fauna-border p-6 animate-fade-in">
         <ResgateFormHeader />
         
