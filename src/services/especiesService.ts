@@ -21,16 +21,16 @@ export const buscarEspeciesPorClasse = async (classeTaxonomica: string): Promise
   let tabela = '';
   switch (classeTaxonomica) {
     case 'Ave':
-      tabela = 'aves';
+      tabela = 'lista_ave';
       break;
     case 'Mamífero':
-      tabela = 'mamiferos';
+      tabela = 'lista_mamifero';
       break;
     case 'Réptil':
-      tabela = 'repteis';
+      tabela = 'lista_reptil';
       break;
     case 'Peixe':
-      tabela = 'peixes';
+      tabela = 'lista_peixe';
       break;
     default:
       return { data: [], error: null };
