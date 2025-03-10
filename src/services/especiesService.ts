@@ -40,32 +40,44 @@ export const buscarEspeciesPorClasse = async (classeTaxonomica: string): Promise
     // Verificando as permissões para depuração
     console.log(`Verificando acesso à tabela: ${tabela}`);
     
+    // Primeiro, verificamos se a tabela existe
+    const { error: tableError } = await supabase
+      .from(tabela)
+      .select('count(*)')
+      .limit(1);
+      
+    if (tableError) {
+      console.error(`Erro ao verificar existência da tabela ${tabela}:`, tableError);
+      return { data: [], error: `A tabela ${tabela} não está acessível. Erro: ${tableError.message}` };
+    }
+    
+    // Agora buscamos os dados
     const { data, error } = await supabase
       .from(tabela)
       .select('nome_popular')
       .order('nome_popular');
       
     if (error) {
-      console.error('Erro ao buscar espécies:', error);
+      console.error(`Erro ao buscar espécies da tabela ${tabela}:`, error);
       return { data: [], error: error.message };
     }
     
-    console.log('Dados recebidos:', data);
+    console.log(`Dados recebidos da tabela ${tabela}:`, data);
     
     if (!data || !Array.isArray(data)) {
-      console.log('Nenhum dado encontrado ou formato inválido');
+      console.log(`Nenhum dado encontrado na tabela ${tabela} ou formato inválido`);
       return { data: [], error: null };
     }
     
     // Garantir que os dados têm a estrutura correta
     const listaFiltrada = data
       .filter(item => item && typeof item === 'object' && 'nome_popular' in item)
-      .map(item => ({ nome_popular: item.nome_popular }));
+      .map(item => ({ nome_popular: item.nome_popular || 'Nome não disponível' }));
       
-    console.log('Lista filtrada:', listaFiltrada);
+    console.log(`Lista filtrada de ${tabela}:`, listaFiltrada);
     return { data: listaFiltrada, error: null };
   } catch (err) {
-    console.error('Exceção ao buscar espécies:', err);
+    console.error(`Exceção ao buscar espécies da tabela ${tabela}:`, err);
     return { data: [], error: 'Ocorreu um erro ao carregar a lista de espécies' };
   }
 };
