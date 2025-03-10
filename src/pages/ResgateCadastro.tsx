@@ -90,11 +90,15 @@ const ResgateCadastro = () => {
   const [especiesLista, setEspeciesLista] = useState<any[]>([]);
   const [regiaoFiltrada, setRegiaoFiltrada] = useState('');
   const [regioesExibidas, setRegioesExibidas] = useState(regioes);
+  const [loading, setLoading] = useState(false);
 
   // Carregar lista de espécies com base na classe taxonômica selecionada
   useEffect(() => {
     const buscarEspecies = async () => {
       if (!formData.classeTaxonomica) return;
+      
+      setLoading(true);
+      console.log(`Buscando espécies para: ${formData.classeTaxonomica}`);
       
       let tabela = '';
       switch (formData.classeTaxonomica) {
@@ -111,19 +115,29 @@ const ResgateCadastro = () => {
           tabela = 'lista_peixe';
           break;
         default:
+          setLoading(false);
           return;
       }
       
-      const { data, error } = await supabase
-        .from(tabela)
-        .select('nome_popular')
-        .order('nome_popular');
-        
-      if (error) {
-        console.error('Erro ao buscar espécies:', error);
-        toast.error('Erro ao carregar lista de espécies');
-      } else {
-        setEspeciesLista(data || []);
+      try {
+        const { data, error } = await supabase
+          .from(tabela)
+          .select('nome_popular')
+          .order('nome_popular');
+          
+        if (error) {
+          console.error('Erro ao buscar espécies:', error);
+          toast.error(`Erro ao carregar lista de espécies: ${error.message}`);
+        } else {
+          console.log('Espécies carregadas:', data?.length || 0);
+          console.log('Exemplo de espécie:', data?.[0]);
+          setEspeciesLista(data || []);
+        }
+      } catch (err) {
+        console.error('Exceção ao buscar espécies:', err);
+        toast.error('Ocorreu um erro ao carregar a lista de espécies');
+      } finally {
+        setLoading(false);
       }
     };
     
@@ -148,7 +162,12 @@ const ResgateCadastro = () => {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'classeTaxonomica') {
+      // Resetar nome popular quando mudar classe taxonômica
+      setFormData(prev => ({ ...prev, [name]: value, nomePopular: '' }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleRegiaoInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -567,20 +586,30 @@ const ResgateCadastro = () => {
           {/* Nome Popular (condicional, baseado na classe taxonômica) */}
           {formData.classeTaxonomica && (
             <div className="space-y-2">
-              <Label htmlFor="nomePopular">Nome Popular</Label>
+              <Label htmlFor="nomePopular">
+                Nome Popular 
+                {loading && <span className="ml-2 text-gray-500 text-sm">(Carregando...)</span>}
+              </Label>
               <Select 
                 onValueChange={(value) => handleSelectChange('nomePopular', value)}
                 value={formData.nomePopular}
+                disabled={loading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={`Selecione a espécie de ${formData.classeTaxonomica.toLowerCase()}`} />
                 </SelectTrigger>
                 <SelectContent className="max-h-80">
-                  {especiesLista.map((especie, index) => (
-                    <SelectItem key={index} value={especie.nome_popular}>
-                      {especie.nome_popular}
+                  {especiesLista.length > 0 ? (
+                    especiesLista.map((especie, index) => (
+                      <SelectItem key={index} value={especie.nome_popular}>
+                        {especie.nome_popular}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>
+                      {loading ? 'Carregando espécies...' : 'Nenhuma espécie encontrada'}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
