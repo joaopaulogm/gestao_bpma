@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Especie {
@@ -9,6 +10,25 @@ export interface Especie {
   estado_de_conservacao: string;
   tipo_de_fauna: string;
 }
+
+export const buscarTodasEspecies = async (): Promise<Especie[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("especies_fauna")
+      .select("*")
+      .order("nome_popular");
+    
+    if (error) {
+      console.error("Erro ao buscar espécies:", error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error("Erro ao buscar espécies:", error);
+    return [];
+  }
+};
 
 export const buscarEspeciesPorClasse = async (
   classe?: string
@@ -61,7 +81,7 @@ export const buscarEspeciePorId = async (id: string): Promise<Especie | null> =>
       .from("especies_fauna")
       .select("*")
       .eq("id", id)
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error("Erro ao buscar espécie por ID:", error);
@@ -81,7 +101,7 @@ export const cadastrarEspecie = async (especie: Omit<Especie, 'id'>): Promise<Es
       .from("especies_fauna")
       .insert([especie])
       .select()
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error("Erro ao cadastrar espécie:", error);
@@ -92,5 +112,45 @@ export const cadastrarEspecie = async (especie: Omit<Especie, 'id'>): Promise<Es
   } catch (error) {
     console.error("Erro ao cadastrar espécie:", error);
     return null;
+  }
+};
+
+export const atualizarEspecie = async (id: string, especie: Omit<Especie, 'id'>): Promise<Especie | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("especies_fauna")
+      .update(especie)
+      .eq("id", id)
+      .select()
+      .maybeSingle();
+    
+    if (error) {
+      console.error("Erro ao atualizar espécie:", error);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Erro ao atualizar espécie:", error);
+    return null;
+  }
+};
+
+export const excluirEspecie = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("especies_fauna")
+      .delete()
+      .eq("id", id);
+    
+    if (error) {
+      console.error("Erro ao excluir espécie:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Erro ao excluir espécie:", error);
+    return false;
   }
 };

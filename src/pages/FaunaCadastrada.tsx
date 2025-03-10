@@ -1,35 +1,36 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Eye, Pencil, Search, Trash } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-// Mock data for demonstration
-const MOCK_FAUNA = [
-  { id: 1, nomeComum: 'Onça-pintada', nomeCientifico: 'Panthera onca', grupo: 'Mamífero', status: 'Vulnerável (VU)' },
-  { id: 2, nomeComum: 'Arara-azul', nomeCientifico: 'Anodorhynchus hyacinthinus', grupo: 'Ave', status: 'Em Perigo (EN)' },
-  { id: 3, nomeComum: 'Jabuti-piranga', nomeCientifico: 'Chelonoidis carbonaria', grupo: 'Réptil', status: 'Pouco Preocupante (LC)' },
-  { id: 4, nomeComum: 'Lobo-guará', nomeCientifico: 'Chrysocyon brachyurus', grupo: 'Mamífero', status: 'Quase Ameaçada (NT)' },
-  { id: 5, nomeComum: 'Peixe-boi', nomeCientifico: 'Trichechus manatus', grupo: 'Mamífero', status: 'Em Perigo (EN)' },
-];
+import { Card, CardContent } from '@/components/ui/card';
+import DeleteConfirmationDialog from '@/components/fauna/DeleteConfirmationDialog';
+import { useFaunaTable } from '@/hooks/useFaunaTable';
 
 const FaunaCadastrada = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterGrupo, setFilterGrupo] = useState('');
-  
-  const filteredFauna = MOCK_FAUNA.filter(fauna => {
-    const matchesSearch = searchTerm === '' || 
-      fauna.nomeComum.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      fauna.nomeCientifico.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesGrupo = filterGrupo === '' || 
-      fauna.grupo.toLowerCase() === filterGrupo.toLowerCase();
-    
-    return matchesSearch && matchesGrupo;
-  });
+  const navigate = useNavigate();
+  const { 
+    especies, 
+    loading, 
+    error, 
+    searchTerm, 
+    setSearchTerm, 
+    filterClasse, 
+    setFilterClasse,
+    confirmDeleteId,
+    setConfirmDeleteId,
+    handleDelete
+  } = useFaunaTable();
+
+  const especieToDelete = especies.find(especie => especie.id === confirmDeleteId);
+
+  const handleEditClick = (id: string) => {
+    navigate(`/fauna-cadastro/${id}`);
+  };
 
   return (
     <Layout title="Fauna Cadastrada" showBackButton>
@@ -47,69 +48,117 @@ const FaunaCadastrada = () => {
           
           <div className="w-full sm:w-48">
             <Select 
-              onValueChange={setFilterGrupo}
-              value={filterGrupo}
+              onValueChange={setFilterClasse}
+              value={filterClasse}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Filtrar por grupo" />
+                <SelectValue placeholder="Filtrar por classe" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os grupos</SelectItem>
-                <SelectItem value="mamífero">Mamífero</SelectItem>
-                <SelectItem value="ave">Ave</SelectItem>
-                <SelectItem value="réptil">Réptil</SelectItem>
-                <SelectItem value="anfíbio">Anfíbio</SelectItem>
-                <SelectItem value="peixe">Peixe</SelectItem>
+                <SelectItem value="">Todas as classes</SelectItem>
+                <SelectItem value="AVE">Ave</SelectItem>
+                <SelectItem value="MAMIFERO">Mamífero</SelectItem>
+                <SelectItem value="REPTIL">Réptil</SelectItem>
+                <SelectItem value="PEIXE">Peixe</SelectItem>
               </SelectContent>
             </Select>
           </div>
+          
+          <Button 
+            className="bg-fauna-blue hover:bg-fauna-blue/90"
+            onClick={() => navigate('/fauna-cadastro')}
+          >
+            Cadastrar Nova Espécie
+          </Button>
         </div>
         
-        <div className="border border-fauna-border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome Comum</TableHead>
-                <TableHead>Nome Científico</TableHead>
-                <TableHead className="hidden md:table-cell">Grupo</TableHead>
-                <TableHead className="hidden md:table-cell">Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredFauna.length > 0 ? (
-                filteredFauna.map((fauna) => (
-                  <TableRow key={fauna.id}>
-                    <TableCell className="font-medium">{fauna.nomeComum}</TableCell>
-                    <TableCell className="italic">{fauna.nomeCientifico}</TableCell>
-                    <TableCell className="hidden md:table-cell">{fauna.grupo}</TableCell>
-                    <TableCell className="hidden md:table-cell">{fauna.status}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" title="Ver detalhes">
-                          <Eye className="h-4 w-4 text-fauna-blue" />
-                        </Button>
-                        <Button variant="ghost" size="icon" title="Editar">
-                          <Pencil className="h-4 w-4 text-fauna-blue" />
-                        </Button>
-                        <Button variant="ghost" size="icon" title="Excluir">
-                          <Trash className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
+        {loading ? (
+          <Card>
+            <CardContent className="p-6">
+              <div className="h-60 flex items-center justify-center">
+                <p className="text-gray-500">Carregando espécies...</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : error ? (
+          <Card>
+            <CardContent className="p-6">
+              <div className="h-60 flex items-center justify-center">
+                <p className="text-red-500">{error}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="border border-fauna-border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome Popular</TableHead>
+                  <TableHead>Nome Científico</TableHead>
+                  <TableHead className="hidden md:table-cell">Classe</TableHead>
+                  <TableHead className="hidden md:table-cell">Estado de Conservação</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {especies.length > 0 ? (
+                  especies.map((especie) => (
+                    <TableRow key={especie.id}>
+                      <TableCell className="font-medium">{especie.nome_popular}</TableCell>
+                      <TableCell className="italic">{especie.nome_cientifico}</TableCell>
+                      <TableCell className="hidden md:table-cell">{especie.classe_taxonomica}</TableCell>
+                      <TableCell className="hidden md:table-cell">{especie.estado_de_conservacao}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            title="Ver detalhes"
+                            onClick={() => navigate(`/fauna-detalhe/${especie.id}`)}
+                          >
+                            <Eye className="h-4 w-4 text-fauna-blue" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            title="Editar"
+                            onClick={() => handleEditClick(especie.id)}
+                          >
+                            <Pencil className="h-4 w-4 text-fauna-blue" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            title="Excluir"
+                            onClick={() => setConfirmDeleteId(especie.id)}
+                          >
+                            <Trash className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      Nenhuma espécie encontrada com os filtros atuais.
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
-                    Nenhuma fauna encontrada com os filtros atuais.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
+
+      {confirmDeleteId && especieToDelete && (
+        <DeleteConfirmationDialog
+          isOpen={!!confirmDeleteId}
+          onClose={() => setConfirmDeleteId(null)}
+          onConfirm={() => handleDelete(confirmDeleteId)}
+          itemName={especieToDelete.nome_popular}
+        />
+      )}
     </Layout>
   );
 };

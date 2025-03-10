@@ -28,7 +28,17 @@ export const useFormFaunaData = () => {
   const onSubmit = async (data: FaunaFormData) => {
     setIsSubmitting(true);
     try {
-      const result = await cadastrarEspecie(data);
+      // Garantir que todos os campos necessários estejam presentes
+      const especieData = {
+        classe_taxonomica: data.classe_taxonomica,
+        nome_popular: data.nome_popular,
+        nome_cientifico: data.nome_cientifico,
+        ordem_taxonomica: data.ordem_taxonomica,
+        estado_de_conservacao: data.estado_de_conservacao,
+        tipo_de_fauna: data.tipo_de_fauna
+      };
+      
+      const result = await cadastrarEspecie(especieData);
       if (result) {
         toast.success('Espécie cadastrada com sucesso!');
         navigate('/fauna-cadastrada');
