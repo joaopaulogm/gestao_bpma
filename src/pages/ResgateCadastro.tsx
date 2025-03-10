@@ -87,10 +87,11 @@ const ResgateCadastro = () => {
     nomePopular: ''
   });
 
-  const [especiesLista, setEspeciesLista] = useState<any[]>([]);
+  const [especiesLista, setEspeciesLista] = useState<Array<{nome_popular: string}>>([]);
   const [regiaoFiltrada, setRegiaoFiltrada] = useState('');
   const [regioesExibidas, setRegioesExibidas] = useState(regioes);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Carregar lista de espécies com base na classe taxonômica selecionada
   useEffect(() => {
@@ -98,6 +99,8 @@ const ResgateCadastro = () => {
       if (!formData.classeTaxonomica) return;
       
       setLoading(true);
+      setError('');
+      setEspeciesLista([]);
       console.log(`Buscando espécies para: ${formData.classeTaxonomica}`);
       
       let tabela = '';
@@ -127,14 +130,25 @@ const ResgateCadastro = () => {
           
         if (error) {
           console.error('Erro ao buscar espécies:', error);
+          setError(`Erro ao carregar lista de espécies: ${error.message}`);
           toast.error(`Erro ao carregar lista de espécies: ${error.message}`);
         } else {
           console.log('Espécies carregadas:', data?.length || 0);
           console.log('Exemplo de espécie:', data?.[0]);
-          setEspeciesLista(data || []);
+          
+          // Garantir que os dados têm a estrutura correta
+          if (data && Array.isArray(data)) {
+            // Verificar se cada item tem a propriedade nome_popular
+            const listaFiltrada = data.filter(item => item && typeof item === 'object' && 'nome_popular' in item && item.nome_popular);
+            setEspeciesLista(listaFiltrada);
+          } else {
+            console.log('Dados não estão no formato esperado:', data);
+            setEspeciesLista([]);
+          }
         }
       } catch (err) {
         console.error('Exceção ao buscar espécies:', err);
+        setError('Ocorreu um erro ao carregar a lista de espécies');
         toast.error('Ocorreu um erro ao carregar a lista de espécies');
       } finally {
         setLoading(false);
@@ -590,28 +604,37 @@ const ResgateCadastro = () => {
                 Nome Popular 
                 {loading && <span className="ml-2 text-gray-500 text-sm">(Carregando...)</span>}
               </Label>
-              <Select 
-                onValueChange={(value) => handleSelectChange('nomePopular', value)}
-                value={formData.nomePopular}
-                disabled={loading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={`Selecione a espécie de ${formData.classeTaxonomica.toLowerCase()}`} />
-                </SelectTrigger>
-                <SelectContent className="max-h-80">
-                  {especiesLista.length > 0 ? (
-                    especiesLista.map((especie, index) => (
-                      <SelectItem key={index} value={especie.nome_popular}>
-                        {especie.nome_popular}
+              {error ? (
+                <div className="text-red-500 text-sm mb-2">{error}</div>
+              ) : null}
+              {loading ? (
+                <div className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground">
+                  Carregando espécies...
+                </div>
+              ) : (
+                <Select 
+                  onValueChange={(value) => handleSelectChange('nomePopular', value)}
+                  value={formData.nomePopular}
+                  disabled={loading || especiesLista.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={`Selecione a espécie de ${formData.classeTaxonomica.toLowerCase()}`} />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-80">
+                    {especiesLista.length > 0 ? (
+                      especiesLista.map((especie, index) => (
+                        <SelectItem key={index} value={especie.nome_popular || `especie-${index}`}>
+                          {especie.nome_popular || `Espécie ${index + 1}`}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="nenhuma-especie">
+                        Nenhuma espécie encontrada
                       </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="" disabled>
-                      {loading ? 'Carregando espécies...' : 'Nenhuma espécie encontrada'}
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           )}
           
@@ -630,3 +653,4 @@ const ResgateCadastro = () => {
 };
 
 export default ResgateCadastro;
+
