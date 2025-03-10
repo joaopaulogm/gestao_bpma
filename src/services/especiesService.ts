@@ -40,7 +40,6 @@ export const buscarEspeciesPorClasse = async (classeTaxonomica: string): Promise
     console.log(`Buscando dados da tabela: ${tabela}`);
     
     // Buscar diretamente os dados sem verificar a existência da tabela primeiro
-    // pois o count(*) não é suportado na sintaxe da API REST do Supabase
     const { data, error } = await supabase
       .from(tabela)
       .select('nome_popular')
