@@ -20,11 +20,20 @@ export const useResgateSubmission = () => {
     setSubmissionError(null);
     
     try {
-      // Converter a data para formato ISO string para o banco de dados
-      const dataFormatada = new Date(data.data);
+      // Converter a data mantendo o timezone local
+      const dataObj = new Date(data.data);
+      const dataFormatada = new Date(
+        dataObj.getFullYear(),
+        dataObj.getMonth(),
+        dataObj.getDate(),
+        12, // Set to noon to avoid timezone issues
+        0,
+        0,
+        0
+      ).toISOString();
       
       const { error } = await supabase.from('registros').insert({
-        data: dataFormatada.toISOString(),
+        data: dataFormatada,
         classe_taxonomica: data.classeTaxonomica,
         nome_cientifico: especieSelecionada.nome_cientifico,
         nome_popular: especieSelecionada.nome_popular,
