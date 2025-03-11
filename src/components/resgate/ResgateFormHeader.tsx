@@ -6,7 +6,10 @@ interface ResgateFormHeaderProps {
   isEditing?: boolean;
 }
 
-const ResgateFormHeader: React.FC<ResgateFormHeaderProps> = ({ isEditing = false }) => {
+const ResgateFormHeader: React.FC<ResgateFormHeaderProps> = ({ 
+  isEditing = false, 
+  isSubmitting = false 
+}) => {
   return (
     <div className="mb-6">
       <h2 className="text-lg text-gray-600">
