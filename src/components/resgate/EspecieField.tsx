@@ -21,6 +21,7 @@ const EspecieField = ({
 }: EspecieFieldProps) => {
   const [especies, setEspecies] = useState<Especie[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEspecies = async () => {
@@ -30,11 +31,16 @@ const EspecieField = ({
       }
 
       setIsLoading(true);
+      setLoadError(null);
+      
       try {
+        console.log(`Buscando espécies para classe: ${classeTaxonomica}`);
         const especiesData = await buscarEspeciesPorClasse(classeTaxonomica);
+        console.log(`Encontradas ${especiesData.length} espécies`);
         setEspecies(especiesData);
       } catch (error) {
         console.error("Erro ao carregar espécies:", error);
+        setLoadError("Falha ao carregar espécies. Tente novamente.");
       } finally {
         setIsLoading(false);
       }
@@ -47,7 +53,7 @@ const EspecieField = ({
     <FormField
       id="especie"
       label="Espécie"
-      error={error}
+      error={error || loadError}
       required={required}
     >
       <Select
@@ -55,13 +61,17 @@ const EspecieField = ({
         onValueChange={onChange}
         disabled={isLoading || !classeTaxonomica}
       >
-        <SelectTrigger className={error ? "border-red-500" : ""}>
+        <SelectTrigger className={error || loadError ? "border-red-500" : ""}>
           <SelectValue placeholder={classeTaxonomica ? "Selecione a espécie" : "Selecione primeiro a classe taxonômica"} />
         </SelectTrigger>
         <SelectContent>
           {isLoading ? (
             <SelectItem value="carregando" disabled>
               Carregando...
+            </SelectItem>
+          ) : loadError ? (
+            <SelectItem value="erro" disabled>
+              Erro: {loadError}
             </SelectItem>
           ) : !classeTaxonomica ? (
             <SelectItem value="selecione-classe" disabled>
