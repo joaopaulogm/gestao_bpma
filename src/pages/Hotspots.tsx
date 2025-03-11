@@ -1,41 +1,23 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import { toast } from 'sonner';
-
-// Configuração do token do Mapbox
-mapboxgl.accessToken = 'pk.eyJ1Ijoiam9hb3BhdWxvZ20iLCJhIjoiY204NHZ4ODY0MmE0aTJ0cTE3ZWh3Z2lmcCJ9.P0DpsEES8FCV6jIobfqZVA';
-
-interface RegistroLocation {
-  id: string;
-  regiao_administrativa: string;
-  latitude: string;
-  longitude: string;
-  count: number;
-}
-
-interface HotspotRegion {
-  regiao: string;
-  contagem: number;
-}
+import HotspotMap from '@/components/hotspots/HotspotMap';
+import HotspotCard from '@/components/hotspots/HotspotCard';
+import type { RegistroLocation, HotspotRegion } from '@/types/hotspots';
 
 const Hotspots = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [locations, setLocations] = useState<RegistroLocation[]>([]);
   const [hotspotRegions, setHotspotRegions] = useState<HotspotRegion[]>([]);
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch all registros with valid coordinates
         const { data: registrosData, error } = await supabase
           .from('registros')
           .select('id, regiao_administrativa, latitude_origem, longitude_origem')
@@ -44,12 +26,10 @@ const Hotspots = () => {
           
         if (error) throw error;
         
-        // Process locations and count registros by region
         const validLocations: RegistroLocation[] = [];
         const regionCounts: Record<string, number> = {};
         
         registrosData.forEach(registro => {
-          // Skip records with invalid coordinates
           if (!registro.latitude_origem || !registro.longitude_origem ||
               isNaN(parseFloat(registro.latitude_origem)) || 
               isNaN(parseFloat(registro.longitude_origem))) {
@@ -64,7 +44,6 @@ const Hotspots = () => {
             count: 1
           });
           
-          // Count occurrences by region
           if (regionCounts[registro.regiao_administrativa]) {
             regionCounts[registro.regiao_administrativa]++;
           } else {
@@ -72,7 +51,6 @@ const Hotspots = () => {
           }
         });
         
-        // Sort regions by count and get top 3
         const sortedRegions = Object.entries(regionCounts)
           .map(([regiao, contagem]) => ({ regiao, contagem }))
           .sort((a, b) => b.contagem - a.contagem)
@@ -90,72 +68,6 @@ const Hotspots = () => {
     
     fetchData();
   }, []);
-  
-  useEffect(() => {
-    // Initialize map when container is available and locations are loaded
-    if (!mapContainer.current || !locations.length) return;
-    
-    try {
-      if (map.current) return; // Avoid reinitializing
-      
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
-        center: [-47.929, -15.779], // Brasília coordinates as default
-        zoom: 8
-      });
-      
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      
-      // Add markers when map is loaded
-      map.current.on('load', () => {
-        locations.forEach(location => {
-          const lat = parseFloat(location.latitude);
-          const lng = parseFloat(location.longitude);
-          
-          if (!isNaN(lat) && !isNaN(lng)) {
-            const popup = new mapboxgl.Popup({ offset: 25 })
-              .setHTML(`<strong>${location.regiao_administrativa}</strong>`);
-              
-            new mapboxgl.Marker({ color: '#E03131' })
-              .setLngLat([lng, lat])
-              .setPopup(popup)
-              .addTo(map.current);
-          }
-        });
-        
-        // Fit map to markers if we have any
-        if (locations.length) {
-          const bounds = new mapboxgl.LngLatBounds();
-          
-          locations.forEach(location => {
-            const lat = parseFloat(location.latitude);
-            const lng = parseFloat(location.longitude);
-            
-            if (!isNaN(lat) && !isNaN(lng)) {
-              bounds.extend([lng, lat]);
-            }
-          });
-          
-          map.current.fitBounds(bounds, {
-            padding: 50,
-            maxZoom: 12
-          });
-        }
-      });
-    } catch (error) {
-      console.error('Erro ao inicializar o mapa:', error);
-      toast.error('Erro ao inicializar o mapa');
-    }
-    
-    // Cleanup
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, [locations]);
   
   return (
     <Layout title="Hotspots" showBackButton>
@@ -178,7 +90,7 @@ const Hotspots = () => {
                   </p>
                 </div>
               ) : (
-                <div ref={mapContainer} className="absolute inset-0 rounded-lg" />
+                <HotspotMap locations={locations} />
               )}
             </div>
           </CardContent>
@@ -197,18 +109,7 @@ const Hotspots = () => {
             ))
           ) : hotspotRegions.length > 0 ? (
             hotspotRegions.map((region, index) => (
-              <Card key={index}>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-medium text-fauna-blue mb-2">
-                    {index === 0 ? 'Área de Maior Incidência' : 
-                     index === 1 ? 'Segundo Hotspot' : 'Terceiro Hotspot'}
-                  </h3>
-                  <p className="text-sm text-gray-700">{region.regiao}</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {region.contagem} {region.contagem === 1 ? 'ocorrência registrada' : 'ocorrências registradas'}
-                  </p>
-                </CardContent>
-              </Card>
+              <HotspotCard key={index} region={region} index={index} />
             ))
           ) : (
             Array(3).fill(0).map((_, index) => (
