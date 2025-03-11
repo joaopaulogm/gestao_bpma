@@ -1,27 +1,41 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Save, Plus } from 'lucide-react';
 
 interface ResgateFormSubmitButtonProps {
   isSubmitting: boolean;
+  isEditing?: boolean;
 }
 
-const ResgateFormSubmitButton: React.FC<ResgateFormSubmitButtonProps> = ({ isSubmitting }) => {
+const ResgateFormSubmitButton = ({ isSubmitting, isEditing = false }: ResgateFormSubmitButtonProps) => {
   return (
-    <div className="pt-4">
+    <div className="flex justify-end">
       <Button 
         type="submit" 
-        className="w-full bg-fauna-blue hover:bg-opacity-90 text-white"
         disabled={isSubmitting}
+        size="lg"
+        className="w-full sm:w-auto"
       >
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Salvando...
+            {isEditing ? 'Salvando...' : 'Cadastrando...'}
           </>
         ) : (
-          'Salvar Registro'
+          <>
+            {isEditing ? (
+              <>
+                <Save className="mr-2 h-5 w-5" />
+                Salvar alterações
+              </>
+            ) : (
+              <>
+                <Plus className="mr-2 h-5 w-5" />
+                Cadastrar resgate
+              </>
+            )}
+          </>
         )}
       </Button>
     </div>

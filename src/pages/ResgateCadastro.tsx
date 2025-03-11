@@ -1,255 +1,266 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { FormProvider } from 'react-hook-form';
-import { useFormResgateData } from '@/hooks/useFormResgateData';
-import { regioes } from '@/constants/regioes';
-import { Filter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-// Component imports
 import ResgateFormHeader from '@/components/resgate/ResgateFormHeader';
-import ResgateFormSubmitButton from '@/components/resgate/ResgateFormSubmitButton';
-import DataField from '@/components/resgate/DataField';
+import FormSection from '@/components/resgate/FormSection';
 import RegiaoAdministrativaField from '@/components/resgate/RegiaoAdministrativaField';
-import EspecieTaxonomicaFields from '@/components/resgate/EspecieTaxonomicaFields';
+import DataField from '@/components/resgate/DataField';
 import OrigemField from '@/components/resgate/OrigemField';
 import DesfechoApreensaoField from '@/components/resgate/DesfechoApreensaoField';
+import ClasseTaxonomicaField from '@/components/resgate/ClasseTaxonomicaField';
+import EspeciesField from '@/components/resgate/EspeciesField';
+import EspecieTaxonomicaFields from '@/components/resgate/EspecieTaxonomicaFields';
+import EspecieDetailsPanel from '@/components/resgate/EspecieDetailsPanel';
 import AnimalInfoFields from '@/components/resgate/AnimalInfoFields';
 import DestinacaoField from '@/components/resgate/DestinacaoField';
+import ResgateFormSubmitButton from '@/components/resgate/ResgateFormSubmitButton';
+import { useFormResgateData } from '@/hooks/useFormResgateData';
+import { Registro } from '@/types/hotspots';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const ResgateCadastro = () => {
-  const [showFilters, setShowFilters] = useState(false);
-  const [filterTipo, setFilterTipo] = useState('');
-  const [filterEstado, setFilterEstado] = useState('');
-  const [filterDestinacao, setFilterDestinacao] = useState('');
-  const [filterClasse, setFilterClasse] = useState('');
-  
-  const {
-    form,
-    formData,
-    errors,
-    handleChange,
-    handleSelectChange,
-    handleQuantidadeChange,
+  const { 
+    form, 
+    formData, 
+    errors, 
+    handleChange, 
+    handleSelectChange, 
+    handleQuantidadeChange, 
     handleSubmit,
     especieSelecionada,
     carregandoEspecie,
     isSubmitting
   } = useFormResgateData();
-
-  // Apply filters to the form data
-  const applyFilters = () => {
-    if (filterTipo) {
-      handleSelectChange('origem', filterTipo);
-    }
-    
-    if (filterEstado) {
-      handleSelectChange('estadoSaude', filterEstado);
-    }
-    
-    if (filterDestinacao) {
-      handleSelectChange('destinacao', filterDestinacao);
-    }
-    
-    if (filterClasse) {
-      handleSelectChange('classeTaxonomica', filterClasse);
-    }
-  };
-
-  // Clear all filters
-  const clearFilters = () => {
-    setFilterTipo('');
-    setFilterEstado('');
-    setFilterDestinacao('');
-    setFilterClasse('');
-  };
-
-  return (
-    <Layout title="Registro de Atividade de Resgate de Fauna" showBackButton>
-      <div className="mb-6">
-        <div className="flex justify-end gap-2">
-          <Button 
-            variant="outline" 
-            className="gap-2"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter className="h-4 w-4" />
-            Filtros Rápidos
-          </Button>
-        </div>
-        
-        {showFilters && (
-          <Card className="border border-fauna-border mt-4">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium text-fauna-blue">Pré-configurar formulário</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <Select 
-                  onValueChange={setFilterTipo}
-                  value={filterTipo}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tipo de ocorrência" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todos os tipos</SelectItem>
-                    <SelectItem value="Resgate de Fauna">Resgate de Fauna</SelectItem>
-                    <SelectItem value="Apreensão">Apreensão</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Select 
-                  onValueChange={setFilterEstado}
-                  value={filterEstado}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Estado de saúde" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todos os estados</SelectItem>
-                    <SelectItem value="Bom">Bom</SelectItem>
-                    <SelectItem value="Regular">Regular</SelectItem>
-                    <SelectItem value="Ruim">Ruim</SelectItem>
-                    <SelectItem value="Óbito">Óbito</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Select 
-                  onValueChange={setFilterClasse}
-                  value={filterClasse}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Classe taxonômica" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todas as classes</SelectItem>
-                    <SelectItem value="Aves">Aves</SelectItem>
-                    <SelectItem value="Mamíferos">Mamíferos</SelectItem>
-                    <SelectItem value="Répteis">Répteis</SelectItem>
-                    <SelectItem value="Anfíbios">Anfíbios</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Select 
-                  onValueChange={setFilterDestinacao}
-                  value={filterDestinacao}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Destinação" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todas as destinações</SelectItem>
-                    <SelectItem value="CETAS/IBAMA">CETAS/IBAMA</SelectItem>
-                    <SelectItem value="HFAUS/IBRAM">HFAUS/IBRAM</SelectItem>
-                    <SelectItem value="CEAPA/BPMA">CEAPA/BPMA</SelectItem>
-                    <SelectItem value="Soltura">Soltura</SelectItem>
-                    <SelectItem value="Óbito">Óbito</SelectItem>
-                    <SelectItem value="Outros">Outros</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="col-span-full flex gap-2 justify-end">
-                <Button
-                  variant="outline"
-                  onClick={clearFilters}
-                >
-                  Limpar
-                </Button>
-                <Button
-                  variant="default"
-                  onClick={applyFilters}
-                >
-                  Aplicar aos Campos
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+  
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editingId = searchParams.get('editar');
+  const [isEditing, setIsEditing] = useState(false);
+  const [originalRegistro, setOriginalRegistro] = useState<Registro | null>(null);
+  
+  useEffect(() => {
+    // Check if we're in edit mode and have a registro
+    if (editingId) {
+      const registroFromState = location.state?.registro as Registro | undefined;
       
-      <div className="bg-white rounded-lg border border-fauna-border p-6 animate-fade-in">
-        <ResgateFormHeader />
+      if (registroFromState) {
+        setOriginalRegistro(registroFromState);
+        populateFormWithRegistro(registroFromState);
+        setIsEditing(true);
+      } else {
+        // If we don't have the registro in state, fetch it
+        fetchRegistro(editingId);
+      }
+    }
+  }, [editingId, location.state]);
+  
+  const fetchRegistro = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('registros')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        setOriginalRegistro(data);
+        populateFormWithRegistro(data);
+        setIsEditing(true);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar registro para edição:', error);
+      toast.error('Erro ao carregar os dados do registro');
+      navigate('/registros');
+    }
+  };
+  
+  const populateFormWithRegistro = (registro: Registro) => {
+    // Populate form fields with registro data
+    form.reset({
+      regiaoAdministrativa: registro.regiao_administrativa,
+      data: new Date(registro.data).toISOString().split('T')[0],
+      origem: registro.origem,
+      latitudeOrigem: registro.latitude_origem,
+      longitudeOrigem: registro.longitude_origem,
+      desfechoApreensao: registro.desfecho_apreensao || '',
+      numeroTCO: registro.numero_tco || '',
+      outroDesfecho: registro.outro_desfecho || '',
+      classeTaxonomica: registro.classe_taxonomica,
+      especieId: '', // This will be handled separately
+      estadoSaude: registro.estado_saude,
+      atropelamento: registro.atropelamento,
+      estagioVida: registro.estagio_vida,
+      quantidade: registro.quantidade,
+      destinacao: registro.destinacao,
+      numeroTermoEntrega: registro.numero_termo_entrega || '',
+      horaGuardaCEAPA: registro.hora_guarda_ceapa || '',
+      motivoEntregaCEAPA: registro.motivo_entrega_ceapa || '',
+      latitudeSoltura: registro.latitude_soltura || '',
+      longitudeSoltura: registro.longitude_soltura || '',
+      outroDestinacao: registro.outro_destinacao || ''
+    });
+    
+    // We need to fetch the especie ID based on the nome_cientifico
+    fetchEspecieId(registro.nome_cientifico);
+  };
+  
+  const fetchEspecieId = async (nomeCientifico: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('especies_fauna')
+        .select('id')
+        .eq('nome_cientifico', nomeCientifico)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        form.setValue('especieId', data.id);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar ID da espécie:', error);
+      // Don't show an error toast as this is a background operation
+    }
+  };
+  
+  const handleFormSubmit = async (data: any) => {
+    if (isEditing && editingId && originalRegistro) {
+      try {
+        // Format the date for the database
+        const dataFormatada = new Date(data.data);
         
-        <FormProvider {...form}>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Data */}
-            <DataField
-              value={formData.data}
-              onChange={handleChange}
-              error={errors.data?.message}
-              required
-            />
+        const { error } = await supabase
+          .from('registros')
+          .update({
+            data: dataFormatada.toISOString(),
+            classe_taxonomica: data.classeTaxonomica,
+            nome_cientifico: especieSelecionada?.nome_cientifico || originalRegistro.nome_cientifico,
+            nome_popular: especieSelecionada?.nome_popular || originalRegistro.nome_popular,
+            regiao_administrativa: data.regiaoAdministrativa,
+            origem: data.origem,
+            latitude_origem: data.latitudeOrigem,
+            longitude_origem: data.longitudeOrigem,
+            desfecho_apreensao: data.desfechoApreensao || null,
+            numero_tco: data.numeroTCO || null,
+            outro_desfecho: data.outroDesfecho || null,
+            estado_saude: data.estadoSaude,
+            atropelamento: data.atropelamento,
+            estagio_vida: data.estagioVida,
+            quantidade: data.quantidade,
+            destinacao: data.destinacao,
+            numero_termo_entrega: data.numeroTermoEntrega || null,
+            hora_guarda_ceapa: data.horaGuardaCEAPA || null,
+            motivo_entrega_ceapa: data.motivoEntregaCEAPA || null,
+            latitude_soltura: data.latitudeSoltura || null,
+            longitude_soltura: data.longitudeSoltura || null,
+            outro_destinacao: data.outroDestinacao || null
+          })
+          .eq('id', editingId);
+        
+        if (error) throw error;
+        
+        toast.success('Registro atualizado com sucesso!');
+        navigate('/registros');
+      } catch (error) {
+        console.error('Erro ao atualizar registro:', error);
+        toast.error('Erro ao atualizar o registro');
+      }
+    } else {
+      // Default submission for new records
+      handleSubmit(data);
+    }
+  };
+  
+  return (
+    <Layout title={isEditing ? "Editar Registro" : "Cadastro de Resgate"} showBackButton>
+      <div className="space-y-6 animate-fade-in">
+        <ResgateFormHeader isEditing={isEditing} />
+        
+        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+          <FormSection title="Informações Gerais" description="Dados sobre a localização e identificação do resgate">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <DataField 
+                value={formData.data}
+                onChange={handleChange}
+                error={errors.data?.message}
+              />
+              
+              <RegiaoAdministrativaField 
+                value={formData.regiaoAdministrativa}
+                onChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
+                error={errors.regiaoAdministrativa?.message}
+              />
+            </div>
             
-            {/* Região Administrativa */}
-            <RegiaoAdministrativaField
-              regioes={regioes}
-              value={formData.regiaoAdministrativa}
-              onChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
-              error={errors.regiaoAdministrativa?.message}
-              required
-            />
-            
-            {/* Classe Taxonômica e Espécie */}
-            <EspecieTaxonomicaFields
-              classeTaxonomica={formData.classeTaxonomica}
-              especieId={formData.especieId}
-              onClasseTaxonomicaChange={(value) => handleSelectChange('classeTaxonomica', value)}
-              onEspecieChange={(value) => handleSelectChange('especieId', value)}
-              especieSelecionada={especieSelecionada}
-              carregandoEspecie={carregandoEspecie}
-              errors={{
-                classeTaxonomica: errors.classeTaxonomica?.message,
-                especieId: errors.especieId?.message
-              }}
-              required
-            />
-            
-            {/* Origem e Coordenadas */}
-            <OrigemField
-              origem={formData.origem}
+            <OrigemField 
+              value={formData.origem}
+              onChange={(value) => handleSelectChange('origem', value)}
               latitudeOrigem={formData.latitudeOrigem}
               longitudeOrigem={formData.longitudeOrigem}
-              onOrigemChange={(value) => handleSelectChange('origem', value)}
               onLatitudeChange={handleChange}
               onLongitudeChange={handleChange}
-              errors={{
-                origem: errors.origem?.message,
-                latitudeOrigem: errors.latitudeOrigem?.message,
-                longitudeOrigem: errors.longitudeOrigem?.message
-              }}
-              required
+              error={errors.origem?.message}
+              latitudeError={errors.latitudeOrigem?.message}
+              longitudeError={errors.longitudeOrigem?.message}
             />
             
-            {/* Desfecho da Apreensão (condicional) */}
-            <DesfechoApreensaoField
-              origem={formData.origem}
-              desfechoApreensao={formData.desfechoApreensao}
-              numeroTCO={formData.numeroTCO}
-              outroDesfecho={formData.outroDesfecho}
-              onDesfechoChange={(value) => handleSelectChange('desfechoApreensao', value)}
-              onNumeroTCOChange={handleChange}
-              onOutroDesfechoChange={handleChange}
-              errors={{
-                desfechoApreensao: errors.desfechoApreensao?.message,
-                numeroTCO: errors.numeroTCO?.message,
-                outroDesfecho: errors.outroDesfecho?.message
-              }}
-              required
+            {formData.origem === 'Apreensão' && (
+              <DesfechoApreensaoField 
+                value={formData.desfechoApreensao}
+                onChange={(value) => handleSelectChange('desfechoApreensao', value)}
+                numeroTCO={formData.numeroTCO}
+                outroDesfecho={formData.outroDesfecho}
+                onNumeroTCOChange={handleChange}
+                onOutroDesfechoChange={handleChange}
+                error={errors.desfechoApreensao?.message}
+                numeroTCOError={errors.numeroTCO?.message}
+                outroDesfechoError={errors.outroDesfecho?.message}
+              />
+            )}
+          </FormSection>
+          
+          <FormSection 
+            title="Espécie" 
+            description="Informações taxonômicas do animal resgatado"
+          >
+            <ClasseTaxonomicaField 
+              value={formData.classeTaxonomica}
+              onChange={(value) => handleSelectChange('classeTaxonomica', value)}
+              error={errors.classeTaxonomica?.message}
             />
             
-            {/* Estado de Saúde, Atropelamento, Estágio da Vida, Quantidade */}
-            <AnimalInfoFields
+            {formData.classeTaxonomica && (
+              <div className="space-y-6">
+                <EspeciesField 
+                  classeTaxonomica={formData.classeTaxonomica}
+                  value={formData.especieId}
+                  onChange={(value) => handleSelectChange('especieId', value)}
+                  error={errors.especieId?.message}
+                  isLoading={carregandoEspecie}
+                />
+                
+                {especieSelecionada && (
+                  <EspecieDetailsPanel especie={especieSelecionada} />
+                )}
+                
+                <EspecieTaxonomicaFields 
+                  nomeCientifico={especieSelecionada?.nome_cientifico || ''}
+                  nomePopular={especieSelecionada?.nome_popular || ''}
+                />
+              </div>
+            )}
+          </FormSection>
+          
+          <FormSection 
+            title="Informações do Animal" 
+            description="Estado de saúde e outras informações do animal"
+          >
+            <AnimalInfoFields 
               estadoSaude={formData.estadoSaude}
               atropelamento={formData.atropelamento}
               estagioVida={formData.estagioVida}
@@ -257,45 +268,47 @@ const ResgateCadastro = () => {
               onEstadoSaudeChange={(value) => handleSelectChange('estadoSaude', value)}
               onAtropelamentoChange={(value) => handleSelectChange('atropelamento', value)}
               onEstagioVidaChange={(value) => handleSelectChange('estagioVida', value)}
-              onQuantidadeChange={handleChange}
-              onQuantidadeDecrease={() => handleQuantidadeChange('diminuir')}
-              onQuantidadeIncrease={() => handleQuantidadeChange('aumentar')}
-              errors={{
-                estadoSaude: errors.estadoSaude?.message,
-                atropelamento: errors.atropelamento?.message,
-                estagioVida: errors.estagioVida?.message,
-                quantidade: errors.quantidade?.message
-              }}
-              required
+              onQuantidadeChange={handleQuantidadeChange}
+              errorEstadoSaude={errors.estadoSaude?.message}
+              errorAtropelamento={errors.atropelamento?.message}
+              errorEstagioVida={errors.estagioVida?.message}
             />
-            
-            {/* Destinação e campos relacionados */}
-            <DestinacaoField
-              destinacao={formData.destinacao}
+          </FormSection>
+          
+          <FormSection 
+            title="Destinação" 
+            description="Para onde o animal foi encaminhado após o resgate"
+          >
+            <DestinacaoField 
+              value={formData.destinacao}
+              onChange={(value) => handleSelectChange('destinacao', value)}
               numeroTermoEntrega={formData.numeroTermoEntrega}
               horaGuardaCEAPA={formData.horaGuardaCEAPA}
               motivoEntregaCEAPA={formData.motivoEntregaCEAPA}
               latitudeSoltura={formData.latitudeSoltura}
               longitudeSoltura={formData.longitudeSoltura}
               outroDestinacao={formData.outroDestinacao}
-              onDestinacaoChange={(value) => handleSelectChange('destinacao', value)}
-              onInputChange={handleChange}
-              onTextareaChange={handleChange}
-              errors={{
-                destinacao: errors.destinacao?.message,
-                numeroTermoEntrega: errors.numeroTermoEntrega?.message,
-                horaGuardaCEAPA: errors.horaGuardaCEAPA?.message,
-                motivoEntregaCEAPA: errors.motivoEntregaCEAPA?.message,
-                latitudeSoltura: errors.latitudeSoltura?.message,
-                longitudeSoltura: errors.longitudeSoltura?.message,
-                outroDestinacao: errors.outroDestinacao?.message
-              }}
-              required
+              onNumeroTermoEntregaChange={handleChange}
+              onHoraGuardaCEAPAChange={handleChange}
+              onMotivoEntregaCEAPAChange={handleChange}
+              onLatitudeSolturaChange={handleChange}
+              onLongitudeSolturaChange={handleChange}
+              onOutroDestinacaoChange={handleChange}
+              error={errors.destinacao?.message}
+              numeroTermoEntregaError={errors.numeroTermoEntrega?.message}
+              horaGuardaCEAPAError={errors.horaGuardaCEAPA?.message}
+              motivoEntregaCEAPAError={errors.motivoEntregaCEAPA?.message}
+              latitudeSolturaError={errors.latitudeSoltura?.message}
+              longitudeSolturaError={errors.longitudeSoltura?.message}
+              outroDestinacaoError={errors.outroDestinacao?.message}
             />
-            
-            <ResgateFormSubmitButton isSubmitting={isSubmitting} />
-          </form>
-        </FormProvider>
+          </FormSection>
+          
+          <ResgateFormSubmitButton 
+            isSubmitting={isSubmitting} 
+            isEditing={isEditing}
+          />
+        </form>
       </div>
     </Layout>
   );

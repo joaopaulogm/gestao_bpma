@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Loader2 } from 'lucide-react';
@@ -9,32 +8,8 @@ import { format } from 'date-fns';
 import RegistrosActions from '@/components/registros/RegistrosActions';
 import RegistrosFilters from '@/components/registros/RegistrosFilters';
 import RegistrosTable from '@/components/registros/RegistrosTable';
-
-interface Registro {
-  id: string;
-  data: string;
-  regiao_administrativa: string;
-  origem: string;
-  latitude_origem: string;
-  longitude_origem: string;
-  desfecho_apreensao: string | null;
-  numero_tco: string | null;
-  outro_desfecho: string | null;
-  classe_taxonomica: string;
-  nome_cientifico: string;
-  nome_popular: string;
-  estado_saude: string;
-  atropelamento: string;
-  estagio_vida: string;
-  quantidade: number;
-  destinacao: string;
-  numero_termo_entrega: string | null;
-  hora_guarda_ceapa: string | null;
-  motivo_entrega_ceapa: string | null;
-  latitude_soltura: string | null;
-  longitude_soltura: string | null;
-  outro_destinacao: string | null;
-}
+import { Registro } from '@/types/hotspots';
+import DeleteConfirmationDialog from '@/components/fauna/DeleteConfirmationDialog';
 
 const Registros = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,29 +20,32 @@ const Registros = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [registroToDelete, setRegistroToDelete] = useState<{ id: string, nome: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
-    const fetchRegistros = async () => {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('registros')
-          .select('*')
-          .order('data', { ascending: false });
-        
-        if (error) throw error;
-        setRegistros(data || []);
-      } catch (error) {
-        console.error('Erro ao buscar registros:', error);
-        toast.error('Erro ao carregar os registros');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchRegistros();
   }, []);
+  
+  const fetchRegistros = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('registros')
+        .select('*')
+        .order('data', { ascending: false });
+      
+      if (error) throw error;
+      setRegistros(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar registros:', error);
+      toast.error('Erro ao carregar os registros');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const filteredRegistros = registros.filter(registro => {
     const matchesSearch = searchTerm === '' || 
@@ -92,6 +70,47 @@ const Registros = () => {
 
   const handleViewDetails = (id: string) => {
     navigate(`/registro-detalhes/${id}`);
+  };
+  
+  const handleEdit = (id: string) => {
+    navigate(`/resgate-editar/${id}`);
+  };
+  
+  const handleDeleteClick = (id: string, nome: string) => {
+    setRegistroToDelete({ id, nome });
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const handleDeleteConfirm = async () => {
+    if (!registroToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('registros')
+        .delete()
+        .eq('id', registroToDelete.id);
+      
+      if (error) throw error;
+      
+      setRegistros(prevRegistros => 
+        prevRegistros.filter(registro => registro.id !== registroToDelete.id)
+      );
+      
+      toast.success(`Registro de "${registroToDelete.nome}" excluído com sucesso`);
+    } catch (error) {
+      console.error('Erro ao excluir registro:', error);
+      toast.error('Erro ao excluir o registro');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setRegistroToDelete(null);
+    }
+  };
+  
+  const handleDeleteCancel = () => {
+    setIsDeleteDialogOpen(false);
+    setRegistroToDelete(null);
   };
   
   const handleExportCSV = () => {
@@ -165,6 +184,8 @@ const Registros = () => {
             <RegistrosTable
               registros={filteredRegistros}
               onViewDetails={handleViewDetails}
+              onEdit={handleEdit}
+              onDelete={handleDeleteClick}
             />
           )}
         </div>
@@ -175,9 +196,15 @@ const Registros = () => {
           </div>
         </div>
       </div>
+      
+      <DeleteConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        itemName={registroToDelete?.nome || ''}
+      />
     </Layout>
   );
 };
 
 export default Registros;
-
