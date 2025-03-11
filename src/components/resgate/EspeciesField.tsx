@@ -16,100 +16,62 @@ interface Especie {
 
 interface EspeciesFieldProps {
   classeTaxonomica: string;
-  nomePopular: string;
-  especiesLista: Especie[];
-  loading: boolean;
-  error: string;
-  onClasseTaxonomicaChange: (value: string) => void;
-  onNomePopularChange: (value: string) => void;
-  errors?: {
-    classeTaxonomica?: string;
-    nomePopular?: string;
-  };
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  isLoading?: boolean;
   required?: boolean;
 }
 
 const EspeciesField: React.FC<EspeciesFieldProps> = ({
   classeTaxonomica,
-  nomePopular,
-  especiesLista,
-  loading,
+  value,
+  onChange,
   error,
-  onClasseTaxonomicaChange,
-  onNomePopularChange,
-  errors = {},
+  isLoading = false,
   required = false
 }) => {
   // Log para debug
   useEffect(() => {
     console.log('EspeciesField renderizado com valores:', {
       classeTaxonomica,
-      nomePopular,
-      especiesListaLength: especiesLista?.length || 0,
-      especiesLista,
-      loading,
-      error
+      value
     });
-  }, [classeTaxonomica, nomePopular, especiesLista, loading, error]);
+  }, [classeTaxonomica, value]);
 
   return (
-    <FormSection>
-      <FormField id="classeTaxonomica" label="Classe Taxonômica" error={errors.classeTaxonomica} required={required}>
-        <Select 
-          onValueChange={onClasseTaxonomicaChange}
-          value={classeTaxonomica}
-        >
-          <SelectTrigger className={errors.classeTaxonomica ? "border-red-500" : ""}>
-            <SelectValue placeholder="Selecione a classe taxonômica" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Ave">Ave</SelectItem>
-            <SelectItem value="Mamífero">Mamífero</SelectItem>
-            <SelectItem value="Réptil">Réptil</SelectItem>
-            <SelectItem value="Peixe">Peixe</SelectItem>
-          </SelectContent>
-        </Select>
-      </FormField>
-      
-      {classeTaxonomica && (
-        <FormField 
-          id="nomePopular" 
-          label="Nome Popular" 
-          error={error || errors.nomePopular}
-          loading={loading}
-          required={required}
-        >
-          {loading ? (
-            <div className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground">
-              Carregando espécies...
-            </div>
+    <FormField
+      id="especieId"
+      label="Espécie"
+      error={error}
+      loading={isLoading}
+      required={required}
+    >
+      <Select
+        value={value}
+        onValueChange={onChange}
+        disabled={isLoading || !classeTaxonomica}
+      >
+        <SelectTrigger className={error ? "border-red-500" : ""}>
+          <SelectValue placeholder={classeTaxonomica ? "Selecione a espécie" : "Selecione primeiro a classe taxonômica"} />
+        </SelectTrigger>
+        <SelectContent>
+          {isLoading ? (
+            <SelectItem value="carregando" disabled>
+              Carregando...
+            </SelectItem>
+          ) : !classeTaxonomica ? (
+            <SelectItem value="selecione-classe" disabled>
+              Selecione primeiro a classe taxonômica
+            </SelectItem>
           ) : (
-            <Select 
-              onValueChange={onNomePopularChange}
-              value={nomePopular}
-              disabled={loading || especiesLista?.length === 0}
-            >
-              <SelectTrigger className={errors.nomePopular ? "border-red-500" : ""}>
-                <SelectValue placeholder={`Selecione a espécie de ${classeTaxonomica.toLowerCase()}`} />
-              </SelectTrigger>
-              <SelectContent className="max-h-80 bg-background z-50">
-                {Array.isArray(especiesLista) && especiesLista.length > 0 ? (
-                  especiesLista.map((especie, index) => (
-                    <SelectItem key={index} value={especie.nome_popular || `especie-${index}`}>
-                      {especie.nome_popular || `Espécie ${index + 1}`}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="nenhuma-especie" disabled>
-                    Nenhuma espécie encontrada
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <SelectItem value="carregando-especies" disabled>
+              Carregando espécies...
+            </SelectItem>
           )}
-        </FormField>
-      )}
-    </FormSection>
+        </SelectContent>
+      </Select>
+    </FormField>
   );
 };
 

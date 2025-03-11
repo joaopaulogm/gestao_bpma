@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -19,6 +18,7 @@ import { useFormResgateData } from '@/hooks/useFormResgateData';
 import { Registro } from '@/types/hotspots';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { regioes } from '@/constants/regioes';
 
 const ResgateCadastro = () => {
   const { 
@@ -182,7 +182,7 @@ const ResgateCadastro = () => {
         <ResgateFormHeader isEditing={isEditing} />
         
         <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-          <FormSection title="Informações Gerais" description="Dados sobre a localização e identificação do resgate">
+          <FormSection title="Informações Gerais">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <DataField 
                 value={formData.data}
@@ -194,40 +194,42 @@ const ResgateCadastro = () => {
                 value={formData.regiaoAdministrativa}
                 onChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
                 error={errors.regiaoAdministrativa?.message}
+                regioes={regioes}
               />
             </div>
             
             <OrigemField 
-              value={formData.origem}
-              onChange={(value) => handleSelectChange('origem', value)}
+              origem={formData.origem}
+              onOrigemChange={(value) => handleSelectChange('origem', value)}
               latitudeOrigem={formData.latitudeOrigem}
               longitudeOrigem={formData.longitudeOrigem}
               onLatitudeChange={handleChange}
               onLongitudeChange={handleChange}
-              error={errors.origem?.message}
-              latitudeError={errors.latitudeOrigem?.message}
-              longitudeError={errors.longitudeOrigem?.message}
+              errors={{
+                origem: errors.origem?.message,
+                latitudeOrigem: errors.latitudeOrigem?.message,
+                longitudeOrigem: errors.longitudeOrigem?.message
+              }}
             />
             
             {formData.origem === 'Apreensão' && (
               <DesfechoApreensaoField 
-                value={formData.desfechoApreensao}
-                onChange={(value) => handleSelectChange('desfechoApreensao', value)}
+                desfechoApreensao={formData.desfechoApreensao}
+                onDesfechoChange={(value) => handleSelectChange('desfechoApreensao', value)}
                 numeroTCO={formData.numeroTCO}
                 outroDesfecho={formData.outroDesfecho}
                 onNumeroTCOChange={handleChange}
                 onOutroDesfechoChange={handleChange}
-                error={errors.desfechoApreensao?.message}
-                numeroTCOError={errors.numeroTCO?.message}
-                outroDesfechoError={errors.outroDesfecho?.message}
+                errors={{
+                  desfechoApreensao: errors.desfechoApreensao?.message,
+                  numeroTCO: errors.numeroTCO?.message,
+                  outroDesfecho: errors.outroDesfecho?.message
+                }}
               />
             )}
           </FormSection>
           
-          <FormSection 
-            title="Espécie" 
-            description="Informações taxonômicas do animal resgatado"
-          >
+          <FormSection title="Espécie">
             <ClasseTaxonomicaField 
               value={formData.classeTaxonomica}
               onChange={(value) => handleSelectChange('classeTaxonomica', value)}
@@ -245,21 +247,16 @@ const ResgateCadastro = () => {
                 />
                 
                 {especieSelecionada && (
-                  <EspecieDetailsPanel especie={especieSelecionada} />
+                  <EspecieDetailsPanel 
+                    especie={especieSelecionada} 
+                    isLoading={carregandoEspecie} 
+                  />
                 )}
-                
-                <EspecieTaxonomicaFields 
-                  nomeCientifico={especieSelecionada?.nome_cientifico || ''}
-                  nomePopular={especieSelecionada?.nome_popular || ''}
-                />
               </div>
             )}
           </FormSection>
           
-          <FormSection 
-            title="Informações do Animal" 
-            description="Estado de saúde e outras informações do animal"
-          >
+          <FormSection title="Informações do Animal">
             <AnimalInfoFields 
               estadoSaude={formData.estadoSaude}
               atropelamento={formData.atropelamento}
@@ -275,13 +272,10 @@ const ResgateCadastro = () => {
             />
           </FormSection>
           
-          <FormSection 
-            title="Destinação" 
-            description="Para onde o animal foi encaminhado após o resgate"
-          >
+          <FormSection title="Destinação">
             <DestinacaoField 
-              value={formData.destinacao}
-              onChange={(value) => handleSelectChange('destinacao', value)}
+              destinacao={formData.destinacao}
+              onDestinacaoChange={(value) => handleSelectChange('destinacao', value)}
               numeroTermoEntrega={formData.numeroTermoEntrega}
               horaGuardaCEAPA={formData.horaGuardaCEAPA}
               motivoEntregaCEAPA={formData.motivoEntregaCEAPA}

@@ -22,15 +22,11 @@ interface AnimalInfoFieldsProps {
   onEstadoSaudeChange: (value: string) => void;
   onAtropelamentoChange: (value: string) => void;
   onEstagioVidaChange: (value: string) => void;
-  onQuantidadeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onQuantidadeDecrease: () => void;
-  onQuantidadeIncrease: () => void;
-  errors?: {
-    estadoSaude?: string;
-    atropelamento?: string;
-    estagioVida?: string;
-    quantidade?: string;
-  };
+  onQuantidadeChange: (operacao: 'aumentar' | 'diminuir') => void;
+  errorEstadoSaude?: string;
+  errorAtropelamento?: string;
+  errorEstagioVida?: string;
+  errorQuantidade?: string;
   required?: boolean;
 }
 
@@ -43,19 +39,26 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
   onAtropelamentoChange,
   onEstagioVidaChange,
   onQuantidadeChange,
-  onQuantidadeDecrease,
-  onQuantidadeIncrease,
-  errors = {},
+  errorEstadoSaude,
+  errorAtropelamento,
+  errorEstagioVida,
+  errorQuantidade,
   required = false
 }) => {
+  const handleInputQuantidade = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // This is a placeholder for direct input changes that we'll ignore in this component
+    // The parent component handles quantity via the increase/decrease operations
+    console.log("Quantidade input changed directly:", e.target.value);
+  };
+
   return (
     <FormSection>
-      <FormField id="estadoSaude" label="Estado de Saúde" error={errors.estadoSaude} required={required}>
+      <FormField id="estadoSaude" label="Estado de Saúde" error={errorEstadoSaude} required={required}>
         <Select 
           onValueChange={onEstadoSaudeChange}
           value={estadoSaude}
         >
-          <SelectTrigger className={errors.estadoSaude ? "border-red-500" : ""}>
+          <SelectTrigger className={errorEstadoSaude ? "border-red-500" : ""}>
             <SelectValue placeholder="Selecione o estado de saúde" />
           </SelectTrigger>
           <SelectContent>
@@ -72,8 +75,8 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
           Animal sofreu atropelamento?
           {required && <span className="text-red-500 ml-1">*</span>}
         </Label>
-        {errors.atropelamento && (
-          <div className="text-red-500 text-sm">{errors.atropelamento}</div>
+        {errorAtropelamento && (
+          <div className="text-red-500 text-sm">{errorAtropelamento}</div>
         )}
         <RadioGroup 
           value={atropelamento} 
@@ -91,12 +94,12 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
         </RadioGroup>
       </div>
       
-      <FormField id="estagioVida" label="Estágio da Vida" error={errors.estagioVida} required={required}>
+      <FormField id="estagioVida" label="Estágio da Vida" error={errorEstagioVida} required={required}>
         <Select 
           onValueChange={onEstagioVidaChange}
           value={estagioVida}
         >
-          <SelectTrigger className={errors.estagioVida ? "border-red-500" : ""}>
+          <SelectTrigger className={errorEstagioVida ? "border-red-500" : ""}>
             <SelectValue placeholder="Selecione o estágio da vida" />
           </SelectTrigger>
           <SelectContent>
@@ -106,13 +109,13 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
         </Select>
       </FormField>
       
-      <FormField id="quantidade" label="Quantidade" error={errors.quantidade} required={required}>
+      <FormField id="quantidade" label="Quantidade" error={errorQuantidade} required={required}>
         <div className="flex items-center space-x-2">
           <Button 
             type="button" 
             variant="outline" 
             className="h-10 w-10 p-0"
-            onClick={onQuantidadeDecrease}
+            onClick={() => onQuantidadeChange('diminuir')}
           >
             -
           </Button>
@@ -120,16 +123,17 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
             id="quantidade"
             name="quantidade"
             type="number"
-            value={quantidade}
-            onChange={onQuantidadeChange}
-            className={`text-center ${errors.quantidade ? "border-red-500" : ""}`}
+            value={quantidade.toString()}
+            onChange={handleInputQuantidade}
+            className={`text-center ${errorQuantidade ? "border-red-500" : ""}`}
             min="1"
+            readOnly
           />
           <Button 
             type="button" 
             variant="outline" 
             className="h-10 w-10 p-0"
-            onClick={onQuantidadeIncrease}
+            onClick={() => onQuantidadeChange('aumentar')}
           >
             +
           </Button>

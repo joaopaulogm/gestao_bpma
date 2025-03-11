@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 
 interface FormSectionProps {
   title?: string;
+  description?: string;
   children: React.ReactNode;
   className?: string;
 }
@@ -13,12 +14,18 @@ interface FormSectionProps {
  */
 const FormSection: React.FC<FormSectionProps> = ({ 
   title, 
+  description,
   children, 
   className = "" 
 }) => {
   return (
     <div className={`space-y-4 ${className}`}>
-      {title && <h3 className="text-md font-medium text-gray-700">{title}</h3>}
+      {title && (
+        <div>
+          <h3 className="text-md font-medium text-gray-700">{title}</h3>
+          {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
+        </div>
+      )}
       <div className="space-y-4">
         {children}
       </div>

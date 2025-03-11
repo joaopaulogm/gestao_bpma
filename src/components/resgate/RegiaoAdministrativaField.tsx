@@ -1,13 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import FormField from './FormField';
 
 interface RegiaoAdministrativaFieldProps {
-  regioes: string[];
   value: string;
   onChange: (value: string) => void;
   error?: string;
   required?: boolean;
+  regioes: string[];
 }
 
 const RegiaoAdministrativaField: React.FC<RegiaoAdministrativaFieldProps> = ({ 

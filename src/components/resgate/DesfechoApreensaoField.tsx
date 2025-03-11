@@ -13,7 +13,6 @@ import FormField from './FormField';
 import FormSection from './FormSection';
 
 interface DesfechoApreensaoFieldProps {
-  origem: string;
   desfechoApreensao: string;
   numeroTCO: string;
   outroDesfecho: string;
@@ -29,7 +28,6 @@ interface DesfechoApreensaoFieldProps {
 }
 
 const DesfechoApreensaoField: React.FC<DesfechoApreensaoFieldProps> = ({
-  origem,
   desfechoApreensao,
   numeroTCO,
   outroDesfecho,
@@ -39,8 +37,6 @@ const DesfechoApreensaoField: React.FC<DesfechoApreensaoFieldProps> = ({
   errors = {},
   required = false
 }) => {
-  if (origem !== 'Apreensão') return null;
-
   return (
     <FormSection>
       <FormField id="desfechoApreensao" label="Desfecho da Apreensão" error={errors.desfechoApreensao} required={required}>
