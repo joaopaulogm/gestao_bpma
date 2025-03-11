@@ -8,38 +8,8 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { toast } from 'sonner';
 
-// Temporary mapbox token input for development
-const MapboxTokenInput = ({ onTokenSubmit }) => {
-  const [token, setToken] = useState('');
-  
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (token.trim()) {
-      onTokenSubmit(token.trim());
-    }
-  };
-  
-  return (
-    <div className="mb-4 p-4 border border-yellow-400 bg-yellow-50 rounded-md">
-      <p className="text-sm mb-2">Para visualizar o mapa, insira seu token público do Mapbox:</p>
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input 
-          type="text" 
-          value={token} 
-          onChange={(e) => setToken(e.target.value)}
-          className="flex-1 px-3 py-2 border rounded-md text-sm"
-          placeholder="pk.eyJ1IjoieW91..."
-        />
-        <button type="submit" className="bg-fauna-blue text-white px-3 py-2 rounded-md text-sm">
-          Aplicar
-        </button>
-      </form>
-      <p className="text-xs mt-2 text-gray-500">
-        Obtenha seu token em <a href="https://account.mapbox.com/access-tokens/" target="_blank" rel="noopener noreferrer" className="text-fauna-blue">mapbox.com</a>
-      </p>
-    </div>
-  );
-};
+// Configuração do token do Mapbox
+mapboxgl.accessToken = 'pk.eyJ1Ijoiam9hb3BhdWxvZ20iLCJhIjoiY204NHZ4ODY0MmE0aTJ0cTE3ZWh3Z2lmcCJ9.P0DpsEES8FCV6jIobfqZVA';
 
 interface RegistroLocation {
   id: string;
@@ -58,7 +28,6 @@ const Hotspots = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [locations, setLocations] = useState<RegistroLocation[]>([]);
   const [hotspotRegions, setHotspotRegions] = useState<HotspotRegion[]>([]);
-  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
 
@@ -123,11 +92,8 @@ const Hotspots = () => {
   }, []);
   
   useEffect(() => {
-    // Initialize map when container is available and token is provided
-    if (!mapContainer.current || !mapboxToken || !locations.length) return;
-    
-    // Initialize map
-    mapboxgl.accessToken = mapboxToken;
+    // Initialize map when container is available and locations are loaded
+    if (!mapContainer.current || !locations.length) return;
     
     try {
       if (map.current) return; // Avoid reinitializing
@@ -189,35 +155,18 @@ const Hotspots = () => {
         map.current = null;
       }
     };
-  }, [mapboxToken, locations]);
-  
-  const handleTokenSubmit = (token: string) => {
-    setMapboxToken(token);
-  };
+  }, [locations]);
   
   return (
     <Layout title="Hotspots" showBackButton>
       <div className="space-y-6 animate-fade-in">
         <Card>
           <CardContent className="p-6">
-            {!mapboxToken && (
-              <MapboxTokenInput onTokenSubmit={handleTokenSubmit} />
-            )}
-            
             <div className="bg-gray-100 rounded-lg relative min-h-[500px] flex items-center justify-center">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center gap-2">
                   <Loader2 className="h-8 w-8 text-fauna-blue animate-spin" />
                   <p className="text-sm text-gray-500">Carregando dados do mapa...</p>
-                </div>
-              ) : !mapboxToken ? (
-                <div className="text-center space-y-4">
-                  <MapPin className="h-12 w-12 text-fauna-blue mx-auto" />
-                  <h3 className="text-lg font-medium">Mapa de Hotspots</h3>
-                  <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                    Insira seu token do Mapbox acima para visualizar o mapa de hotspots 
-                    com base nos registros cadastrados.
-                  </p>
                 </div>
               ) : locations.length === 0 ? (
                 <div className="text-center space-y-4">
