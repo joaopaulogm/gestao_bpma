@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import { ResgateFormData } from '@/schemas/resgateSchema';
 import { Especie } from '@/services/especieService';
 import { regioes } from '@/constants/regioes';
@@ -29,6 +31,7 @@ interface ResgateFormProps {
   carregandoEspecie: boolean;
   isSubmitting: boolean;
   isEditing: boolean;
+  fetchError?: string | null;
 }
 
 const ResgateForm: React.FC<ResgateFormProps> = ({
@@ -42,11 +45,31 @@ const ResgateForm: React.FC<ResgateFormProps> = ({
   especieSelecionada,
   carregandoEspecie,
   isSubmitting,
-  isEditing
+  isEditing,
+  fetchError
 }) => {
+  // Check if we have form-level errors
+  const formLevelError = errors.root?.message || errors._errors?.join(', ');
+
   return (
     <div className="space-y-6 animate-fade-in">
       <ResgateFormHeader isEditing={isEditing} isSubmitting={isSubmitting} />
+      
+      {fetchError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar dados</AlertTitle>
+          <AlertDescription>{fetchError}</AlertDescription>
+        </Alert>
+      )}
+      
+      {formLevelError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro de validação</AlertTitle>
+          <AlertDescription>{formLevelError}</AlertDescription>
+        </Alert>
+      )}
       
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
         <FormSection title="Informações Gerais">
@@ -55,6 +78,7 @@ const ResgateForm: React.FC<ResgateFormProps> = ({
               value={formData.data}
               onChange={handleChange}
               error={errors.data?.message}
+              required={true}
             />
             
             <RegiaoAdministrativaField 
@@ -62,6 +86,7 @@ const ResgateForm: React.FC<ResgateFormProps> = ({
               onChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
               error={errors.regiaoAdministrativa?.message}
               regioes={regioes}
+              required={true}
             />
           </div>
           
@@ -77,6 +102,7 @@ const ResgateForm: React.FC<ResgateFormProps> = ({
               latitudeOrigem: errors.latitudeOrigem?.message,
               longitudeOrigem: errors.longitudeOrigem?.message
             }}
+            required={true}
           />
           
           {formData.origem === 'Apreensão' && (
@@ -92,6 +118,7 @@ const ResgateForm: React.FC<ResgateFormProps> = ({
                 numeroTCO: errors.numeroTCO?.message,
                 outroDesfecho: errors.outroDesfecho?.message
               }}
+              required={true}
             />
           )}
         </FormSection>
@@ -101,6 +128,7 @@ const ResgateForm: React.FC<ResgateFormProps> = ({
             value={formData.classeTaxonomica}
             onChange={(value) => handleSelectChange('classeTaxonomica', value)}
             error={errors.classeTaxonomica?.message}
+            required={true}
           />
           
           {formData.classeTaxonomica && (
@@ -111,6 +139,7 @@ const ResgateForm: React.FC<ResgateFormProps> = ({
                 onChange={(value) => handleSelectChange('especieId', value)}
                 error={errors.especieId?.message}
                 isLoading={carregandoEspecie}
+                required={true}
               />
               
               {especieSelecionada && (
@@ -136,6 +165,7 @@ const ResgateForm: React.FC<ResgateFormProps> = ({
             errorEstadoSaude={errors.estadoSaude?.message}
             errorAtropelamento={errors.atropelamento?.message}
             errorEstagioVida={errors.estagioVida?.message}
+            required={true}
           />
         </FormSection>
         
@@ -162,6 +192,7 @@ const ResgateForm: React.FC<ResgateFormProps> = ({
             latitudeSolturaError={errors.latitudeSoltura?.message}
             longitudeSolturaError={errors.longitudeSoltura?.message}
             outroDestinacaoError={errors.outroDestinacao?.message}
+            required={true}
           />
         </FormSection>
         

@@ -7,13 +7,18 @@ import { type Especie } from '@/services/especieService';
 
 export const useResgateSubmission = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   const salvarRegistroNoBanco = async (data: ResgateFormData, especieSelecionada: Especie | null) => {
     if (!especieSelecionada) {
+      setSubmissionError("É necessário selecionar uma espécie para continuar");
+      toast.error("É necessário selecionar uma espécie para continuar");
       console.error("Espécie não selecionada");
       return false;
     }
 
+    setSubmissionError(null);
+    
     try {
       // Converter a data para formato ISO string para o banco de dados
       const dataFormatada = new Date(data.data);
@@ -44,23 +49,29 @@ export const useResgateSubmission = () => {
       });
 
       if (error) {
+        setSubmissionError(`Erro ao salvar registro: ${error.message}`);
         console.error("Erro ao salvar registro:", error);
         toast.error("Erro ao salvar registro: " + error.message);
         return false;
       }
 
+      setSubmissionError(null);
       console.log("Registro salvo com sucesso!");
       return true;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      setSubmissionError(`Erro ao salvar registro: ${errorMessage}`);
       console.error("Erro ao salvar registro:", error);
-      toast.error("Erro ao salvar registro no banco de dados");
+      toast.error(`Erro ao salvar registro no banco de dados: ${errorMessage}`);
       return false;
     }
   };
 
   return {
     isSubmitting,
+    submissionError,
     setIsSubmitting,
+    setSubmissionError,
     salvarRegistroNoBanco
   };
 };

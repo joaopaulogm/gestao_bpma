@@ -31,7 +31,8 @@ const DataField: React.FC<DataFieldProps> = ({
           type="date"
           value={value}
           onChange={onChange}
-          className={error ? "border-red-500" : ""}
+          className={error ? "border-red-500 bg-red-50" : ""}
+          aria-invalid={!!error}
         />
       </FormField>
     </FormSection>

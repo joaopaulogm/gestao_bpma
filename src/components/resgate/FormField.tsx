@@ -23,17 +23,21 @@ const FormField: React.FC<FormFieldProps> = ({
   required = false
 }) => {
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${error ? 'animate-shake' : ''}`}>
       <Label htmlFor={id} className="flex items-center">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
         {loading && <span className="ml-2 text-gray-500 text-sm">(Carregando...)</span>}
       </Label>
       
-      {children}
+      <div className={error ? "ring-1 ring-red-500 rounded-md" : ""}>
+        {children}
+      </div>
       
       {error && (
-        <div className="text-red-500 text-sm">{error}</div>
+        <div className="text-red-500 text-sm font-medium bg-red-50 p-2 rounded-md border-l-2 border-red-500">
+          {error}
+        </div>
       )}
     </div>
   );

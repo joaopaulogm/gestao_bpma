@@ -27,6 +27,7 @@ const ResgateFormContainer = () => {
   const editingId = searchParams.get('editar');
   const [isEditing, setIsEditing] = useState(false);
   const [originalRegistro, setOriginalRegistro] = useState<Registro | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   
   useEffect(() => {
     // Check if we're in edit mode and have a registro
@@ -46,6 +47,7 @@ const ResgateFormContainer = () => {
   
   const fetchRegistro = async (id: string) => {
     try {
+      setFetchError(null);
       const { data, error } = await supabase
         .from('registros')
         .select('*')
@@ -61,8 +63,13 @@ const ResgateFormContainer = () => {
       }
     } catch (error) {
       console.error('Erro ao buscar registro para edição:', error);
+      setFetchError('Não foi possível carregar o registro para edição');
       toast.error('Erro ao carregar os dados do registro');
-      navigate('/registros');
+      
+      // Give the user time to see the toast before redirecting
+      setTimeout(() => {
+        navigate('/registros');
+      }, 2000);
     }
   };
   
@@ -111,7 +118,7 @@ const ResgateFormContainer = () => {
       }
     } catch (error) {
       console.error('Erro ao buscar ID da espécie:', error);
-      // Don't show an error toast as this is a background operation
+      toast.error('Não foi possível identificar a espécie do registro. Por favor, selecione novamente.');
     }
   };
   
@@ -156,6 +163,14 @@ const ResgateFormContainer = () => {
       } catch (error) {
         console.error('Erro ao atualizar registro:', error);
         toast.error('Erro ao atualizar o registro');
+        
+        // Highlight specific validation issues if available
+        if (error instanceof Error) {
+          form.setError('root', { 
+            type: 'manual',
+            message: `Erro ao atualizar: ${error.message}`
+          });
+        }
       }
     } else {
       // Default submission for new records
@@ -176,6 +191,7 @@ const ResgateFormContainer = () => {
       carregandoEspecie={carregandoEspecie}
       isSubmitting={isSubmitting}
       isEditing={isEditing}
+      fetchError={fetchError}
     />
   );
 };
