@@ -112,7 +112,7 @@ const DataField: React.FC<DataFieldProps> = ({
         error={error}
         required={required}
       >
-        <div className="flex w-full gap-2">
+        <div className="flex w-auto inline-flex gap-2">
           <Input
             id="data"
             name="data"
@@ -121,7 +121,7 @@ const DataField: React.FC<DataFieldProps> = ({
             value={value}
             onChange={handleInputChange}
             className={cn(
-              "flex-1",
+              "w-auto min-w-28",
               error ? "border-red-500 bg-red-50" : ""
             )}
             maxLength={10}
