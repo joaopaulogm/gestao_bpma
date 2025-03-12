@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { supabase } from '@/integrations/supabase/client';
@@ -140,7 +141,7 @@ const Registros = () => {
 
   return (
     <Layout title="Lista de Registros" showBackButton>
-      <div className="space-y-6 animate-fade-in w-full">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in w-full">
         <RegistrosActions
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -161,7 +162,7 @@ const Registros = () => {
           />
         )}
         
-        <div className="border border-fauna-border rounded-lg overflow-hidden w-full">
+        <div className="border border-fauna-border rounded-lg shadow-sm overflow-hidden w-full">
           {isLoading ? (
             <RegistrosLoading />
           ) : (

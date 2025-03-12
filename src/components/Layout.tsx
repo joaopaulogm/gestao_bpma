@@ -16,14 +16,14 @@ const Layout = ({ children, title, showBackButton = false }: LayoutProps) => {
   
   // Use wider layout for registros page
   const isRegistrosPage = location.pathname === '/registros';
-  const maxWidthClass = isRegistrosPage ? 'max-w-7xl' : 'max-w-4xl';
+  const maxWidthClass = isRegistrosPage ? 'max-w-full lg:max-w-[95%]' : 'max-w-4xl';
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Header />
       
-      <main className={`flex-1 p-4 ${maxWidthClass} mx-auto w-full`}>
-        <div className="flex items-center gap-3 mb-6">
+      <main className={`flex-1 p-2 sm:p-4 ${maxWidthClass} mx-auto w-full`}>
+        <div className="flex items-center gap-3 mb-4 sm:mb-6">
           {showBackButton && (
             <button 
               onClick={() => navigate(-1)} 
@@ -33,7 +33,7 @@ const Layout = ({ children, title, showBackButton = false }: LayoutProps) => {
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <h1 className="text-2xl font-medium text-fauna-blue">{title}</h1>
+          <h1 className="text-xl sm:text-2xl font-medium text-fauna-blue">{title}</h1>
         </div>
         
         {children}
