@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ResgateFormData } from '@/schemas/resgateSchema';
-import { regioes } from '@/hooks/useFormResgateData';
+import { regioes } from '@/constants/regioes';
 import FormSection from './FormSection';
 import DataField from './DataField';
 import RegiaoAdministrativaField from './RegiaoAdministrativaField';
@@ -24,15 +24,15 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
   return (
     <FormSection title="Informações Gerais">
       <DataField 
-        data={formData.data}
+        value={formData.data}
         onChange={handleChange}
         error={errors.data?.message}
         required={true}
       />
       
       <RegiaoAdministrativaField 
-        regiaoAdministrativa={formData.regiaoAdministrativa}
-        onRegiaoChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
+        value={formData.regiaoAdministrativa}
+        onChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
         error={errors.regiaoAdministrativa?.message}
         regioes={regioes}
         required={true}
