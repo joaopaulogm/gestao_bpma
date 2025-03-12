@@ -61,24 +61,26 @@ export const useResgateFormEdit = (
   };
 
   const populateFormWithRegistro = async (registro: Registro) => {
-    const formatDateForForm = (dateString: string) => {
+    // Format date from database (YYYY-MM-DD) to DD/MM/YYYY for form display
+    const formatDate = (dateString: string) => {
       try {
-        if (dateString.includes('T')) {
-          return dateString.split('T')[0];
-        }
-        
         const date = new Date(dateString);
-        return date.toISOString().split('T')[0];
+        return date.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
       } catch (error) {
-        console.error('Error formatting date for form:', error, dateString);
+        console.error('Error formatting date:', error);
         return dateString;
       }
     };
     
     form.reset({
+      data: formatDate(registro.data),
       regiaoAdministrativa: registro.regiao_administrativa,
-      data: formatDateForForm(registro.data),
       origem: registro.origem,
+      desfechoResgate: registro.desfecho_resgate || '',
       latitudeOrigem: registro.latitude_origem,
       longitudeOrigem: registro.longitude_origem,
       desfechoApreensao: registro.desfecho_apreensao || '',
