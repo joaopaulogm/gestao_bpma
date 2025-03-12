@@ -177,7 +177,7 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
           id="quantidade"
           name="quantidade"
           type="number"
-          value={quantidadeAdulto + quantidadeFilhote}
+          value={quantidade.toString()}
           className="text-center bg-slate-50"
           readOnly
         />

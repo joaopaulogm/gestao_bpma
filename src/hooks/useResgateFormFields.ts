@@ -28,13 +28,13 @@ export const useResgateFormFields = (form: UseFormReturn<ResgateFormData>) => {
 
   const handleQuantidadeChange = (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => {
     if (tipo === 'adulto') {
-      const currentValue = formData.quantidadeAdulto;
+      const currentValue = formData.quantidadeAdulto || 0; // Ensure we have a value even if it's undefined
       setValue('quantidadeAdulto', operacao === 'aumentar' 
         ? currentValue + 1 
         : Math.max(0, currentValue - 1)
       );
     } else {
-      const currentValue = formData.quantidadeFilhote;
+      const currentValue = formData.quantidadeFilhote || 0; // Ensure we have a value even if it's undefined
       setValue('quantidadeFilhote', operacao === 'aumentar' 
         ? currentValue + 1 
         : Math.max(0, currentValue - 1)
@@ -42,8 +42,12 @@ export const useResgateFormFields = (form: UseFormReturn<ResgateFormData>) => {
     }
     
     // Update total quantity
-    const totalQuantidade = formData.quantidadeAdulto + formData.quantidadeFilhote;
-    setValue('quantidade', totalQuantidade > 0 ? totalQuantidade : 0);
+    const adultos = formData.quantidadeAdulto || 0;
+    const filhotes = formData.quantidadeFilhote || 0;
+    const totalQuantidade = (operacao === 'aumentar' ? 1 : -1) + (tipo === 'adulto' ? adultos : filhotes) + (tipo === 'adulto' ? filhotes : adultos);
+    
+    // Ensure the total is at least 0
+    setValue('quantidade', Math.max(0, totalQuantidade));
   };
 
   const getFieldError = (fieldName: keyof ResgateFormData): string | undefined => {

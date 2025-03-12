@@ -102,6 +102,10 @@ export const useResgateFormEdit = (
     console.log("Populando formulário com registro:", registro);
     console.log("Classe taxonômica a ser definida:", registro.classe_taxonomica);
     
+    // Ensure quantidades are numbers, not null
+    const quantidadeAdulto = registro.quantidade_adulto || 0;
+    const quantidadeFilhote = registro.quantidade_filhote || 0;
+    
     form.reset({
       data: formatDate(registro.data),
       regiaoAdministrativa: registro.regiao_administrativa,
@@ -118,6 +122,8 @@ export const useResgateFormEdit = (
       atropelamento: registro.atropelamento,
       estagioVida: registro.estagio_vida,
       quantidade: registro.quantidade,
+      quantidadeAdulto,
+      quantidadeFilhote,
       destinacao: registro.destinacao,
       numeroTermoEntrega: registro.numero_termo_entrega || '',
       horaGuardaCEAPA: registro.hora_guarda_ceapa || '',
