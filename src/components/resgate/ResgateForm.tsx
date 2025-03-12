@@ -11,7 +11,7 @@ interface ResgateFormProps {
   errors: any;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
-  handleQuantidadeChange: (operacao: 'aumentar' | 'diminuir') => void;
+  handleQuantidadeChange: (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;
   handleFormSubmit: (data: any) => Promise<void>;
   especieSelecionada: Especie | null;
   carregandoEspecie: boolean;
