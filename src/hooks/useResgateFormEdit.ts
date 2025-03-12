@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -105,6 +104,7 @@ export const useResgateFormEdit = (
     // Ensure quantidades are numbers, not null
     const quantidadeAdulto = registro.quantidade_adulto || 0;
     const quantidadeFilhote = registro.quantidade_filhote || 0;
+    const quantidade = quantidadeAdulto + quantidadeFilhote;
     
     form.reset({
       data: formatDate(registro.data),
@@ -121,7 +121,7 @@ export const useResgateFormEdit = (
       estadoSaude: registro.estado_saude,
       atropelamento: registro.atropelamento,
       estagioVida: registro.estagio_vida,
-      quantidade: registro.quantidade,
+      quantidade,
       quantidadeAdulto,
       quantidadeFilhote,
       destinacao: registro.destinacao,

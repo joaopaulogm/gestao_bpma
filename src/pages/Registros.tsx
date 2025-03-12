@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,7 +49,13 @@ const Registros = () => {
         .order('data', { ascending: false });
       
       if (error) throw error;
-      setRegistros(data || []);
+      
+      const registrosWithQuantities = (data || []).map(reg => ({
+        ...reg,
+        quantidade: (reg.quantidade_adulto || 0) + (reg.quantidade_filhote || 0)
+      }));
+      
+      setRegistros(registrosWithQuantities);
     } catch (error) {
       console.error('Erro ao buscar registros:', error);
       toast.error('Erro ao carregar os registros');

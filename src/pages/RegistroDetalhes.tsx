@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -30,6 +29,8 @@ interface Registro {
   atropelamento: string;
   estagio_vida: string;
   quantidade: number;
+  quantidade_adulto: number;
+  quantidade_filhote: number;
   destinacao: string;
   numero_termo_entrega: string | null;
   hora_guarda_ceapa: string | null;
@@ -151,6 +152,8 @@ const RegistroDetalhes = () => {
           atropelamento={registro.atropelamento}
           estagio_vida={registro.estagio_vida}
           quantidade={registro.quantidade}
+          quantidade_adulto={registro.quantidade_adulto}
+          quantidade_filhote={registro.quantidade_filhote}
         />
 
         <InformacoesDestinacaoCard 

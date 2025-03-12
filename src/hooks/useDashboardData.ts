@@ -1,9 +1,7 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-// Define the FilterState interface that was missing
 export interface FilterState {
   year: number;
   month: number | null;
@@ -60,42 +58,39 @@ export const useDashboardData = () => {
     const resgates = registros.filter(r => r.origem === 'Resgate de Fauna');
     const apreensoes = registros.filter(r => r.origem === 'Apreensão');
 
-    // Processar dados para distribuição por classe
     const classeCount = registros.reduce((acc, reg) => {
       acc[reg.classe_taxonomica] = (acc[reg.classe_taxonomica] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    // Processar dados para destinos
     const destinosCount = registros.reduce((acc, reg) => {
       acc[reg.destinacao] = (acc[reg.destinacao] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    // Processar dados para desfechos de apreensão
     const desfechosCount = apreensoes.reduce((acc, reg) => {
       const desfecho = reg.desfecho_apreensao || 'Não informado';
       acc[desfecho] = (acc[desfecho] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    // Processar espécies mais resgatadas
     const especiesResgatadas = resgates.reduce((acc, reg) => {
-      acc[reg.nome_popular] = (acc[reg.nome_popular] || 0) + reg.quantidade;
+      const total = (reg.quantidade_adulto || 0) + (reg.quantidade_filhote || 0);
+      acc[reg.nome_popular] = (acc[reg.nome_popular] || 0) + total;
       return acc;
     }, {} as Record<string, number>);
 
-    // Processar espécies mais apreendidas
     const especiesApreendidas = apreensoes.reduce((acc, reg) => {
-      acc[reg.nome_popular] = (acc[reg.nome_popular] || 0) + reg.quantidade;
+      const total = (reg.quantidade_adulto || 0) + (reg.quantidade_filhote || 0);
+      acc[reg.nome_popular] = (acc[reg.nome_popular] || 0) + total;
       return acc;
     }, {} as Record<string, number>);
 
-    // Processar atropelamentos
     const atropelamentosData = registros
       .filter(r => r.atropelamento === 'Sim')
       .reduce((acc, reg) => {
-        acc[reg.nome_popular] = (acc[reg.nome_popular] || 0) + reg.quantidade;
+        const total = (reg.quantidade_adulto || 0) + (reg.quantidade_filhote || 0);
+        acc[reg.nome_popular] = (acc[reg.nome_popular] || 0) + total;
         return acc;
     }, {} as Record<string, number>);
 

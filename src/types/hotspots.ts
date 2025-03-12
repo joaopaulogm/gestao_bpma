@@ -30,6 +30,8 @@ export interface Registro {
   atropelamento: string;
   estagio_vida: string;
   quantidade: number;
+  quantidade_adulto: number;
+  quantidade_filhote: number;
   destinacao: string;
   numero_termo_entrega: string | null;
   hora_guarda_ceapa: string | null;
@@ -37,4 +39,6 @@ export interface Registro {
   latitude_soltura: string | null;
   longitude_soltura: string | null;
   outro_destinacao: string | null;
+  created_at: string;
 }
+
