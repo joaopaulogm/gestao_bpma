@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { ResgateFormData } from '@/schemas/resgateSchema';
+import { regioes } from '@/hooks/useFormResgateData';
 import FormSection from './FormSection';
-import RegiaoAdministrativaField from './RegiaoAdministrativaField';
 import DataField from './DataField';
+import RegiaoAdministrativaField from './RegiaoAdministrativaField';
 import OrigemField from './OrigemField';
 import DesfechoApreensaoField from './DesfechoApreensaoField';
-import { regioes } from '@/constants/regioes';
 
 interface InformacoesGeraisSectionProps {
   formData: ResgateFormData;
@@ -23,32 +23,33 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
 }) => {
   return (
     <FormSection title="Informações Gerais">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <DataField 
-          value={formData.data}
-          onChange={handleChange}
-          error={errors.data?.message}
-          required={true}
-        />
-        
-        <RegiaoAdministrativaField 
-          value={formData.regiaoAdministrativa}
-          onChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
-          error={errors.regiaoAdministrativa?.message}
-          regioes={regioes}
-          required={true}
-        />
-      </div>
+      <DataField 
+        data={formData.data}
+        onChange={handleChange}
+        error={errors.data?.message}
+        required={true}
+      />
+      
+      <RegiaoAdministrativaField 
+        regiaoAdministrativa={formData.regiaoAdministrativa}
+        onRegiaoChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
+        error={errors.regiaoAdministrativa?.message}
+        regioes={regioes}
+        required={true}
+      />
       
       <OrigemField 
         origem={formData.origem}
-        onOrigemChange={(value) => handleSelectChange('origem', value)}
+        desfechoResgate={formData.desfechoResgate}
         latitudeOrigem={formData.latitudeOrigem}
         longitudeOrigem={formData.longitudeOrigem}
+        onOrigemChange={(value) => handleSelectChange('origem', value)}
+        onDesfechoResgateChange={(value) => handleSelectChange('desfechoResgate', value)}
         onLatitudeChange={handleChange}
         onLongitudeChange={handleChange}
         errors={{
           origem: errors.origem?.message,
+          desfechoResgate: errors.desfechoResgate?.message,
           latitudeOrigem: errors.latitudeOrigem?.message,
           longitudeOrigem: errors.longitudeOrigem?.message
         }}
@@ -58,9 +59,9 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
       {formData.origem === 'Apreensão' && (
         <DesfechoApreensaoField 
           desfechoApreensao={formData.desfechoApreensao}
-          onDesfechoChange={(value) => handleSelectChange('desfechoApreensao', value)}
           numeroTCO={formData.numeroTCO}
           outroDesfecho={formData.outroDesfecho}
+          onDesfechoChange={(value) => handleSelectChange('desfechoApreensao', value)}
           onNumeroTCOChange={handleChange}
           onOutroDesfechoChange={handleChange}
           errors={{

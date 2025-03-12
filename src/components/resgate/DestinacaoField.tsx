@@ -76,6 +76,7 @@ const DestinacaoField: React.FC<DestinacaoFieldProps> = ({
             <SelectItem value="HFAUS/IBRAM">HFAUS/IBRAM</SelectItem>
             <SelectItem value="CEAPA/BPMA">CEAPA/BPMA</SelectItem>
             <SelectItem value="Soltura">Soltura</SelectItem>
+            <SelectItem value="Vida Livre">Vida Livre</SelectItem>
             <SelectItem value="Outros">Outros</SelectItem>
           </SelectContent>
         </Select>
