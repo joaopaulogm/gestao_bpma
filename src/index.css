@@ -140,3 +140,45 @@
   opacity: 0.3;
   margin: 1rem 0;
 }
+
+/* Dashboard chart styles */
+.recharts-tooltip-cursor {
+  @apply opacity-20;
+}
+
+.recharts-legend-item-text {
+  @apply text-xs inline-block text-slate-700;
+}
+
+.recharts-cartesian-axis-tick-value {
+  @apply fill-slate-500 text-xs;
+}
+
+.recharts-pie-label-text {
+  @apply fill-slate-700 text-xs;
+}
+
+.recharts-default-tooltip {
+  @apply bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg rounded-lg !important;
+}
+
+/* Custom card styles for dashboard */
+.dashboard-card {
+  @apply bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300;
+}
+
+.card-gradient-blue {
+  @apply bg-gradient-to-r from-blue-50 to-white;
+}
+
+.card-gradient-purple {
+  @apply bg-gradient-to-r from-purple-50 to-white;
+}
+
+.card-gradient-green {
+  @apply bg-gradient-to-r from-green-50 to-white;
+}
+
+.card-gradient-pink {
+  @apply bg-gradient-to-r from-pink-50 to-white;
+}

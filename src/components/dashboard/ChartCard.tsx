@@ -9,11 +9,13 @@ interface ChartCardProps {
 
 const ChartCard: React.FC<ChartCardProps> = ({ title, children }) => {
   return (
-    <Card className="col-span-1">
-      <CardHeader>
-        <CardTitle className="text-xl font-medium text-fauna-blue">{title}</CardTitle>
+    <Card className="col-span-1 overflow-hidden border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+      <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100 pb-3">
+        <CardTitle className="text-lg font-medium text-slate-800 flex items-center">
+          {title}
+        </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4">
         <div className="h-80">
           {children}
         </div>
