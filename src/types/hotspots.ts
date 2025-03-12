@@ -20,6 +20,7 @@ export interface Registro {
   latitude_origem: string;
   longitude_origem: string;
   desfecho_apreensao: string | null;
+  desfecho_resgate: string | null;
   numero_tco: string | null;
   outro_desfecho: string | null;
   classe_taxonomica: string;
