@@ -7,6 +7,8 @@ import { ResgateFormData } from '@/schemas/resgateSchema';
 import { Registro } from '@/types/hotspots';
 import { supabase } from '@/integrations/supabase/client';
 import { buscarEspeciePorNomeCientifico } from '@/services/especieService';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export const useResgateFormEdit = (
   form: UseFormReturn<ResgateFormData>,
@@ -64,14 +66,27 @@ export const useResgateFormEdit = (
     // Format date from database (YYYY-MM-DD) to DD/MM/YYYY for form display
     const formatDate = (dateString: string) => {
       try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
-        });
+        // If it's in YYYY-MM-DD format
+        if (dateString.includes('-')) {
+          const [year, month, day] = dateString.split('-').map(Number);
+          // Using date-fns with ptBR locale to ensure DD/MM/YYYY format
+          return format(new Date(year, month - 1, day), 'dd/MM/yyyy', { locale: ptBR });
+        }
+        
+        // For ISO format with T
+        if (dateString.includes('T')) {
+          return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
+        }
+        
+        // If already in DD/MM/YYYY
+        if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+          return dateString;
+        }
+        
+        // Default fallback
+        return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
       } catch (error) {
-        console.error('Error formatting date:', error);
+        console.error('Error formatting date:', error, dateString);
         return dateString;
       }
     };

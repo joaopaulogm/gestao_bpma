@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { type ResgateFormData } from '@/schemas/resgateSchema';
 import { type Especie } from '@/services/especieService';
+import { parse, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export const useResgateSubmission = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,8 +22,17 @@ export const useResgateSubmission = () => {
     setSubmissionError(null);
     
     try {
-      // Parse the date properly and format it for PostgreSQL (YYYY-MM-DD)
-      const dataObj = new Date(data.data);
+      // Parse the date from DD/MM/YYYY format to Date object
+      let dataObj: Date;
+      
+      // Check if data.data is in DD/MM/YYYY format
+      if (data.data.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        // Parse from Brazilian date format DD/MM/YYYY
+        dataObj = parse(data.data, 'dd/MM/yyyy', new Date(), { locale: ptBR });
+      } else {
+        // Fallback to direct Date parsing
+        dataObj = new Date(data.data);
+      }
       
       // Check if date is valid
       if (isNaN(dataObj.getTime())) {
@@ -29,7 +40,7 @@ export const useResgateSubmission = () => {
       }
       
       // Format date as YYYY-MM-DD for PostgreSQL
-      const dataFormatada = dataObj.toISOString().split('T')[0];
+      const dataFormatada = format(dataObj, 'yyyy-MM-dd');
       
       console.log('Saving date to database:', dataFormatada, 'Original value:', data.data);
       
@@ -43,6 +54,7 @@ export const useResgateSubmission = () => {
         latitude_origem: data.latitudeOrigem,
         longitude_origem: data.longitudeOrigem,
         desfecho_apreensao: data.desfechoApreensao || null,
+        desfecho_resgate: data.desfechoResgate || null,
         numero_tco: data.numeroTCO || null,
         outro_desfecho: data.outroDesfecho || null,
         estado_saude: data.estadoSaude,

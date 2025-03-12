@@ -3,7 +3,8 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Eye, Edit, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Registro } from '@/types/hotspots';
 
 interface RegistrosTableProps {
@@ -21,14 +22,25 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
 }) => {
   const formatDateTime = (dateString: string) => {
     try {
-      // Ensure consistent date parsing
-      const [year, month, day] = dateString.includes('T') 
-        ? dateString.split('T')[0].split('-').map(Number)
-        : dateString.split('-').map(Number);
+      // For database date format (YYYY-MM-DD)
+      if (dateString.includes('-')) {
+        const [year, month, day] = dateString.split('-').map(Number);
+        // Create date object ensuring we use correct day/month (not US format)
+        return format(new Date(year, month - 1, day), 'dd/MM/yyyy', { locale: ptBR });
+      }
       
-      // Create date object with exact components (avoiding timezone shifts)
-      const date = new Date(year, month - 1, day);
-      return format(date, 'dd/MM/yyyy');
+      // For ISO format dates (with 'T')
+      if (dateString.includes('T')) {
+        return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
+      }
+      
+      // If it's already in DD/MM/YYYY format
+      if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        return dateString;
+      }
+      
+      // Fallback
+      return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
     } catch (error) {
       console.error('Error formatting date:', error, dateString);
       return dateString;

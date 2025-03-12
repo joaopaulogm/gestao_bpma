@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import FormField from './FormField';
@@ -29,6 +29,11 @@ const DataField: React.FC<DataFieldProps> = ({
     if (!dateValue) return undefined;
     
     try {
+      // Handle DD/MM/YYYY format (Brazilian format)
+      if (dateValue.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        return parse(dateValue, 'dd/MM/yyyy', new Date(), { locale: ptBR });
+      }
+      
       // Handle ISO format dates (with 'T')
       if (dateValue.includes('T')) {
         return new Date(dateValue);
@@ -37,12 +42,6 @@ const DataField: React.FC<DataFieldProps> = ({
       // Handle YYYY-MM-DD format
       if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const [year, month, day] = dateValue.split('-').map(Number);
-        return new Date(year, month - 1, day);
-      }
-      
-      // Handle DD/MM/YYYY format potentially entered by user
-      if (dateValue.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-        const [day, month, year] = dateValue.split('/').map(Number);
         return new Date(year, month - 1, day);
       }
       
@@ -89,7 +88,7 @@ const DataField: React.FC<DataFieldProps> = ({
     if (!date) return;
     
     // Format the selected date to DD/MM/YYYY
-    const formattedDate = format(date, 'dd/MM/yyyy');
+    const formattedDate = format(date, 'dd/MM/yyyy', { locale: ptBR });
     
     // Create a synthetic event to pass to the onChange handler
     const syntheticEvent = {

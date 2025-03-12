@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -7,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { ResgateFormData } from '@/schemas/resgateSchema';
 import { Registro } from '@/types/hotspots';
 import { Especie } from '@/services/especieService';
+import { parse, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export const useResgateFormSubmitEdit = (
   form: UseFormReturn<ResgateFormData>,
@@ -24,18 +25,30 @@ export const useResgateFormSubmitEdit = (
     setIsSubmitting(true);
     
     try {
-      const formatDateForDB = (dateString: string) => {
-        try {
-          const [year, month, day] = dateString.split('-').map(Number);
-          const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          return formattedDate;
-        } catch (error) {
-          console.error('Error formatting date for database:', error, dateString);
-          throw new Error('Data inválida');
-        }
-      };
+      // Parse the date from DD/MM/YYYY format to Date object
+      let dataObj: Date;
       
-      const dataFormatada = formatDateForDB(data.data);
+      // Check if data.data is in DD/MM/YYYY format
+      if (data.data.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        // Parse from Brazilian date format DD/MM/YYYY
+        dataObj = parse(data.data, 'dd/MM/yyyy', new Date(), { locale: ptBR });
+      } else if (data.data.includes('-')) {
+        // Handle YYYY-MM-DD format
+        const [year, month, day] = data.data.split('-').map(Number);
+        dataObj = new Date(year, month - 1, day);
+      } else {
+        // Fallback to direct Date parsing
+        dataObj = new Date(data.data);
+      }
+      
+      // Check if date is valid
+      if (isNaN(dataObj.getTime())) {
+        throw new Error('Data inválida');
+      }
+      
+      // Format date as YYYY-MM-DD for PostgreSQL
+      const dataFormatada = format(dataObj, 'yyyy-MM-dd');
+      
       console.log('Updating with date:', dataFormatada, 'Original value:', data.data);
       
       const { error } = await supabase
@@ -50,6 +63,7 @@ export const useResgateFormSubmitEdit = (
           latitude_origem: data.latitudeOrigem,
           longitude_origem: data.longitudeOrigem,
           desfecho_apreensao: data.desfechoApreensao || null,
+          desfecho_resgate: data.desfechoResgate || null,
           numero_tco: data.numeroTCO || null,
           outro_desfecho: data.outroDesfecho || null,
           estado_saude: data.estadoSaude,

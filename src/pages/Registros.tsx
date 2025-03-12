@@ -4,7 +4,8 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import RegistrosActions from '@/components/registros/RegistrosActions';
 import RegistrosFilters from '@/components/registros/RegistrosFilters';
 import RegistrosTable from '@/components/registros/RegistrosTable';
@@ -123,21 +124,36 @@ const Registros = () => {
     
     const csvRows = [
       headers.join(','),
-      ...filteredRegistros.map(registro => [
-        format(new Date(registro.data), 'dd/MM/yyyy'),
-        `"${registro.regiao_administrativa}"`,
-        registro.origem,
-        registro.latitude_origem,
-        registro.longitude_origem,
-        registro.classe_taxonomica,
-        `"${registro.nome_cientifico}"`,
-        `"${registro.nome_popular}"`,
-        registro.estado_saude,
-        registro.atropelamento,
-        registro.estagio_vida,
-        registro.quantidade,
-        registro.destinacao
-      ].join(','))
+      ...filteredRegistros.map(registro => {
+        let formattedDate;
+        try {
+          if (registro.data.includes('-')) {
+            const [year, month, day] = registro.data.split('-').map(Number);
+            formattedDate = format(new Date(year, month - 1, day), 'dd/MM/yyyy', { locale: ptBR });
+          } else {
+            formattedDate = format(new Date(registro.data), 'dd/MM/yyyy', { locale: ptBR });
+          }
+        } catch (error) {
+          console.error('Error formatting date for CSV:', error);
+          formattedDate = registro.data;
+        }
+        
+        return [
+          formattedDate,
+          `"${registro.regiao_administrativa}"`,
+          registro.origem,
+          registro.latitude_origem,
+          registro.longitude_origem,
+          registro.classe_taxonomica,
+          `"${registro.nome_cientifico}"`,
+          `"${registro.nome_popular}"`,
+          registro.estado_saude,
+          registro.atropelamento,
+          registro.estagio_vida,
+          registro.quantidade,
+          registro.destinacao
+        ].join(',');
+      })
     ];
     
     const csvString = csvRows.join('\n');
