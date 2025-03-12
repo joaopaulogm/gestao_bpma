@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,8 +6,9 @@ import DateFilter from '@/components/dashboard/DateFilter';
 import ChartCard from '@/components/dashboard/ChartCard';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Activity } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
+import { toast } from 'sonner';
 
 const COLORS = ['#071d49', '#0A2472', '#0E6BA8', '#A6E1FA', '#DAFDBA'];
 
@@ -16,37 +16,33 @@ const Dashboard = () => {
   const { data, isLoading, error, filters, updateFilters } = useDashboardData();
 
   const handleExportExcel = () => {
-    if (!data) return;
+    if (!data) {
+      toast.error("Não há dados para exportar");
+      return;
+    }
     
-    const exportData = {
-      totalResgates: data.totalResgates,
-      totalApreensoes: data.totalApreensoes,
-      distribuicaoPorClasse: data.distribuicaoPorClasse,
-      destinos: data.destinos,
-      desfechos: data.desfechos,
-      especiesMaisResgatadas: data.especiesMaisResgatadas,
-      especiesMaisApreendidas: data.especiesMaisApreendidas,
-      atropelamentos: data.atropelamentos,
-    };
-    
-    exportToExcel([exportData], `dashboard-${filters.year}-${filters.month || 'all'}`);
+    try {
+      exportToExcel(data, `dashboard-${filters.year}-${filters.month !== null ? filters.month + 1 : 'todos'}`);
+      toast.success("Dados exportados com sucesso para XLSX");
+    } catch (err) {
+      console.error("Erro ao exportar para Excel:", err);
+      toast.error("Erro ao exportar dados para XLSX");
+    }
   };
 
   const handleExportPDF = () => {
-    if (!data) return;
+    if (!data) {
+      toast.error("Não há dados para exportar");
+      return;
+    }
     
-    const exportData = {
-      totalResgates: data.totalResgates,
-      totalApreensoes: data.totalApreensoes,
-      distribuicaoPorClasse: data.distribuicaoPorClasse,
-      destinos: data.destinos,
-      desfechos: data.desfechos,
-      especiesMaisResgatadas: data.especiesMaisResgatadas,
-      especiesMaisApreendidas: data.especiesMaisApreendidas,
-      atropelamentos: data.atropelamentos,
-    };
-    
-    exportToPDF([exportData], `dashboard-${filters.year}-${filters.month || 'all'}`);
+    try {
+      exportToPDF(data, `dashboard-${filters.year}-${filters.month !== null ? filters.month + 1 : 'todos'}`);
+      toast.success("Dados exportados com sucesso para PDF");
+    } catch (err) {
+      console.error("Erro ao exportar para PDF:", err);
+      toast.error("Erro ao exportar dados para PDF");
+    }
   };
 
   if (isLoading) {
@@ -69,6 +65,8 @@ const Dashboard = () => {
     );
   }
 
+  const hasRAnalysis = data.analysis && data.analysis.r_data;
+
   return (
     <Layout title="Dashboard" showBackButton>
       <div className="space-y-6 animate-fade-in">
@@ -90,6 +88,12 @@ const Dashboard = () => {
               <Download size={16} />
               Exportar PDF
             </Button>
+            {hasRAnalysis && (
+              <div className="flex items-center text-green-500 ml-4">
+                <Activity size={16} className="mr-1" />
+                <span className="text-xs font-medium">Análise R ativa</span>
+              </div>
+            )}
           </div>
           <DateFilter
             year={filters.year}
@@ -215,6 +219,37 @@ const Dashboard = () => {
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
+
+          {hasRAnalysis && (
+            <>
+              <ChartCard title="Análise Estatística (R)">
+                <div className="p-4">
+                  <h3 className="text-lg font-medium mb-4">Sumário Estatístico</h3>
+                  <div className="overflow-auto max-h-[300px]">
+                    <pre className="text-xs bg-gray-50 p-4 rounded">
+                      {JSON.stringify(data.analysis.r_data.summary, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              </ChartCard>
+              
+              {data.analysis.r_data.plots && data.analysis.r_data.plots.length > 0 && (
+                <ChartCard title="Visualizações Avançadas (R)">
+                  <div className="p-4">
+                    {data.analysis.r_data.plots.map((plot: string, index: number) => (
+                      <div key={index} className="mb-4">
+                        <img 
+                          src={`data:image/png;base64,${plot}`} 
+                          alt={`R Plot ${index + 1}`} 
+                          className="mx-auto max-w-full"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </ChartCard>
+              )}
+            </>
+          )}
         </div>
       </div>
     </Layout>
