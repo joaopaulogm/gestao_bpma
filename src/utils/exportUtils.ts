@@ -1,9 +1,15 @@
-
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { DashboardData } from '@/hooks/useDashboardData';
 
-export const exportToExcel = (data: any, fileName: string) => {
+interface JsPDFWithAutoTable extends jsPDF {
+  lastAutoTable?: {
+    finalY: number;
+  };
+}
+
+export const exportToExcel = (data: DashboardData, fileName: string) => {
   // Convert complex nested data structure to a flattened format for Excel
   const flattenedData = flattenDataForExport(data);
   
@@ -13,8 +19,8 @@ export const exportToExcel = (data: any, fileName: string) => {
   XLSX.writeFile(wb, `${fileName}.xlsx`);
 };
 
-export const exportToPDF = (data: any, fileName: string) => {
-  const doc = new jsPDF();
+export const exportToPDF = (data: DashboardData, fileName: string) => {
+  const doc = new jsPDF() as JsPDFWithAutoTable;
   
   // Add title
   doc.setFontSize(16);

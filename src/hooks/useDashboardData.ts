@@ -1,15 +1,8 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Registro } from '@/types/hotspots';
 
-interface FilterState {
-  year: number;
-  month: number | null;
-}
-
-interface DashboardData {
+export interface DashboardData {
   totalResgates: number;
   totalApreensoes: number;
   distribuicaoPorClasse: { name: string; value: number }[];
@@ -18,6 +11,12 @@ interface DashboardData {
   especiesMaisResgatadas: { name: string; quantidade: number }[];
   especiesMaisApreendidas: { name: string; quantidade: number }[];
   atropelamentos: { name: string; quantidade: number }[];
+  analysis?: {
+    r_data?: {
+      summary?: any;
+      plots?: string[];
+    };
+  };
 }
 
 export const useDashboardData = () => {
