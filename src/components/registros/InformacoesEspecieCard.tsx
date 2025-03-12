@@ -26,6 +26,7 @@ const InformacoesEspecieCard = ({
   quantidade_adulto = 0,
   quantidade_filhote = 0,
 }: InformacoesEspecieCardProps) => {
+  // Updated this check to use 0 as the baseline since now we don't have NULLs
   const showDetailedQuantities = quantidade_adulto > 0 || quantidade_filhote > 0;
 
   return (

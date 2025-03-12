@@ -65,6 +65,8 @@ export type Database = {
           outro_desfecho: string | null
           outro_destinacao: string | null
           quantidade: number
+          quantidade_adulto: number | null
+          quantidade_filhote: number | null
           regiao_administrativa: string
         }
         Insert: {
@@ -92,6 +94,8 @@ export type Database = {
           outro_desfecho?: string | null
           outro_destinacao?: string | null
           quantidade: number
+          quantidade_adulto?: number | null
+          quantidade_filhote?: number | null
           regiao_administrativa: string
         }
         Update: {
@@ -119,6 +123,8 @@ export type Database = {
           outro_desfecho?: string | null
           outro_destinacao?: string | null
           quantidade?: number
+          quantidade_adulto?: number | null
+          quantidade_filhote?: number | null
           regiao_administrativa?: string
         }
         Relationships: []
