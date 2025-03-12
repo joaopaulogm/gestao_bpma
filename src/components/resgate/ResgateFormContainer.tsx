@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -31,7 +30,6 @@ const ResgateFormContainer = () => {
   const [fetchError, setFetchError] = useState<string | null>(null);
   
   useEffect(() => {
-    // Check if we're in edit mode and have a registro
     if (editingId) {
       const registroFromState = location.state?.registro as Registro | undefined;
       
@@ -40,7 +38,6 @@ const ResgateFormContainer = () => {
         populateFormWithRegistro(registroFromState);
         setIsEditing(true);
       } else {
-        // If we don't have the registro in state, fetch it
         fetchRegistro(editingId);
       }
     }
@@ -67,23 +64,19 @@ const ResgateFormContainer = () => {
       setFetchError('Não foi possível carregar o registro para edição');
       toast.error('Erro ao carregar os dados do registro');
       
-      // Give the user time to see the toast before redirecting
       setTimeout(() => {
         navigate('/registros');
       }, 2000);
     }
   };
   
-  const populateFormWithRegistro = (registro: Registro) => {
-    // Format the date to YYYY-MM-DD for the form
+  const populateFormWithRegistro = async (registro: Registro) => {
     const formatDateForForm = (dateString: string) => {
       try {
-        // If date is in ISO format with time part
         if (dateString.includes('T')) {
           return dateString.split('T')[0];
         }
         
-        // If it's just a date string, make sure it's in the right format
         const date = new Date(dateString);
         return date.toISOString().split('T')[0];
       } catch (error) {
@@ -92,7 +85,6 @@ const ResgateFormContainer = () => {
       }
     };
     
-    // Populate form fields with registro data
     form.reset({
       regiaoAdministrativa: registro.regiao_administrativa,
       data: formatDateForForm(registro.data),
@@ -103,7 +95,7 @@ const ResgateFormContainer = () => {
       numeroTCO: registro.numero_tco || '',
       outroDesfecho: registro.outro_desfecho || '',
       classeTaxonomica: registro.classe_taxonomica,
-      especieId: '', // This will be handled separately
+      especieId: '',
       estadoSaude: registro.estado_saude,
       atropelamento: registro.atropelamento,
       estagioVida: registro.estagio_vida,
@@ -117,21 +109,22 @@ const ResgateFormContainer = () => {
       outroDestinacao: registro.outro_destinacao || ''
     });
     
-    // We need to fetch the especie ID based on the nome_cientifico
-    fetchEspecieId(registro.nome_cientifico);
+    const especie = await buscarEspeciePorNomeCientifico(registro.nome_cientifico);
+    if (especie) {
+      form.setValue('especieId', especie.id);
+      await buscarDetalhesEspecie(especie.id);
+    } else {
+      console.warn(`Espécie com nome científico "${registro.nome_cientifico}" não encontrada`);
+      toast.warning("Espécie do registro original não encontrada no cadastro");
+    }
   };
   
-  // Add the missing function to fetch especie ID based on nome_cientifico
   const fetchEspecieId = async (nomeCientifico: string) => {
     try {
-      // Use the buscarEspeciePorNomeCientifico function to get the species by scientific name
       const especie = await buscarEspeciePorNomeCientifico(nomeCientifico);
       
       if (especie) {
-        // Set the especieId in the form
         form.setValue('especieId', especie.id);
-        
-        // Also call buscarDetalhesEspecie to populate especieSelecionada
         await buscarDetalhesEspecie(especie.id);
       } else {
         console.warn(`Espécie com nome científico "${nomeCientifico}" não encontrada`);
@@ -143,15 +136,11 @@ const ResgateFormContainer = () => {
     }
   };
   
-  // Implementando a função buscarDetalhesEspecie
   const buscarDetalhesEspecie = async (especieId: string) => {
     try {
       const especie = await buscarEspeciePorId(especieId);
       if (especie) {
-        // Esta função é usada pelo hook useFormResgateData
-        // Para sincronizar nosso estado local, vamos usá-la diretamente
         if (form.getValues('especieId') === especieId) {
-          // Atualizamos a seleção de espécie no estado do formulário
           form.setValue('especieId', especieId);
         }
       }
@@ -164,13 +153,9 @@ const ResgateFormContainer = () => {
   const handleFormSubmit = async (data: any) => {
     if (isEditing && editingId && originalRegistro) {
       try {
-        // Format the date for the database (YYYY-MM-DD)
-        // Fix timezone issue by using date constructor with separate parts
         const formatDateForDB = (dateString: string) => {
           try {
-            // Split the date string into components
             const [year, month, day] = dateString.split('-').map(Number);
-            // Create date with local timezone (avoiding timezone shifts)
             const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             return formattedDate;
           } catch (error) {
@@ -218,7 +203,6 @@ const ResgateFormContainer = () => {
         console.error('Erro ao atualizar registro:', error);
         toast.error('Erro ao atualizar o registro');
         
-        // Highlight specific validation issues if available
         if (error instanceof Error) {
           form.setError('root', { 
             type: 'manual',
@@ -227,7 +211,6 @@ const ResgateFormContainer = () => {
         }
       }
     } else {
-      // Default submission for new records
       handleSubmit(data);
     }
   };

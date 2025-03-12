@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { buscarEspeciePorId, type Especie } from '@/services/especieService';
+import { buscarEspeciePorId, buscarEspeciePorNomeCientifico, type Especie } from '@/services/especieService';
 
 export const useEspecieSelector = () => {
   const [especieSelecionada, setEspecieSelecionada] = useState<Especie | null>(null);
@@ -29,6 +29,29 @@ export const useEspecieSelector = () => {
     }
   };
 
+  const buscarEspeciePorNome = async (nomeCientifico: string) => {
+    if (!nomeCientifico) {
+      setEspecieSelecionada(null);
+      return null;
+    }
+    
+    setCarregandoEspecie(true);
+    setEspecieError(null);
+    
+    try {
+      const especie = await buscarEspeciePorNomeCientifico(nomeCientifico);
+      setEspecieSelecionada(especie);
+      return especie;
+    } catch (error) {
+      console.error("Erro ao buscar espécie por nome científico:", error);
+      setEspecieError("Não foi possível encontrar a espécie");
+      toast.error("Erro ao buscar espécie");
+      return null;
+    } finally {
+      setCarregandoEspecie(false);
+    }
+  };
+
   const limparEspecie = () => {
     setEspecieSelecionada(null);
     setEspecieError(null);
@@ -39,6 +62,8 @@ export const useEspecieSelector = () => {
     carregandoEspecie,
     especieError,
     buscarDetalhesEspecie,
+    buscarEspeciePorNome,
     limparEspecie
   };
 };
+
