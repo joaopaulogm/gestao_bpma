@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { useFormResgateData } from '@/hooks/useFormResgateData';
 import { useResgateFormEdit } from '@/hooks/useResgateFormEdit';
 import { useResgateFormSubmitEdit } from '@/hooks/useResgateFormSubmitEdit';
@@ -23,7 +23,9 @@ const ResgateFormContainer = () => {
   } = useFormResgateData();
   
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const editingId = searchParams.get('editar');
+  const isFromEditPage = location.state?.fromEdit || false;
   
   const {
     isEditing,
@@ -37,6 +39,15 @@ const ResgateFormContainer = () => {
   } = useResgateFormSubmitEdit(form, handleSubmit);
 
   const isSubmitting = isSubmittingCreate || isSubmittingEdit;
+  
+  // For debugging
+  useEffect(() => {
+    if (editingId) {
+      console.log("Modo de edição ativado, ID:", editingId);
+      console.log("Dados recebidos do estado:", location.state);
+      console.log("Classe taxonomica no formData:", formData.classeTaxonomica);
+    }
+  }, [editingId, location.state, formData.classeTaxonomica]);
   
   const onFormSubmit = async (data: ResgateFormData) => {
     await handleFormSubmit(data, isEditing, editingId, originalRegistro, especieSelecionada);

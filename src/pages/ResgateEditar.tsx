@@ -18,6 +18,8 @@ const ResgateEditar = () => {
       if (!id) return;
       
       try {
+        console.log("Buscando registro para edição, ID:", id);
+        
         const { data, error } = await supabase
           .from('registros')
           .select('*')
@@ -25,10 +27,19 @@ const ResgateEditar = () => {
           .single();
         
         if (error) throw error;
+        
+        console.log("Registro encontrado:", data);
+        console.log("Classe taxonômica do registro:", data.classe_taxonomica);
+        
         setRegistro(data);
         
-        // Redirect to the cadastro page with query parameters
-        navigate(`/resgate-cadastro?editar=${id}`, { state: { registro: data } });
+        // Redirect to the cadastro page with query parameters and state
+        navigate(`/resgate-cadastro?editar=${id}`, { 
+          state: { 
+            registro: data,
+            fromEdit: true 
+          } 
+        });
       } catch (error) {
         console.error('Erro ao buscar registro:', error);
         toast.error('Erro ao carregar o registro para edição');

@@ -23,13 +23,18 @@ export const useResgateFormEdit = (
   
   useEffect(() => {
     if (editingId) {
+      // Check for registro in location state
       const registroFromState = location.state?.registro as Registro | undefined;
       
       if (registroFromState) {
+        console.log("Registro encontrado no estado da navegação:", registroFromState);
+        console.log("Classe taxonômica do registro:", registroFromState.classe_taxonomica);
+        
         setOriginalRegistro(registroFromState);
         populateFormWithRegistro(registroFromState);
         setIsEditing(true);
       } else {
+        console.log("Registro não encontrado no estado, buscando do banco...");
         fetchRegistro(editingId);
       }
     }
@@ -47,6 +52,9 @@ export const useResgateFormEdit = (
       if (error) throw error;
       
       if (data) {
+        console.log("Registro obtido do banco:", data);
+        console.log("Classe taxonômica do registro:", data.classe_taxonomica);
+        
         setOriginalRegistro(data);
         populateFormWithRegistro(data);
         setIsEditing(true);
@@ -91,6 +99,9 @@ export const useResgateFormEdit = (
       }
     };
     
+    console.log("Populando formulário com registro:", registro);
+    console.log("Classe taxonômica a ser definida:", registro.classe_taxonomica);
+    
     form.reset({
       data: formatDate(registro.data),
       regiaoAdministrativa: registro.regiao_administrativa,
@@ -115,6 +126,9 @@ export const useResgateFormEdit = (
       longitudeSoltura: registro.longitude_soltura || '',
       outroDestinacao: registro.outro_destinacao || ''
     });
+    
+    // Log the form values after setting them
+    console.log("Valores do formulário após reset:", form.getValues());
     
     fetchEspecieByNomeCientifico(registro.nome_cientifico);
   };

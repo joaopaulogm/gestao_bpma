@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ResgateFormData } from '@/schemas/resgateSchema';
 import { Especie } from '@/services/especieService';
 import FormSection from './FormSection';
@@ -22,6 +22,11 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
   especieSelecionada,
   carregandoEspecie
 }) => {
+  // For debugging
+  useEffect(() => {
+    console.log("EspecieSection - classeTaxonomica atual:", formData.classeTaxonomica);
+  }, [formData.classeTaxonomica]);
+
   return (
     <FormSection title="Espécie">
       <ClasseTaxonomicaField 

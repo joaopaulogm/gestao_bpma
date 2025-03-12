@@ -20,6 +20,7 @@ const ClasseTaxonomicaField = ({
   const [classes, setClasses] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -39,6 +40,12 @@ const ClasseTaxonomicaField = ({
         
         console.log(`Classes encontradas: ${classesCorrigidas.join(', ')}`);
         setClasses(classesCorrigidas);
+
+        // If we have an initial value and classes are loaded, mark as initialized
+        if (value && !isInitialized) {
+          setIsInitialized(true);
+          console.log(`Classe taxonômica inicial: ${value}`);
+        }
       } catch (error) {
         console.error("Erro ao carregar classes taxonômicas:", error);
         setLoadError("Falha ao carregar classes taxonômicas");
@@ -48,7 +55,12 @@ const ClasseTaxonomicaField = ({
     };
 
     fetchClasses();
-  }, []);
+  }, [value, isInitialized]);
+
+  // For debugging
+  useEffect(() => {
+    console.log("ClasseTaxonomicaField - value atual:", value);
+  }, [value]);
 
   return (
     <FormField
