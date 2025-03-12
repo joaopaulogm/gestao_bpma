@@ -6,7 +6,7 @@ import { Eye, Edit, Trash2 } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Registro } from '@/types/hotspots';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RegistrosTableProps {
   registros: Registro[];
@@ -21,7 +21,7 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
   onEdit, 
   onDelete 
 }) => {
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useIsMobile();
   
   const formatDateTime = (dateString: string) => {
     try {
