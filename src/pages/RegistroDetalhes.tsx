@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -11,34 +12,7 @@ import RegistroActionsBar from '@/components/registros/RegistroActionsBar';
 import InformacoesGeraisCard from '@/components/registros/InformacoesGeraisCard';
 import InformacoesEspecieCard from '@/components/registros/InformacoesEspecieCard';
 import InformacoesDestinacaoCard from '@/components/registros/InformacoesDestinacaoCard';
-
-interface Registro {
-  id: string;
-  data: string;
-  regiao_administrativa: string;
-  origem: string;
-  latitude_origem: string;
-  longitude_origem: string;
-  desfecho_apreensao: string | null;
-  numero_tco: string | null;
-  outro_desfecho: string | null;
-  classe_taxonomica: string;
-  nome_cientifico: string;
-  nome_popular: string;
-  estado_saude: string;
-  atropelamento: string;
-  estagio_vida: string;
-  quantidade: number;
-  quantidade_adulto: number;
-  quantidade_filhote: number;
-  destinacao: string;
-  numero_termo_entrega: string | null;
-  hora_guarda_ceapa: string | null;
-  motivo_entrega_ceapa: string | null;
-  latitude_soltura: string | null;
-  longitude_soltura: string | null;
-  outro_destinacao: string | null;
-}
+import { Registro } from '@/types/hotspots';
 
 const RegistroDetalhes = () => {
   const { id } = useParams<{ id: string }>();
@@ -59,7 +33,15 @@ const RegistroDetalhes = () => {
         
         if (error) throw error;
         
-        setRegistro(data);
+        // Process the data to ensure quantidade is calculated properly
+        const processedRegistro: Registro = {
+          ...data,
+          quantidade_adulto: data.quantidade_adulto || 0,
+          quantidade_filhote: data.quantidade_filhote || 0,
+          quantidade: (data.quantidade_adulto || 0) + (data.quantidade_filhote || 0)
+        };
+        
+        setRegistro(processedRegistro);
       } catch (error) {
         console.error('Erro ao buscar detalhes do registro:', error);
         toast.error('Erro ao carregar os detalhes do registro');
@@ -151,9 +133,9 @@ const RegistroDetalhes = () => {
           estado_saude={registro.estado_saude}
           atropelamento={registro.atropelamento}
           estagio_vida={registro.estagio_vida}
-          quantidade={registro.quantidade}
-          quantidade_adulto={registro.quantidade_adulto}
-          quantidade_filhote={registro.quantidade_filhote}
+          quantidade={registro.quantidade || 0}
+          quantidade_adulto={registro.quantidade_adulto || 0}
+          quantidade_filhote={registro.quantidade_filhote || 0}
         />
 
         <InformacoesDestinacaoCard 

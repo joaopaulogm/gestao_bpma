@@ -31,12 +31,20 @@ const ResgateEditar = () => {
         console.log("Registro encontrado:", data);
         console.log("Classe taxonômica do registro:", data.classe_taxonomica);
         
-        setRegistro(data);
+        // Process the data to ensure quantidade is calculated properly
+        const processedRegistro: Registro = {
+          ...data,
+          quantidade_adulto: data.quantidade_adulto || 0,
+          quantidade_filhote: data.quantidade_filhote || 0,
+          quantidade: (data.quantidade_adulto || 0) + (data.quantidade_filhote || 0)
+        };
+        
+        setRegistro(processedRegistro);
         
         // Redirect to the cadastro page with query parameters and state
         navigate(`/resgate-cadastro?editar=${id}`, { 
           state: { 
-            registro: data,
+            registro: processedRegistro,
             fromEdit: true 
           } 
         });

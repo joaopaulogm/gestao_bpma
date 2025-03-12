@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,15 +56,23 @@ export const useDashboardData = () => {
       throw error;
     }
 
-    const resgates = registros.filter(r => r.origem === 'Resgate de Fauna');
-    const apreensoes = registros.filter(r => r.origem === 'Apreensão');
+    // Process the data and add the quantidade property
+    const processedRegistros = registros.map(registro => ({
+      ...registro,
+      quantidade_adulto: registro.quantidade_adulto || 0,
+      quantidade_filhote: registro.quantidade_filhote || 0,
+      quantidade: (registro.quantidade_adulto || 0) + (registro.quantidade_filhote || 0)
+    }));
 
-    const classeCount = registros.reduce((acc, reg) => {
+    const resgates = processedRegistros.filter(r => r.origem === 'Resgate de Fauna');
+    const apreensoes = processedRegistros.filter(r => r.origem === 'Apreensão');
+
+    const classeCount = processedRegistros.reduce((acc, reg) => {
       acc[reg.classe_taxonomica] = (acc[reg.classe_taxonomica] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    const destinosCount = registros.reduce((acc, reg) => {
+    const destinosCount = processedRegistros.reduce((acc, reg) => {
       acc[reg.destinacao] = (acc[reg.destinacao] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -75,21 +84,21 @@ export const useDashboardData = () => {
     }, {} as Record<string, number>);
 
     const especiesResgatadas = resgates.reduce((acc, reg) => {
-      const total = (reg.quantidade_adulto || 0) + (reg.quantidade_filhote || 0);
+      const total = reg.quantidade;
       acc[reg.nome_popular] = (acc[reg.nome_popular] || 0) + total;
       return acc;
     }, {} as Record<string, number>);
 
     const especiesApreendidas = apreensoes.reduce((acc, reg) => {
-      const total = (reg.quantidade_adulto || 0) + (reg.quantidade_filhote || 0);
+      const total = reg.quantidade;
       acc[reg.nome_popular] = (acc[reg.nome_popular] || 0) + total;
       return acc;
     }, {} as Record<string, number>);
 
-    const atropelamentosData = registros
+    const atropelamentosData = processedRegistros
       .filter(r => r.atropelamento === 'Sim')
       .reduce((acc, reg) => {
-        const total = (reg.quantidade_adulto || 0) + (reg.quantidade_filhote || 0);
+        const total = reg.quantidade;
         acc[reg.nome_popular] = (acc[reg.nome_popular] || 0) + total;
         return acc;
     }, {} as Record<string, number>);

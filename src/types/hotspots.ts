@@ -29,9 +29,9 @@ export interface Registro {
   estado_saude: string;
   atropelamento: string;
   estagio_vida: string;
-  quantidade: number;
-  quantidade_adulto: number;
-  quantidade_filhote: number;
+  quantidade?: number; // Make it optional since it's calculated
+  quantidade_adulto: number | null;
+  quantidade_filhote: number | null;
   destinacao: string;
   numero_termo_entrega: string | null;
   hora_guarda_ceapa: string | null;
@@ -41,4 +41,3 @@ export interface Registro {
   outro_destinacao: string | null;
   created_at: string;
 }
-

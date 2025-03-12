@@ -50,12 +50,14 @@ const Registros = () => {
       
       if (error) throw error;
       
-      const registrosWithQuantities = (data || []).map(reg => ({
+      const processedRegistros: Registro[] = (data || []).map(reg => ({
         ...reg,
+        quantidade_adulto: reg.quantidade_adulto || 0,
+        quantidade_filhote: reg.quantidade_filhote || 0,
         quantidade: (reg.quantidade_adulto || 0) + (reg.quantidade_filhote || 0)
       }));
       
-      setRegistros(registrosWithQuantities);
+      setRegistros(processedRegistros);
     } catch (error) {
       console.error('Erro ao buscar registros:', error);
       toast.error('Erro ao carregar os registros');
@@ -225,7 +227,7 @@ const Registros = () => {
         isOpen={isDeleteDialogOpen}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
-        itemName={registroToDelete?.nome || ''}
+        itemName={registroToDelete?.nome_popular || ''}
       />
     </Layout>
   );

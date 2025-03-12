@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -29,8 +30,16 @@ export const useResgateFormEdit = (
         console.log("Registro encontrado no estado da navegação:", registroFromState);
         console.log("Classe taxonômica do registro:", registroFromState.classe_taxonomica);
         
-        setOriginalRegistro(registroFromState);
-        populateFormWithRegistro(registroFromState);
+        // Ensure the quantidade and other properties are properly set
+        const processedRegistro: Registro = {
+          ...registroFromState,
+          quantidade_adulto: registroFromState.quantidade_adulto || 0,
+          quantidade_filhote: registroFromState.quantidade_filhote || 0,
+          quantidade: (registroFromState.quantidade_adulto || 0) + (registroFromState.quantidade_filhote || 0)
+        };
+        
+        setOriginalRegistro(processedRegistro);
+        populateFormWithRegistro(processedRegistro);
         setIsEditing(true);
       } else {
         console.log("Registro não encontrado no estado, buscando do banco...");
@@ -54,8 +63,16 @@ export const useResgateFormEdit = (
         console.log("Registro obtido do banco:", data);
         console.log("Classe taxonômica do registro:", data.classe_taxonomica);
         
-        setOriginalRegistro(data);
-        populateFormWithRegistro(data);
+        // Ensure the quantidade and other properties are properly set
+        const processedRegistro: Registro = {
+          ...data,
+          quantidade_adulto: data.quantidade_adulto || 0,
+          quantidade_filhote: data.quantidade_filhote || 0,
+          quantidade: (data.quantidade_adulto || 0) + (data.quantidade_filhote || 0)
+        };
+        
+        setOriginalRegistro(processedRegistro);
+        populateFormWithRegistro(processedRegistro);
         setIsEditing(true);
       }
     } catch (error) {
