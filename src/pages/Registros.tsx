@@ -227,7 +227,7 @@ const Registros = () => {
         isOpen={isDeleteDialogOpen}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
-        itemName={registroToDelete?.nome_popular || ''}
+        itemName={registroToDelete?.nome || ''}
       />
     </Layout>
   );
