@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { format, parse } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Registro } from '@/types/hotspots';
+import DeleteConfirmationDialog from '@/components/fauna/DeleteConfirmationDialog';
 import RegistrosActions from '@/components/registros/RegistrosActions';
 import RegistrosFilters from '@/components/registros/RegistrosFilters';
 import RegistrosTable from '@/components/registros/RegistrosTable';
-import { Registro } from '@/types/hotspots';
-import DeleteConfirmationDialog from '@/components/fauna/DeleteConfirmationDialog';
+import RegistrosSummary from '@/components/registros/RegistrosSummary';
+import RegistrosLoading from '@/components/registros/RegistrosLoading';
+import { useRegistroDelete } from '@/hooks/useRegistroDelete';
 
 const Registros = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,10 +21,18 @@ const Registros = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [registroToDelete, setRegistroToDelete] = useState<{ id: string, nome: string } | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
+  
+  const { 
+    isDeleteDialogOpen, 
+    registroToDelete, 
+    isDeleting,
+    handleDeleteClick, 
+    handleDeleteConfirm, 
+    handleDeleteCancel 
+  } = useRegistroDelete((deletedId) => {
+    setRegistros(prevRegistros => prevRegistros.filter(r => r.id !== deletedId));
+  });
   
   useEffect(() => {
     fetchRegistros();
@@ -77,43 +85,6 @@ const Registros = () => {
     navigate(`/resgate-editar/${id}`);
   };
   
-  const handleDeleteClick = (id: string, nome: string) => {
-    setRegistroToDelete({ id, nome });
-    setIsDeleteDialogOpen(true);
-  };
-  
-  const handleDeleteConfirm = async () => {
-    if (!registroToDelete) return;
-    
-    setIsDeleting(true);
-    try {
-      const { error } = await supabase
-        .from('registros')
-        .delete()
-        .eq('id', registroToDelete.id);
-      
-      if (error) throw error;
-      
-      setRegistros(prevRegistros => 
-        prevRegistros.filter(registro => registro.id !== registroToDelete.id)
-      );
-      
-      toast.success(`Registro de "${registroToDelete.nome}" excluído com sucesso`);
-    } catch (error) {
-      console.error('Erro ao excluir registro:', error);
-      toast.error('Erro ao excluir o registro');
-    } finally {
-      setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
-      setRegistroToDelete(null);
-    }
-  };
-  
-  const handleDeleteCancel = () => {
-    setIsDeleteDialogOpen(false);
-    setRegistroToDelete(null);
-  };
-  
   const handleExportCSV = () => {
     const headers = [
       'Data', 'Região Administrativa', 'Tipo', 'Latitude', 'Longitude',
@@ -125,17 +96,17 @@ const Registros = () => {
     const csvRows = [
       headers.join(','),
       ...filteredRegistros.map(registro => {
-        let formattedDate;
+        let formattedDate = registro.data;
         try {
           if (registro.data.includes('-')) {
             const [year, month, day] = registro.data.split('-').map(Number);
-            formattedDate = format(new Date(year, month - 1, day), 'dd/MM/yyyy', { locale: ptBR });
-          } else {
-            formattedDate = format(new Date(registro.data), 'dd/MM/yyyy', { locale: ptBR });
+            const date = new Date(year, month - 1, day);
+            const day2 = String(date.getDate()).padStart(2, '0');
+            const month2 = String(date.getMonth() + 1).padStart(2, '0');
+            formattedDate = `${day2}/${month2}/${date.getFullYear()}`;
           }
         } catch (error) {
           console.error('Error formatting date for CSV:', error);
-          formattedDate = registro.data;
         }
         
         return [
@@ -192,10 +163,7 @@ const Registros = () => {
         
         <div className="border border-fauna-border rounded-lg overflow-hidden">
           {isLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-fauna-blue" />
-              <span className="ml-2">Carregando registros...</span>
-            </div>
+            <RegistrosLoading />
           ) : (
             <RegistrosTable
               registros={filteredRegistros}
@@ -206,11 +174,10 @@ const Registros = () => {
           )}
         </div>
         
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-500">
-            Mostrando {filteredRegistros.length} de {registros.length} registros
-          </div>
-        </div>
+        <RegistrosSummary 
+          filteredCount={filteredRegistros.length} 
+          totalCount={registros.length} 
+        />
       </div>
       
       <DeleteConfirmationDialog
