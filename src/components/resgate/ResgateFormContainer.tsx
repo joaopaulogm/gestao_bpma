@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -6,6 +5,7 @@ import { useFormResgateData } from '@/hooks/useFormResgateData';
 import { Registro } from '@/types/hotspots';
 import { supabase } from '@/integrations/supabase/client';
 import ResgateForm from './ResgateForm';
+import { buscarEspeciePorNomeCientifico } from '@/services/especieService';
 
 const ResgateFormContainer = () => {
   const { 
@@ -118,6 +118,28 @@ const ResgateFormContainer = () => {
     
     // We need to fetch the especie ID based on the nome_cientifico
     fetchEspecieId(registro.nome_cientifico);
+  };
+  
+  // Add the missing function to fetch especie ID based on nome_cientifico
+  const fetchEspecieId = async (nomeCientifico: string) => {
+    try {
+      // Use the buscarEspeciePorNomeCientifico function to get the species by scientific name
+      const especie = await buscarEspeciePorNomeCientifico(nomeCientifico);
+      
+      if (especie) {
+        // Set the especieId in the form
+        form.setValue('especieId', especie.id);
+        
+        // Also call buscarDetalhesEspecie to populate especieSelecionada
+        await buscarDetalhesEspecie(especie.id);
+      } else {
+        console.warn(`Espécie com nome científico "${nomeCientifico}" não encontrada`);
+        toast.warning("Espécie do registro original não encontrada no cadastro");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar ID da espécie:", error);
+      toast.error("Erro ao carregar dados da espécie");
+    }
   };
   
   const handleFormSubmit = async (data: any) => {

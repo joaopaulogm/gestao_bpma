@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Enable real-time updates for especies_fauna table
@@ -106,6 +105,26 @@ export const buscarEspeciePorId = async (id: string): Promise<Especie | null> =>
     return data;
   } catch (error) {
     console.error("Erro ao buscar espécie por ID:", error);
+    return null;
+  }
+};
+
+export const buscarEspeciePorNomeCientifico = async (nomeCientifico: string): Promise<Especie | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("especies_fauna")
+      .select("*")
+      .ilike("nome_cientifico", nomeCientifico)
+      .maybeSingle();
+    
+    if (error) {
+      console.error("Erro ao buscar espécie por nome científico:", error);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Erro ao buscar espécie por nome científico:", error);
     return null;
   }
 };
