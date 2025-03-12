@@ -34,7 +34,7 @@ const ResgateFormContainer = () => {
   const {
     handleFormSubmit,
     isSubmitting: isSubmittingEdit
-  } = useResgateFormSubmitEdit(form, form.handleSubmit);
+  } = useResgateFormSubmitEdit(form, handleSubmit);
 
   const isSubmitting = isSubmittingCreate || isSubmittingEdit;
   

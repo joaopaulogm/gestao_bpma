@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn, SubmitHandler } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { ResgateFormData } from '@/schemas/resgateSchema';
 import { Registro } from '@/types/hotspots';
@@ -10,7 +10,7 @@ import { Especie } from '@/services/especieService';
 
 export const useResgateFormSubmitEdit = (
   form: UseFormReturn<ResgateFormData>,
-  handleSubmit: (data: ResgateFormData) => Promise<void>
+  handleSubmit: any // Using any here as we're just passing it through
 ) => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
