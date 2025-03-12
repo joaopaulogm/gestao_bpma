@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -83,25 +82,41 @@ export const useDashboardData = () => {
       return acc;
     }, {} as Record<string, number>);
 
-    const especiesResgatadas = resgates.reduce((acc, reg) => {
-      const total = reg.quantidade;
-      acc[reg.nome_popular] = (acc[reg.nome_popular] || 0) + total;
-      return acc;
-    }, {} as Record<string, number>);
+    const especiesResgatadasMap = new Map<string, number>();
+    const especiesApreensõesMap = new Map<string, number>();
+    const atropelamentosMap = new Map<string, number>();
 
-    const especiesApreendidas = apreensoes.reduce((acc, reg) => {
-      const total = reg.quantidade;
-      acc[reg.nome_popular] = (acc[reg.nome_popular] || 0) + total;
-      return acc;
-    }, {} as Record<string, number>);
+    resgates.forEach(r => {
+      const total = r.quantidade;
+      especiesResgatadasMap.set(r.nome_popular, (especiesResgatadasMap.get(r.nome_popular) || 0) + 
+        ((r.quantidade_adulto || 0) + (r.quantidade_filhote || 0)));
+    });
 
-    const atropelamentosData = processedRegistros
-      .filter(r => r.atropelamento === 'Sim')
-      .reduce((acc, reg) => {
-        const total = reg.quantidade;
-        acc[reg.nome_popular] = (acc[reg.nome_popular] || 0) + total;
-        return acc;
-    }, {} as Record<string, number>);
+    apreensoes.forEach(r => {
+      const total = r.quantidade;
+      especiesApreensõesMap.set(r.nome_popular, (especiesApreensõesMap.get(r.nome_popular) || 0) + 
+        ((r.quantidade_adulto || 0) + (r.quantidade_filhote || 0)));
+    });
+
+    processedRegistros.forEach(r => {
+      const total = r.quantidade;
+      atropelamentosMap.set(r.nome_popular, (atropelamentosMap.get(r.nome_popular) || 0) + 
+        ((r.quantidade_adulto || 0) + (r.quantidade_filhote || 0)));
+    });
+
+    const especiesResgatadas = Array.from(especiesResgatadasMap.entries())
+      .map(([name, quantidade]) => ({ name, quantidade }))
+      .sort((a, b) => b.quantidade - a.quantidade)
+      .slice(0, 5);
+
+    const especiesApreendidas = Array.from(especiesApreensõesMap.entries())
+      .map(([name, quantidade]) => ({ name, quantidade }))
+      .sort((a, b) => b.quantidade - a.quantidade)
+      .slice(0, 5);
+
+    const atropelamentos = Array.from(atropelamentosMap.entries())
+      .map(([name, quantidade]) => ({ name, quantidade }))
+      .sort((a, b) => b.quantidade - a.quantidade);
 
     return {
       totalResgates: resgates.length,
@@ -109,17 +124,9 @@ export const useDashboardData = () => {
       distribuicaoPorClasse: Object.entries(classeCount).map(([name, value]) => ({ name, value })),
       destinos: Object.entries(destinosCount).map(([name, value]) => ({ name, value })),
       desfechos: Object.entries(desfechosCount).map(([name, value]) => ({ name, value })),
-      especiesMaisResgatadas: Object.entries(especiesResgatadas)
-        .map(([name, quantidade]) => ({ name, quantidade }))
-        .sort((a, b) => b.quantidade - a.quantidade)
-        .slice(0, 5),
-      especiesMaisApreendidas: Object.entries(especiesApreendidas)
-        .map(([name, quantidade]) => ({ name, quantidade }))
-        .sort((a, b) => b.quantidade - a.quantidade)
-        .slice(0, 5),
-      atropelamentos: Object.entries(atropelamentosData)
-        .map(([name, quantidade]) => ({ name, quantidade }))
-        .sort((a, b) => b.quantidade - a.quantidade)
+      especiesMaisResgatadas,
+      especiesMaisApreendidas,
+      atropelamentos
     };
   };
 

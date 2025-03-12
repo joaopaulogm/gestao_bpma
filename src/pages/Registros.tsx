@@ -97,12 +97,10 @@ const Registros = () => {
   
   const formatDateForExport = (dateString: string) => {
     try {
-      // If already in DD/MM/YYYY format
       if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
         return dateString;
       }
       
-      // If date is in ISO format (with T)
       if (dateString.includes('T')) {
         const date = new Date(dateString);
         if (!isNaN(date.getTime())) {
@@ -110,13 +108,11 @@ const Registros = () => {
         }
       }
       
-      // If date is in YYYY-MM-DD format
       if (dateString.includes('-')) {
         const parts = dateString.split('-');
         if (parts.length === 3) {
-          // Ensure we're parsing in the correct format
           const year = parseInt(parts[0]);
-          const month = parseInt(parts[1]) - 1; // JS months are 0-indexed
+          const month = parseInt(parts[1]) - 1;
           const day = parseInt(parts[2]);
           
           const date = new Date(year, month, day);
@@ -126,7 +122,6 @@ const Registros = () => {
         }
       }
       
-      // Generic fallback
       const date = new Date(dateString);
       if (!isNaN(date.getTime())) {
         return format(date, 'dd/MM/yyyy', { locale: ptBR });

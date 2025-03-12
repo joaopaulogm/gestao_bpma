@@ -121,7 +121,7 @@ export const useResgateFormEdit = (
     // Ensure quantidades are numbers, not null
     const quantidadeAdulto = registro.quantidade_adulto || 0;
     const quantidadeFilhote = registro.quantidade_filhote || 0;
-    const quantidade = quantidadeAdulto + quantidadeFilhote;
+    const quantidade = (registro.quantidade !== undefined) ? registro.quantidade : (quantidadeAdulto + quantidadeFilhote);
     
     form.reset({
       data: formatDate(registro.data),
