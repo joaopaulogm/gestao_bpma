@@ -5,6 +5,7 @@ import { useFormResgateData } from '@/hooks/useFormResgateData';
 import { useResgateFormEdit } from '@/hooks/useResgateFormEdit';
 import { useResgateFormSubmitEdit } from '@/hooks/useResgateFormSubmitEdit';
 import ResgateForm from './ResgateForm';
+import { ResgateFormData } from '@/schemas/resgateSchema';
 
 const ResgateFormContainer = () => {
   const { 
@@ -33,11 +34,11 @@ const ResgateFormContainer = () => {
   const {
     handleFormSubmit,
     isSubmitting: isSubmittingEdit
-  } = useResgateFormSubmitEdit(form, handleSubmit);
+  } = useResgateFormSubmitEdit(form, form.handleSubmit);
 
   const isSubmitting = isSubmittingCreate || isSubmittingEdit;
   
-  const onFormSubmit = async (data: any) => {
+  const onFormSubmit = async (data: ResgateFormData) => {
     await handleFormSubmit(data, isEditing, editingId, originalRegistro, especieSelecionada);
   };
 
@@ -49,7 +50,7 @@ const ResgateFormContainer = () => {
       handleChange={handleChange}
       handleSelectChange={handleSelectChange}
       handleQuantidadeChange={handleQuantidadeChange}
-      handleFormSubmit={onFormSubmit}
+      handleFormSubmit={form.handleSubmit(onFormSubmit)}
       especieSelecionada={especieSelecionada}
       carregandoEspecie={carregandoEspecie}
       isSubmitting={isSubmitting}
