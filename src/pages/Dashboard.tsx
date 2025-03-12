@@ -6,11 +6,48 @@ import { BarChart, PieChart, Cell, Bar, XAxis, YAxis, Tooltip, Legend, Pie, Resp
 import DateFilter from '@/components/dashboard/DateFilter';
 import ChartCard from '@/components/dashboard/ChartCard';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
+import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
 
 const COLORS = ['#071d49', '#0A2472', '#0E6BA8', '#A6E1FA', '#DAFDBA'];
 
 const Dashboard = () => {
   const { data, isLoading, error, filters, updateFilters } = useDashboardData();
+
+  const handleExportExcel = () => {
+    if (!data) return;
+    
+    const exportData = {
+      totalResgates: data.totalResgates,
+      totalApreensoes: data.totalApreensoes,
+      distribuicaoPorClasse: data.distribuicaoPorClasse,
+      destinos: data.destinos,
+      desfechos: data.desfechos,
+      especiesMaisResgatadas: data.especiesMaisResgatadas,
+      especiesMaisApreendidas: data.especiesMaisApreendidas,
+      atropelamentos: data.atropelamentos,
+    };
+    
+    exportToExcel([exportData], `dashboard-${filters.year}-${filters.month || 'all'}`);
+  };
+
+  const handleExportPDF = () => {
+    if (!data) return;
+    
+    const exportData = {
+      totalResgates: data.totalResgates,
+      totalApreensoes: data.totalApreensoes,
+      distribuicaoPorClasse: data.distribuicaoPorClasse,
+      destinos: data.destinos,
+      desfechos: data.desfechos,
+      especiesMaisResgatadas: data.especiesMaisResgatadas,
+      especiesMaisApreendidas: data.especiesMaisApreendidas,
+      atropelamentos: data.atropelamentos,
+    };
+    
+    exportToPDF([exportData], `dashboard-${filters.year}-${filters.month || 'all'}`);
+  };
 
   if (isLoading) {
     return (
@@ -35,7 +72,25 @@ const Dashboard = () => {
   return (
     <Layout title="Dashboard" showBackButton>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleExportExcel}
+              className="flex items-center gap-2"
+            >
+              <Download size={16} />
+              Exportar XLSX
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleExportPDF}
+              className="flex items-center gap-2"
+            >
+              <Download size={16} />
+              Exportar PDF
+            </Button>
+          </div>
           <DateFilter
             year={filters.year}
             month={filters.month}
