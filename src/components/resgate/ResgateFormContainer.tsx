@@ -74,10 +74,27 @@ const ResgateFormContainer = () => {
   };
   
   const populateFormWithRegistro = (registro: Registro) => {
+    // Format the date to YYYY-MM-DD for the form
+    const formatDateForForm = (dateString: string) => {
+      try {
+        // If date is in ISO format with time part
+        if (dateString.includes('T')) {
+          return dateString.split('T')[0];
+        }
+        
+        // If it's just a date string, make sure it's in the right format
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+      } catch (error) {
+        console.error('Error formatting date for form:', error, dateString);
+        return dateString;
+      }
+    };
+    
     // Populate form fields with registro data
     form.reset({
       regiaoAdministrativa: registro.regiao_administrativa,
-      data: new Date(registro.data).toISOString().split('T')[0],
+      data: formatDateForForm(registro.data),
       origem: registro.origem,
       latitudeOrigem: registro.latitude_origem,
       longitudeOrigem: registro.longitude_origem,
@@ -103,35 +120,27 @@ const ResgateFormContainer = () => {
     fetchEspecieId(registro.nome_cientifico);
   };
   
-  const fetchEspecieId = async (nomeCientifico: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('especies_fauna')
-        .select('id')
-        .eq('nome_cientifico', nomeCientifico)
-        .single();
-      
-      if (error) throw error;
-      
-      if (data) {
-        form.setValue('especieId', data.id);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar ID da espécie:', error);
-      toast.error('Não foi possível identificar a espécie do registro. Por favor, selecione novamente.');
-    }
-  };
-  
   const handleFormSubmit = async (data: any) => {
     if (isEditing && editingId && originalRegistro) {
       try {
-        // Format the date for the database
-        const dataFormatada = new Date(data.data);
+        // Format the date for the database (YYYY-MM-DD)
+        const formatDateForDB = (dateString: string) => {
+          try {
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0];
+          } catch (error) {
+            console.error('Error formatting date for database:', error, dateString);
+            throw new Error('Data inválida');
+          }
+        };
+        
+        const dataFormatada = formatDateForDB(data.data);
+        console.log('Updating with date:', dataFormatada, 'Original value:', data.data);
         
         const { error } = await supabase
           .from('registros')
           .update({
-            data: dataFormatada.toISOString(),
+            data: dataFormatada,
             classe_taxonomica: data.classeTaxonomica,
             nome_cientifico: especieSelecionada?.nome_cientifico || originalRegistro.nome_cientifico,
             nome_popular: especieSelecionada?.nome_popular || originalRegistro.nome_popular,

@@ -20,17 +20,18 @@ export const useResgateSubmission = () => {
     setSubmissionError(null);
     
     try {
-      // Converter a data mantendo o timezone local
+      // Parse the date properly and format it for PostgreSQL (YYYY-MM-DD)
       const dataObj = new Date(data.data);
-      const dataFormatada = new Date(
-        dataObj.getFullYear(),
-        dataObj.getMonth(),
-        dataObj.getDate(),
-        12, // Set to noon to avoid timezone issues
-        0,
-        0,
-        0
-      ).toISOString();
+      
+      // Check if date is valid
+      if (isNaN(dataObj.getTime())) {
+        throw new Error('Data inválida');
+      }
+      
+      // Format date as YYYY-MM-DD for PostgreSQL
+      const dataFormatada = dataObj.toISOString().split('T')[0];
+      
+      console.log('Saving date to database:', dataFormatada, 'Original value:', data.data);
       
       const { error } = await supabase.from('registros').insert({
         data: dataFormatada,

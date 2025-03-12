@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import RegistroLoading from '@/components/registros/RegistroLoading';
@@ -71,8 +71,11 @@ const RegistroDetalhes = () => {
 
   const formatDateTime = (dateString: string) => {
     try {
-      return format(new Date(dateString), 'dd/MM/yyyy');
+      // Make sure we parse the date correctly before formatting
+      const date = dateString.includes('T') ? parseISO(dateString) : new Date(dateString);
+      return format(date, 'dd/MM/yyyy');
     } catch (error) {
+      console.error('Error formatting date:', error, dateString);
       return dateString;
     }
   };
