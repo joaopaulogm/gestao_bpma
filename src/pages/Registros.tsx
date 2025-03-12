@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +11,8 @@ import RegistrosTable from '@/components/registros/RegistrosTable';
 import RegistrosSummary from '@/components/registros/RegistrosSummary';
 import RegistrosLoading from '@/components/registros/RegistrosLoading';
 import { useRegistroDelete } from '@/hooks/useRegistroDelete';
+import { format, parse } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const Registros = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,6 +87,30 @@ const Registros = () => {
     navigate(`/resgate-editar/${id}`);
   };
   
+  const formatDateForExport = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      
+      if (!isNaN(date.getTime())) {
+        return format(date, 'dd/MM/yyyy', { locale: ptBR });
+      } 
+      
+      if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        return dateString;
+      }
+      
+      if (dateString.includes('-')) {
+        const [year, month, day] = dateString.split('-').map(Number);
+        return format(new Date(year, month - 1, day), 'dd/MM/yyyy', { locale: ptBR });
+      }
+      
+      return dateString;
+    } catch (error) {
+      console.error('Error formatting date for export:', error, dateString);
+      return dateString;
+    }
+  };
+  
   const handleExportCSV = () => {
     const headers = [
       'Data', 'Região Administrativa', 'Tipo', 'Latitude', 'Longitude',
@@ -97,18 +122,7 @@ const Registros = () => {
     const csvRows = [
       headers.join(','),
       ...filteredRegistros.map(registro => {
-        let formattedDate = registro.data;
-        try {
-          if (registro.data.includes('-')) {
-            const [year, month, day] = registro.data.split('-').map(Number);
-            const date = new Date(year, month - 1, day);
-            const day2 = String(date.getDate()).padStart(2, '0');
-            const month2 = String(date.getMonth() + 1).padStart(2, '0');
-            formattedDate = `${day2}/${month2}/${date.getFullYear()}`;
-          }
-        } catch (error) {
-          console.error('Error formatting date for CSV:', error);
-        }
+        const formattedDate = formatDateForExport(registro.data);
         
         return [
           formattedDate,

@@ -24,9 +24,31 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
   
   const formatDateTime = (dateString: string) => {
     try {
-      // Parse the date and format it to Brazilian format (DD/MM/YYYY)
-      const date = new Date(dateString);
-      return format(date, 'dd/MM/yyyy', { locale: ptBR });
+      // Handle different date formats and ensure DD/MM/YYYY display
+      
+      // If date is in ISO or date object format
+      if (dateString.includes('T') || dateString.includes('-')) {
+        const date = new Date(dateString);
+        // Check if date is valid
+        if (!isNaN(date.getTime())) {
+          return format(date, 'dd/MM/yyyy', { locale: ptBR });
+        }
+      }
+      
+      // If already in DD/MM/YYYY format
+      if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        return dateString;
+      }
+      
+      // Last resort, try to parse using date-fns
+      try {
+        // Try to parse the date assuming it's YYYY-MM-DD
+        const parsedDate = parse(dateString, 'yyyy-MM-dd', new Date());
+        return format(parsedDate, 'dd/MM/yyyy', { locale: ptBR });
+      } catch (parseError) {
+        console.error('Error parsing date:', parseError, dateString);
+        return dateString;
+      }
     } catch (error) {
       console.error('Error formatting date:', error, dateString);
       return dateString;
