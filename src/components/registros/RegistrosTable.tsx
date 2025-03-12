@@ -48,65 +48,68 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
   };
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
+    <div className="w-full overflow-x-auto">
+      <Table className="w-full table-fixed">
         <TableHeader>
           <TableRow>
-            <TableHead>Data</TableHead>
-            <TableHead>Região</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Espécie</TableHead>
-            <TableHead>Nome Científico</TableHead>
-            <TableHead>Classe</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Estágio de Vida</TableHead>
-            <TableHead>Qtd.</TableHead>
-            <TableHead>Destinação</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+            <TableHead className="w-[90px]">Data</TableHead>
+            <TableHead className="w-[140px]">Região</TableHead>
+            <TableHead className="w-[80px]">Tipo</TableHead>
+            <TableHead className="w-[120px]">Espécie</TableHead>
+            <TableHead className="w-[120px]">Nome Científico</TableHead>
+            <TableHead className="w-[90px]">Classe</TableHead>
+            <TableHead className="w-[90px]">Estado</TableHead>
+            <TableHead className="w-[90px]">Estágio</TableHead>
+            <TableHead className="w-[50px]">Qtd.</TableHead>
+            <TableHead className="w-[120px]">Destinação</TableHead>
+            <TableHead className="w-[120px] text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {registros.length > 0 ? (
             registros.map((registro) => (
               <TableRow key={registro.id}>
-                <TableCell>{formatDateTime(registro.data)}</TableCell>
-                <TableCell className="max-w-[150px] truncate">{registro.regiao_administrativa}</TableCell>
-                <TableCell>{registro.origem}</TableCell>
-                <TableCell className="max-w-[150px] truncate">{registro.nome_popular}</TableCell>
-                <TableCell className="max-w-[150px] truncate italic">{registro.nome_cientifico}</TableCell>
-                <TableCell>{registro.classe_taxonomica}</TableCell>
-                <TableCell>{registro.estado_saude}</TableCell>
-                <TableCell>{registro.estagio_vida}</TableCell>
-                <TableCell>{registro.quantidade}</TableCell>
-                <TableCell className="max-w-[150px] truncate">{registro.destinacao}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
+                <TableCell className="whitespace-nowrap">{formatDateTime(registro.data)}</TableCell>
+                <TableCell className="truncate max-w-[140px]">{registro.regiao_administrativa}</TableCell>
+                <TableCell className="whitespace-nowrap">{registro.origem}</TableCell>
+                <TableCell className="truncate max-w-[120px]">{registro.nome_popular}</TableCell>
+                <TableCell className="truncate max-w-[120px] italic">{registro.nome_cientifico}</TableCell>
+                <TableCell className="truncate">{registro.classe_taxonomica}</TableCell>
+                <TableCell className="truncate">{registro.estado_saude}</TableCell>
+                <TableCell className="truncate">{registro.estagio_vida}</TableCell>
+                <TableCell className="text-center">{registro.quantidade}</TableCell>
+                <TableCell className="truncate max-w-[120px]">{registro.destinacao}</TableCell>
+                <TableCell className="text-right p-2">
+                  <div className="flex justify-end gap-1">
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="gap-1"
+                      className="h-8 w-8 p-0"
                       onClick={() => onViewDetails(registro.id)}
+                      title="Ver detalhes"
                     >
                       <Eye className="h-4 w-4 text-fauna-blue" />
-                      <span className="hidden sm:inline">Ver</span>
+                      <span className="sr-only">Ver</span>
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="gap-1"
+                      className="h-8 w-8 p-0"
                       onClick={() => onEdit(registro.id)}
+                      title="Editar registro"
                     >
                       <Edit className="h-4 w-4 text-amber-500" />
-                      <span className="hidden sm:inline">Editar</span>
+                      <span className="sr-only">Editar</span>
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="gap-1"
+                      className="h-8 w-8 p-0"
                       onClick={() => onDelete(registro.id, registro.nome_popular)}
+                      title="Excluir registro"
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />
-                      <span className="hidden sm:inline">Excluir</span>
+                      <span className="sr-only">Excluir</span>
                     </Button>
                   </div>
                 </TableCell>

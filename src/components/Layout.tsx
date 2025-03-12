@@ -2,7 +2,7 @@
 import React from 'react';
 import Header from './Header';
 import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,12 +12,17 @@ interface LayoutProps {
 
 const Layout = ({ children, title, showBackButton = false }: LayoutProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Use wider layout for registros page
+  const isRegistrosPage = location.pathname === '/registros';
+  const maxWidthClass = isRegistrosPage ? 'max-w-7xl' : 'max-w-4xl';
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Header />
       
-      <main className="flex-1 p-4 max-w-4xl mx-auto w-full">
+      <main className={`flex-1 p-4 ${maxWidthClass} mx-auto w-full`}>
         <div className="flex items-center gap-3 mb-6">
           {showBackButton && (
             <button 
