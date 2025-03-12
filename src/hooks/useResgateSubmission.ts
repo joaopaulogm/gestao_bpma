@@ -61,6 +61,8 @@ export const useResgateSubmission = () => {
         atropelamento: data.atropelamento,
         estagio_vida: data.estagioVida,
         quantidade: data.quantidade,
+        quantidade_adulto: data.quantidadeAdulto,
+        quantidade_filhote: data.quantidadeFilhote,
         destinacao: data.destinacao,
         numero_termo_entrega: data.numeroTermoEntrega || null,
         hora_guarda_ceapa: data.horaGuardaCEAPA || null,

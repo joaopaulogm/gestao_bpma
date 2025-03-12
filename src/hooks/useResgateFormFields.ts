@@ -26,12 +26,24 @@ export const useResgateFormFields = (form: UseFormReturn<ResgateFormData>) => {
     }
   };
 
-  const handleQuantidadeChange = (operacao: 'aumentar' | 'diminuir') => {
-    const currentValue = formData.quantidade;
-    setValue('quantidade', operacao === 'aumentar' 
-      ? currentValue + 1 
-      : Math.max(1, currentValue - 1)
-    );
+  const handleQuantidadeChange = (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => {
+    if (tipo === 'adulto') {
+      const currentValue = formData.quantidadeAdulto;
+      setValue('quantidadeAdulto', operacao === 'aumentar' 
+        ? currentValue + 1 
+        : Math.max(0, currentValue - 1)
+      );
+    } else {
+      const currentValue = formData.quantidadeFilhote;
+      setValue('quantidadeFilhote', operacao === 'aumentar' 
+        ? currentValue + 1 
+        : Math.max(0, currentValue - 1)
+      );
+    }
+    
+    // Update total quantity
+    const totalQuantidade = formData.quantidadeAdulto + formData.quantidadeFilhote;
+    setValue('quantidade', totalQuantidade > 0 ? totalQuantidade : 0);
   };
 
   const getFieldError = (fieldName: keyof ResgateFormData): string | undefined => {

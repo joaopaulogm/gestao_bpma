@@ -11,6 +11,8 @@ interface InformacoesEspecieCardProps {
   atropelamento: string;
   estagio_vida: string;
   quantidade: number;
+  quantidade_adulto?: number;
+  quantidade_filhote?: number;
 }
 
 const InformacoesEspecieCard = ({
@@ -21,7 +23,11 @@ const InformacoesEspecieCard = ({
   atropelamento,
   estagio_vida,
   quantidade,
+  quantidade_adulto = 0,
+  quantidade_filhote = 0,
 }: InformacoesEspecieCardProps) => {
+  const showDetailedQuantities = quantidade_adulto > 0 || quantidade_filhote > 0;
+
   return (
     <Card className="border border-fauna-border">
       <CardHeader>
@@ -37,7 +43,20 @@ const InformacoesEspecieCard = ({
           <DetailsField label="Estado de Saúde" value={estado_saude} />
           <DetailsField label="Atropelamento" value={atropelamento} />
           <DetailsField label="Estágio de Vida" value={estagio_vida} />
-          <DetailsField label="Quantidade" value={quantidade} />
+          
+          {showDetailedQuantities ? (
+            <>
+              <DetailsField label="Quantidade Total" value={quantidade} />
+              {quantidade_adulto > 0 && (
+                <DetailsField label="Quantidade (Adultos)" value={quantidade_adulto} />
+              )}
+              {quantidade_filhote > 0 && (
+                <DetailsField label="Quantidade (Filhotes)" value={quantidade_filhote} />
+              )}
+            </>
+          ) : (
+            <DetailsField label="Quantidade" value={quantidade} />
+          )}
         </div>
       </CardContent>
     </Card>

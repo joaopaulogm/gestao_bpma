@@ -7,7 +7,7 @@ import AnimalInfoFields from './AnimalInfoFields';
 interface AnimalInfoSectionProps {
   formData: ResgateFormData;
   handleSelectChange: (name: string, value: string) => void;
-  handleQuantidadeChange: (operacao: 'aumentar' | 'diminuir') => void;
+  handleQuantidadeChange: (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;
   errors: any;
 }
 
@@ -23,6 +23,8 @@ const AnimalInfoSection: React.FC<AnimalInfoSectionProps> = ({
         estadoSaude={formData.estadoSaude}
         atropelamento={formData.atropelamento}
         estagioVida={formData.estagioVida}
+        quantidadeAdulto={formData.quantidadeAdulto}
+        quantidadeFilhote={formData.quantidadeFilhote}
         quantidade={formData.quantidade}
         onEstadoSaudeChange={(value) => handleSelectChange('estadoSaude', value)}
         onAtropelamentoChange={(value) => handleSelectChange('atropelamento', value)}
@@ -31,6 +33,8 @@ const AnimalInfoSection: React.FC<AnimalInfoSectionProps> = ({
         errorEstadoSaude={errors.estadoSaude?.message}
         errorAtropelamento={errors.atropelamento?.message}
         errorEstagioVida={errors.estagioVida?.message}
+        errorQuantidadeAdulto={errors.quantidadeAdulto?.message}
+        errorQuantidadeFilhote={errors.quantidadeFilhote?.message}
         required={true}
       />
     </FormSection>

@@ -18,15 +18,18 @@ interface AnimalInfoFieldsProps {
   estadoSaude: string;
   atropelamento: string;
   estagioVida: string;
+  quantidadeAdulto: number;
+  quantidadeFilhote: number;
   quantidade: number;
   onEstadoSaudeChange: (value: string) => void;
   onAtropelamentoChange: (value: string) => void;
   onEstagioVidaChange: (value: string) => void;
-  onQuantidadeChange: (operacao: 'aumentar' | 'diminuir') => void;
+  onQuantidadeChange: (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;
   errorEstadoSaude?: string;
   errorAtropelamento?: string;
   errorEstagioVida?: string;
-  errorQuantidade?: string;
+  errorQuantidadeAdulto?: string;
+  errorQuantidadeFilhote?: string;
   required?: boolean;
 }
 
@@ -34,6 +37,8 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
   estadoSaude,
   atropelamento,
   estagioVida,
+  quantidadeAdulto,
+  quantidadeFilhote,
   quantidade,
   onEstadoSaudeChange,
   onAtropelamentoChange,
@@ -42,15 +47,10 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
   errorEstadoSaude,
   errorAtropelamento,
   errorEstagioVida,
-  errorQuantidade,
+  errorQuantidadeAdulto,
+  errorQuantidadeFilhote,
   required = false
 }) => {
-  const handleInputQuantidade = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // This is a placeholder for direct input changes that we'll ignore in this component
-    // The parent component handles quantity via the increase/decrease operations
-    console.log("Quantidade input changed directly:", e.target.value);
-  };
-
   return (
     <FormSection>
       <FormField id="estadoSaude" label="Estado de Saúde" error={errorEstadoSaude} required={required}>
@@ -105,39 +105,82 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
           <SelectContent>
             <SelectItem value="Adulto">Adulto</SelectItem>
             <SelectItem value="Filhote">Filhote</SelectItem>
+            <SelectItem value="Ambos">Ambos (Mãe e filhotes)</SelectItem>
           </SelectContent>
         </Select>
       </FormField>
       
-      <FormField id="quantidade" label="Quantidade" error={errorQuantidade} required={required}>
-        <div className="flex items-center space-x-2">
-          <Button 
-            type="button" 
-            variant="outline" 
-            className="h-10 w-10 p-0"
-            onClick={() => onQuantidadeChange('diminuir')}
-          >
-            -
-          </Button>
-          <Input
-            id="quantidade"
-            name="quantidade"
-            type="number"
-            value={quantidade.toString()}
-            onChange={handleInputQuantidade}
-            className={`text-center ${errorQuantidade ? "border-red-500" : ""}`}
-            min="1"
-            readOnly
-          />
-          <Button 
-            type="button" 
-            variant="outline" 
-            className="h-10 w-10 p-0"
-            onClick={() => onQuantidadeChange('aumentar')}
-          >
-            +
-          </Button>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <FormField id="quantidadeAdulto" label="Quantidade (Adultos)" error={errorQuantidadeAdulto}>
+          <div className="flex items-center space-x-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="h-10 w-10 p-0"
+              onClick={() => onQuantidadeChange('adulto', 'diminuir')}
+            >
+              -
+            </Button>
+            <Input
+              id="quantidadeAdulto"
+              name="quantidadeAdulto"
+              type="number"
+              value={quantidadeAdulto.toString()}
+              className={`text-center ${errorQuantidadeAdulto ? "border-red-500" : ""}`}
+              min="0"
+              readOnly
+            />
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="h-10 w-10 p-0"
+              onClick={() => onQuantidadeChange('adulto', 'aumentar')}
+            >
+              +
+            </Button>
+          </div>
+        </FormField>
+        
+        <FormField id="quantidadeFilhote" label="Quantidade (Filhotes)" error={errorQuantidadeFilhote}>
+          <div className="flex items-center space-x-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="h-10 w-10 p-0"
+              onClick={() => onQuantidadeChange('filhote', 'diminuir')}
+            >
+              -
+            </Button>
+            <Input
+              id="quantidadeFilhote"
+              name="quantidadeFilhote"
+              type="number"
+              value={quantidadeFilhote.toString()}
+              className={`text-center ${errorQuantidadeFilhote ? "border-red-500" : ""}`}
+              min="0"
+              readOnly
+            />
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="h-10 w-10 p-0"
+              onClick={() => onQuantidadeChange('filhote', 'aumentar')}
+            >
+              +
+            </Button>
+          </div>
+        </FormField>
+      </div>
+      
+      <FormField id="quantidadeTotal" label="Quantidade Total" required={required}>
+        <Input
+          id="quantidade"
+          name="quantidade"
+          type="number"
+          value={quantidadeAdulto + quantidadeFilhote}
+          className="text-center bg-slate-50"
+          readOnly
+        />
       </FormField>
     </FormSection>
   );
