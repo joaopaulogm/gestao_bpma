@@ -70,7 +70,7 @@ export type Database = {
           atropelamento: string
           classe_taxonomica: string
           created_at?: string
-          data?: string
+          data: string
           desfecho_apreensao?: string | null
           destinacao: string
           estado_saude: string
