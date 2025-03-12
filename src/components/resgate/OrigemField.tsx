@@ -10,16 +10,20 @@ import {
 } from '@/components/ui/select';
 import FormField from './FormField';
 import FormSection from './FormSection';
+import DesfechoResgateField from './DesfechoResgateField';
 
 interface OrigemFieldProps {
   origem: string;
+  desfechoResgate: string;
   latitudeOrigem: string;
   longitudeOrigem: string;
   onOrigemChange: (value: string) => void;
+  onDesfechoResgateChange: (value: string) => void;
   onLatitudeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onLongitudeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   errors?: {
     origem?: string;
+    desfechoResgate?: string;
     latitudeOrigem?: string;
     longitudeOrigem?: string;
   };
@@ -28,9 +32,11 @@ interface OrigemFieldProps {
 
 const OrigemField: React.FC<OrigemFieldProps> = ({
   origem,
+  desfechoResgate,
   latitudeOrigem,
   longitudeOrigem,
   onOrigemChange,
+  onDesfechoResgateChange,
   onLatitudeChange,
   onLongitudeChange,
   errors = {},
@@ -52,6 +58,15 @@ const OrigemField: React.FC<OrigemFieldProps> = ({
           </SelectContent>
         </Select>
       </FormField>
+      
+      {origem === 'Resgate de Fauna' && (
+        <DesfechoResgateField
+          desfechoResgate={desfechoResgate}
+          onDesfechoChange={onDesfechoResgateChange}
+          error={errors.desfechoResgate}
+          required={true}
+        />
+      )}
       
       {(origem === 'Resgate de Fauna' || origem === 'Apreensão') && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

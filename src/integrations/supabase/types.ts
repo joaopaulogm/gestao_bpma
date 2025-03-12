@@ -46,6 +46,7 @@ export type Database = {
           created_at: string
           data: string
           desfecho_apreensao: string | null
+          desfecho_resgate: string | null
           destinacao: string
           estado_saude: string
           estagio_vida: string
@@ -72,6 +73,7 @@ export type Database = {
           created_at?: string
           data: string
           desfecho_apreensao?: string | null
+          desfecho_resgate?: string | null
           destinacao: string
           estado_saude: string
           estagio_vida: string
@@ -98,6 +100,7 @@ export type Database = {
           created_at?: string
           data?: string
           desfecho_apreensao?: string | null
+          desfecho_resgate?: string | null
           destinacao?: string
           estado_saude?: string
           estagio_vida?: string

@@ -1,13 +1,11 @@
 
 import { ResgateFormData } from '@/schemas/resgateSchema';
 
-/**
- * Valores padrão para o formulário de resgate
- */
 export const defaultResgateForm: ResgateFormData = {
   data: '',
   regiaoAdministrativa: '',
   origem: '',
+  desfechoResgate: '',
   latitudeOrigem: '',
   longitudeOrigem: '',
   desfechoApreensao: '',
