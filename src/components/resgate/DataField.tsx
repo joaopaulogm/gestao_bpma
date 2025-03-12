@@ -24,7 +24,7 @@ const DataField: React.FC<DataFieldProps> = ({
   error,
   required = false 
 }) => {
-  // Parse the input date value, safely handling both Date objects and strings
+  // Parse the input date value
   const parseDate = (dateValue: string): Date | undefined => {
     if (!dateValue) return undefined;
     
@@ -54,29 +54,6 @@ const DataField: React.FC<DataFieldProps> = ({
     }
   };
 
-  // Format date for the input field in YYYY-MM-DD format
-  const formatDateForInput = (dateValue: string): string => {
-    if (!dateValue) return '';
-    
-    try {
-      const date = parseDate(dateValue);
-      if (!date || isNaN(date.getTime())) return dateValue;
-      
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    } catch (error) {
-      console.error('Error formatting date for input:', error, dateValue);
-      return dateValue;
-    }
-  };
-
-  // Handle manual input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e);
-  };
-
   // Handle date selection from calendar
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
@@ -98,7 +75,6 @@ const DataField: React.FC<DataFieldProps> = ({
     onChange(syntheticEvent);
   };
 
-  const formattedValue = formatDateForInput(value);
   const selectedDate = parseDate(value);
 
   return (
@@ -113,9 +89,10 @@ const DataField: React.FC<DataFieldProps> = ({
           <Input
             id="data"
             name="data"
-            type="date"
-            value={formattedValue}
-            onChange={handleInputChange}
+            type="text"
+            placeholder="DD/MM/AAAA"
+            value={value}
+            onChange={onChange}
             className={cn(
               "flex-1",
               error ? "border-red-500 bg-red-50" : ""
