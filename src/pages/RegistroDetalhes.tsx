@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import RegistroLoading from '@/components/registros/RegistroLoading';
@@ -71,14 +72,42 @@ const RegistroDetalhes = () => {
 
   const formatDateTime = (dateString: string) => {
     try {
-      // Ensure consistent date parsing
-      const [year, month, day] = dateString.includes('T') 
-        ? dateString.split('T')[0].split('-').map(Number)
-        : dateString.split('-').map(Number);
+      // If already in DD/MM/YYYY format
+      if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        return dateString;
+      }
       
-      // Create date object with exact components (avoiding timezone shifts)
-      const date = new Date(year, month - 1, day);
-      return format(date, 'dd/MM/yyyy');
+      // If date is in ISO format (with T)
+      if (dateString.includes('T')) {
+        const date = new Date(dateString);
+        if (!isNaN(date.getTime())) {
+          return format(date, 'dd/MM/yyyy', { locale: ptBR });
+        }
+      }
+      
+      // If date is in YYYY-MM-DD format
+      if (dateString.includes('-')) {
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+          // Ensure we're parsing in the correct format
+          const year = parseInt(parts[0]);
+          const month = parseInt(parts[1]) - 1; // JS months are 0-indexed
+          const day = parseInt(parts[2]);
+          
+          const date = new Date(year, month, day);
+          if (!isNaN(date.getTime())) {
+            return format(date, 'dd/MM/yyyy', { locale: ptBR });
+          }
+        }
+      }
+      
+      // Generic fallback
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return format(date, 'dd/MM/yyyy', { locale: ptBR });
+      }
+      
+      return dateString;
     } catch (error) {
       console.error('Error formatting date:', error, dateString);
       return dateString;

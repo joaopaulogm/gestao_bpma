@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -24,31 +25,42 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
   
   const formatDateTime = (dateString: string) => {
     try {
-      // Handle different date formats and ensure DD/MM/YYYY display
-      
-      // If date is in ISO or date object format
-      if (dateString.includes('T') || dateString.includes('-')) {
-        const date = new Date(dateString);
-        // Check if date is valid
-        if (!isNaN(date.getTime())) {
-          return format(date, 'dd/MM/yyyy', { locale: ptBR });
-        }
-      }
-      
       // If already in DD/MM/YYYY format
       if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
         return dateString;
       }
       
-      // Last resort, try to parse using date-fns
-      try {
-        // Try to parse the date assuming it's YYYY-MM-DD
-        const parsedDate = parse(dateString, 'yyyy-MM-dd', new Date());
-        return format(parsedDate, 'dd/MM/yyyy', { locale: ptBR });
-      } catch (parseError) {
-        console.error('Error parsing date:', parseError, dateString);
-        return dateString;
+      // If date is in ISO format (with T)
+      if (dateString.includes('T')) {
+        const date = new Date(dateString);
+        if (!isNaN(date.getTime())) {
+          return format(date, 'dd/MM/yyyy', { locale: ptBR });
+        }
       }
+      
+      // If date is in YYYY-MM-DD format
+      if (dateString.includes('-')) {
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+          // Ensure we're parsing in the correct format
+          const year = parseInt(parts[0]);
+          const month = parseInt(parts[1]) - 1; // JS months are 0-indexed
+          const day = parseInt(parts[2]);
+          
+          const date = new Date(year, month, day);
+          if (!isNaN(date.getTime())) {
+            return format(date, 'dd/MM/yyyy', { locale: ptBR });
+          }
+        }
+      }
+      
+      // Generic fallback
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return format(date, 'dd/MM/yyyy', { locale: ptBR });
+      }
+      
+      return dateString;
     } catch (error) {
       console.error('Error formatting date:', error, dateString);
       return dateString;
