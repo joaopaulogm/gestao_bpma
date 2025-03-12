@@ -3,7 +3,7 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Eye, Edit, Trash2 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { Registro } from '@/types/hotspots';
 
 interface RegistrosTableProps {
@@ -21,8 +21,13 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
 }) => {
   const formatDateTime = (dateString: string) => {
     try {
-      // Make sure we parse the date correctly before formatting
-      const date = dateString.includes('T') ? parseISO(dateString) : new Date(dateString);
+      // Ensure consistent date parsing
+      const [year, month, day] = dateString.includes('T') 
+        ? dateString.split('T')[0].split('-').map(Number)
+        : dateString.split('-').map(Number);
+      
+      // Create date object with exact components (avoiding timezone shifts)
+      const date = new Date(year, month - 1, day);
       return format(date, 'dd/MM/yyyy');
     } catch (error) {
       console.error('Error formatting date:', error, dateString);

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -5,7 +6,7 @@ import { useFormResgateData } from '@/hooks/useFormResgateData';
 import { Registro } from '@/types/hotspots';
 import { supabase } from '@/integrations/supabase/client';
 import ResgateForm from './ResgateForm';
-import { buscarEspeciePorNomeCientifico } from '@/services/especieService';
+import { buscarEspeciePorNomeCientifico, buscarEspeciePorId } from '@/services/especieService';
 
 const ResgateFormContainer = () => {
   const { 
@@ -142,14 +143,36 @@ const ResgateFormContainer = () => {
     }
   };
   
+  // Implementando a função buscarDetalhesEspecie
+  const buscarDetalhesEspecie = async (especieId: string) => {
+    try {
+      const especie = await buscarEspeciePorId(especieId);
+      if (especie) {
+        // Esta função é usada pelo hook useFormResgateData
+        // Para sincronizar nosso estado local, vamos usá-la diretamente
+        if (form.getValues('especieId') === especieId) {
+          // Atualizamos a seleção de espécie no estado do formulário
+          form.setValue('especieId', especieId);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao buscar detalhes da espécie:", error);
+      toast.error("Erro ao carregar detalhes da espécie");
+    }
+  };
+  
   const handleFormSubmit = async (data: any) => {
     if (isEditing && editingId && originalRegistro) {
       try {
         // Format the date for the database (YYYY-MM-DD)
+        // Fix timezone issue by using date constructor with separate parts
         const formatDateForDB = (dateString: string) => {
           try {
-            const date = new Date(dateString);
-            return date.toISOString().split('T')[0];
+            // Split the date string into components
+            const [year, month, day] = dateString.split('-').map(Number);
+            // Create date with local timezone (avoiding timezone shifts)
+            const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            return formattedDate;
           } catch (error) {
             console.error('Error formatting date for database:', error, dateString);
             throw new Error('Data inválida');
