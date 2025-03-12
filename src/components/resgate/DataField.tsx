@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -70,13 +71,15 @@ const DataField: React.FC<DataFieldProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedDate = formatDateInput(e.target.value);
     
+    // Create a synthetic event to pass to the onChange handler
     const syntheticEvent = {
       ...e,
       target: {
         ...e.target,
+        name: e.target.name,
         value: formattedDate
       }
-    };
+    } as React.ChangeEvent<HTMLInputElement>;
     
     onChange(syntheticEvent);
   };
