@@ -64,6 +64,7 @@ export type Database = {
           origem: string
           outro_desfecho: string | null
           outro_destinacao: string | null
+          quantidade: number | null
           quantidade_adulto: number | null
           quantidade_filhote: number | null
           regiao_administrativa: string
@@ -92,6 +93,7 @@ export type Database = {
           origem: string
           outro_desfecho?: string | null
           outro_destinacao?: string | null
+          quantidade?: number | null
           quantidade_adulto?: number | null
           quantidade_filhote?: number | null
           regiao_administrativa: string
@@ -120,6 +122,7 @@ export type Database = {
           origem?: string
           outro_desfecho?: string | null
           outro_destinacao?: string | null
+          quantidade?: number | null
           quantidade_adulto?: number | null
           quantidade_filhote?: number | null
           regiao_administrativa?: string

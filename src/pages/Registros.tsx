@@ -50,14 +50,7 @@ const Registros = () => {
       
       if (error) throw error;
       
-      const processedRegistros: Registro[] = (data || []).map(reg => ({
-        ...reg,
-        quantidade_adulto: reg.quantidade_adulto || 0,
-        quantidade_filhote: reg.quantidade_filhote || 0,
-        quantidade: (reg.quantidade_adulto || 0) + (reg.quantidade_filhote || 0)
-      }));
-      
-      setRegistros(processedRegistros);
+      setRegistros(data || []);
     } catch (error) {
       console.error('Erro ao buscar registros:', error);
       toast.error('Erro ao carregar os registros');

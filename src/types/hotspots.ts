@@ -29,7 +29,7 @@ export interface Registro {
   estado_saude: string;
   atropelamento: string;
   estagio_vida: string;
-  quantidade?: number; // Make it calculated/optional since it's not in the database
+  quantidade: number;
   quantidade_adulto: number | null;
   quantidade_filhote: number | null;
   destinacao: string;

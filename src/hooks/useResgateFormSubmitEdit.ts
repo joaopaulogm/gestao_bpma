@@ -51,7 +51,7 @@ export const useResgateFormSubmitEdit = (
       const dataFormatada = format(dataObj, 'yyyy-MM-dd');
       
       console.log('Updating with date:', dataFormatada, 'Original value:', data.data);
-      console.log('Quantidade adulto:', data.quantidadeAdulto, 'Quantidade filhote:', data.quantidadeFilhote);
+      console.log('Quantidade adulto:', data.quantidadeAdulto, 'Quantidade filhote:', data.quantidadeFilhote, 'Quantidade total:', data.quantidade);
       
       const { error } = await supabase
         .from('registros')
