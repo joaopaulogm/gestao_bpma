@@ -88,6 +88,7 @@ export const useFormResgateData = () => {
     handleSubmit,
     especieSelecionada,
     carregandoEspecie,
+    buscarDetalhesEspecie,
     isSubmitting
   };
 };
