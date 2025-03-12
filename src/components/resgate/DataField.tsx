@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import FormField from './FormField';
@@ -24,40 +24,57 @@ const DataField: React.FC<DataFieldProps> = ({
   error,
   required = false 
 }) => {
-  // Ensure the date is in YYYY-MM-DD format for the input field
-  const formatDateForInput = (dateString: string) => {
-    if (!dateString) return '';
+  // Parse the input date value, safely handling both Date objects and strings
+  const parseDate = (dateValue: string): Date | undefined => {
+    if (!dateValue) return undefined;
     
     try {
-      // If the date already includes a 'T', it's in ISO format and we just need the date part
-      if (dateString.includes('T')) {
-        return dateString.split('T')[0];
+      // Handle ISO format dates (with 'T')
+      if (dateValue.includes('T')) {
+        return new Date(dateValue);
       }
       
-      // If it's just a date string, make sure it's in the right format
-      const date = new Date(dateString);
+      // Handle YYYY-MM-DD format
+      if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateValue.split('-').map(Number);
+        return new Date(year, month - 1, day);
+      }
+      
+      // Handle DD/MM/YYYY format potentially entered by user
+      if (dateValue.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        const [day, month, year] = dateValue.split('/').map(Number);
+        return new Date(year, month - 1, day);
+      }
+      
+      // Last resort, try direct parsing
+      return new Date(dateValue);
+    } catch (error) {
+      console.error('Error parsing date:', error, dateValue);
+      return undefined;
+    }
+  };
+
+  // Format date for the input field in YYYY-MM-DD format
+  const formatDateForInput = (dateValue: string): string => {
+    if (!dateValue) return '';
+    
+    try {
+      const date = parseDate(dateValue);
+      if (!date || isNaN(date.getTime())) return dateValue;
+      
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     } catch (error) {
-      console.error('Error formatting date for input:', error, dateString);
-      return dateString;
+      console.error('Error formatting date for input:', error, dateValue);
+      return dateValue;
     }
   };
 
-  // Convert YYYY-MM-DD string to Date object for the calendar
-  const getDateFromString = (dateString: string): Date | undefined => {
-    if (!dateString) return undefined;
-    
-    try {
-      // Parse the date string into a Date object
-      const [year, month, day] = dateString.split('-').map(Number);
-      return new Date(year, month - 1, day);
-    } catch (error) {
-      console.error('Error parsing date string:', error, dateString);
-      return undefined;
-    }
+  // Handle manual input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e);
   };
 
   // Handle date selection from calendar
@@ -82,7 +99,7 @@ const DataField: React.FC<DataFieldProps> = ({
   };
 
   const formattedValue = formatDateForInput(value);
-  const selectedDate = getDateFromString(formattedValue);
+  const selectedDate = parseDate(value);
 
   return (
     <FormSection>
@@ -98,7 +115,7 @@ const DataField: React.FC<DataFieldProps> = ({
             name="data"
             type="date"
             value={formattedValue}
-            onChange={onChange}
+            onChange={handleInputChange}
             className={cn(
               "flex-1",
               error ? "border-red-500 bg-red-50" : ""
@@ -115,6 +132,7 @@ const DataField: React.FC<DataFieldProps> = ({
                   "h-10 w-10",
                   error ? "border-red-500" : ""
                 )}
+                type="button"
               >
                 <CalendarIcon className="h-4 w-4" />
               </Button>
