@@ -26,9 +26,9 @@ const AnimalInfoSection: React.FC<AnimalInfoSectionProps> = ({
         quantidadeAdulto={formData.quantidadeAdulto}
         quantidadeFilhote={formData.quantidadeFilhote}
         quantidade={formData.quantidade}
-        onEstadoSaudeChange={(value) => handleSelectChange('estadoSaude', value)}
-        onAtropelamentoChange={(value) => handleSelectChange('atropelamento', value)}
-        onEstagioVidaChange={(value) => handleSelectChange('estagioVida', value)}
+        onEstadoSaudeChange={value => handleSelectChange('estadoSaude', value)}
+        onAtropelamentoChange={value => handleSelectChange('atropelamento', value)}
+        onEstagioVidaChange={value => handleSelectChange('estagioVida', value)}
         onQuantidadeChange={handleQuantidadeChange}
         errorEstadoSaude={errors.estadoSaude?.message}
         errorAtropelamento={errors.atropelamento?.message}
