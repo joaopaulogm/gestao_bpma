@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -54,15 +53,40 @@ const DataField: React.FC<DataFieldProps> = ({
     }
   };
 
+  // Format user input as DD/MM/AAAA while typing
+  const formatDateInput = (input: string): string => {
+    // Remove all non-numeric characters
+    const numbersOnly = input.replace(/\D/g, '');
+    
+    // Add slashes while typing
+    if (numbersOnly.length <= 2) return numbersOnly;
+    if (numbersOnly.length <= 4) {
+      return `${numbersOnly.slice(0, 2)}/${numbersOnly.slice(2)}`;
+    }
+    return `${numbersOnly.slice(0, 2)}/${numbersOnly.slice(2, 4)}/${numbersOnly.slice(4, 8)}`;
+  };
+
+  // Handle input changes with automatic formatting
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedDate = formatDateInput(e.target.value);
+    
+    const syntheticEvent = {
+      ...e,
+      target: {
+        ...e.target,
+        value: formattedDate
+      }
+    };
+    
+    onChange(syntheticEvent);
+  };
+
   // Handle date selection from calendar
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
     
-    // Format the selected date to YYYY-MM-DD
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const formattedDate = `${year}-${month}-${day}`;
+    // Format the selected date to DD/MM/YYYY
+    const formattedDate = format(date, 'dd/MM/yyyy');
     
     // Create a synthetic event to pass to the onChange handler
     const syntheticEvent = {
@@ -92,11 +116,12 @@ const DataField: React.FC<DataFieldProps> = ({
             type="text"
             placeholder="DD/MM/AAAA"
             value={value}
-            onChange={onChange}
+            onChange={handleInputChange}
             className={cn(
               "flex-1",
               error ? "border-red-500 bg-red-50" : ""
             )}
+            maxLength={10}
             aria-invalid={!!error}
           />
           
