@@ -1,3 +1,4 @@
+
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -10,223 +11,419 @@ interface JsPDFWithAutoTable extends jsPDF {
 }
 
 export const exportToExcel = (data: DashboardData, fileName: string) => {
-  // Convert complex nested data structure to a flattened format for Excel
-  const flattenedData = flattenDataForExport(data);
+  // Convertemos a estrutura de dados complexa em um formato plano para Excel
+  const workbook = XLSX.utils.book_new();
   
-  const ws = XLSX.utils.json_to_sheet(flattenedData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Dashboard Data");
-  XLSX.writeFile(wb, `${fileName}.xlsx`);
+  // Resumo geral
+  const resumoSheet = [
+    ['Métrica', 'Valor'],
+    ['Total de Registros', data.totalRegistros],
+    ['Total de Resgates', data.totalResgates],
+    ['Total de Apreensões', data.totalApreensoes],
+    ['Total de Atropelamentos', data.totalAtropelamentos],
+    ['Quantidade Mínima por Ocorrência', data.quantidadePorOcorrencia.min],
+    ['Quantidade Máxima por Ocorrência', data.quantidadePorOcorrencia.max],
+    ['Quantidade Média por Ocorrência', data.quantidadePorOcorrencia.avg],
+    ['Quantidade Mediana por Ocorrência', data.quantidadePorOcorrencia.median],
+    ['Data da Exportação', data.ultimaAtualizacao]
+  ];
+  
+  XLSX.utils.book_append_sheet(
+    workbook, 
+    XLSX.utils.aoa_to_sheet(resumoSheet), 
+    "Resumo"
+  );
+  
+  // Série temporal
+  const timeSeriesSheet = [
+    ['Data', 'Resgates', 'Apreensões', 'Total']
+  ];
+  
+  data.timeSeriesData.forEach(item => {
+    timeSeriesSheet.push([
+      item.date,
+      item.resgates,
+      item.apreensoes,
+      item.total
+    ]);
+  });
+  
+  XLSX.utils.book_append_sheet(
+    workbook, 
+    XLSX.utils.aoa_to_sheet(timeSeriesSheet), 
+    "Evolução Temporal"
+  );
+  
+  // Regiões administrativas
+  const regiaoSheet = [
+    ['Região Administrativa', 'Quantidade']
+  ];
+  
+  data.regiaoAdministrativa.forEach(item => {
+    regiaoSheet.push([item.name, item.value]);
+  });
+  
+  XLSX.utils.book_append_sheet(
+    workbook, 
+    XLSX.utils.aoa_to_sheet(regiaoSheet), 
+    "Regiões Administrativas"
+  );
+  
+  // Distribuições por classe taxonômica e estado de saúde
+  const distribuicoesSheet = [
+    ['Categoria', 'Nome', 'Quantidade', 'Percentual']
+  ];
+  
+  data.classeTaxonomica.forEach(item => {
+    distribuicoesSheet.push(['Classe Taxonômica', item.name, item.value, '']);
+  });
+  
+  data.estadoSaude.forEach(item => {
+    distribuicoesSheet.push([
+      'Estado de Saúde', 
+      item.estado, 
+      item.quantidade, 
+      `${item.percentual.toFixed(2)}%`
+    ]);
+  });
+  
+  data.estagioVidaDistribuicao.forEach(item => {
+    distribuicoesSheet.push(['Estágio de Vida', item.name, item.value, '']);
+  });
+  
+  XLSX.utils.book_append_sheet(
+    workbook, 
+    XLSX.utils.aoa_to_sheet(distribuicoesSheet), 
+    "Distribuições"
+  );
+  
+  // Espécies
+  const especiesSheet = [
+    ['Categoria', 'Espécie', 'Quantidade']
+  ];
+  
+  data.especiesMaisResgatadas.forEach(item => {
+    especiesSheet.push(['Mais Resgatadas', item.name, item.quantidade]);
+  });
+  
+  data.especiesMaisApreendidas.forEach(item => {
+    especiesSheet.push(['Mais Apreendidas', item.name, item.quantidade]);
+  });
+  
+  data.especiesAtropeladas.forEach(item => {
+    especiesSheet.push(['Atropeladas', item.name, item.quantidade]);
+  });
+  
+  XLSX.utils.book_append_sheet(
+    workbook, 
+    XLSX.utils.aoa_to_sheet(especiesSheet), 
+    "Espécies"
+  );
+  
+  // Desfechos
+  const desfechosSheet = [
+    ['Categoria', 'Desfecho', 'Quantidade']
+  ];
+  
+  data.desfechoResgate.forEach(item => {
+    desfechosSheet.push(['Resgate', item.name, item.value]);
+  });
+  
+  data.desfechoApreensao.forEach(item => {
+    desfechosSheet.push(['Apreensão', item.name, item.value]);
+  });
+  
+  XLSX.utils.book_append_sheet(
+    workbook, 
+    XLSX.utils.aoa_to_sheet(desfechosSheet), 
+    "Desfechos"
+  );
+  
+  // Destinação
+  const destinacaoSheet = [
+    ['Destinação', 'Quantidade']
+  ];
+  
+  data.destinacaoTipos.forEach(item => {
+    destinacaoSheet.push([item.name, item.value]);
+  });
+  
+  if (data.motivosEntregaCEAPA.length > 0) {
+    destinacaoSheet.push(['', '']);
+    destinacaoSheet.push(['Motivo Entrega CEAPA', 'Quantidade']);
+    
+    data.motivosEntregaCEAPA.forEach(item => {
+      destinacaoSheet.push([item.name, item.value]);
+    });
+  }
+  
+  XLSX.utils.book_append_sheet(
+    workbook, 
+    XLSX.utils.aoa_to_sheet(destinacaoSheet), 
+    "Destinação"
+  );
+  
+  // Escrever o arquivo XLSX
+  XLSX.writeFile(workbook, `${fileName}.xlsx`);
 };
 
 export const exportToPDF = (data: DashboardData, fileName: string) => {
   const doc = new jsPDF() as JsPDFWithAutoTable;
   
-  // Add title
-  doc.setFontSize(16);
-  doc.text("Dashboard de Análise de Fauna", 14, 20);
-  doc.setFontSize(10);
-  doc.text(`Gerado em: ${new Date().toLocaleDateString()}`, 14, 30);
+  // Função auxiliar para criar título de seção
+  const addSectionTitle = (title: string, y: number) => {
+    doc.setFontSize(14);
+    doc.setTextColor(59, 130, 246); // Cor azul
+    doc.text(title, 14, y);
+    doc.setDrawColor(59, 130, 246);
+    doc.setLineWidth(0.5);
+    doc.line(14, y + 1, 196, y + 1);
+    doc.setTextColor(0);
+    doc.setFontSize(10);
+    
+    return y + 10;
+  };
   
-  // Add summary data
-  doc.setFontSize(12);
-  doc.text("Resumo", 14, 40);
+  // Cabeçalho
+  doc.setFontSize(20);
+  doc.setTextColor(23, 37, 84);
+  doc.text("Dashboard de Fauna", 14, 20);
+  
+  // Informações de exportação
+  doc.setFontSize(10);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Exportado em: ${data.ultimaAtualizacao}`, 14, 30);
+  
+  let yPos = 40;
+  
+  // 1. Resumo
+  yPos = addSectionTitle("Resumo", yPos);
   
   autoTable(doc, {
-    startY: 45,
+    startY: yPos,
     head: [['Métrica', 'Valor']],
     body: [
+      ['Total de Registros', data.totalRegistros.toString()],
       ['Total de Resgates', data.totalResgates.toString()],
       ['Total de Apreensões', data.totalApreensoes.toString()],
-      ['Total de Atropelamentos', data.atropelamentos.reduce((acc: number, curr: any) => acc + curr.quantidade, 0).toString()]
+      ['Total de Atropelamentos', data.totalAtropelamentos.toString()]
     ],
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [59, 130, 246],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 9
+    }
   });
   
-  // Add distribution by class
-  let yPos = doc.lastAutoTable?.finalY || 45;
-  yPos += 15;
+  yPos = (doc.lastAutoTable?.finalY || yPos) + 15;
   
-  doc.text("Distribuição por Classe", 14, yPos);
+  // 2. Distribuição por classe taxonômica
+  yPos = addSectionTitle("Distribuição por Classe Taxonômica", yPos);
   
   autoTable(doc, {
-    startY: yPos + 5,
+    startY: yPos,
     head: [['Classe', 'Quantidade']],
-    body: data.distribuicaoPorClasse.map((item: any) => [item.name, item.value.toString()]),
+    body: data.classeTaxonomica.map(item => [item.name, item.value.toString()]),
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [16, 185, 129],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 9
+    }
   });
   
-  // Add destinations
-  yPos = doc.lastAutoTable?.finalY || yPos;
-  yPos += 15;
+  yPos = (doc.lastAutoTable?.finalY || yPos) + 15;
   
-  doc.text("Destinos", 14, yPos);
+  // 3. Regiões administrativas
+  yPos = addSectionTitle("Top 10 Regiões Administrativas", yPos);
   
   autoTable(doc, {
-    startY: yPos + 5,
-    head: [['Destino', 'Quantidade']],
-    body: data.destinos.map((item: any) => [item.name, item.value.toString()]),
+    startY: yPos,
+    head: [['Região', 'Quantidade']],
+    body: data.regiaoAdministrativa
+      .slice(0, 10)
+      .map(item => [item.name, item.value.toString()]),
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [139, 92, 246],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 9
+    }
   });
   
-  // Add outcomes
-  yPos = doc.lastAutoTable?.finalY || yPos;
-  yPos += 15;
+  // Nova página
+  doc.addPage();
+  yPos = 20;
   
-  doc.text("Desfechos de Apreensão", 14, yPos);
+  // 4. Top espécies resgatadas
+  yPos = addSectionTitle("Top 10 Espécies Mais Resgatadas", yPos);
   
   autoTable(doc, {
-    startY: yPos + 5,
+    startY: yPos,
+    head: [['Espécie', 'Quantidade']],
+    body: data.especiesMaisResgatadas
+      .slice(0, 10)
+      .map(item => [item.name, item.quantidade.toString()]),
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [249, 115, 22],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 9
+    }
+  });
+  
+  yPos = (doc.lastAutoTable?.finalY || yPos) + 15;
+  
+  // 5. Top espécies apreendidas
+  yPos = addSectionTitle("Top 10 Espécies Mais Apreendidas", yPos);
+  
+  autoTable(doc, {
+    startY: yPos,
+    head: [['Espécie', 'Quantidade']],
+    body: data.especiesMaisApreendidas
+      .slice(0, 10)
+      .map(item => [item.name, item.quantidade.toString()]),
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [16, 185, 129],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 9
+    }
+  });
+  
+  yPos = (doc.lastAutoTable?.finalY || yPos) + 15;
+  
+  // 6. Atropelamentos
+  yPos = addSectionTitle("Espécies Atropeladas", yPos);
+  
+  autoTable(doc, {
+    startY: yPos,
+    head: [['Espécie', 'Quantidade']],
+    body: data.especiesAtropeladas
+      .slice(0, 10)
+      .map(item => [item.name, item.quantidade.toString()]),
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [236, 72, 153],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 9
+    }
+  });
+  
+  // Nova página
+  doc.addPage();
+  yPos = 20;
+  
+  // 7. Desfechos
+  yPos = addSectionTitle("Desfechos de Resgate", yPos);
+  
+  autoTable(doc, {
+    startY: yPos,
     head: [['Desfecho', 'Quantidade']],
-    body: data.desfechos.map((item: any) => [item.name, item.value.toString()]),
+    body: data.desfechoResgate.map(item => [item.name, item.value.toString()]),
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [16, 185, 129],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 9
+    }
   });
   
-  // Add most rescued species (add new page if needed)
-  if ((doc.lastAutoTable?.finalY || 0) > 230) {
-    doc.addPage();
-    yPos = 20;
-  } else {
-    yPos = doc.lastAutoTable?.finalY || yPos;
-    yPos += 15;
-  }
+  yPos = (doc.lastAutoTable?.finalY || yPos) + 15;
   
-  doc.text("Espécies Mais Resgatadas", 14, yPos);
+  // 8. Desfechos de apreensão
+  yPos = addSectionTitle("Desfechos de Apreensão", yPos);
   
   autoTable(doc, {
-    startY: yPos + 5,
-    head: [['Espécie', 'Quantidade']],
-    body: data.especiesMaisResgatadas.map((item: any) => [item.name, item.quantidade.toString()]),
+    startY: yPos,
+    head: [['Desfecho', 'Quantidade']],
+    body: data.desfechoApreensao.map(item => [item.name, item.value.toString()]),
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [139, 92, 246],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 9
+    }
   });
   
-  // Add most seized species
-  yPos = doc.lastAutoTable?.finalY || yPos;
-  yPos += 15;
+  yPos = (doc.lastAutoTable?.finalY || yPos) + 15;
   
-  // Check if we need a new page
-  if (yPos > 230) {
-    doc.addPage();
-    yPos = 20;
-  }
-  
-  doc.text("Espécies Mais Apreendidas", 14, yPos);
+  // 9. Destinação
+  yPos = addSectionTitle("Destinação dos Animais", yPos);
   
   autoTable(doc, {
-    startY: yPos + 5,
-    head: [['Espécie', 'Quantidade']],
-    body: data.especiesMaisApreendidas.map((item: any) => [item.name, item.quantidade.toString()]),
+    startY: yPos,
+    head: [['Destinação', 'Quantidade']],
+    body: data.destinacaoTipos.map(item => [item.name, item.value.toString()]),
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [59, 130, 246],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 9
+    }
   });
   
-  // Add roadkill data
-  yPos = doc.lastAutoTable?.finalY || yPos;
-  yPos += 15;
-  
-  // Check if we need a new page
-  if (yPos > 230) {
-    doc.addPage();
-    yPos = 20;
-  }
-  
-  doc.text("Animais Atropelados por Espécie", 14, yPos);
+  // 10. Estatísticas de quantidade
+  yPos = (doc.lastAutoTable?.finalY || yPos) + 15;
+  yPos = addSectionTitle("Estatísticas de Quantidade por Ocorrência", yPos);
   
   autoTable(doc, {
-    startY: yPos + 5,
-    head: [['Espécie', 'Quantidade']],
-    body: data.atropelamentos.map((item: any) => [item.name, item.quantidade.toString()]),
+    startY: yPos,
+    head: [['Métrica', 'Valor']],
+    body: [
+      ['Quantidade Mínima', data.quantidadePorOcorrencia.min.toString()],
+      ['Quantidade Máxima', data.quantidadePorOcorrencia.max.toString()],
+      ['Quantidade Média', data.quantidadePorOcorrencia.avg.toFixed(1)],
+      ['Quantidade Mediana', data.quantidadePorOcorrencia.median.toString()]
+    ],
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [236, 72, 153],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 9
+    }
   });
   
-  // Add R analysis data if available
-  if (data.analysis && data.analysis.r_data) {
-    doc.addPage();
-    doc.setFontSize(14);
-    doc.text("Análise Estatística (R)", 14, 20);
-    
-    // Add R analysis tables
-    // This would depend on the specific structure of your R analysis data
-    // You would need to customize this based on what your R API returns
+  // Rodapé
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`Página ${i} de ${totalPages} - Dashboard de Fauna - ${fileName}`, 14, 285);
   }
   
+  // Salvar o PDF
   doc.save(`${fileName}.pdf`);
 };
-
-// Helper function to flatten nested data for Excel export
-function flattenDataForExport(data: any) {
-  const result = [];
-  
-  // Add summary data
-  result.push({
-    categoria: 'Resumo',
-    metrica: 'Total de Resgates',
-    valor: data.totalResgates
-  });
-  
-  result.push({
-    categoria: 'Resumo',
-    metrica: 'Total de Apreensões',
-    valor: data.totalApreensoes
-  });
-  
-  result.push({
-    categoria: 'Resumo',
-    metrica: 'Total de Atropelamentos',
-    valor: data.atropelamentos.reduce((acc: number, curr: any) => acc + curr.quantidade, 0)
-  });
-  
-  // Add distribution by class
-  data.distribuicaoPorClasse.forEach((item: any) => {
-    result.push({
-      categoria: 'Distribuição por Classe',
-      metrica: item.name,
-      valor: item.value
-    });
-  });
-  
-  // Add destinations
-  data.destinos.forEach((item: any) => {
-    result.push({
-      categoria: 'Destinos',
-      metrica: item.name,
-      valor: item.value
-    });
-  });
-  
-  // Add outcomes
-  data.desfechos.forEach((item: any) => {
-    result.push({
-      categoria: 'Desfechos de Apreensão',
-      metrica: item.name,
-      valor: item.value
-    });
-  });
-  
-  // Add most rescued species
-  data.especiesMaisResgatadas.forEach((item: any) => {
-    result.push({
-      categoria: 'Espécies Mais Resgatadas',
-      metrica: item.name,
-      valor: item.quantidade
-    });
-  });
-  
-  // Add most seized species
-  data.especiesMaisApreendidas.forEach((item: any) => {
-    result.push({
-      categoria: 'Espécies Mais Apreendidas',
-      metrica: item.name,
-      valor: item.quantidade
-    });
-  });
-  
-  // Add roadkill data
-  data.atropelamentos.forEach((item: any) => {
-    result.push({
-      categoria: 'Animais Atropelados por Espécie',
-      metrica: item.name,
-      valor: item.quantidade
-    });
-  });
-  
-  // Add R analysis data if available
-  if (data.analysis && data.analysis.r_data) {
-    // Add R specific analysis data
-    // This would depend on the structure of your R analysis
-  }
-  
-  return result;
-}

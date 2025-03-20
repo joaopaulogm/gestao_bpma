@@ -41,3 +41,38 @@ export interface Registro {
   outro_destinacao: string | null;
   created_at: string;
 }
+
+export interface ChartDataItem {
+  name: string;
+  value: number;
+}
+
+export interface TimeSeriesItem {
+  date: string;
+  resgates: number;
+  apreensoes: number;
+  total: number;
+}
+
+export interface MapDataPoint {
+  id: string;
+  latitude: string;
+  longitude: string;
+  tipo: string;
+  nome_popular: string;
+  quantidade: number;
+}
+
+export interface HealthDistribution {
+  estado: string;
+  quantidade: number;
+  percentual: number;
+}
+
+export interface DashboardMetric {
+  title: string;
+  value: number;
+  previousValue?: number;
+  change?: number;
+  icon: React.ReactNode;
+}

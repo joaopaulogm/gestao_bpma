@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, FileSpreadsheet, FilePdf } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
 import { toast } from 'sonner';
 import { DashboardData } from '@/hooks/useDashboardData';
@@ -10,9 +10,10 @@ interface DashboardExportProps {
   data: DashboardData | null;
   year: number;
   month: number | null;
+  isLoading: boolean;
 }
 
-const DashboardExport = ({ data, year, month }: DashboardExportProps) => {
+const DashboardExport = ({ data, year, month, isLoading }: DashboardExportProps) => {
   const handleExportExcel = () => {
     if (!data) {
       toast.error("Não há dados para exportar");
@@ -20,7 +21,8 @@ const DashboardExport = ({ data, year, month }: DashboardExportProps) => {
     }
     
     try {
-      exportToExcel(data, `dashboard-${year}-${month !== null ? month + 1 : 'todos'}`);
+      const fileName = `dashboard-${year}${month !== null ? `-${String(month + 1).padStart(2, '0')}` : ''}`;
+      exportToExcel(data, fileName);
       toast.success("Dados exportados com sucesso para XLSX");
     } catch (err) {
       console.error("Erro ao exportar para Excel:", err);
@@ -35,7 +37,8 @@ const DashboardExport = ({ data, year, month }: DashboardExportProps) => {
     }
     
     try {
-      exportToPDF(data, `dashboard-${year}-${month !== null ? month + 1 : 'todos'}`);
+      const fileName = `dashboard-${year}${month !== null ? `-${String(month + 1).padStart(2, '0')}` : ''}`;
+      exportToPDF(data, fileName);
       toast.success("Dados exportados com sucesso para PDF");
     } catch (err) {
       console.error("Erro ao exportar para PDF:", err);
@@ -48,17 +51,19 @@ const DashboardExport = ({ data, year, month }: DashboardExportProps) => {
       <Button 
         variant="outline" 
         onClick={handleExportExcel}
-        className="flex items-center gap-2"
+        disabled={isLoading || !data}
+        className="flex items-center gap-2 bg-white border-blue-200 text-blue-700 hover:bg-blue-50"
       >
-        <Download size={16} />
+        <FileSpreadsheet size={16} />
         Exportar XLSX
       </Button>
       <Button 
         variant="outline" 
         onClick={handleExportPDF}
-        className="flex items-center gap-2"
+        disabled={isLoading || !data}
+        className="flex items-center gap-2 bg-white border-red-200 text-red-700 hover:bg-red-50"
       >
-        <Download size={16} />
+        <FilePdf size={16} />
         Exportar PDF
       </Button>
     </div>
