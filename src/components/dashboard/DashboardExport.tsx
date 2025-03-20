@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, FileSpreadsheet, FilePdf } from 'lucide-react';
+import { Download, FileSpreadsheet, FileText } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
 import { toast } from 'sonner';
 import { DashboardData } from '@/hooks/useDashboardData';
@@ -63,7 +63,7 @@ const DashboardExport = ({ data, year, month, isLoading }: DashboardExportProps)
         disabled={isLoading || !data}
         className="flex items-center gap-2 bg-white border-red-200 text-red-700 hover:bg-red-50"
       >
-        <FilePdf size={16} />
+        <FileText size={16} />
         Exportar PDF
       </Button>
     </div>

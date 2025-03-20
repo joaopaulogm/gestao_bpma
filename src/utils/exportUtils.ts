@@ -17,14 +17,14 @@ export const exportToExcel = (data: DashboardData, fileName: string) => {
   // Resumo geral
   const resumoSheet = [
     ['Métrica', 'Valor'],
-    ['Total de Registros', data.totalRegistros],
-    ['Total de Resgates', data.totalResgates],
-    ['Total de Apreensões', data.totalApreensoes],
-    ['Total de Atropelamentos', data.totalAtropelamentos],
-    ['Quantidade Mínima por Ocorrência', data.quantidadePorOcorrencia.min],
-    ['Quantidade Máxima por Ocorrência', data.quantidadePorOcorrencia.max],
-    ['Quantidade Média por Ocorrência', data.quantidadePorOcorrencia.avg],
-    ['Quantidade Mediana por Ocorrência', data.quantidadePorOcorrencia.median],
+    ['Total de Registros', data.totalRegistros.toString()],
+    ['Total de Resgates', data.totalResgates.toString()],
+    ['Total de Apreensões', data.totalApreensoes.toString()],
+    ['Total de Atropelamentos', data.totalAtropelamentos.toString()],
+    ['Quantidade Mínima por Ocorrência', data.quantidadePorOcorrencia.min.toString()],
+    ['Quantidade Máxima por Ocorrência', data.quantidadePorOcorrencia.max.toString()],
+    ['Quantidade Média por Ocorrência', data.quantidadePorOcorrencia.avg.toString()],
+    ['Quantidade Mediana por Ocorrência', data.quantidadePorOcorrencia.median.toString()],
     ['Data da Exportação', data.ultimaAtualizacao]
   ];
   
@@ -42,9 +42,9 @@ export const exportToExcel = (data: DashboardData, fileName: string) => {
   data.timeSeriesData.forEach(item => {
     timeSeriesSheet.push([
       item.date,
-      item.resgates,
-      item.apreensoes,
-      item.total
+      item.resgates.toString(),
+      item.apreensoes.toString(),
+      item.total.toString()
     ]);
   });
   
@@ -60,7 +60,7 @@ export const exportToExcel = (data: DashboardData, fileName: string) => {
   ];
   
   data.regiaoAdministrativa.forEach(item => {
-    regiaoSheet.push([item.name, item.value]);
+    regiaoSheet.push([item.name, item.value.toString()]);
   });
   
   XLSX.utils.book_append_sheet(
@@ -75,20 +75,20 @@ export const exportToExcel = (data: DashboardData, fileName: string) => {
   ];
   
   data.classeTaxonomica.forEach(item => {
-    distribuicoesSheet.push(['Classe Taxonômica', item.name, item.value, '']);
+    distribuicoesSheet.push(['Classe Taxonômica', item.name, item.value.toString(), '']);
   });
   
   data.estadoSaude.forEach(item => {
     distribuicoesSheet.push([
       'Estado de Saúde', 
       item.estado, 
-      item.quantidade, 
+      item.quantidade.toString(), 
       `${item.percentual.toFixed(2)}%`
     ]);
   });
   
   data.estagioVidaDistribuicao.forEach(item => {
-    distribuicoesSheet.push(['Estágio de Vida', item.name, item.value, '']);
+    distribuicoesSheet.push(['Estágio de Vida', item.name, item.value.toString(), '']);
   });
   
   XLSX.utils.book_append_sheet(
@@ -103,15 +103,15 @@ export const exportToExcel = (data: DashboardData, fileName: string) => {
   ];
   
   data.especiesMaisResgatadas.forEach(item => {
-    especiesSheet.push(['Mais Resgatadas', item.name, item.quantidade]);
+    especiesSheet.push(['Mais Resgatadas', item.name, item.quantidade.toString()]);
   });
   
   data.especiesMaisApreendidas.forEach(item => {
-    especiesSheet.push(['Mais Apreendidas', item.name, item.quantidade]);
+    especiesSheet.push(['Mais Apreendidas', item.name, item.quantidade.toString()]);
   });
   
   data.especiesAtropeladas.forEach(item => {
-    especiesSheet.push(['Atropeladas', item.name, item.quantidade]);
+    especiesSheet.push(['Atropeladas', item.name, item.quantidade.toString()]);
   });
   
   XLSX.utils.book_append_sheet(
@@ -126,11 +126,11 @@ export const exportToExcel = (data: DashboardData, fileName: string) => {
   ];
   
   data.desfechoResgate.forEach(item => {
-    desfechosSheet.push(['Resgate', item.name, item.value]);
+    desfechosSheet.push(['Resgate', item.name, item.value.toString()]);
   });
   
   data.desfechoApreensao.forEach(item => {
-    desfechosSheet.push(['Apreensão', item.name, item.value]);
+    desfechosSheet.push(['Apreensão', item.name, item.value.toString()]);
   });
   
   XLSX.utils.book_append_sheet(
@@ -145,7 +145,7 @@ export const exportToExcel = (data: DashboardData, fileName: string) => {
   ];
   
   data.destinacaoTipos.forEach(item => {
-    destinacaoSheet.push([item.name, item.value]);
+    destinacaoSheet.push([item.name, item.value.toString()]);
   });
   
   if (data.motivosEntregaCEAPA.length > 0) {
@@ -153,7 +153,7 @@ export const exportToExcel = (data: DashboardData, fileName: string) => {
     destinacaoSheet.push(['Motivo Entrega CEAPA', 'Quantidade']);
     
     data.motivosEntregaCEAPA.forEach(item => {
-      destinacaoSheet.push([item.name, item.value]);
+      destinacaoSheet.push([item.name, item.value.toString()]);
     });
   }
   

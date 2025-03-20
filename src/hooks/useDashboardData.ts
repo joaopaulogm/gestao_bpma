@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -350,6 +351,15 @@ export const useDashboardData = () => {
       ? (sortedQuantidades[mid - 1] + sortedQuantidades[mid]) / 2
       : sortedQuantidades[mid];
     
+    // Criar as propriedades adicionais que faltam para os gráficos
+    const distribuicaoPorClasse = classeTaxonomica; // Usar a mesma distribuição por classe taxonômica
+    
+    const destinos = destinacaoTipos; // Usar os mesmos tipos de destinação
+    
+    const desfechos = desfechoApreensao; // Usar os mesmos desfechos de apreensão
+    
+    const atropelamentos = especiesAtropeladas; // Usar as mesmas espécies atropeladas
+    
     // 19. Métricas para cartões de resumo
     const metricas: DashboardMetric[] = [
       {
@@ -418,7 +428,12 @@ export const useDashboardData = () => {
         median
       },
       metricas,
-      ultimaAtualizacao: new Date().toLocaleString('pt-BR')
+      ultimaAtualizacao: new Date().toLocaleString('pt-BR'),
+      // Adicionar as propriedades que faltam
+      distribuicaoPorClasse,
+      destinos,
+      desfechos,
+      atropelamentos
     };
   };
 

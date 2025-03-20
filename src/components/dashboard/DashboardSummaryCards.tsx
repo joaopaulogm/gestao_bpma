@@ -2,7 +2,7 @@
 import React from 'react';
 import { DashboardData } from '@/hooks/useDashboardData';
 import { Card, CardContent } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, Layers, Paw, Target, Car, Bird, Users } from 'lucide-react';
+import { TrendingUp, TrendingDown, Layers, Target, Car, Bird, Users } from 'lucide-react';
 
 interface DashboardSummaryCardsProps {
   data: DashboardData;
@@ -17,7 +17,8 @@ const DashboardSummaryCards = ({ data }: DashboardSummaryCardsProps) => {
       case 'Layers':
         return <Layers {...iconProps} />;
       case 'Paw':
-        return <Paw {...iconProps} />;
+        // Como não existe o ícone Paw, vamos usar um substituto
+        return <Bird {...iconProps} />;
       case 'Target':
         return <Target {...iconProps} />;
       case 'Car':

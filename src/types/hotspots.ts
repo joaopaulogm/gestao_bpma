@@ -79,3 +79,52 @@ export interface DashboardMetric {
   iconColor: string; // Cor do ícone
 }
 
+// Adicionando as propriedades que faltam para o DashboardCharts
+export interface EspecieQuantidade {
+  name: string;
+  quantidade: number;
+}
+
+export interface DashboardData {
+  totalResgates: number;
+  totalApreensoes: number;
+  totalRegistros: number;
+  totalAtropelamentos: number;
+  
+  // Gráficos principais
+  timeSeriesData: TimeSeriesItem[];
+  regiaoAdministrativa: ChartDataItem[];
+  origemDistribuicao: ChartDataItem[];
+  classeTaxonomica: ChartDataItem[];
+  desfechoResgate: ChartDataItem[];
+  desfechoApreensao: ChartDataItem[];
+  estadoSaude: HealthDistribution[];
+  destinacaoTipos: ChartDataItem[];
+  atropelamentoDistribuicao: ChartDataItem[];
+  estagioVidaDistribuicao: ChartDataItem[];
+  
+  // Top 5/10 listas
+  especiesMaisResgatadas: EspecieQuantidade[];
+  especiesMaisApreendidas: EspecieQuantidade[];
+  especiesAtropeladas: EspecieQuantidade[];
+  motivosEntregaCEAPA: ChartDataItem[];
+  
+  // Dados geográficos
+  mapDataOrigem: MapDataPoint[];
+  mapDataSoltura: MapDataPoint[];
+  
+  // Métricas para cartões de resumo
+  metricas: DashboardMetric[];
+  
+  // Análises avançadas
+  quantidadePorOcorrencia: {min: number, max: number, avg: number, median: number};
+  
+  // Data da atualização
+  ultimaAtualizacao: string;
+  
+  // Propriedades faltantes para os gráficos
+  distribuicaoPorClasse: ChartDataItem[];
+  destinos: ChartDataItem[];
+  desfechos: ChartDataItem[];
+  atropelamentos: EspecieQuantidade[];
+}
