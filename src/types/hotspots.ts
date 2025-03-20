@@ -1,4 +1,5 @@
 
+
 export interface RegistroLocation {
   id: string;
   regiao_administrativa: string;
@@ -74,5 +75,7 @@ export interface DashboardMetric {
   value: number;
   previousValue?: number;
   change?: number;
-  icon: React.ReactNode;
+  iconType: string; // Nome do ícone em vez de um elemento React
+  iconColor: string; // Cor do ícone
 }
+

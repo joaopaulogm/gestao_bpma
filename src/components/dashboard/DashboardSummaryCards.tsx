@@ -2,13 +2,35 @@
 import React from 'react';
 import { DashboardData } from '@/hooks/useDashboardData';
 import { Card, CardContent } from '@/components/ui/card';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Layers, Paw, Target, Car, Bird, Users } from 'lucide-react';
 
 interface DashboardSummaryCardsProps {
   data: DashboardData;
 }
 
 const DashboardSummaryCards = ({ data }: DashboardSummaryCardsProps) => {
+  // Função para renderizar o ícone correto
+  const renderIcon = (iconType: string, iconColor: string) => {
+    const iconProps = { className: `h-5 w-5 ${iconColor}` };
+    
+    switch (iconType) {
+      case 'Layers':
+        return <Layers {...iconProps} />;
+      case 'Paw':
+        return <Paw {...iconProps} />;
+      case 'Target':
+        return <Target {...iconProps} />;
+      case 'Car':
+        return <Car {...iconProps} />;
+      case 'Bird':
+        return <Bird {...iconProps} />;
+      case 'Users':
+        return <Users {...iconProps} />;
+      default:
+        return <Layers {...iconProps} />;
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       {data.metricas.map((metric, index) => (
@@ -19,7 +41,7 @@ const DashboardSummaryCards = ({ data }: DashboardSummaryCardsProps) => {
                 {metric.title}
               </span>
               <div className="bg-slate-100 p-1.5 rounded-full">
-                {metric.icon}
+                {renderIcon(metric.iconType, metric.iconColor)}
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-800">

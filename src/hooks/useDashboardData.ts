@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +10,6 @@ import {
   HealthDistribution,
   DashboardMetric
 } from '@/types/hotspots';
-import { Layers, Paw, Leaf, Car, Bird, Target, Users, TrendingUp } from 'lucide-react';
 
 export interface FilterState {
   year: number;
@@ -357,32 +355,38 @@ export const useDashboardData = () => {
       {
         title: 'Total de Registros',
         value: registros.length,
-        icon: <Layers className="h-5 w-5 text-blue-500" />
+        iconType: 'Layers',
+        iconColor: 'text-blue-500'
       },
       {
         title: 'Resgates',
         value: resgates.length,
-        icon: <Paw className="h-5 w-5 text-green-500" />
+        iconType: 'Paw',
+        iconColor: 'text-green-500'
       },
       {
         title: 'Apreensões',
         value: apreensoes.length,
-        icon: <Target className="h-5 w-5 text-purple-500" />
+        iconType: 'Target',
+        iconColor: 'text-purple-500'
       },
       {
         title: 'Atropelamentos',
         value: atropelamentos.length,
-        icon: <Car className="h-5 w-5 text-pink-500" />
+        iconType: 'Car',
+        iconColor: 'text-pink-500'
       },
       {
         title: 'Espécies Registradas',
         value: new Set(registros.map(r => r.nome_cientifico)).size,
-        icon: <Bird className="h-5 w-5 text-amber-500" />
+        iconType: 'Bird',
+        iconColor: 'text-amber-500'
       },
       {
         title: 'Animais Contabilizados',
         value: registros.reduce((sum, r) => sum + (r.quantidade || 1), 0),
-        icon: <Users className="h-5 w-5 text-cyan-500" />
+        iconType: 'Users',
+        iconColor: 'text-cyan-500'
       }
     ];
     
