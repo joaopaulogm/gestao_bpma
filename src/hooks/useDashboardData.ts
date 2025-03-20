@@ -9,7 +9,8 @@ import {
   TimeSeriesItem, 
   MapDataPoint,
   HealthDistribution,
-  DashboardMetric
+  DashboardMetric,
+  DashboardData
 } from '@/types/hotspots';
 
 export interface FilterState {
@@ -17,44 +18,6 @@ export interface FilterState {
   month: number | null;
   classeTaxonomica: string | null;
   origem: string | null;
-}
-
-export interface DashboardData {
-  totalResgates: number;
-  totalApreensoes: number;
-  totalRegistros: number;
-  totalAtropelamentos: number;
-  
-  // Gráficos principais
-  timeSeriesData: TimeSeriesItem[];
-  regiaoAdministrativa: ChartDataItem[];
-  origemDistribuicao: ChartDataItem[];
-  classeTaxonomica: ChartDataItem[];
-  desfechoResgate: ChartDataItem[];
-  desfechoApreensao: ChartDataItem[];
-  estadoSaude: HealthDistribution[];
-  destinacaoTipos: ChartDataItem[];
-  atropelamentoDistribuicao: ChartDataItem[];
-  estagioVidaDistribuicao: ChartDataItem[];
-  
-  // Top 5/10 listas
-  especiesMaisResgatadas: { name: string; quantidade: number }[];
-  especiesMaisApreendidas: { name: string; quantidade: number }[];
-  especiesAtropeladas: { name: string; quantidade: number }[];
-  motivosEntregaCEAPA: ChartDataItem[];
-  
-  // Dados geográficos
-  mapDataOrigem: MapDataPoint[];
-  mapDataSoltura: MapDataPoint[];
-  
-  // Métricas para cartões de resumo
-  metricas: DashboardMetric[];
-  
-  // Análises avançadas
-  quantidadePorOcorrencia: {min: number, max: number, avg: number, median: number};
-  
-  // Data da atualização
-  ultimaAtualizacao: string;
 }
 
 export const useDashboardData = () => {
@@ -109,7 +72,7 @@ export const useDashboardData = () => {
     // 1. Dados de base/contagem
     const resgates = registros.filter(r => r.origem === 'Resgate de Fauna');
     const apreensoes = registros.filter(r => r.origem === 'Apreensão');
-    const atropelamentos = registros.filter(r => r.atropelamento === 'Sim');
+    const animaisAtropelados = registros.filter(r => r.atropelamento === 'Sim');
     
     // 2. Distribuição por região administrativa
     const regiaoMap = new Map<string, number>();
@@ -186,8 +149,8 @@ export const useDashboardData = () => {
     
     // 9. Distribuição de atropelamento
     const atropelamentoDistribuicao = [
-      { name: 'Atropelamento', value: atropelamentos.length },
-      { name: 'Outros', value: registros.length - atropelamentos.length }
+      { name: 'Atropelamento', value: animaisAtropelados.length },
+      { name: 'Outros', value: registros.length - animaisAtropelados.length }
     ];
     
     // 10. Distribuição por estágio de vida
@@ -226,7 +189,7 @@ export const useDashboardData = () => {
     
     // 13. Espécies atropeladas
     const especiesAtropeladasMap = new Map<string, number>();
-    atropelamentos.forEach(reg => {
+    animaisAtropelados.forEach(reg => {
       const chave = `${reg.nome_popular} (${reg.nome_cientifico})`;
       especiesAtropeladasMap.set(chave, (especiesAtropeladasMap.get(chave) || 0) + (reg.quantidade || 1));
     });
@@ -353,11 +316,8 @@ export const useDashboardData = () => {
     
     // Criar as propriedades adicionais que faltam para os gráficos
     const distribuicaoPorClasse = classeTaxonomica; // Usar a mesma distribuição por classe taxonômica
-    
     const destinos = destinacaoTipos; // Usar os mesmos tipos de destinação
-    
     const desfechos = desfechoApreensao; // Usar os mesmos desfechos de apreensão
-    
     const atropelamentos = especiesAtropeladas; // Usar as mesmas espécies atropeladas
     
     // 19. Métricas para cartões de resumo
@@ -371,7 +331,7 @@ export const useDashboardData = () => {
       {
         title: 'Resgates',
         value: resgates.length,
-        iconType: 'Paw',
+        iconType: 'Bird',
         iconColor: 'text-green-500'
       },
       {
@@ -382,7 +342,7 @@ export const useDashboardData = () => {
       },
       {
         title: 'Atropelamentos',
-        value: atropelamentos.length,
+        value: animaisAtropelados.length,
         iconType: 'Car',
         iconColor: 'text-pink-500'
       },
@@ -404,7 +364,7 @@ export const useDashboardData = () => {
       totalRegistros: registros.length,
       totalResgates: resgates.length,
       totalApreensoes: apreensoes.length,
-      totalAtropelamentos: atropelamentos.length,
+      totalAtropelamentos: animaisAtropelados.length,
       timeSeriesData,
       regiaoAdministrativa,
       origemDistribuicao,

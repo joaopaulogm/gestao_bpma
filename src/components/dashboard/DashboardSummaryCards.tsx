@@ -17,7 +17,7 @@ const DashboardSummaryCards = ({ data }: DashboardSummaryCardsProps) => {
       case 'Layers':
         return <Layers {...iconProps} />;
       case 'Paw':
-        // Como não existe o ícone Paw, vamos usar um substituto
+        // Como não existe o ícone Paw, vamos usar o Bird como substituto
         return <Bird {...iconProps} />;
       case 'Target':
         return <Target {...iconProps} />;

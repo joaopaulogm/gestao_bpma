@@ -1,5 +1,4 @@
 
-
 export interface RegistroLocation {
   id: string;
   regiao_administrativa: string;
@@ -122,7 +121,7 @@ export interface DashboardData {
   // Data da atualização
   ultimaAtualizacao: string;
   
-  // Propriedades faltantes para os gráficos
+  // Propriedades adicionais para os gráficos
   distribuicaoPorClasse: ChartDataItem[];
   destinos: ChartDataItem[];
   desfechos: ChartDataItem[];
