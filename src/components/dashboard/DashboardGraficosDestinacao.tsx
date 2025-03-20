@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { DashboardData } from '@/hooks/useDashboardData';
+import { DashboardData } from '@/types/hotspots';
 import { 
   BarChart, 
   Bar, 

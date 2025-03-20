@@ -1,8 +1,7 @@
-
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { DashboardData } from '@/hooks/useDashboardData';
+import { DashboardData } from '@/types/hotspots';
 
 interface JsPDFWithAutoTable extends jsPDF {
   lastAutoTable?: {
@@ -427,3 +426,4 @@ export const exportToPDF = (data: DashboardData, fileName: string) => {
   // Salvar o PDF
   doc.save(`${fileName}.pdf`);
 };
+

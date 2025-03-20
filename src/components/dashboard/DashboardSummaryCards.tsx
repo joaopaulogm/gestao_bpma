@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { DashboardData } from '@/hooks/useDashboardData';
+import { DashboardData } from '@/types/hotspots';
 import { Card, CardContent } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Layers, Target, Car, Bird, Users } from 'lucide-react';
 

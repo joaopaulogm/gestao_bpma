@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, FileSpreadsheet, FileText } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
 import { toast } from 'sonner';
-import { DashboardData } from '@/hooks/useDashboardData';
+import { DashboardData } from '@/types/hotspots';
 
 interface DashboardExportProps {
   data: DashboardData | null;
