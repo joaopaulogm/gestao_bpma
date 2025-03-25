@@ -41,6 +41,16 @@ function App() {
               } 
             />
             
+            {/* Public Resgate Cadastro page */}
+            <Route 
+              path="/resgate-cadastro" 
+              element={
+                <SidebarLayout>
+                  <ResgateCadastro />
+                </SidebarLayout>
+              } 
+            />
+            
             {/* Protected routes */}
             <Route 
               path="/dashboard" 
@@ -78,16 +88,6 @@ function App() {
                 <ProtectedRoute>
                   <SidebarLayout>
                     <RegistroDetalhes />
-                  </SidebarLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/resgate-cadastro" 
-              element={
-                <ProtectedRoute>
-                  <SidebarLayout>
-                    <ResgateCadastro />
                   </SidebarLayout>
                 </ProtectedRoute>
               } 

@@ -26,18 +26,31 @@ const Index = () => {
       </h1>
       
       {!isAuthenticated ? (
-        <div className="max-w-md mx-auto text-center bg-white p-8 rounded-lg shadow-sm border border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-800 mb-3">Área Restrita SOI/BPMA</h2>
-          <p className="text-gray-600 mb-6">
-            Para acessar as funcionalidades do sistema, faça login com suas credenciais.
-          </p>
-          <Button 
-            onClick={() => navigate('/login')}
-            className="flex items-center gap-2 bg-fauna-blue hover:bg-fauna-blue/90"
-          >
-            <LogIn className="h-4 w-4" />
-            Fazer Login
-          </Button>
+        <div className="space-y-8">
+          {/* Public card for unauthenticated users */}
+          <div className="max-w-md mx-auto">
+            <Card 
+              title="Cadastrar Resgate/Apreensão" 
+              subtitle="Registre uma nova atividade" 
+              icon={Clipboard} 
+              to="/resgate-cadastro"
+            />
+          </div>
+          
+          {/* Login information */}
+          <div className="max-w-md mx-auto text-center bg-white p-8 rounded-lg shadow-sm border border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-800 mb-3">Área Restrita SOI/BPMA</h2>
+            <p className="text-gray-600 mb-6">
+              Para acessar as funcionalidades do sistema, faça login com suas credenciais.
+            </p>
+            <Button 
+              onClick={() => navigate('/login')}
+              className="flex items-center gap-2 bg-fauna-blue hover:bg-fauna-blue/90"
+            >
+              <LogIn className="h-4 w-4" />
+              Fazer Login
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl mx-auto">

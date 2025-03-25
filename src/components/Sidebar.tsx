@@ -72,6 +72,17 @@ const Sidebar = () => {
           {isOpen && <span>Página Inicial</span>}
         </Link>
         
+        {/* Cadastrar Resgate/Apreensão - Public */}
+        <Link 
+          to="/resgate-cadastro" 
+          className={`flex items-center gap-3 py-2 px-3 rounded-md ${
+            isActive('/resgate-cadastro') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
+          } transition-colors mb-2`}
+        >
+          <Clipboard size={20} />
+          {isOpen && <span>Cadastrar Resgate/Apreensão</span>}
+        </Link>
+        
         <Separator className="my-4" />
         
         {/* Restricted Area Section */}
@@ -151,16 +162,6 @@ const Sidebar = () => {
               >
                 <FileText size={20} />
                 {isOpen && <span>Relatórios</span>}
-              </Link>
-              
-              <Link 
-                to="/resgate-cadastro" 
-                className={`flex items-center gap-3 py-2 px-3 rounded-md ${
-                  isActive('/resgate-cadastro') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
-                } transition-colors ml-3`}
-              >
-                <Clipboard size={20} />
-                {isOpen && <span>Cadastrar Resgate</span>}
               </Link>
             </>
           )}
