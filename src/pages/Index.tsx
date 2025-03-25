@@ -8,20 +8,38 @@ import {
   BarChart, 
   MapPin, 
   Table, 
-  FileText 
+  FileText,
+  LogIn
 } from 'lucide-react';
-import Header from '@/components/Header';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <Header />
+    <div className="p-6">
+      <h1 className="text-2xl font-medium text-center text-fauna-blue mb-8 mt-4">
+        Sistema de Gestão de Fauna
+      </h1>
       
-      <main className="flex-1 p-4">
-        <h2 className="text-2xl font-medium text-center text-fauna-blue mb-8 mt-4">
-          Sistema de Gestão de Fauna
-        </h2>
-        
+      {!isAuthenticated ? (
+        <div className="max-w-md mx-auto text-center bg-white p-8 rounded-lg shadow-sm border border-gray-100">
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">Área Restrita SOI/BPMA</h2>
+          <p className="text-gray-600 mb-6">
+            Para acessar as funcionalidades do sistema, faça login com suas credenciais.
+          </p>
+          <Button 
+            onClick={() => navigate('/login')}
+            className="flex items-center gap-2 bg-fauna-blue hover:bg-fauna-blue/90"
+          >
+            <LogIn className="h-4 w-4" />
+            Fazer Login
+          </Button>
+        </div>
+      ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
           <Card 
             title="Cadastrar Resgate/Apreensão" 
@@ -73,7 +91,7 @@ const Index = () => {
             className="sm:col-span-2 sm:w-1/2 mx-auto"
           />
         </div>
-      </main>
+      )}
     </div>
   );
 };
