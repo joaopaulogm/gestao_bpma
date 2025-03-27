@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { 
   Select, 
   SelectContent, 
@@ -43,6 +43,7 @@ const DesfechoResgateField: React.FC<DesfechoResgateFieldProps> = ({
             <SelectItem value="Evadido">Evadido</SelectItem>
             <SelectItem value="Óbito">Óbito</SelectItem>
             <SelectItem value="Desistência do Solicitante">Desistência do Solicitante</SelectItem>
+            <SelectItem value="Impossibilidade de Acesso">Impossibilidade de Acesso</SelectItem>
           </SelectContent>
         </Select>
       </FormField>
