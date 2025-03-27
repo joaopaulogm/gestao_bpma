@@ -4,7 +4,6 @@ import { useSearchParams, useLocation } from 'react-router-dom';
 import { useFormResgateData } from '@/hooks/useFormResgateData';
 import { useResgateFormEdit } from '@/hooks/useResgateFormEdit';
 import { useResgateFormSubmitEdit } from '@/hooks/useResgateFormSubmitEdit';
-import { useMultipleAnimaisForm } from '@/hooks/useMultipleAnimaisForm';
 import { buscarEspeciePorId } from '@/services/especieService';
 import ResgateForm from './ResgateForm';
 import { ResgateFormData } from '@/schemas/resgateSchema';
@@ -20,17 +19,6 @@ const ResgateFormContainer = () => {
     isSubmitting: isSubmittingCreate
   } = useFormResgateData();
   
-  const {
-    especiesSelecionadas,
-    carregandoEspecies,
-    initializeAnimais,
-    handleAnimalAdd,
-    handleAnimalRemove,
-    handleAnimalChange,
-    handleAnimalQuantidadeChange,
-    onBuscarDetalhesEspecie
-  } = useMultipleAnimaisForm(form);
-  
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const editingId = searchParams.get('editar');
@@ -39,11 +27,11 @@ const ResgateFormContainer = () => {
   const {
     isEditing,
     originalRegistro,
-    fetchError
-  } = useResgateFormEdit(form, editingId, 
-    // We're not using this directly now, it will need to be modified
-    () => {}
-  );
+    fetchError,
+    especieSelecionada,
+    carregandoEspecie,
+    onBuscarDetalhesEspecie
+  } = useResgateFormEdit(form, editingId, buscarEspeciePorId);
   
   const {
     handleFormSubmit,
@@ -52,11 +40,6 @@ const ResgateFormContainer = () => {
 
   const isSubmitting = isSubmittingCreate || isSubmittingEdit;
   
-  // Initialize animals if needed
-  useEffect(() => {
-    initializeAnimais();
-  }, [initializeAnimais]);
-  
   // For debugging
   useEffect(() => {
     if (editingId) {
@@ -64,14 +47,9 @@ const ResgateFormContainer = () => {
       console.log("Dados recebidos do estado:", location.state);
     }
   }, [editingId, location.state]);
-
-  // Handler to pass to child components
-  const handleEspecieSelection = (index: number, especieId: string) => {
-    onBuscarDetalhesEspecie(index, especieId, buscarEspeciePorId);
-  };
   
   const onFormSubmit = async (data: ResgateFormData) => {
-    await handleFormSubmit(data, isEditing, editingId, originalRegistro, especiesSelecionadas[0]);
+    await handleFormSubmit(data, isEditing, editingId, originalRegistro, especieSelecionada);
   };
 
   return (
@@ -81,14 +59,10 @@ const ResgateFormContainer = () => {
       errors={errors}
       handleChange={handleChange}
       handleSelectChange={handleSelectChange}
-      handleAnimalChange={handleAnimalChange}
-      handleAnimalAdd={handleAnimalAdd}
-      handleAnimalRemove={handleAnimalRemove}
-      handleAnimalQuantidadeChange={handleAnimalQuantidadeChange}
       handleFormSubmit={form.handleSubmit(onFormSubmit)}
-      especiesSelecionadas={especiesSelecionadas}
-      carregandoEspecies={carregandoEspecies}
-      onBuscarDetalhesEspecie={handleEspecieSelection}
+      especieSelecionada={especieSelecionada}
+      carregandoEspecie={carregandoEspecie}
+      onBuscarDetalhesEspecie={onBuscarDetalhesEspecie}
       isSubmitting={isSubmitting}
       isEditing={isEditing}
       fetchError={fetchError}

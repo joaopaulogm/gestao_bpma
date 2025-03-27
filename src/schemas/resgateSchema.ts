@@ -1,19 +1,6 @@
 
 import { z } from "zod";
 
-const animalItemSchema = z.object({
-  classeTaxonomica: z.string().optional(),
-  especieId: z.string().optional(),
-  estadoSaude: z.string().optional(),
-  atropelamento: z.string().optional(),
-  estagioVida: z.string().optional(),
-  quantidadeAdulto: z.number().min(0, "Quantidade de adultos não pode ser negativa").default(0),
-  quantidadeFilhote: z.number().min(0, "Quantidade de filhotes não pode ser negativa").default(0),
-  quantidade: z.number().default(0),
-});
-
-export type AnimalItem = z.infer<typeof animalItemSchema>;
-
 export const resgateSchema = z.object({
   data: z.string().min(1, "Data é obrigatória"),
   regiaoAdministrativa: z.string().min(1, "Região Administrativa é obrigatória"),
@@ -32,6 +19,14 @@ export const resgateSchema = z.object({
   desfechoApreensao: z.string().optional(),
   numeroTCO: z.string().optional(),
   outroDesfecho: z.string().optional(),
+  classeTaxonomica: z.string().optional(),
+  especieId: z.string().optional(),
+  estadoSaude: z.string().optional(),
+  atropelamento: z.string().optional(),
+  estagioVida: z.string().optional(),
+  quantidadeAdulto: z.number().min(0, "Quantidade de adultos não pode ser negativa").default(0),
+  quantidadeFilhote: z.number().min(0, "Quantidade de filhotes não pode ser negativa").default(0),
+  quantidade: z.number().default(0),
   destinacao: z.string().min(1, "Destinação é obrigatória"),
   numeroTermoEntrega: z.string().optional(),
   horaGuardaCEAPA: z.string().optional(),
@@ -39,80 +34,68 @@ export const resgateSchema = z.object({
   latitudeSoltura: z.string().optional(),
   longitudeSoltura: z.string().optional(),
   outroDestinacao: z.string().optional(),
-  animais: z.array(animalItemSchema).min(1, "Adicione pelo menos um animal"),
 })
 .superRefine((data, ctx) => {
   // If desfechoResgate is "Evadido", several fields become optional
   const isEvadido = data.desfechoResgate === "Evadido";
   
-  // For non-evadido cases, validate at least one animal is present
-  if (!isEvadido && data.animais.length === 0) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "É necessário adicionar pelo menos um animal",
-      path: ["animais"],
-    });
-  }
-  
-  // Validate that for non-evadido cases, each animal has required information
+  // For non-evadido cases, validate animal information is present
   if (!isEvadido) {
-    data.animais.forEach((animal, index) => {
-      if (!animal.classeTaxonomica) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Classe Taxonômica é obrigatória",
-          path: [`animais.${index}.classeTaxonomica`],
-        });
-      }
-      
-      if (!animal.especieId) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Espécie é obrigatória",
-          path: [`animais.${index}.especieId`],
-        });
-      }
-      
-      if (!animal.estadoSaude) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Estado de Saúde é obrigatório",
-          path: [`animais.${index}.estadoSaude`],
-        });
-      }
-      
-      if (!animal.atropelamento) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Informação sobre atropelamento é obrigatória",
-          path: [`animais.${index}.atropelamento`],
-        });
-      }
-      
-      if (!animal.estagioVida) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Estágio da Vida é obrigatório",
-          path: [`animais.${index}.estagioVida`],
-        });
-      }
-      
-      if (animal.quantidadeAdulto === 0 && animal.quantidadeFilhote === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "É necessário adicionar pelo menos um animal adulto ou filhote",
-          path: [`animais.${index}.quantidadeAdulto`],
-        });
-      }
-      
-      if (animal.quantidade < 1) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Quantidade total deve ser maior que zero",
-          path: [`animais.${index}.quantidade`],
-        });
-      }
-    });
+    if (!data.classeTaxonomica) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Classe Taxonômica é obrigatória",
+        path: ["classeTaxonomica"],
+      });
+    }
+    
+    if (!data.especieId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Espécie é obrigatória",
+        path: ["especieId"],
+      });
+    }
+    
+    if (!data.estadoSaude) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Estado de Saúde é obrigatório",
+        path: ["estadoSaude"],
+      });
+    }
+    
+    if (!data.atropelamento) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Informação sobre atropelamento é obrigatória",
+        path: ["atropelamento"],
+      });
+    }
+    
+    if (!data.estagioVida) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Estágio da Vida é obrigatório",
+        path: ["estagioVida"],
+      });
+    }
+    
+    if (data.quantidadeAdulto === 0 && data.quantidadeFilhote === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "É necessário adicionar pelo menos um animal adulto ou filhote",
+        path: ["quantidadeAdulto"],
+      });
+    }
+    
+    if (data.quantidade < 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Quantidade total deve ser maior que zero",
+        path: ["quantidade"],
+      });
+    }
   }
   
   // Validate desfechoApreensao fields based on origem
