@@ -40,10 +40,10 @@ const ResgateFormContainer = () => {
     isEditing,
     originalRegistro,
     fetchError
-  } = useResgateFormEdit(form, editingId, 
-    // We're not using this directly now, it will need to be modified
-    () => {}
-  );
+  } = useResgateFormEdit(form, editingId, async (especieId: string) => {
+    // This now returns a Promise to match the expected function signature
+    return Promise.resolve();
+  });
   
   const {
     handleFormSubmit,

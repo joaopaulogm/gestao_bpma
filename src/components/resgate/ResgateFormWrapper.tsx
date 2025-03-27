@@ -62,7 +62,7 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
         fetchError={fetchError} 
       />
       
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+      <form onSubmit={handleFormSubmit} className="space-y-6">
         <InformacoesGeraisSection 
           formData={formData}
           handleChange={handleChange}
