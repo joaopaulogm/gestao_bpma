@@ -8,6 +8,7 @@ import FormErrorDisplay from './FormErrorDisplay';
 import ResgateFormSubmitButton from './ResgateFormSubmitButton';
 import InformacoesGeraisSection from './InformacoesGeraisSection';
 import EspecieSection from './EspecieSection';
+import AnimalInfoSection from './AnimalInfoSection';
 import DestinacaoSection from './DestinacaoSection';
 
 interface ResgateFormWrapperProps {
@@ -16,10 +17,10 @@ interface ResgateFormWrapperProps {
   errors: any;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
+  handleQuantidadeChange: (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;
   handleFormSubmit: (data: any) => Promise<void>;
   especieSelecionada: Especie | null;
   carregandoEspecie: boolean;
-  onBuscarDetalhesEspecie: (especieId: string) => void;
   isSubmitting: boolean;
   isEditing: boolean;
   fetchError?: string | null;
@@ -31,10 +32,10 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
   errors,
   handleChange,
   handleSelectChange,
+  handleQuantidadeChange,
   handleFormSubmit,
   especieSelecionada,
   carregandoEspecie,
-  onBuscarDetalhesEspecie,
   isSubmitting,
   isEditing,
   fetchError
@@ -54,7 +55,7 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
         fetchError={fetchError} 
       />
       
-      <form onSubmit={handleFormSubmit} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
         <InformacoesGeraisSection 
           formData={formData}
           handleChange={handleChange}
@@ -62,14 +63,20 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
           errors={errors}
         />
         
-        <EspecieSection
+        <EspecieSection 
           formData={formData}
-          handleChange={handleChange}
           handleSelectChange={handleSelectChange}
           errors={errors}
           especieSelecionada={especieSelecionada}
           carregandoEspecie={carregandoEspecie}
-          onBuscarDetalhesEspecie={onBuscarDetalhesEspecie}
+          isEvadido={isEvadido}
+        />
+        
+        <AnimalInfoSection 
+          formData={formData}
+          handleSelectChange={handleSelectChange}
+          handleQuantidadeChange={handleQuantidadeChange}
+          errors={errors}
           isEvadido={isEvadido}
         />
         

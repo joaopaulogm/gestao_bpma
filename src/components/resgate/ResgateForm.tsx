@@ -11,10 +11,10 @@ interface ResgateFormProps {
   errors: any;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
+  handleQuantidadeChange: (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;
   handleFormSubmit: (data: any) => Promise<void>;
   especieSelecionada: Especie | null;
   carregandoEspecie: boolean;
-  onBuscarDetalhesEspecie: (especieId: string) => void; 
   isSubmitting: boolean;
   isEditing: boolean;
   fetchError?: string | null;

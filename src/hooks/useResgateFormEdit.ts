@@ -1,186 +1,182 @@
 
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { UseFormReturn } from 'react-hook-form';
-import { supabase } from '@/integrations/supabase/client';
 import { ResgateFormData } from '@/schemas/resgateSchema';
 import { Registro } from '@/types/hotspots';
-import { Especie } from '@/services/especieService';
+import { supabase } from '@/integrations/supabase/client';
+import { buscarEspeciePorNomeCientifico } from '@/services/especieService';
 import { format } from 'date-fns';
-import { toast } from 'sonner';
+import { ptBR } from 'date-fns/locale';
 
 export const useResgateFormEdit = (
   form: UseFormReturn<ResgateFormData>,
   editingId: string | null,
-  buscarEspeciePorId: (id: string) => Promise<Especie | null>,
+  buscarDetalhesEspecie: (especieId: string) => Promise<void>
 ) => {
-  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
   const [originalRegistro, setOriginalRegistro] = useState<Registro | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [especieSelecionada, setEspecieSelecionada] = useState<Especie | null>(null);
-  const [carregandoEspecie, setCarregandoEspecie] = useState<boolean>(false);
   
-  // Function to fetch details about a specific species
-  const onBuscarDetalhesEspecie = async (especieId: string) => {
-    if (!especieId) {
-      setEspecieSelecionada(null);
-      return;
+  useEffect(() => {
+    if (editingId) {
+      // Check for registro in location state
+      const registroFromState = location.state?.registro as Registro | undefined;
+      
+      if (registroFromState) {
+        console.log("Registro encontrado no estado da navegação:", registroFromState);
+        console.log("Classe taxonômica do registro:", registroFromState.classe_taxonomica);
+        
+        // Ensure the quantidade and other properties are properly set
+        const processedRegistro: Registro = {
+          ...registroFromState,
+          quantidade_adulto: registroFromState.quantidade_adulto || 0,
+          quantidade_filhote: registroFromState.quantidade_filhote || 0,
+          quantidade: (registroFromState.quantidade_adulto || 0) + (registroFromState.quantidade_filhote || 0)
+        };
+        
+        setOriginalRegistro(processedRegistro);
+        populateFormWithRegistro(processedRegistro);
+        setIsEditing(true);
+      } else {
+        console.log("Registro não encontrado no estado, buscando do banco...");
+        fetchRegistro(editingId);
+      }
     }
-    
-    setCarregandoEspecie(true);
-    
+  }, [editingId, location.state]);
+  
+  const fetchRegistro = async (id: string) => {
     try {
-      const especie = await buscarEspeciePorId(especieId);
-      setEspecieSelecionada(especie);
+      setFetchError(null);
+      const { data, error } = await supabase
+        .from('registros')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        console.log("Registro obtido do banco:", data);
+        console.log("Classe taxonômica do registro:", data.classe_taxonomica);
+        
+        // Ensure the quantidade and other properties are properly set
+        const processedRegistro: Registro = {
+          ...data,
+          quantidade_adulto: data.quantidade_adulto || 0,
+          quantidade_filhote: data.quantidade_filhote || 0,
+          quantidade: (data.quantidade_adulto || 0) + (data.quantidade_filhote || 0)
+        };
+        
+        setOriginalRegistro(processedRegistro);
+        populateFormWithRegistro(processedRegistro);
+        setIsEditing(true);
+      }
     } catch (error) {
-      console.error('Erro ao buscar espécie:', error);
-      toast.error('Não foi possível carregar os detalhes da espécie');
-    } finally {
-      setCarregandoEspecie(false);
+      console.error('Erro ao buscar registro para edição:', error);
+      setFetchError('Não foi possível carregar o registro para edição');
+      toast.error('Erro ao carregar os dados do registro');
+      
+      setTimeout(() => {
+        navigate('/registros');
+      }, 2000);
     }
   };
 
-  // Load the initial data if we're editing
-  useEffect(() => {
-    const fetchRegistro = async () => {
-      if (!editingId) {
-        setIsEditing(false);
-        return;
-      }
-      
-      setIsEditing(true);
-      
+  const populateFormWithRegistro = async (registro: Registro) => {
+    // Format date from database (YYYY-MM-DD) to DD/MM/YYYY for form display
+    const formatDate = (dateString: string) => {
       try {
-        const { data, error } = await supabase
-          .from('registros')
-          .select('*')
-          .eq('id', editingId)
-          .single();
-        
-        if (error) throw error;
-        
-        if (!data) {
-          setFetchError('Registro não encontrado');
-          return;
+        // If it's in YYYY-MM-DD format
+        if (dateString.includes('-')) {
+          const [year, month, day] = dateString.split('-').map(Number);
+          // Using date-fns with ptBR locale to ensure DD/MM/YYYY format
+          return format(new Date(year, month - 1, day), 'dd/MM/yyyy', { locale: ptBR });
         }
         
-        setOriginalRegistro(data);
-        
-        // Format date from YYYY-MM-DD to DD/MM/YYYY for the form
-        const formattedDate = data.data ? format(new Date(data.data), 'dd/MM/yyyy') : '';
-        
-        // Look up the especie if available
-        if (data.nome_cientifico) {
-          const { data: especieData, error: especieError } = await supabase
-            .from('especies_fauna')
-            .select('*')
-            .eq('nome_cientifico', data.nome_cientifico)
-            .maybeSingle();
-          
-          if (!especieError && especieData) {
-            setEspecieSelecionada(especieData);
-            
-            // Reset form with the data from registro and especie
-            form.reset({
-              data: formattedDate,
-              regiaoAdministrativa: data.regiao_administrativa || '',
-              origem: data.origem || '',
-              latitudeOrigem: data.latitude_origem?.toString() || '',
-              longitudeOrigem: data.longitude_origem?.toString() || '',
-              desfechoResgate: data.desfecho_resgate || '',
-              desfechoApreensao: data.desfecho_apreensao || '',
-              numeroTCO: data.numero_tco || '',
-              outroDesfecho: data.outro_desfecho || '',
-              classeTaxonomica: data.classe_taxonomica || '',
-              especieId: especieData.id || '',
-              estadoSaude: data.estado_saude || '',
-              atropelamento: data.atropelamento || '',
-              estagioVida: data.estagio_vida || '',
-              quantidade: data.quantidade || 0,
-              quantidadeAdulto: data.quantidade_adulto || 0,
-              quantidadeFilhote: data.quantidade_filhote || 0,
-              destinacao: data.destinacao || '',
-              numeroTermoEntrega: data.numero_termo_entrega || '',
-              horaGuardaCEAPA: data.hora_guarda_ceapa || '',
-              motivoEntregaCEAPA: data.motivo_entrega_ceapa || '',
-              latitudeSoltura: data.latitude_soltura?.toString() || '',
-              longitudeSoltura: data.longitude_soltura?.toString() || '',
-              outroDestinacao: data.outro_destinacao || '',
-            });
-          } else {
-            console.error('Erro ao buscar espécie:', especieError);
-            
-            // Reset form without an especie
-            form.reset({
-              data: formattedDate,
-              regiaoAdministrativa: data.regiao_administrativa || '',
-              origem: data.origem || '',
-              latitudeOrigem: data.latitude_origem?.toString() || '',
-              longitudeOrigem: data.longitude_origem?.toString() || '',
-              desfechoResgate: data.desfecho_resgate || '',
-              desfechoApreensao: data.desfecho_apreensao || '',
-              numeroTCO: data.numero_tco || '',
-              outroDesfecho: data.outro_desfecho || '',
-              classeTaxonomica: data.classe_taxonomica || '',
-              especieId: '',
-              estadoSaude: data.estado_saude || '',
-              atropelamento: data.atropelamento || '',
-              estagioVida: data.estagio_vida || '',
-              quantidade: data.quantidade || 0,
-              quantidadeAdulto: data.quantidade_adulto || 0,
-              quantidadeFilhote: data.quantidade_filhote || 0,
-              destinacao: data.destinacao || '',
-              numeroTermoEntrega: data.numero_termo_entrega || '',
-              horaGuardaCEAPA: data.hora_guarda_ceapa || '',
-              motivoEntregaCEAPA: data.motivo_entrega_ceapa || '',
-              latitudeSoltura: data.latitude_soltura?.toString() || '',
-              longitudeSoltura: data.longitude_soltura?.toString() || '',
-              outroDestinacao: data.outro_destinacao || '',
-            });
-          }
-        } else {
-          // No especie data available, just reset the form with registro data
-          form.reset({
-            data: formattedDate,
-            regiaoAdministrativa: data.regiao_administrativa || '',
-            origem: data.origem || '',
-            latitudeOrigem: data.latitude_origem?.toString() || '',
-            longitudeOrigem: data.longitude_origem?.toString() || '',
-            desfechoResgate: data.desfecho_resgate || '',
-            desfechoApreensao: data.desfecho_apreensao || '',
-            numeroTCO: data.numero_tco || '',
-            outroDesfecho: data.outro_desfecho || '',
-            classeTaxonomica: data.classe_taxonomica || '',
-            especieId: '',
-            estadoSaude: data.estado_saude || '',
-            atropelamento: data.atropelamento || '',
-            estagioVida: data.estagio_vida || '',
-            quantidade: data.quantidade || 0,
-            quantidadeAdulto: data.quantidade_adulto || 0,
-            quantidadeFilhote: data.quantidade_filhote || 0,
-            destinacao: data.destinacao || '',
-            numeroTermoEntrega: data.numero_termo_entrega || '',
-            horaGuardaCEAPA: data.hora_guarda_ceapa || '',
-            motivoEntregaCEAPA: data.motivo_entrega_ceapa || '',
-            latitudeSoltura: data.latitude_soltura?.toString() || '',
-            longitudeSoltura: data.longitude_soltura?.toString() || '',
-            outroDestinacao: data.outro_destinacao || '',
-          });
+        // For ISO format with T
+        if (dateString.includes('T')) {
+          return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
         }
+        
+        // If already in DD/MM/YYYY
+        if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+          return dateString;
+        }
+        
+        // Default fallback
+        return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
       } catch (error) {
-        console.error('Erro ao buscar registro para edição:', error);
-        setFetchError('Erro ao carregar dados para edição');
+        console.error('Error formatting date:', error, dateString);
+        return dateString;
       }
     };
     
-    fetchRegistro();
-  }, [editingId, form, buscarEspeciePorId]);
+    console.log("Populando formulário com registro:", registro);
+    console.log("Classe taxonômica a ser definida:", registro.classe_taxonomica);
+    
+    // Ensure quantidades are numbers, not null
+    const quantidadeAdulto = registro.quantidade_adulto || 0;
+    const quantidadeFilhote = registro.quantidade_filhote || 0;
+    const quantidade = (registro.quantidade !== undefined) ? registro.quantidade : (quantidadeAdulto + quantidadeFilhote);
+    
+    form.reset({
+      data: formatDate(registro.data),
+      regiaoAdministrativa: registro.regiao_administrativa,
+      origem: registro.origem,
+      desfechoResgate: registro.desfecho_resgate || '',
+      latitudeOrigem: registro.latitude_origem,
+      longitudeOrigem: registro.longitude_origem,
+      desfechoApreensao: registro.desfecho_apreensao || '',
+      numeroTCO: registro.numero_tco || '',
+      outroDesfecho: registro.outro_desfecho || '',
+      classeTaxonomica: registro.classe_taxonomica,
+      especieId: '',
+      estadoSaude: registro.estado_saude,
+      atropelamento: registro.atropelamento,
+      estagioVida: registro.estagio_vida,
+      quantidade,
+      quantidadeAdulto,
+      quantidadeFilhote,
+      destinacao: registro.destinacao,
+      numeroTermoEntrega: registro.numero_termo_entrega || '',
+      horaGuardaCEAPA: registro.hora_guarda_ceapa || '',
+      motivoEntregaCEAPA: registro.motivo_entrega_ceapa || '',
+      latitudeSoltura: registro.latitude_soltura || '',
+      longitudeSoltura: registro.longitude_soltura || '',
+      outroDestinacao: registro.outro_destinacao || ''
+    });
+    
+    // Log the form values after setting them
+    console.log("Valores do formulário após reset:", form.getValues());
+    
+    fetchEspecieByNomeCientifico(registro.nome_cientifico);
+  };
   
+  const fetchEspecieByNomeCientifico = async (nomeCientifico: string) => {
+    try {
+      const especie = await buscarEspeciePorNomeCientifico(nomeCientifico);
+      
+      if (especie) {
+        form.setValue('especieId', especie.id);
+        await buscarDetalhesEspecie(especie.id);
+      } else {
+        console.warn(`Espécie com nome científico "${nomeCientifico}" não encontrada`);
+        toast.warning("Espécie do registro original não encontrada no cadastro");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar ID da espécie:", error);
+      toast.error("Erro ao carregar dados da espécie");
+    }
+  };
+
   return {
     isEditing,
     originalRegistro,
     fetchError,
-    especieSelecionada,
-    carregandoEspecie,
-    onBuscarDetalhesEspecie
+    setFetchError
   };
 };

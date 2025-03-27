@@ -19,8 +19,6 @@ export const resgateSchema = z.object({
   desfechoApreensao: z.string().optional(),
   numeroTCO: z.string().optional(),
   outroDesfecho: z.string().optional(),
-  classeTaxonomica: z.string().optional(),
-  especieId: z.string().optional(),
   estadoSaude: z.string().optional(),
   atropelamento: z.string().optional(),
   estagioVida: z.string().optional(),
@@ -34,13 +32,16 @@ export const resgateSchema = z.object({
   latitudeSoltura: z.string().optional(),
   longitudeSoltura: z.string().optional(),
   outroDestinacao: z.string().optional(),
+  classeTaxonomica: z.string().optional(),
+  especieId: z.string().optional(),
 })
 .superRefine((data, ctx) => {
   // If desfechoResgate is "Evadido", several fields become optional
   const isEvadido = data.desfechoResgate === "Evadido";
   
-  // For non-evadido cases, validate animal information is present
+  // For non-evadido cases, validate required fields
   if (!isEvadido) {
+    // Validate classeTaxonomica
     if (!data.classeTaxonomica) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -49,6 +50,7 @@ export const resgateSchema = z.object({
       });
     }
     
+    // Validate especieId
     if (!data.especieId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -57,6 +59,7 @@ export const resgateSchema = z.object({
       });
     }
     
+    // Validate estadoSaude
     if (!data.estadoSaude) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -65,6 +68,7 @@ export const resgateSchema = z.object({
       });
     }
     
+    // Validate atropelamento
     if (!data.atropelamento) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -73,6 +77,7 @@ export const resgateSchema = z.object({
       });
     }
     
+    // Validate estagioVida
     if (!data.estagioVida) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -81,6 +86,7 @@ export const resgateSchema = z.object({
       });
     }
     
+    // Validate that at least one adult or juvenile is present
     if (data.quantidadeAdulto === 0 && data.quantidadeFilhote === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -89,6 +95,7 @@ export const resgateSchema = z.object({
       });
     }
     
+    // Validate quantidade
     if (data.quantidade < 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
