@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Plus, Trash2, Check } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Especie } from '@/services/especieService';
@@ -111,18 +111,6 @@ const MultipleAnimaisSection: React.FC<MultipleAnimaisSectionProps> = ({
               required={!isEvadido}
               isEvadido={isEvadido}
             />
-            
-            <div className="flex justify-end mt-4">
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-2"
-                onClick={onAddAnimal}
-              >
-                <Plus className="h-4 w-4" />
-                Incluir outro animal
-              </Button>
-            </div>
           </div>
         </Card>
       ))}
