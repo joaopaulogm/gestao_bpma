@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { 
   Activity, 
@@ -38,6 +37,12 @@ const Dashboard = () => {
     updateFilters,
     refetch
   } = useDashboardData();
+  
+  useEffect(() => {
+    if (filters.year !== 2025) {
+      updateFilters({ year: 2025, month: null });
+    }
+  }, []);
   
   const [activeTab, setActiveTab] = useState("geral");
   
