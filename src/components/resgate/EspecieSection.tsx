@@ -6,6 +6,7 @@ import FormSection from './FormSection';
 import ClasseTaxonomicaField from './ClasseTaxonomicaField';
 import EspeciesField from './EspeciesField';
 import EspecieDetailsPanel from './EspecieDetailsPanel';
+import { AlertTriangle } from 'lucide-react';
 
 interface EspecieSectionProps {
   formData: ResgateFormData;
@@ -13,6 +14,7 @@ interface EspecieSectionProps {
   errors: any;
   especieSelecionada: Especie | null;
   carregandoEspecie: boolean;
+  isEvadido?: boolean;
 }
 
 const EspecieSection: React.FC<EspecieSectionProps> = ({
@@ -20,7 +22,8 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
   handleSelectChange,
   errors,
   especieSelecionada,
-  carregandoEspecie
+  carregandoEspecie,
+  isEvadido = false
 }) => {
   // For debugging
   useEffect(() => {
@@ -29,11 +32,26 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
 
   return (
     <FormSection title="Espécie">
+      {isEvadido && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <AlertTriangle className="h-5 w-5 text-yellow-400" aria-hidden="true" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                Como o desfecho é "Evadido", os campos nesta seção são opcionais.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ClasseTaxonomicaField 
         value={formData.classeTaxonomica}
         onChange={(value) => handleSelectChange('classeTaxonomica', value)}
         error={errors.classeTaxonomica?.message}
-        required={true}
+        required={!isEvadido}
       />
       
       {formData.classeTaxonomica && (
@@ -44,7 +62,7 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
             onChange={(value) => handleSelectChange('especieId', value)}
             error={errors.especieId?.message}
             isLoading={carregandoEspecie}
-            required={true}
+            required={!isEvadido}
           />
           
           {especieSelecionada && (

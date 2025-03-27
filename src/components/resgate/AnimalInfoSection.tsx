@@ -9,13 +9,15 @@ interface AnimalInfoSectionProps {
   handleSelectChange: (name: string, value: string) => void;
   handleQuantidadeChange: (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;
   errors: any;
+  isEvadido?: boolean;
 }
 
 const AnimalInfoSection: React.FC<AnimalInfoSectionProps> = ({
   formData,
   handleSelectChange,
   handleQuantidadeChange,
-  errors
+  errors,
+  isEvadido = false
 }) => {
   return (
     <FormSection title="Informações do Animal">
@@ -36,6 +38,7 @@ const AnimalInfoSection: React.FC<AnimalInfoSectionProps> = ({
         errorQuantidadeAdulto={errors.quantidadeAdulto?.message}
         errorQuantidadeFilhote={errors.quantidadeFilhote?.message}
         required={true}
+        isEvadido={isEvadido}
       />
     </FormSection>
   );

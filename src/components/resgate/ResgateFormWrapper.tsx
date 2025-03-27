@@ -42,6 +42,9 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
 }) => {
   // Check if we have form-level errors
   const formLevelError = errors.root?.message || errors._errors?.join(', ');
+  
+  // Check if desfecho is Evadido to make fields optional
+  const isEvadido = formData.desfechoResgate === "Evadido";
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -66,6 +69,7 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
           errors={errors}
           especieSelecionada={especieSelecionada}
           carregandoEspecie={carregandoEspecie}
+          isEvadido={isEvadido}
         />
         
         <AnimalInfoSection 
@@ -73,6 +77,7 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
           handleSelectChange={handleSelectChange}
           handleQuantidadeChange={handleQuantidadeChange}
           errors={errors}
+          isEvadido={isEvadido}
         />
         
         <DestinacaoSection 

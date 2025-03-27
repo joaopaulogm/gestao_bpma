@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import FormField from './FormField';
 import FormSection from './FormSection';
+import { AlertTriangle } from 'lucide-react';
 
 interface AnimalInfoFieldsProps {
   estadoSaude: string;
@@ -31,6 +32,7 @@ interface AnimalInfoFieldsProps {
   errorQuantidadeAdulto?: string;
   errorQuantidadeFilhote?: string;
   required?: boolean;
+  isEvadido?: boolean;
 }
 
 const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
@@ -49,11 +51,32 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
   errorEstagioVida,
   errorQuantidadeAdulto,
   errorQuantidadeFilhote,
-  required = false
+  required = false,
+  isEvadido = false
 }) => {
   return (
     <FormSection>
-      <FormField id="estadoSaude" label="Estado de Saúde" error={errorEstadoSaude} required={required}>
+      {isEvadido && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <AlertTriangle className="h-5 w-5 text-yellow-400" aria-hidden="true" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                Como o desfecho é "Evadido", os campos nesta seção são opcionais.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <FormField 
+        id="estadoSaude" 
+        label="Estado de Saúde" 
+        error={errorEstadoSaude} 
+        required={required && !isEvadido}
+      >
         <Select 
           onValueChange={onEstadoSaudeChange}
           value={estadoSaude}
@@ -73,7 +96,7 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
       <div className="space-y-2">
         <Label className="flex items-center">
           Animal sofreu atropelamento?
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && !isEvadido && <span className="text-red-500 ml-1">*</span>}
         </Label>
         {errorAtropelamento && (
           <div className="text-red-500 text-sm">{errorAtropelamento}</div>
@@ -94,7 +117,12 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
         </RadioGroup>
       </div>
       
-      <FormField id="estagioVida" label="Estágio da Vida" error={errorEstagioVida} required={required}>
+      <FormField 
+        id="estagioVida" 
+        label="Estágio da Vida" 
+        error={errorEstagioVida} 
+        required={required && !isEvadido}
+      >
         <Select 
           onValueChange={onEstagioVidaChange}
           value={estagioVida}
@@ -111,7 +139,12 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
       </FormField>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <FormField id="quantidadeAdulto" label="Quantidade (Adultos)" error={errorQuantidadeAdulto}>
+        <FormField 
+          id="quantidadeAdulto" 
+          label="Quantidade (Adultos)" 
+          error={errorQuantidadeAdulto}
+          required={required && !isEvadido}
+        >
           <div className="flex items-center space-x-2">
             <Button 
               type="button" 
@@ -141,7 +174,12 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
           </div>
         </FormField>
         
-        <FormField id="quantidadeFilhote" label="Quantidade (Filhotes)" error={errorQuantidadeFilhote}>
+        <FormField 
+          id="quantidadeFilhote" 
+          label="Quantidade (Filhotes)" 
+          error={errorQuantidadeFilhote}
+          required={required && !isEvadido}
+        >
           <div className="flex items-center space-x-2">
             <Button 
               type="button" 
@@ -172,7 +210,11 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
         </FormField>
       </div>
       
-      <FormField id="quantidadeTotal" label="Quantidade Total" required={required}>
+      <FormField 
+        id="quantidadeTotal" 
+        label="Quantidade Total" 
+        required={required && !isEvadido}
+      >
         <Input
           id="quantidade"
           name="quantidade"
