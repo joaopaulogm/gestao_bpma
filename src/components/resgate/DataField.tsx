@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
-import { format, parse } from 'date-fns';
+import { format, parse, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import FormField from './FormField';
@@ -29,24 +29,34 @@ const DataField: React.FC<DataFieldProps> = ({
     if (!dateValue) return undefined;
     
     try {
+      console.log("Parsing date value:", dateValue);
+      
       // Handle DD/MM/YYYY format (Brazilian format)
       if (dateValue.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-        return parse(dateValue, 'dd/MM/yyyy', new Date(), { locale: ptBR });
+        const parsedDate = parse(dateValue, 'dd/MM/yyyy', new Date(), { locale: ptBR });
+        console.log("Parsed from DD/MM/YYYY:", parsedDate);
+        return parsedDate;
       }
       
       // Handle ISO format dates (with 'T')
       if (dateValue.includes('T')) {
-        return new Date(dateValue);
+        const date = new Date(dateValue);
+        console.log("Parsed from ISO format:", date);
+        return date;
       }
       
       // Handle YYYY-MM-DD format
       if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const [year, month, day] = dateValue.split('-').map(Number);
-        return new Date(year, month - 1, day);
+        const date = new Date(year, month - 1, day);
+        console.log("Parsed from YYYY-MM-DD:", date);
+        return date;
       }
       
       // Last resort, try direct parsing
-      return new Date(dateValue);
+      const date = new Date(dateValue);
+      console.log("Parsed with direct parsing:", date);
+      return date;
     } catch (error) {
       console.error('Error parsing date:', error, dateValue);
       return undefined;
@@ -69,6 +79,7 @@ const DataField: React.FC<DataFieldProps> = ({
   // Handle input changes with automatic formatting
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedDate = formatDateInput(e.target.value);
+    console.log("Input changed, formatted as:", formattedDate);
     
     // Create a synthetic event to pass to the onChange handler
     const syntheticEvent = {
@@ -87,8 +98,11 @@ const DataField: React.FC<DataFieldProps> = ({
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
     
+    console.log("Date selected from calendar:", date);
+    
     // Format the selected date to DD/MM/YYYY
     const formattedDate = format(date, 'dd/MM/yyyy', { locale: ptBR });
+    console.log("Formatted for display:", formattedDate);
     
     // Create a synthetic event to pass to the onChange handler
     const syntheticEvent = {
@@ -102,6 +116,8 @@ const DataField: React.FC<DataFieldProps> = ({
   };
 
   const selectedDate = parseDate(value);
+  console.log("Current date value:", value);
+  console.log("Parsed selected date for calendar:", selectedDate);
 
   return (
     <FormSection>
@@ -144,7 +160,7 @@ const DataField: React.FC<DataFieldProps> = ({
             <PopoverContent className="w-auto p-0" align="end">
               <Calendar
                 mode="single"
-                selected={selectedDate}
+                selected={selectedDate && isValid(selectedDate) ? selectedDate : undefined}
                 onSelect={handleDateSelect}
                 locale={ptBR}
                 className="p-3 pointer-events-auto"

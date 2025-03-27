@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -7,7 +6,7 @@ import { ResgateFormData } from '@/schemas/resgateSchema';
 import { Registro } from '@/types/hotspots';
 import { supabase } from '@/integrations/supabase/client';
 import { buscarEspeciePorNomeCientifico } from '@/services/especieService';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export const useResgateFormEdit = (
@@ -62,6 +61,7 @@ export const useResgateFormEdit = (
       if (data) {
         console.log("Registro obtido do banco:", data);
         console.log("Classe taxonômica do registro:", data.classe_taxonomica);
+        console.log("Data original do registro:", data.data);
         
         // Ensure the quantidade and other properties are properly set
         const processedRegistro: Registro = {
@@ -87,36 +87,32 @@ export const useResgateFormEdit = (
   };
 
   const populateFormWithRegistro = async (registro: Registro) => {
-    // Format date from database (YYYY-MM-DD) to DD/MM/YYYY for form display
-    const formatDate = (dateString: string) => {
-      try {
-        // If it's in YYYY-MM-DD format
-        if (dateString.includes('-')) {
-          const [year, month, day] = dateString.split('-').map(Number);
-          // Using date-fns with ptBR locale to ensure DD/MM/YYYY format
-          return format(new Date(year, month - 1, day), 'dd/MM/yyyy', { locale: ptBR });
-        }
-        
-        // For ISO format with T
-        if (dateString.includes('T')) {
-          return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
-        }
-        
-        // If already in DD/MM/YYYY
-        if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-          return dateString;
-        }
-        
-        // Default fallback
-        return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
-      } catch (error) {
-        console.error('Error formatting date:', error, dateString);
-        return dateString;
-      }
-    };
+    // Preserve the original date format from the database without altering it
+    // We'll just convert it to DD/MM/YYYY for display
+    console.log("Data do registro antes da formatação:", registro.data);
     
-    console.log("Populando formulário com registro:", registro);
-    console.log("Classe taxonômica a ser definida:", registro.classe_taxonomica);
+    let formattedDate = registro.data;
+    
+    // Only format if not already in DD/MM/YYYY
+    if (!registro.data.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+      try {
+        if (registro.data.includes('-')) {
+          // Handle YYYY-MM-DD format
+          const [year, month, day] = registro.data.split('-');
+          formattedDate = `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+        } else if (registro.data.includes('T')) {
+          // Handle ISO format
+          const date = new Date(registro.data);
+          formattedDate = format(date, 'dd/MM/yyyy', { locale: ptBR });
+        }
+      } catch (error) {
+        console.error('Error formatting date for display:', error);
+        // Keep original as fallback
+        formattedDate = registro.data;
+      }
+    }
+    
+    console.log("Data formatada para exibição:", formattedDate);
     
     // Ensure quantidades are numbers, not null
     const quantidadeAdulto = registro.quantidade_adulto || 0;
@@ -124,7 +120,7 @@ export const useResgateFormEdit = (
     const quantidade = (registro.quantidade !== undefined) ? registro.quantidade : (quantidadeAdulto + quantidadeFilhote);
     
     form.reset({
-      data: formatDate(registro.data),
+      data: formattedDate,
       regiaoAdministrativa: registro.regiao_administrativa,
       origem: registro.origem,
       desfechoResgate: registro.desfecho_resgate || '',

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -7,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ResgateFormData } from '@/schemas/resgateSchema';
 import { Registro } from '@/types/hotspots';
 import { Especie } from '@/services/especieService';
-import { parse, format } from 'date-fns';
+import { parse, format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export const useResgateFormSubmitEdit = (
@@ -27,30 +26,36 @@ export const useResgateFormSubmitEdit = (
     
     try {
       // Parse the date from DD/MM/YYYY format to Date object
-      let dataObj: Date;
+      let dataObj: Date | null = null;
+      let dataFormatada: string = '';
+      
+      console.log("Data original para atualização:", data.data);
       
       // Check if data.data is in DD/MM/YYYY format
       if (data.data.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-        // Parse from Brazilian date format DD/MM/YYYY
+        // Parse from Brazilian date format DD/MM/YYYY to a Date object
         dataObj = parse(data.data, 'dd/MM/yyyy', new Date(), { locale: ptBR });
+        
+        // Format back to YYYY-MM-DD for database
+        if (isValid(dataObj)) {
+          dataFormatada = format(dataObj, 'yyyy-MM-dd');
+        } else {
+          throw new Error('Data inválida após conversão');
+        }
       } else if (data.data.includes('-')) {
-        // Handle YYYY-MM-DD format
-        const [year, month, day] = data.data.split('-').map(Number);
-        dataObj = new Date(year, month - 1, day);
+        // Already in YYYY-MM-DD format, keep as is
+        dataFormatada = data.data;
       } else {
-        // Fallback to direct Date parsing
-        dataObj = new Date(data.data);
+        // Try to parse as is
+        const date = new Date(data.data);
+        if (isValid(date)) {
+          dataFormatada = format(date, 'yyyy-MM-dd');
+        } else {
+          throw new Error('Formato de data não reconhecido');
+        }
       }
       
-      // Check if date is valid
-      if (isNaN(dataObj.getTime())) {
-        throw new Error('Data inválida');
-      }
-      
-      // Format date as YYYY-MM-DD for PostgreSQL
-      const dataFormatada = format(dataObj, 'yyyy-MM-dd');
-      
-      console.log('Updating with date:', dataFormatada, 'Original value:', data.data);
+      console.log('Atualizando com a data formatada:', dataFormatada, 'Original:', data.data);
       console.log('Quantidade adulto:', data.quantidadeAdulto, 'Quantidade filhote:', data.quantidadeFilhote, 'Quantidade total:', data.quantidade);
       
       const { error } = await supabase

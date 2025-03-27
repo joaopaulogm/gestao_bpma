@@ -30,6 +30,7 @@ const ResgateEditar = () => {
         
         console.log("Registro encontrado:", data);
         console.log("Classe taxonômica do registro:", data.classe_taxonomica);
+        console.log("Data original do registro:", data.data);
         
         // Process the data to ensure quantidade is calculated properly
         const processedRegistro: Registro = {
