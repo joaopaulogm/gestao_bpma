@@ -11,8 +11,10 @@ export const useResgateSubmission = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
-  const salvarRegistroNoBanco = async (data: ResgateFormData, especieSelecionada: Especie | null) => {
-    if (!especieSelecionada) {
+  const salvarRegistroNoBanco = async (data: any, especieSelecionada: Especie | null) => {
+    // If we're not provided an especie and this is not an "Evadido" case, check if we need it
+    const isEvadido = data.desfechoResgate === "Evadido";
+    if (!isEvadido && !especieSelecionada && data.classeTaxonomica && data.especieId) {
       setSubmissionError("É necessário selecionar uma espécie para continuar");
       toast.error("É necessário selecionar uma espécie para continuar");
       console.error("Espécie não selecionada");
@@ -45,11 +47,9 @@ export const useResgateSubmission = () => {
       console.log('Saving date to database:', dataFormatada, 'Original value:', data.data);
       console.log('Quantidade adulto:', data.quantidadeAdulto, 'Quantidade filhote:', data.quantidadeFilhote, 'Quantidade total:', data.quantidade);
       
-      const { error } = await supabase.from('registros').insert({
+      // Prepare record data
+      let recordData: any = {
         data: dataFormatada,
-        classe_taxonomica: data.classeTaxonomica,
-        nome_cientifico: especieSelecionada.nome_cientifico,
-        nome_popular: especieSelecionada.nome_popular,
         regiao_administrativa: data.regiaoAdministrativa,
         origem: data.origem,
         latitude_origem: data.latitudeOrigem,
@@ -71,7 +71,21 @@ export const useResgateSubmission = () => {
         latitude_soltura: data.latitudeSoltura || null,
         longitude_soltura: data.longitudeSoltura || null,
         outro_destinacao: data.outroDestinacao || null
-      });
+      };
+      
+      // Add especie info if available
+      if (especieSelecionada) {
+        recordData.classe_taxonomica = especieSelecionada.classe_taxonomica;
+        recordData.nome_cientifico = especieSelecionada.nome_cientifico;
+        recordData.nome_popular = especieSelecionada.nome_popular;
+      } else if (data.classeTaxonomica) {
+        // If we have classe_taxonomica but no especie (could be "Evadido" case)
+        recordData.classe_taxonomica = data.classeTaxonomica;
+        recordData.nome_cientifico = data.nomeCientifico || "Não identificado";
+        recordData.nome_popular = data.nomePopular || "Não identificado";
+      }
+
+      const { error } = await supabase.from('registros').insert(recordData);
 
       if (error) {
         setSubmissionError(`Erro ao salvar registro: ${error.message}`);

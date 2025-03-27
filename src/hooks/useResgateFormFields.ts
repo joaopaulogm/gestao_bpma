@@ -26,30 +26,6 @@ export const useResgateFormFields = (form: UseFormReturn<ResgateFormData>) => {
     }
   };
 
-  const handleQuantidadeChange = (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => {
-    if (tipo === 'adulto') {
-      const currentValue = formData.quantidadeAdulto || 0; // Ensure we have a value even if it's undefined
-      setValue('quantidadeAdulto', operacao === 'aumentar' 
-        ? currentValue + 1 
-        : Math.max(0, currentValue - 1)
-      );
-    } else {
-      const currentValue = formData.quantidadeFilhote || 0; // Ensure we have a value even if it's undefined
-      setValue('quantidadeFilhote', operacao === 'aumentar' 
-        ? currentValue + 1 
-        : Math.max(0, currentValue - 1)
-      );
-    }
-    
-    // Update total quantity
-    const adultos = formData.quantidadeAdulto || 0;
-    const filhotes = formData.quantidadeFilhote || 0;
-    const totalQuantidade = (operacao === 'aumentar' ? 1 : -1) + (tipo === 'adulto' ? adultos : filhotes) + (tipo === 'adulto' ? filhotes : adultos);
-    
-    // Ensure the total is at least 0
-    setValue('quantidade', Math.max(0, totalQuantidade));
-  };
-
   const getFieldError = (fieldName: keyof ResgateFormData): string | undefined => {
     return errors[fieldName]?.message as string | undefined;
   };
@@ -62,7 +38,6 @@ export const useResgateFormFields = (form: UseFormReturn<ResgateFormData>) => {
     formData,
     handleChange,
     handleSelectChange,
-    handleQuantidadeChange,
     getFieldError,
     isFieldInvalid,
     touchedFields,

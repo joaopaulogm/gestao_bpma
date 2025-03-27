@@ -1,14 +1,13 @@
 
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { ResgateFormData } from '@/schemas/resgateSchema';
+import { ResgateFormData, AnimalItem } from '@/schemas/resgateSchema';
 import { Especie } from '@/services/especieService';
 import ResgateFormHeader from './ResgateFormHeader';
 import FormErrorDisplay from './FormErrorDisplay';
 import ResgateFormSubmitButton from './ResgateFormSubmitButton';
 import InformacoesGeraisSection from './InformacoesGeraisSection';
-import EspecieSection from './EspecieSection';
-import AnimalInfoSection from './AnimalInfoSection';
+import MultipleAnimaisSection from './MultipleAnimaisSection';
 import DestinacaoSection from './DestinacaoSection';
 
 interface ResgateFormWrapperProps {
@@ -17,10 +16,14 @@ interface ResgateFormWrapperProps {
   errors: any;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
-  handleQuantidadeChange: (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;
+  handleAnimalChange: (index: number, field: string, value: any) => void;
+  handleAnimalAdd: () => void;
+  handleAnimalRemove: (index: number) => void;
+  handleAnimalQuantidadeChange: (index: number, tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;
   handleFormSubmit: (data: any) => Promise<void>;
-  especieSelecionada: Especie | null;
-  carregandoEspecie: boolean;
+  especiesSelecionadas: (Especie | null)[];
+  carregandoEspecies: boolean[];
+  onBuscarDetalhesEspecie: (index: number, especieId: string) => void;
   isSubmitting: boolean;
   isEditing: boolean;
   fetchError?: string | null;
@@ -32,10 +35,14 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
   errors,
   handleChange,
   handleSelectChange,
-  handleQuantidadeChange,
+  handleAnimalChange,
+  handleAnimalAdd,
+  handleAnimalRemove,
+  handleAnimalQuantidadeChange,
   handleFormSubmit,
-  especieSelecionada,
-  carregandoEspecie,
+  especiesSelecionadas,
+  carregandoEspecies,
+  onBuscarDetalhesEspecie,
   isSubmitting,
   isEditing,
   fetchError
@@ -63,20 +70,16 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
           errors={errors}
         />
         
-        <EspecieSection 
-          formData={formData}
-          handleSelectChange={handleSelectChange}
+        <MultipleAnimaisSection
+          animais={formData.animais || []}
+          onAddAnimal={handleAnimalAdd}
+          onRemoveAnimal={handleAnimalRemove}
+          onUpdateAnimal={handleAnimalChange}
+          onQuantidadeChange={handleAnimalQuantidadeChange}
           errors={errors}
-          especieSelecionada={especieSelecionada}
-          carregandoEspecie={carregandoEspecie}
-          isEvadido={isEvadido}
-        />
-        
-        <AnimalInfoSection 
-          formData={formData}
-          handleSelectChange={handleSelectChange}
-          handleQuantidadeChange={handleQuantidadeChange}
-          errors={errors}
+          especiesSelecionadas={especiesSelecionadas}
+          carregandoEspecies={carregandoEspecies}
+          onBuscarDetalhesEspecie={onBuscarDetalhesEspecie}
           isEvadido={isEvadido}
         />
         

@@ -4,6 +4,8 @@ import { useSearchParams, useLocation } from 'react-router-dom';
 import { useFormResgateData } from '@/hooks/useFormResgateData';
 import { useResgateFormEdit } from '@/hooks/useResgateFormEdit';
 import { useResgateFormSubmitEdit } from '@/hooks/useResgateFormSubmitEdit';
+import { useMultipleAnimaisForm } from '@/hooks/useMultipleAnimaisForm';
+import { buscarEspeciePorId } from '@/services/especieService';
 import ResgateForm from './ResgateForm';
 import { ResgateFormData } from '@/schemas/resgateSchema';
 
@@ -14,13 +16,20 @@ const ResgateFormContainer = () => {
     errors, 
     handleChange, 
     handleSelectChange, 
-    handleQuantidadeChange, 
     handleSubmit,
-    especieSelecionada,
-    carregandoEspecie,
-    buscarDetalhesEspecie,
     isSubmitting: isSubmittingCreate
   } = useFormResgateData();
+  
+  const {
+    especiesSelecionadas,
+    carregandoEspecies,
+    initializeAnimais,
+    handleAnimalAdd,
+    handleAnimalRemove,
+    handleAnimalChange,
+    handleAnimalQuantidadeChange,
+    onBuscarDetalhesEspecie
+  } = useMultipleAnimaisForm(form);
   
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -31,7 +40,10 @@ const ResgateFormContainer = () => {
     isEditing,
     originalRegistro,
     fetchError
-  } = useResgateFormEdit(form, editingId, buscarDetalhesEspecie);
+  } = useResgateFormEdit(form, editingId, 
+    // We're not using this directly now, it will need to be modified
+    () => {}
+  );
   
   const {
     handleFormSubmit,
@@ -40,17 +52,26 @@ const ResgateFormContainer = () => {
 
   const isSubmitting = isSubmittingCreate || isSubmittingEdit;
   
+  // Initialize animals if needed
+  useEffect(() => {
+    initializeAnimais();
+  }, [initializeAnimais]);
+  
   // For debugging
   useEffect(() => {
     if (editingId) {
       console.log("Modo de edição ativado, ID:", editingId);
       console.log("Dados recebidos do estado:", location.state);
-      console.log("Classe taxonomica no formData:", formData.classeTaxonomica);
     }
-  }, [editingId, location.state, formData.classeTaxonomica]);
+  }, [editingId, location.state]);
+
+  // Handler to pass to child components
+  const handleEspecieSelection = (index: number, especieId: string) => {
+    onBuscarDetalhesEspecie(index, especieId, buscarEspeciePorId);
+  };
   
   const onFormSubmit = async (data: ResgateFormData) => {
-    await handleFormSubmit(data, isEditing, editingId, originalRegistro, especieSelecionada);
+    await handleFormSubmit(data, isEditing, editingId, originalRegistro, especiesSelecionadas[0]);
   };
 
   return (
@@ -60,10 +81,14 @@ const ResgateFormContainer = () => {
       errors={errors}
       handleChange={handleChange}
       handleSelectChange={handleSelectChange}
-      handleQuantidadeChange={handleQuantidadeChange}
+      handleAnimalChange={handleAnimalChange}
+      handleAnimalAdd={handleAnimalAdd}
+      handleAnimalRemove={handleAnimalRemove}
+      handleAnimalQuantidadeChange={handleAnimalQuantidadeChange}
       handleFormSubmit={form.handleSubmit(onFormSubmit)}
-      especieSelecionada={especieSelecionada}
-      carregandoEspecie={carregandoEspecie}
+      especiesSelecionadas={especiesSelecionadas}
+      carregandoEspecies={carregandoEspecies}
+      onBuscarDetalhesEspecie={handleEspecieSelection}
       isSubmitting={isSubmitting}
       isEditing={isEditing}
       fetchError={fetchError}
