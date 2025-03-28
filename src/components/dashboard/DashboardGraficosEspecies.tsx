@@ -1,7 +1,9 @@
 
 import React from 'react';
 import { DashboardData } from '@/types/hotspots';
-import SpeciesRescueChart from './charts/SpeciesRescueChart';
+import RescuedSpeciesChart from './charts/RescuedSpeciesChart';
+import SeizedSpeciesChart from './charts/SeizedSpeciesChart';
+import RoadkillSpeciesChart from './charts/RoadkillSpeciesChart';
 import LifeStageChart from './charts/LifeStageChart';
 import RoadkillDistributionChart from './charts/RoadkillDistributionChart';
 import QuantityStatisticsChart from './charts/QuantityStatisticsChart';
@@ -13,23 +15,11 @@ interface DashboardGraficosEspeciesProps {
 const DashboardGraficosEspecies = ({ data }: DashboardGraficosEspeciesProps) => {
   return (
     <div className="space-y-8">
-      <SpeciesRescueChart 
-        data={data.especiesMaisResgatadas} 
-        title="Espécies Mais Resgatadas" 
-        color="#f97316" 
-      />
+      <RescuedSpeciesChart data={data.especiesMaisResgatadas} />
       
-      <SpeciesRescueChart 
-        data={data.especiesMaisApreendidas} 
-        title="Espécies Mais Apreendidas" 
-        color="#10b981" 
-      />
+      <SeizedSpeciesChart data={data.especiesMaisApreendidas} />
       
-      <SpeciesRescueChart 
-        data={data.especiesAtropeladas} 
-        title="Espécies Atropeladas" 
-        color="#ec4899" 
-      />
+      <RoadkillSpeciesChart data={data.especiesAtropeladas} />
       
       <LifeStageChart data={data.estagioVidaDistribuicao} />
       
