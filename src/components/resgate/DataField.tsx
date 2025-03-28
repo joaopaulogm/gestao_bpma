@@ -52,31 +52,27 @@ const DataField: React.FC<DataFieldProps> = ({
   };
 
   return (
-    <FormSection>
-      <FormField 
-        id="data" 
-        label="Data" 
-        error={error}
-        required={required}
-      >
-        <div className="flex w-auto">
-          <Input
-            id="data"
-            name="data"
-            type="text"
-            placeholder="DD/MM/AAAA"
-            value={value}
-            onChange={handleInputChange}
-            className={cn(
-              "w-full",
-              error ? "border-red-500 bg-red-50" : ""
-            )}
-            maxLength={10}
-            aria-invalid={!!error}
-          />
-        </div>
-      </FormField>
-    </FormSection>
+    <FormField 
+      id="data" 
+      label="Data" 
+      error={error}
+      required={required}
+    >
+      <Input
+        id="data"
+        name="data"
+        type="text"
+        placeholder="DD/MM/AAAA"
+        value={value}
+        onChange={handleInputChange}
+        className={cn(
+          "w-full",
+          error ? "border-red-500 bg-red-50" : ""
+        )}
+        maxLength={10}
+        aria-invalid={!!error}
+      />
+    </FormField>
   );
 };
 

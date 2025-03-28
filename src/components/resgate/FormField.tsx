@@ -9,6 +9,7 @@ interface FormFieldProps {
   error?: string;
   loading?: boolean;
   required?: boolean;
+  className?: string;
 }
 
 /**
@@ -20,10 +21,11 @@ const FormField: React.FC<FormFieldProps> = ({
   children, 
   error, 
   loading,
-  required = false
+  required = false,
+  className = ""
 }) => {
   return (
-    <div className={`space-y-2 ${error ? 'animate-shake' : ''}`}>
+    <div className={`space-y-2 ${error ? 'animate-shake' : ''} ${className}`}>
       <Label htmlFor={id} className="flex items-center">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}

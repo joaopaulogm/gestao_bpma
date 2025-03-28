@@ -55,9 +55,9 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
   isEvadido = false
 }) => {
   return (
-    <FormSection>
+    <FormSection columns={true}>
       {isEvadido && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 col-span-full">
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <AlertTriangle className="h-5 w-5 text-yellow-400" aria-hidden="true" />
@@ -138,77 +138,75 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
         </Select>
       </FormField>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <FormField 
-          id="quantidadeAdulto" 
-          label="Quantidade (Adultos)" 
-          error={errorQuantidadeAdulto}
-          required={required && !isEvadido}
-        >
-          <div className="flex items-center space-x-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="h-10 w-10 p-0"
-              onClick={() => onQuantidadeChange('adulto', 'diminuir')}
-            >
-              -
-            </Button>
-            <Input
-              id="quantidadeAdulto"
-              name="quantidadeAdulto"
-              type="number"
-              value={quantidadeAdulto.toString()}
-              className={`text-center ${errorQuantidadeAdulto ? "border-red-500" : ""}`}
-              min="0"
-              readOnly
-            />
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="h-10 w-10 p-0"
-              onClick={() => onQuantidadeChange('adulto', 'aumentar')}
-            >
-              +
-            </Button>
-          </div>
-        </FormField>
-        
-        <FormField 
-          id="quantidadeFilhote" 
-          label="Quantidade (Filhotes)" 
-          error={errorQuantidadeFilhote}
-          required={required && !isEvadido}
-        >
-          <div className="flex items-center space-x-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="h-10 w-10 p-0"
-              onClick={() => onQuantidadeChange('filhote', 'diminuir')}
-            >
-              -
-            </Button>
-            <Input
-              id="quantidadeFilhote"
-              name="quantidadeFilhote"
-              type="number"
-              value={quantidadeFilhote.toString()}
-              className={`text-center ${errorQuantidadeFilhote ? "border-red-500" : ""}`}
-              min="0"
-              readOnly
-            />
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="h-10 w-10 p-0"
-              onClick={() => onQuantidadeChange('filhote', 'aumentar')}
-            >
-              +
-            </Button>
-          </div>
-        </FormField>
-      </div>
+      <FormField 
+        id="quantidadeAdulto" 
+        label="Quantidade (Adultos)" 
+        error={errorQuantidadeAdulto}
+        required={required && !isEvadido}
+      >
+        <div className="flex items-center space-x-2">
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="h-10 w-10 p-0 flex-shrink-0"
+            onClick={() => onQuantidadeChange('adulto', 'diminuir')}
+          >
+            -
+          </Button>
+          <Input
+            id="quantidadeAdulto"
+            name="quantidadeAdulto"
+            type="number"
+            value={quantidadeAdulto.toString()}
+            className={`text-center ${errorQuantidadeAdulto ? "border-red-500" : ""}`}
+            min="0"
+            readOnly
+          />
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="h-10 w-10 p-0 flex-shrink-0"
+            onClick={() => onQuantidadeChange('adulto', 'aumentar')}
+          >
+            +
+          </Button>
+        </div>
+      </FormField>
+      
+      <FormField 
+        id="quantidadeFilhote" 
+        label="Quantidade (Filhotes)" 
+        error={errorQuantidadeFilhote}
+        required={required && !isEvadido}
+      >
+        <div className="flex items-center space-x-2">
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="h-10 w-10 p-0 flex-shrink-0"
+            onClick={() => onQuantidadeChange('filhote', 'diminuir')}
+          >
+            -
+          </Button>
+          <Input
+            id="quantidadeFilhote"
+            name="quantidadeFilhote"
+            type="number"
+            value={quantidadeFilhote.toString()}
+            className={`text-center ${errorQuantidadeFilhote ? "border-red-500" : ""}`}
+            min="0"
+            readOnly
+          />
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="h-10 w-10 p-0 flex-shrink-0"
+            onClick={() => onQuantidadeChange('filhote', 'aumentar')}
+          >
+            +
+          </Button>
+        </div>
+      </FormField>
       
       <FormField 
         id="quantidadeTotal" 

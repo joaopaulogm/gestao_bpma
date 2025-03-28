@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { ResgateFormData } from '@/schemas/resgateSchema';
-import { regioes } from '@/constants/regioes';
 import FormSection from './FormSection';
 import DataField from './DataField';
-import RegiaoAdministrativaField from './RegiaoAdministrativaField';
 import OrigemField from './OrigemField';
+import RegiaoAdministrativaField from './RegiaoAdministrativaField';
+import DesfechoResgateField from './DesfechoResgateField';
 import DesfechoApreensaoField from './DesfechoApreensaoField';
 
 interface InformacoesGeraisSectionProps {
@@ -22,55 +22,60 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
   errors
 }) => {
   return (
-    <FormSection title="Informações Gerais">
-      <DataField 
+    <FormSection title="Informações Gerais" columns={true}>
+      <DataField
         value={formData.data}
         onChange={handleChange}
         error={errors.data?.message}
         required={true}
       />
-      
-      <RegiaoAdministrativaField 
-        value={formData.regiaoAdministrativa}
+
+      <RegiaoAdministrativaField
+        regiao={formData.regiaoAdministrativa}
         onChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
         error={errors.regiaoAdministrativa?.message}
-        regioes={regioes}
         required={true}
       />
-      
-      <OrigemField 
+
+      <OrigemField
         origem={formData.origem}
-        desfechoResgate={formData.desfechoResgate}
-        latitudeOrigem={formData.latitudeOrigem}
-        longitudeOrigem={formData.longitudeOrigem}
+        latitude={formData.latitudeOrigem}
+        longitude={formData.longitudeOrigem}
         onOrigemChange={(value) => handleSelectChange('origem', value)}
-        onDesfechoResgateChange={(value) => handleSelectChange('desfechoResgate', value)}
         onLatitudeChange={handleChange}
         onLongitudeChange={handleChange}
         errors={{
           origem: errors.origem?.message,
-          desfechoResgate: errors.desfechoResgate?.message,
-          latitudeOrigem: errors.latitudeOrigem?.message,
-          longitudeOrigem: errors.longitudeOrigem?.message
+          latitude: errors.latitudeOrigem?.message,
+          longitude: errors.longitudeOrigem?.message
         }}
         required={true}
       />
-      
-      {formData.origem === 'Apreensão' && (
-        <DesfechoApreensaoField 
-          desfechoApreensao={formData.desfechoApreensao}
-          numeroTCO={formData.numeroTCO}
-          outroDesfecho={formData.outroDesfecho}
-          onDesfechoChange={(value) => handleSelectChange('desfechoApreensao', value)}
-          onNumeroTCOChange={handleChange}
-          onOutroDesfechoChange={handleChange}
-          errors={{
-            desfechoApreensao: errors.desfechoApreensao?.message,
-            numeroTCO: errors.numeroTCO?.message,
-            outroDesfecho: errors.outroDesfecho?.message
-          }}
-          required={true}
-        />
+
+      <DesfechoResgateField
+        desfechoResgate={formData.desfechoResgate}
+        onDesfechoChange={(value) => handleSelectChange('desfechoResgate', value)}
+        error={errors.desfechoResgate?.message}
+        required={true}
+      />
+
+      {formData.origem === 'Apreensão/Resgate' && (
+        <div className="col-span-full">
+          <DesfechoApreensaoField
+            desfechoApreensao={formData.desfechoApreensao}
+            numeroTCO={formData.numeroTCO}
+            outroDesfecho={formData.outroDesfecho}
+            onDesfechoChange={(value) => handleSelectChange('desfechoApreensao', value)}
+            onNumeroTCOChange={handleChange}
+            onOutroDesfechoChange={handleChange}
+            errors={{
+              desfechoApreensao: errors.desfechoApreensao?.message,
+              numeroTCO: errors.numeroTCO?.message,
+              outroDesfecho: errors.outroDesfecho?.message
+            }}
+            required={true}
+          />
+        </div>
       )}
     </FormSection>
   );

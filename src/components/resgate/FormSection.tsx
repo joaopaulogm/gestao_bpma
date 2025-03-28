@@ -7,6 +7,7 @@ interface FormSectionProps {
   description?: string;
   children: React.ReactNode;
   className?: string;
+  columns?: boolean;
 }
 
 /**
@@ -16,7 +17,8 @@ const FormSection: React.FC<FormSectionProps> = ({
   title, 
   description,
   children, 
-  className = "" 
+  className = "",
+  columns = false
 }) => {
   return (
     <div className={`space-y-4 ${className}`}>
@@ -26,7 +28,10 @@ const FormSection: React.FC<FormSectionProps> = ({
           {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
         </div>
       )}
-      <div className="space-y-4">
+      <div className={columns 
+        ? "grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4" 
+        : "space-y-4"
+      }>
         {children}
       </div>
     </div>

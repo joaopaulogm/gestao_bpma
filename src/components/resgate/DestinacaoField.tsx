@@ -62,8 +62,8 @@ const DestinacaoField: React.FC<DestinacaoFieldProps> = ({
   required = false
 }) => {
   return (
-    <FormSection>
-      <FormField id="destinacao" label="Destinação" error={error} required={required}>
+    <FormSection columns={true}>
+      <FormField id="destinacao" label="Destinação" error={error} required={required} className="col-span-full md:col-span-1">
         <Select 
           onValueChange={onDestinacaoChange}
           value={destinacao}
@@ -106,7 +106,7 @@ const DestinacaoField: React.FC<DestinacaoFieldProps> = ({
               className={horaGuardaCEAPAError ? "border-red-500" : ""}
             />
           </FormField>
-          <FormField id="motivoEntregaCEAPA" label="Motivo" error={motivoEntregaCEAPAError} required={required}>
+          <FormField id="motivoEntregaCEAPA" label="Motivo" error={motivoEntregaCEAPAError} required={required} className="col-span-full">
             <Textarea
               id="motivoEntregaCEAPA"
               name="motivoEntregaCEAPA"
@@ -120,8 +120,8 @@ const DestinacaoField: React.FC<DestinacaoFieldProps> = ({
       )}
       
       {destinacao === 'Soltura' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField id="latitudeSoltura" label="Latitude da Soltura (DD - Decimal Degres)" error={latitudeSolturaError} required={required}>
+        <>
+          <FormField id="latitudeSoltura" label="Latitude da Soltura" error={latitudeSolturaError} required={required}>
             <Input
               id="latitudeSoltura"
               name="latitudeSoltura"
@@ -131,7 +131,7 @@ const DestinacaoField: React.FC<DestinacaoFieldProps> = ({
               className={latitudeSolturaError ? "border-red-500" : ""}
             />
           </FormField>
-          <FormField id="longitudeSoltura" label="Longitude da Soltura (DD - Decimal Degres)" error={longitudeSolturaError} required={required}>
+          <FormField id="longitudeSoltura" label="Longitude da Soltura" error={longitudeSolturaError} required={required}>
             <Input
               id="longitudeSoltura"
               name="longitudeSoltura"
@@ -141,11 +141,11 @@ const DestinacaoField: React.FC<DestinacaoFieldProps> = ({
               className={longitudeSolturaError ? "border-red-500" : ""}
             />
           </FormField>
-        </div>
+        </>
       )}
       
       {destinacao === 'Outros' && (
-        <FormField id="outroDestinacao" label="Especifique a Destinação" error={outroDestinacaoError} required={required}>
+        <FormField id="outroDestinacao" label="Especifique a Destinação" error={outroDestinacaoError} required={required} className="col-span-full">
           <Textarea
             id="outroDestinacao"
             name="outroDestinacao"
