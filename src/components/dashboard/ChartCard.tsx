@@ -184,7 +184,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         )}
       </CardHeader>
-      <CardContent className="h-[300px]">
+      <CardContent className={`${data && type ? 'h-[300px]' : 'h-auto'}`}>
         {renderChart()}
       </CardContent>
     </Card>

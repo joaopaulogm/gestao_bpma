@@ -52,7 +52,7 @@ const DashboardAppreensoesRecordes: React.FC<DashboardAppreensoesRecordesProps> 
       title="Recordes de Apreensões" 
       subtitle="Ocorrências com maior número de animais"
     >
-      <div className="grid grid-cols-1 gap-4 h-full">
+      <div className="grid grid-cols-1 gap-4 h-auto pb-4">
         {recordeMaiorQuantidade && (
           <Card className="bg-blue-50 border-blue-200">
             <CardHeader className="pb-2">
@@ -86,7 +86,7 @@ const DashboardAppreensoesRecordes: React.FC<DashboardAppreensoesRecordesProps> 
         )}
         
         {recordeApreensao && (
-          <Card className="bg-purple-50 border-purple-200">
+          <Card className="bg-purple-50 border-purple-200 mb-4">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base font-medium text-purple-700">
