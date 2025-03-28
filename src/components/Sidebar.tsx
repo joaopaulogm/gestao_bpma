@@ -11,7 +11,10 @@ import {
   FileText, 
   LogOut,
   Home,
-  Lock
+  Lock,
+  ChevronLeft,
+  ChevronRight,
+  LogIn
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -51,9 +54,9 @@ const Sidebar = () => {
           className="text-fauna-blue p-1 rounded hover:bg-fauna-light focus:outline-none"
         >
           {isOpen ? (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            <ChevronLeft size={24} />
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            <ChevronRight size={24} />
           )}
         </button>
       </div>
@@ -99,7 +102,7 @@ const Sidebar = () => {
                 isActive('/login') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
               } transition-colors ml-3`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              <LogIn size={20} />
               {isOpen && <span>Fazer Login</span>}
             </Link>
           ) : (
