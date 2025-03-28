@@ -3,15 +3,17 @@ import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartTooltipContent } from '@/components/ui/chart';
+import { Registro } from '@/types/hotspots';
 
 interface ApreensaoRecord {
   data: string;
   numeroTCO: string;
   quantidade: number;
+  label: string;
 }
 
 interface DashboardAppreensoesRecordesProps {
-  registros: any[];
+  registros: Registro[];
 }
 
 const DashboardAppreensoesRecordes: React.FC<DashboardAppreensoesRecordesProps> = ({ registros }) => {
@@ -33,8 +35,9 @@ const DashboardAppreensoesRecordes: React.FC<DashboardAppreensoesRecordesProps> 
       if (!acc[chave]) {
         acc[chave] = {
           data: reg.data,
-          numeroTCO: reg.numero_tco,
-          quantidade: 0
+          numeroTCO: reg.numero_tco || '',
+          quantidade: 0,
+          label: ''
         };
       }
       
