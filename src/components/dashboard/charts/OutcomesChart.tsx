@@ -8,6 +8,7 @@ import {
   Tooltip, 
   Legend, 
   ResponsiveContainer,
+  CartesianGrid,
   LabelList
 } from 'recharts';
 import ChartCard from '../ChartCard';
@@ -20,18 +21,19 @@ interface OutcomesChartProps {
 
 const OutcomesChart: React.FC<OutcomesChartProps> = ({ data }) => {
   return (
-    <ChartCard title="Desfechos de Apreensão">
-      <ResponsiveContainer width="100%" height={300}>
+    <ChartCard title="Desfechos de Apreensão" subtitle="Resultado das apreensões realizadas">
+      <ResponsiveContainer width="100%" height={400}>
         <BarChart 
           data={data} 
-          margin={{ top: 10, right: 30, left: 30, bottom: 30 }}
-          barSize={25}
+          margin={{ top: 20, right: 30, left: 30, bottom: 40 }}
+          barSize={40}
         >
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
           <XAxis 
             dataKey="name" 
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 11 }}
+            tick={{ fontSize: 12 }}
             angle={-25}
             textAnchor="end"
             height={60}
@@ -39,7 +41,7 @@ const OutcomesChart: React.FC<OutcomesChartProps> = ({ data }) => {
           <YAxis 
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 11 }}
+            tick={{ fontSize: 12 }}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend 
@@ -53,7 +55,7 @@ const OutcomesChart: React.FC<OutcomesChartProps> = ({ data }) => {
             fill="#8b5cf6" 
             radius={[4, 4, 0, 0]} 
           >
-            <LabelList dataKey="value" position="top" style={{ fontSize: '11px' }} />
+            <LabelList dataKey="value" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} fill="#666" />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

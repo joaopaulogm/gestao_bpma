@@ -14,7 +14,7 @@ interface DashboardChartsProps {
 
 const DashboardCharts = ({ data }: DashboardChartsProps) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
+    <div className="grid grid-cols-1 gap-8 animate-fade-in">
       <ClassDistributionChart data={data.distribuicaoPorClasse} />
       <DestinationsChart data={data.destinos} />
       <OutcomesChart data={data.desfechos} />

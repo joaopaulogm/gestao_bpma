@@ -12,35 +12,30 @@ interface DashboardGraficosEspeciesProps {
 
 const DashboardGraficosEspecies = ({ data }: DashboardGraficosEspeciesProps) => {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SpeciesRescueChart 
-          data={data.especiesMaisResgatadas} 
-          title="Espécies Mais Resgatadas" 
-          color="#f97316" 
-        />
-        
-        <SpeciesRescueChart 
-          data={data.especiesMaisApreendidas} 
-          title="Espécies Mais Apreendidas" 
-          color="#10b981" 
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SpeciesRescueChart 
-          data={data.especiesAtropeladas} 
-          title="Espécies Atropeladas" 
-          color="#ec4899" 
-        />
-        
-        <LifeStageChart data={data.estagioVidaDistribuicao} />
-      </div>
+    <div className="space-y-8">
+      <SpeciesRescueChart 
+        data={data.especiesMaisResgatadas} 
+        title="Espécies Mais Resgatadas" 
+        color="#f97316" 
+      />
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RoadkillDistributionChart data={data.atropelamentoDistribuicao} />
-        <QuantityStatisticsChart data={data.quantidadePorOcorrencia} />
-      </div>
+      <SpeciesRescueChart 
+        data={data.especiesMaisApreendidas} 
+        title="Espécies Mais Apreendidas" 
+        color="#10b981" 
+      />
+      
+      <SpeciesRescueChart 
+        data={data.especiesAtropeladas} 
+        title="Espécies Atropeladas" 
+        color="#ec4899" 
+      />
+      
+      <LifeStageChart data={data.estagioVidaDistribuicao} />
+      
+      <RoadkillDistributionChart data={data.atropelamentoDistribuicao} />
+      
+      <QuantityStatisticsChart data={data.quantidadePorOcorrencia} />
     </div>
   );
 };

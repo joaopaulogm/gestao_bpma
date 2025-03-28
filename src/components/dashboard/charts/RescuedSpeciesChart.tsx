@@ -5,6 +5,7 @@ import {
   Bar, 
   XAxis, 
   YAxis, 
+  CartesianGrid,
   Tooltip, 
   Legend, 
   ResponsiveContainer,
@@ -19,27 +20,28 @@ interface SpeciesChartProps {
 
 const RescuedSpeciesChart: React.FC<SpeciesChartProps> = ({ data }) => {
   return (
-    <ChartCard title="Espécies Mais Resgatadas">
-      <ResponsiveContainer width="100%" height={300}>
+    <ChartCard title="Espécies Mais Resgatadas" subtitle="Top 10 espécies em número de resgates">
+      <ResponsiveContainer width="100%" height={400}>
         <BarChart 
           data={data} 
-          margin={{ top: 10, right: 30, left: 30, bottom: 30 }}
+          margin={{ top: 20, right: 30, left: 140, bottom: 20 }}
           barSize={25}
           layout="vertical"
         >
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={true} vertical={false} />
           <XAxis 
             type="number" 
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 11 }}
+            tick={{ fontSize: 12 }}
           />
           <YAxis 
             type="category"
             dataKey="name" 
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 11 }}
-            width={120}
+            tick={{ fontSize: 12 }}
+            width={140}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend 
@@ -53,7 +55,7 @@ const RescuedSpeciesChart: React.FC<SpeciesChartProps> = ({ data }) => {
             fill="#f97316" 
             radius={[0, 4, 4, 0]} 
           >
-            <LabelList dataKey="quantidade" position="right" style={{ fontSize: '11px' }} />
+            <LabelList dataKey="quantidade" position="right" style={{ fontSize: '12px', fontWeight: 'bold' }} fill="#666" />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

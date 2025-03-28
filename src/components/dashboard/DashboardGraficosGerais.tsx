@@ -18,17 +18,12 @@ const DashboardGraficosGerais: React.FC<DashboardGraficosGeraisProps> = ({ data 
     <div className="space-y-8">
       <DashboardCharts data={data} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RegioesAdministrativasChart data={data.regiaoAdministrativa} />
-        <OrigemDistribuicaoChart data={data.origemDistribuicao} />
-      </div>
+      <RegioesAdministrativasChart data={data.regiaoAdministrativa} />
+      <OrigemDistribuicaoChart data={data.origemDistribuicao} />
+      <ClasseTaxonomicaChart data={data.classeTaxonomica} />
+      <EstagioVidaChart data={data.estagioVidaDistribuicao} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ClasseTaxonomicaChart data={data.classeTaxonomica} />
-        <EstagioVidaChart data={data.estagioVidaDistribuicao} />
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-8">
         <DashboardAppreensoesRecordes registros={data.rawData || []} />
         <EstadoSaudeChart data={data.estadoSaude} />
       </div>
