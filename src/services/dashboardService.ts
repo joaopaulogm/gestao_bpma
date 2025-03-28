@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { FilterState } from '@/hooks/useDashboardData';
+import { FilterState } from '@/hooks/useFilterState';
+import { format, endOfMonth } from 'date-fns';
 
 /**
  * Fetches registry data from Supabase based on filters
@@ -48,5 +49,3 @@ export const fetchRegistryData = async (filters: FilterState) => {
   
   return registros;
 };
-
-import { format, endOfMonth } from 'date-fns';
