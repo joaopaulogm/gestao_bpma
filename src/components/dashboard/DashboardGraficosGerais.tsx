@@ -1,13 +1,10 @@
 
 import React from 'react';
 import { DashboardData } from '@/types/hotspots';
-import DashboardCharts from '@/components/dashboard/DashboardCharts';
-import DashboardAppreensoesRecordes from './DashboardAppreensoesRecordes';
-import RegioesAdministrativasChart from './charts/RegioesAdministrativasChart';
-import OrigemDistribuicaoChart from './charts/OrigemDistribuicaoChart';
-import ClasseTaxonomicaChart from './charts/ClasseTaxonomicaChart';
-import EstagioVidaChart from './charts/EstagioVidaChart';
-import EstadoSaudeChart from './charts/EstadoSaudeChart';
+import SummaryChartsSection from './sections/SummaryChartsSection';
+import RegionalDistributionSection from './sections/RegionalDistributionSection';
+import TaxonomicDataSection from './sections/TaxonomicDataSection';
+import HealthApprehensionSection from './sections/HealthApprehensionSection';
 
 interface DashboardGraficosGeraisProps {
   data: DashboardData;
@@ -16,17 +13,10 @@ interface DashboardGraficosGeraisProps {
 const DashboardGraficosGerais: React.FC<DashboardGraficosGeraisProps> = ({ data }) => {
   return (
     <div className="space-y-8">
-      <DashboardCharts data={data} />
-      
-      <RegioesAdministrativasChart data={data.regiaoAdministrativa} />
-      <OrigemDistribuicaoChart data={data.origemDistribuicao} />
-      <ClasseTaxonomicaChart data={data.classeTaxonomica} />
-      <EstagioVidaChart data={data.estagioVidaDistribuicao} />
-      
-      <div className="grid grid-cols-1 gap-8">
-        <DashboardAppreensoesRecordes registros={data.rawData || []} />
-        <EstadoSaudeChart data={data.estadoSaude} />
-      </div>
+      <SummaryChartsSection data={data} />
+      <RegionalDistributionSection data={data} />
+      <TaxonomicDataSection data={data} />
+      <HealthApprehensionSection data={data} />
     </div>
   );
 };
