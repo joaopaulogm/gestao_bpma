@@ -36,7 +36,7 @@ const OrigemField: React.FC<OrigemFieldProps> = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="Resgate de Fauna">Resgate de Fauna</SelectItem>
-          <SelectItem value="Apreensão/Resgate">Apreensão/Resgate</SelectItem>
+          <SelectItem value="Apreensão">Apreensão</SelectItem>
         </SelectContent>
       </Select>
     </FormField>
