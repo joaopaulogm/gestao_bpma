@@ -1,3 +1,4 @@
+
 export interface RegistroLocation {
   id: string;
   regiao_administrativa: string;
