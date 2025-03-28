@@ -15,6 +15,7 @@ import {
   ResponsiveContainer,
   LabelList
 } from 'recharts';
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
 interface DashboardChartsProps {
   data: DashboardData;
@@ -74,7 +75,7 @@ const DashboardCharts = ({ data }: DashboardChartsProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
       <ChartCard title="Distribuição por Classe">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={300}>
           <PieChart margin={{ top: 10, right: 30, left: 30, bottom: 10 }}>
             <Pie
               data={data.distribuicaoPorClasse}
@@ -104,7 +105,7 @@ const DashboardCharts = ({ data }: DashboardChartsProps) => {
       </ChartCard>
 
       <ChartCard title="Destinos">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart 
             data={data.destinos} 
             margin={{ top: 10, right: 30, left: 30, bottom: 30 }}
@@ -143,7 +144,7 @@ const DashboardCharts = ({ data }: DashboardChartsProps) => {
       </ChartCard>
 
       <ChartCard title="Desfechos de Apreensão">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart 
             data={data.desfechos} 
             margin={{ top: 10, right: 30, left: 30, bottom: 30 }}
@@ -182,7 +183,7 @@ const DashboardCharts = ({ data }: DashboardChartsProps) => {
       </ChartCard>
 
       <ChartCard title="Espécies Mais Resgatadas">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart 
             data={data.especiesMaisResgatadas} 
             margin={{ top: 10, right: 30, left: 30, bottom: 30 }}
@@ -222,7 +223,7 @@ const DashboardCharts = ({ data }: DashboardChartsProps) => {
       </ChartCard>
 
       <ChartCard title="Espécies Mais Apreendidas">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart 
             data={data.especiesMaisApreendidas} 
             margin={{ top: 10, right: 30, left: 30, bottom: 30 }}
@@ -262,7 +263,7 @@ const DashboardCharts = ({ data }: DashboardChartsProps) => {
       </ChartCard>
 
       <ChartCard title="Animais Atropelados por Espécie">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart 
             data={data.atropelamentos} 
             margin={{ top: 10, right: 30, left: 30, bottom: 30 }}

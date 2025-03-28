@@ -97,7 +97,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
 
     if (type === 'bar') {
       return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart 
             data={data} 
             margin={{ top: 10, right: 30, left: 30, bottom: 30 }}
@@ -141,7 +141,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
     
     if (type === 'pie') {
       return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={300}>
           <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
             <Pie
               data={data}
@@ -184,7 +184,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         )}
       </CardHeader>
-      <CardContent className={`${data && type ? 'h-[300px]' : 'h-auto'}`}>
+      <CardContent className="p-4">
         {renderChart()}
       </CardContent>
     </Card>

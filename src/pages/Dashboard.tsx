@@ -17,14 +17,16 @@ const Dashboard = () => {
     refetch
   } = useDashboardData();
   
+  // Initialize year filter to 2025 when component mounts
   useEffect(() => {
-    // Set year filter to 2025 when component loads
+    console.log("Setting initial filters");
     updateFilters({ year: 2025, month: null });
   }, []);
   
   const [activeTab, setActiveTab] = useState("geral");
   
   const handleRefresh = () => {
+    console.log("Refreshing dashboard data");
     refetch();
   };
 
@@ -41,12 +43,15 @@ const Dashboard = () => {
   }
 
   if (error || !data) {
+    console.error("Dashboard error:", error);
     return (
       <Layout title="Painel de Dados" showBackButton>
         <DashboardLoading isError onRefresh={handleRefresh} />
       </Layout>
     );
   }
+
+  console.log("Dashboard data loaded:", data);
 
   return (
     <Layout title="Painel de Dados" showBackButton>
