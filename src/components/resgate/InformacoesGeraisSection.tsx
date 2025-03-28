@@ -7,6 +7,7 @@ import OrigemField from './OrigemField';
 import RegiaoAdministrativaField from './RegiaoAdministrativaField';
 import DesfechoResgateField from './DesfechoResgateField';
 import DesfechoApreensaoField from './DesfechoApreensaoField';
+import { regioes } from '@/constants/regioes';
 
 interface InformacoesGeraisSectionProps {
   formData: ResgateFormData;
@@ -31,23 +32,24 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
       />
 
       <RegiaoAdministrativaField
-        regiao={formData.regiaoAdministrativa}
+        value={formData.regiaoAdministrativa}
         onChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
         error={errors.regiaoAdministrativa?.message}
         required={true}
+        regioes={regioes}
       />
 
       <OrigemField
         origem={formData.origem}
-        latitude={formData.latitudeOrigem}
-        longitude={formData.longitudeOrigem}
+        latitudeOrigem={formData.latitudeOrigem}
+        longitudeOrigem={formData.longitudeOrigem}
         onOrigemChange={(value) => handleSelectChange('origem', value)}
         onLatitudeChange={handleChange}
         onLongitudeChange={handleChange}
         errors={{
           origem: errors.origem?.message,
-          latitude: errors.latitudeOrigem?.message,
-          longitude: errors.longitudeOrigem?.message
+          latitudeOrigem: errors.latitudeOrigem?.message,
+          longitudeOrigem: errors.longitudeOrigem?.message
         }}
         required={true}
       />
