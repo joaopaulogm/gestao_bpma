@@ -41,11 +41,7 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
 
       <OrigemField
         origem={formData.origem}
-        latitudeOrigem={formData.latitudeOrigem}
-        longitudeOrigem={formData.longitudeOrigem}
         onOrigemChange={(value) => handleSelectChange('origem', value)}
-        onLatitudeChange={handleChange}
-        onLongitudeChange={handleChange}
         errors={{
           origem: errors.origem?.message,
           latitudeOrigem: errors.latitudeOrigem?.message,
