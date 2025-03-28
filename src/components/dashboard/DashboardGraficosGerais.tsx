@@ -1,9 +1,13 @@
 
 import React from 'react';
 import { DashboardData } from '@/types/hotspots';
-import ChartCard from '@/components/dashboard/ChartCard';
 import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import DashboardAppreensoesRecordes from './DashboardAppreensoesRecordes';
+import RegioesAdministrativasChart from './charts/RegioesAdministrativasChart';
+import OrigemDistribuicaoChart from './charts/OrigemDistribuicaoChart';
+import ClasseTaxonomicaChart from './charts/ClasseTaxonomicaChart';
+import EstagioVidaChart from './charts/EstagioVidaChart';
+import EstadoSaudeChart from './charts/EstadoSaudeChart';
 
 interface DashboardGraficosGeraisProps {
   data: DashboardData;
@@ -15,56 +19,18 @@ const DashboardGraficosGerais: React.FC<DashboardGraficosGeraisProps> = ({ data 
       <DashboardCharts data={data} />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard 
-          title="Regiões Administrativas" 
-          data={data.regiaoAdministrativa.slice(0, 10)} 
-          type="bar" 
-          dataKey="value" 
-          nameKey="name"
-          showLegend={false}
-        />
-        
-        <ChartCard 
-          title="Origem" 
-          data={data.origemDistribuicao} 
-          type="pie" 
-          dataKey="value" 
-          nameKey="name"
-        />
+        <RegioesAdministrativasChart data={data.regiaoAdministrativa} />
+        <OrigemDistribuicaoChart data={data.origemDistribuicao} />
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard 
-          title="Classe Taxonômica" 
-          data={data.classeTaxonomica.slice(0, 8)} 
-          type="bar" 
-          dataKey="value" 
-          nameKey="name"
-          showLegend={false}
-        />
-        
-        <ChartCard 
-          title="Estágio de Vida" 
-          data={data.estagioVidaDistribuicao} 
-          type="pie" 
-          dataKey="value" 
-          nameKey="name"
-        />
+        <ClasseTaxonomicaChart data={data.classeTaxonomica} />
+        <EstagioVidaChart data={data.estagioVidaDistribuicao} />
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <DashboardAppreensoesRecordes registros={data.rawData || []} />
-        
-        <ChartCard 
-          title="Estado de Saúde" 
-          data={data.estadoSaude.map(item => ({ 
-            name: item.estado, 
-            value: item.quantidade 
-          }))} 
-          type="pie" 
-          dataKey="value" 
-          nameKey="name"
-        />
+        <EstadoSaudeChart data={data.estadoSaude} />
       </div>
     </div>
   );
