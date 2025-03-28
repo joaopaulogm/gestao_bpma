@@ -1,10 +1,6 @@
 
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
 import { format, parse, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -24,45 +20,6 @@ const DataField: React.FC<DataFieldProps> = ({
   error,
   required = false 
 }) => {
-  // Parse the input date value
-  const parseDate = (dateValue: string): Date | undefined => {
-    if (!dateValue) return undefined;
-    
-    try {
-      console.log("Parsing date value:", dateValue);
-      
-      // Handle DD/MM/YYYY format (Brazilian format)
-      if (dateValue.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-        const parsedDate = parse(dateValue, 'dd/MM/yyyy', new Date(), { locale: ptBR });
-        console.log("Parsed from DD/MM/YYYY:", parsedDate);
-        return parsedDate;
-      }
-      
-      // Handle ISO format dates (with 'T')
-      if (dateValue.includes('T')) {
-        const date = new Date(dateValue);
-        console.log("Parsed from ISO format:", date);
-        return date;
-      }
-      
-      // Handle YYYY-MM-DD format
-      if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const [year, month, day] = dateValue.split('-').map(Number);
-        const date = new Date(year, month - 1, day);
-        console.log("Parsed from YYYY-MM-DD:", date);
-        return date;
-      }
-      
-      // Last resort, try direct parsing
-      const date = new Date(dateValue);
-      console.log("Parsed with direct parsing:", date);
-      return date;
-    } catch (error) {
-      console.error('Error parsing date:', error, dateValue);
-      return undefined;
-    }
-  };
-
   // Format user input as DD/MM/AAAA while typing
   const formatDateInput = (input: string): string => {
     // Remove all non-numeric characters
@@ -94,31 +51,6 @@ const DataField: React.FC<DataFieldProps> = ({
     onChange(syntheticEvent);
   };
 
-  // Handle date selection from calendar
-  const handleDateSelect = (date: Date | undefined) => {
-    if (!date) return;
-    
-    console.log("Date selected from calendar:", date);
-    
-    // Format the selected date to DD/MM/YYYY
-    const formattedDate = format(date, 'dd/MM/yyyy', { locale: ptBR });
-    console.log("Formatted for display:", formattedDate);
-    
-    // Create a synthetic event to pass to the onChange handler
-    const syntheticEvent = {
-      target: {
-        name: 'data',
-        value: formattedDate
-      }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    onChange(syntheticEvent);
-  };
-
-  const selectedDate = parseDate(value);
-  console.log("Current date value:", value);
-  console.log("Parsed selected date for calendar:", selectedDate);
-
   return (
     <FormSection>
       <FormField 
@@ -127,7 +59,7 @@ const DataField: React.FC<DataFieldProps> = ({
         error={error}
         required={required}
       >
-        <div className="flex w-auto inline-flex gap-2">
+        <div className="flex w-auto">
           <Input
             id="data"
             name="data"
@@ -136,37 +68,12 @@ const DataField: React.FC<DataFieldProps> = ({
             value={value}
             onChange={handleInputChange}
             className={cn(
-              "w-auto min-w-28",
+              "w-full",
               error ? "border-red-500 bg-red-50" : ""
             )}
             maxLength={10}
             aria-invalid={!!error}
           />
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon"
-                className={cn(
-                  "h-10 w-10",
-                  error ? "border-red-500" : ""
-                )}
-                type="button"
-              >
-                <CalendarIcon className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={selectedDate && isValid(selectedDate) ? selectedDate : undefined}
-                onSelect={handleDateSelect}
-                locale={ptBR}
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
         </div>
       </FormField>
     </FormSection>
