@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BarChart4, RefreshCw } from 'lucide-react';
+import { BarChart4, RefreshCw, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import DashboardExport from './DashboardExport';
