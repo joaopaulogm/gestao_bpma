@@ -20,7 +20,7 @@ interface OrigemFieldProps {
 }
 
 const ORIGENS = [
-  'Entrega Voluntária',
+  'Resgate de Fauna',
   'Apreensão/Resgate'
 ];
 

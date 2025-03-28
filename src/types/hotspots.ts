@@ -1,4 +1,3 @@
-
 export interface RegistroLocation {
   id: string;
   regiao_administrativa: string;
@@ -78,19 +77,16 @@ export interface DashboardMetric {
   iconColor: string; // Cor do ícone
 }
 
-// Adicionando as propriedades que faltam para o DashboardCharts
 export interface EspecieQuantidade {
   name: string;
   quantidade: number;
 }
 
 export interface DashboardData {
+  totalRegistros: number;
   totalResgates: number;
   totalApreensoes: number;
-  totalRegistros: number;
   totalAtropelamentos: number;
-  
-  // Gráficos principais
   timeSeriesData: TimeSeriesItem[];
   regiaoAdministrativa: ChartDataItem[];
   origemDistribuicao: ChartDataItem[];
@@ -101,29 +97,23 @@ export interface DashboardData {
   destinacaoTipos: ChartDataItem[];
   atropelamentoDistribuicao: ChartDataItem[];
   estagioVidaDistribuicao: ChartDataItem[];
-  
-  // Top 5/10 listas
-  especiesMaisResgatadas: EspecieQuantidade[];
-  especiesMaisApreendidas: EspecieQuantidade[];
-  especiesAtropeladas: EspecieQuantidade[];
+  especiesMaisResgatadas: { name: string; quantidade: number }[];
+  especiesMaisApreendidas: { name: string; quantidade: number }[];
+  especiesAtropeladas: { name: string; quantidade: number }[];
   motivosEntregaCEAPA: ChartDataItem[];
-  
-  // Dados geográficos
   mapDataOrigem: MapDataPoint[];
   mapDataSoltura: MapDataPoint[];
-  
-  // Métricas para cartões de resumo
+  quantidadePorOcorrencia: {
+    min: number;
+    max: number;
+    avg: number;
+    median: number;
+  };
   metricas: DashboardMetric[];
-  
-  // Análises avançadas
-  quantidadePorOcorrencia: {min: number, max: number, avg: number, median: number};
-  
-  // Data da atualização
   ultimaAtualizacao: string;
-  
-  // Propriedades adicionais para os gráficos
   distribuicaoPorClasse: ChartDataItem[];
   destinos: ChartDataItem[];
   desfechos: ChartDataItem[];
-  atropelamentos: EspecieQuantidade[];
+  atropelamentos: { name: string; quantidade: number }[];
+  rawData?: any[];
 }

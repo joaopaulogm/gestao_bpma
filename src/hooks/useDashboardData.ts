@@ -362,7 +362,8 @@ export const useDashboardData = () => {
       distribuicaoPorClasse,
       destinos,
       desfechos,
-      atropelamentos
+      atropelamentos,
+      rawData: registros // Adicionar os dados brutos para uso no componente de recordes
     };
   };
 
