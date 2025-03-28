@@ -18,9 +18,8 @@ const Dashboard = () => {
   } = useDashboardData();
   
   useEffect(() => {
-    if (filters.year !== 2025) {
-      updateFilters({ year: 2025, month: null });
-    }
+    // Set year filter to 2025 when component loads
+    updateFilters({ year: 2025, month: null });
   }, []);
   
   const [activeTab, setActiveTab] = useState("geral");

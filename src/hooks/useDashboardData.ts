@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +21,7 @@ export interface FilterState {
 
 export const useDashboardData = () => {
   const [filters, setFilters] = useState<FilterState>({
-    year: new Date().getFullYear(),
+    year: 2025,
     month: null,
     classeTaxonomica: null,
     origem: null,
@@ -237,65 +236,35 @@ export const useDashboardData = () => {
       }));
     
     // 17. Dados para série temporal
-    // Primeiro, determinar o nível de agregação baseado no filtro de mês
-    let timeSeriesData: TimeSeriesItem[] = [];
+    // Always show all months for 2025 regardless of data
+    const monthNames = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
     
-    if (filters.month !== null) {
-      // Se o mês está definido, agregamos por dia
-      const daysInMonth = new Date(filters.year, filters.month + 1, 0).getDate();
+    let timeSeriesData: TimeSeriesItem[] = monthNames.map((monthName, index) => {
+      return {
+        date: monthName,
+        resgates: 0,
+        apreensoes: 0,
+        total: 0
+      };
+    });
+    
+    // Preencher os dados reais
+    registros.forEach(reg => {
+      const regDate = new Date(reg.data);
+      const month = regDate.getMonth();
       
-      // Inicializar um array com todos os dias do mês
-      timeSeriesData = Array.from({ length: daysInMonth }, (_, i) => {
-        const day = i + 1;
-        const dateStr = `${filters.year}-${String(filters.month! + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        return {
-          date: format(new Date(dateStr), 'dd/MM/yyyy'),
-          resgates: 0,
-          apreensoes: 0,
-          total: 0
-        };
-      });
-      
-      // Preencher os dados reais
-      registros.forEach(reg => {
-        const regDate = new Date(reg.data);
-        const day = regDate.getDate() - 1; // Índice 0-based
-        
-        if (timeSeriesData[day]) {
-          if (reg.origem === 'Resgate de Fauna') {
-            timeSeriesData[day].resgates += 1;
-          } else if (reg.origem === 'Apreensão') {
-            timeSeriesData[day].apreensoes += 1;
-          }
-          timeSeriesData[day].total += 1;
+      if (timeSeriesData[month]) {
+        if (reg.origem === 'Resgate de Fauna') {
+          timeSeriesData[month].resgates += 1;
+        } else if (reg.origem === 'Apreensão') {
+          timeSeriesData[month].apreensoes += 1;
         }
-      });
-    } else {
-      // Se o mês não está definido, agregamos por mês
-      timeSeriesData = Array.from({ length: 12 }, (_, i) => {
-        return {
-          date: format(new Date(filters.year, i, 1), 'MMM/yyyy', { locale: ptBR }),
-          resgates: 0,
-          apreensoes: 0,
-          total: 0
-        };
-      });
-      
-      // Preencher os dados reais
-      registros.forEach(reg => {
-        const regDate = new Date(reg.data);
-        const month = regDate.getMonth();
-        
-        if (timeSeriesData[month]) {
-          if (reg.origem === 'Resgate de Fauna') {
-            timeSeriesData[month].resgates += 1;
-          } else if (reg.origem === 'Apreensão') {
-            timeSeriesData[month].apreensoes += 1;
-          }
-          timeSeriesData[month].total += 1;
-        }
-      });
-    }
+        timeSeriesData[month].total += 1;
+      }
+    });
     
     // 18. Estatísticas de quantidade por ocorrência
     const quantidades = registros

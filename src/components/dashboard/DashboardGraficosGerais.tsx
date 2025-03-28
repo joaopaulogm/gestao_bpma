@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DashboardData } from '@/types/hotspots';
 import { 
@@ -56,7 +55,7 @@ const DashboardGraficosGerais = ({ data }: DashboardGraficosGeraisProps) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Evolução Temporal" subtitle="Ocorrências ao longo do período">
+        <ChartCard title="Evolução Temporal (2025)" subtitle="Ocorrências por mês ao longo do ano">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={data.timeSeriesData}
@@ -68,9 +67,9 @@ const DashboardGraficosGerais = ({ data }: DashboardGraficosGeraisProps) => {
                 tick={{ fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
-                angle={-25}
                 textAnchor="end"
-                height={50}
+                height={70}
+                angle={-25}
               />
               <YAxis 
                 tick={{ fontSize: 11 }}

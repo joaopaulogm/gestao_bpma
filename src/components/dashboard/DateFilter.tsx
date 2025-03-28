@@ -9,7 +9,7 @@ interface DateFilterProps {
 }
 
 const DateFilter: React.FC<DateFilterProps> = ({ year, month, onFilterChange }) => {
-  // Fixed list of years including 2025, instead of dynamically getting current year
+  // Fixed list of years with 2025 as the default
   const years = [2025, 2024, 2023, 2022, 2021];
   const months = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -21,6 +21,7 @@ const DateFilter: React.FC<DateFilterProps> = ({ year, month, onFilterChange }) 
       <Select
         value={year.toString()}
         onValueChange={(value) => onFilterChange(parseInt(value), month)}
+        defaultValue="2025"
       >
         <SelectTrigger className="w-[160px]">
           <SelectValue placeholder="Selecione o ano" />
