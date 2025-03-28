@@ -7,6 +7,7 @@ import OrigemField from './OrigemField';
 import RegiaoAdministrativaField from './RegiaoAdministrativaField';
 import DesfechoResgateField from './DesfechoResgateField';
 import DesfechoApreensaoField from './DesfechoApreensaoField';
+import CoordenadasOrigemField from './CoordenadasOrigemField';
 import { regioes } from '@/constants/regioes';
 
 interface InformacoesGeraisSectionProps {
@@ -43,9 +44,7 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
         origem={formData.origem}
         onOrigemChange={(value) => handleSelectChange('origem', value)}
         errors={{
-          origem: errors.origem?.message,
-          latitudeOrigem: errors.latitudeOrigem?.message,
-          longitudeOrigem: errors.longitudeOrigem?.message
+          origem: errors.origem?.message
         }}
         required={true}
       />
@@ -57,7 +56,21 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
         required={true}
       />
 
-      {formData.origem === 'Apreensão/Resgate' && (
+      {/* Add the coordinates fields */}
+      <div className="col-span-full">
+        <CoordenadasOrigemField
+          latitudeOrigem={formData.latitudeOrigem}
+          longitudeOrigem={formData.longitudeOrigem}
+          onChange={handleChange}
+          errors={{
+            latitudeOrigem: errors.latitudeOrigem?.message,
+            longitudeOrigem: errors.longitudeOrigem?.message
+          }}
+          required={true}
+        />
+      </div>
+
+      {formData.origem === 'Apreensão' && (
         <div className="col-span-full">
           <DesfechoApreensaoField
             desfechoApreensao={formData.desfechoApreensao}
