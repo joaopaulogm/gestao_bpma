@@ -58,6 +58,7 @@ export const useResgateFormSubmitEdit = (
       console.log('Atualizando com a data formatada:', dataFormatada, 'Original:', data.data);
       console.log('Quantidade adulto:', data.quantidadeAdulto, 'Quantidade filhote:', data.quantidadeFilhote, 'Quantidade total:', data.quantidade);
       
+      // O trigger no banco de dados atualizará quantidade_total automaticamente
       const { error } = await supabase
         .from('registros')
         .update({

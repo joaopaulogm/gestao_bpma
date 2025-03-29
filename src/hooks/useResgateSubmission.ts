@@ -45,6 +45,8 @@ export const useResgateSubmission = () => {
       console.log('Saving date to database:', dataFormatada, 'Original value:', data.data);
       console.log('Quantidade adulto:', data.quantidadeAdulto, 'Quantidade filhote:', data.quantidadeFilhote, 'Quantidade total:', data.quantidade);
       
+      // Não precisamos calcular quantidade_total explicitamente
+      // O trigger no banco de dados fará isso automaticamente
       const { error } = await supabase.from('registros').insert({
         data: dataFormatada,
         classe_taxonomica: data.classeTaxonomica,

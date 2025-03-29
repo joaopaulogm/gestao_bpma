@@ -32,6 +32,7 @@ export interface Registro {
   quantidade: number;
   quantidade_adulto: number | null;
   quantidade_filhote: number | null;
+  quantidade_total: number | null; // Adicionando o novo campo
   destinacao: string;
   numero_termo_entrega: string | null;
   hora_guarda_ceapa: string | null;

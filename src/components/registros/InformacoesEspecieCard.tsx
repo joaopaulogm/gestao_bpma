@@ -13,6 +13,7 @@ interface InformacoesEspecieCardProps {
   quantidade: number;
   quantidade_adulto?: number;
   quantidade_filhote?: number;
+  quantidade_total?: number;
 }
 
 const InformacoesEspecieCard = ({
@@ -25,6 +26,7 @@ const InformacoesEspecieCard = ({
   quantidade,
   quantidade_adulto = 0,
   quantidade_filhote = 0,
+  quantidade_total = 0,
 }: InformacoesEspecieCardProps) => {
   // Updated this check to use 0 as the baseline since now we don't have NULLs
   const showDetailedQuantities = quantidade_adulto > 0 || quantidade_filhote > 0;
@@ -47,7 +49,7 @@ const InformacoesEspecieCard = ({
           
           {showDetailedQuantities ? (
             <>
-              <DetailsField label="Quantidade Total" value={quantidade} />
+              <DetailsField label="Quantidade Total" value={quantidade_total || quantidade} />
               {quantidade_adulto > 0 && (
                 <DetailsField label="Quantidade (Adultos)" value={quantidade_adulto} />
               )}

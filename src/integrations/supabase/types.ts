@@ -67,6 +67,7 @@ export type Database = {
           quantidade: number | null
           quantidade_adulto: number | null
           quantidade_filhote: number | null
+          quantidade_total: number | null
           regiao_administrativa: string
         }
         Insert: {
@@ -96,6 +97,7 @@ export type Database = {
           quantidade?: number | null
           quantidade_adulto?: number | null
           quantidade_filhote?: number | null
+          quantidade_total?: number | null
           regiao_administrativa: string
         }
         Update: {
@@ -125,6 +127,7 @@ export type Database = {
           quantidade?: number | null
           quantidade_adulto?: number | null
           quantidade_filhote?: number | null
+          quantidade_total?: number | null
           regiao_administrativa?: string
         }
         Relationships: []

@@ -11,7 +11,7 @@ export const transformOriginMapData = (registros: Registro[]): MapDataPoint[] =>
     longitude: reg.longitude_origem,
     tipo: reg.origem,
     nome_popular: reg.nome_popular,
-    quantidade: reg.quantidade || 1
+    quantidade: reg.quantidade_total || reg.quantidade || 1
   }));
 };
 
@@ -27,6 +27,6 @@ export const transformReleaseMapData = (registros: Registro[]): MapDataPoint[] =
       longitude: reg.longitude_soltura as string,
       tipo: 'Soltura',
       nome_popular: reg.nome_popular,
-      quantidade: reg.quantidade || 1
+      quantidade: reg.quantidade_total || reg.quantidade || 1
     }));
 };
