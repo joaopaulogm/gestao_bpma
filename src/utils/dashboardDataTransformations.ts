@@ -7,3 +7,5 @@ export * from './dashboard/destinationTransformations';
 export * from './dashboard/speciesTransformations';
 export * from './dashboard/mapTransformations';
 export * from './dashboard/statisticsTransformations';
+export * from './dashboard/timeSeriesTransformations';
+export * from './dashboard/metricsTransformations';
