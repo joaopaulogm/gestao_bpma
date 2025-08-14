@@ -14,7 +14,8 @@ import {
   Lock,
   ChevronLeft,
   ChevronRight,
-  LogIn
+  LogIn,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -75,7 +76,7 @@ const Sidebar = () => {
           {isOpen && <span>Página Inicial</span>}
         </Link>
         
-        {/* Cadastrar Resgate/Apreensão - Public */}
+        {/* Ocorrências de Resgate e Animais Apreendidos - Public */}
         <Link 
           to="/resgate-cadastro" 
           className={`flex items-center gap-3 py-2 px-3 rounded-md ${
@@ -83,7 +84,18 @@ const Sidebar = () => {
           } transition-colors mb-2`}
         >
           <Clipboard size={20} />
-          {isOpen && <span>Cadastrar Resgate/Apreensão</span>}
+          {isOpen && <span>Ocorrências de Resgate e Animais Apreendidos</span>}
+        </Link>
+        
+        {/* Ocorrências Crimes Ambientais - Public */}
+        <Link 
+          to="/crimes-ambientais" 
+          className={`flex items-center gap-3 py-2 px-3 rounded-md ${
+            isActive('/crimes-ambientais') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
+          } transition-colors mb-2`}
+        >
+          <Shield size={20} />
+          {isOpen && <span>Ocorrências Crimes Ambientais</span>}
         </Link>
         
         <Separator className="my-4" />
