@@ -5,7 +5,7 @@ import ResgateFormContainer from '@/components/resgate/ResgateFormContainer';
 
 const ResgateCadastro = () => {
   return (
-    <Layout title="Cadastro de Resgate" showBackButton>
+    <Layout title="Ocorrências de Resgate e Animais Apreendidos" showBackButton>
       <ResgateFormContainer />
     </Layout>
   );
