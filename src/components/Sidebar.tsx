@@ -48,7 +48,7 @@ const Sidebar = () => {
     >
       <div className="flex items-center justify-between p-4">
         {isOpen && (
-          <h1 className="text-fauna-blue text-lg font-medium">Gestão de Fauna</h1>
+          <h1 className="text-fauna-blue text-lg font-medium">Gestão de Dados do BPMA</h1>
         )}
         <button 
           onClick={toggleSidebar} 

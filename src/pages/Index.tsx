@@ -13,7 +13,7 @@ const Index = () => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-medium text-center text-fauna-blue mb-8 mt-4">
-        Sistema de Gestão de Fauna
+        Gestão de Dados do BPMA
       </h1>
       
       <div className="space-y-8">
