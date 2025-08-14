@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Card from '@/components/Card';
-import { Clipboard, LogIn } from 'lucide-react';
+import { Clipboard, LogIn, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -17,13 +17,19 @@ const Index = () => {
       </h1>
       
       <div className="space-y-8">
-        {/* Public card for unauthenticated users */}
-        <div className="max-w-md mx-auto">
+        {/* Public cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           <Card 
             title="Cadastrar Resgate/Apreensão" 
             subtitle="Registre uma nova atividade" 
             icon={Clipboard} 
             to="/resgate-cadastro"
+          />
+          <Card 
+            title="Ocorrências Crimes Ambientais" 
+            subtitle="Registre crimes contra o meio ambiente" 
+            icon={Shield} 
+            to="/crimes-ambientais"
           />
         </div>
         

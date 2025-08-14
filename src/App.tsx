@@ -7,6 +7,7 @@ import Hotspots from '@/pages/Hotspots';
 import Registros from '@/pages/Registros';
 import RegistroDetalhes from '@/pages/RegistroDetalhes';
 import ResgateCadastro from '@/pages/ResgateCadastro';
+import CrimesAmbientais from '@/pages/CrimesAmbientais';
 import FaunaCadastrada from '@/pages/FaunaCadastrada';
 import FaunaCadastro from '@/pages/FaunaCadastro';
 import Relatorios from '@/pages/Relatorios';
@@ -47,6 +48,16 @@ function App() {
               element={
                 <SidebarLayout>
                   <ResgateCadastro />
+                </SidebarLayout>
+              } 
+            />
+            
+            {/* Public Crimes Ambientais page */}
+            <Route 
+              path="/crimes-ambientais" 
+              element={
+                <SidebarLayout>
+                  <CrimesAmbientais />
                 </SidebarLayout>
               } 
             />
