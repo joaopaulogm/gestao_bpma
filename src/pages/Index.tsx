@@ -20,7 +20,7 @@ const Index = () => {
         {/* Public cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           <Card 
-            title="Cadastrar Resgate/Apreensão" 
+            title="Ocorrências de Resgate e Animais Apreendidos" 
             subtitle="Registre uma nova atividade" 
             icon={Clipboard} 
             to="/resgate-cadastro"
