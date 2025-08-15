@@ -5,7 +5,6 @@ import { regioes } from '@/constants/regioes';
 import FormSection from '@/components/resgate/FormSection';
 import FormField from '@/components/resgate/FormField';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Save, Loader2 } from 'lucide-react';
@@ -13,7 +12,7 @@ import { Save, Loader2 } from 'lucide-react';
 interface CrimesAmbientaisFormProps {
   form: UseFormReturn<CrimesAmbientaisFormData>;
   formData: CrimesAmbientaisFormData;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
   handleSubmit: () => void;
   isSubmitting: boolean;
@@ -76,21 +75,37 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
             </Select>
           </FormField>
 
-          <FormField
-            id="localizacaoOcorrencia"
-            label="Localização da Ocorrência"
-            error={getFieldError('localizacaoOcorrencia')}
-          >
-            <Textarea
-              id="localizacaoOcorrencia"
-              name="localizacaoOcorrencia"
-              placeholder="Ex: Próximo ao Parque da Cidade, coordenadas: -15.7801, -47.9292"
-              value={formData.localizacaoOcorrencia || ''}
-              onChange={handleChange}
-              className={getFieldError('localizacaoOcorrencia') ? 'border-red-500' : ''}
-              rows={3}
-            />
-          </FormField>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              id="latitudeOcorrencia"
+              label="Latitude da Ocorrência"
+              error={getFieldError('latitudeOcorrencia')}
+            >
+              <Input
+                id="latitudeOcorrencia"
+                name="latitudeOcorrencia"
+                placeholder="Ex: -15.7801"
+                value={formData.latitudeOcorrencia || ''}
+                onChange={handleChange}
+                className={getFieldError('latitudeOcorrencia') ? 'border-red-500' : ''}
+              />
+            </FormField>
+
+            <FormField
+              id="longitudeOcorrencia"
+              label="Longitude da Ocorrência"
+              error={getFieldError('longitudeOcorrencia')}
+            >
+              <Input
+                id="longitudeOcorrencia"
+                name="longitudeOcorrencia"
+                placeholder="Ex: -47.9292"
+                value={formData.longitudeOcorrencia || ''}
+                onChange={handleChange}
+                className={getFieldError('longitudeOcorrencia') ? 'border-red-500' : ''}
+              />
+            </FormField>
+          </div>
 
           <FormField
             id="tipoCrime"
