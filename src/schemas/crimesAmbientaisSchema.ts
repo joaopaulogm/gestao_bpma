@@ -3,8 +3,7 @@ import { z } from 'zod';
 export const crimesAmbientaisSchema = z.object({
   data: z.string().min(1, "Data é obrigatória"),
   regiaoAdministrativa: z.string().min(1, "Região Administrativa é obrigatória"),
-  latitudeOcorrencia: z.string().optional(),
-  longitudeOcorrencia: z.string().optional(),
+  localizacaoOcorrencia: z.string().optional(),
   tipoCrime: z.string().min(1, "Tipo de Crime é obrigatório"),
   enquadramento: z.string().min(1, "Enquadramento é obrigatório"),
   desfecho: z.string().min(1, "Desfecho é obrigatório"),

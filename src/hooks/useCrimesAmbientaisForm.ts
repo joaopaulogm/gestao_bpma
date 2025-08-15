@@ -12,8 +12,7 @@ export const useCrimesAmbientaisForm = () => {
     defaultValues: {
       data: '',
       regiaoAdministrativa: '',
-      latitudeOcorrencia: '',
-      longitudeOcorrencia: '',
+      localizacaoOcorrencia: '',
       tipoCrime: '',
       enquadramento: '',
       desfecho: '',
@@ -25,7 +24,7 @@ export const useCrimesAmbientaisForm = () => {
   const formData = watch();
   const { errors } = formState;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setValue(name as keyof CrimesAmbientaisFormData, value);
     
