@@ -12,6 +12,8 @@ export const useCrimesAmbientaisForm = () => {
     defaultValues: {
       data: '',
       regiaoAdministrativa: '',
+      latitudeOcorrencia: '',
+      longitudeOcorrencia: '',
       tipoCrime: '',
       enquadramento: '',
       desfecho: '',

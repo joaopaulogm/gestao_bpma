@@ -4,6 +4,7 @@ import { CrimesAmbientaisFormData, TIPOS_CRIME, ENQUADRAMENTOS, DESFECHOS, PROCE
 import { regioes } from '@/constants/regioes';
 import FormSection from '@/components/resgate/FormSection';
 import FormField from '@/components/resgate/FormField';
+import CoordenadasOcorrenciaField from './CoordenadasOcorrenciaField';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -74,6 +75,16 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
               </SelectContent>
             </Select>
           </FormField>
+
+          <CoordenadasOcorrenciaField
+            latitudeOcorrencia={formData.latitudeOcorrencia || ''}
+            longitudeOcorrencia={formData.longitudeOcorrencia || ''}
+            onChange={handleChange}
+            errors={{
+              latitudeOcorrencia: getFieldError('latitudeOcorrencia'),
+              longitudeOcorrencia: getFieldError('longitudeOcorrencia')
+            }}
+          />
 
           <FormField
             id="tipoCrime"
