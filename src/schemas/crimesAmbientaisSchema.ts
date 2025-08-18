@@ -33,9 +33,10 @@ export const TIPOS_CRIME = [
 
 export const ENQUADRAMENTOS = {
   "Crime Contra a Fauna": [
-    "Matar, perseguir, caçar, apanhar ou utilizar espécimes da fauna silvestre, sem permissão ou em desacordo com a autorização (Art. 29)",
-    "Impedir a procriação da fauna silvestre (Art. 29)",
-    "Modificar, danificar ou destruir ninho, abrigo ou criadouro natural (Art. 29)",
+    "Art. 29. Matar, perseguir, caçar, apanhar, utilizar espécimes da fauna silvestre, nativos ou em rota migratória, sem a devida permissão, licença ou autorização da autoridade competente, ou em desacordo com a obtida",
+    "Art. 29, I - quem impede a procriação da fauna, sem licença, autorização ou em desacordo com a obtida",
+    "Art. 29, II - quem modifica, danifica ou destrói ninho, abrigo ou criadouro natural",
+    "Art. 29, III - quem vende, expõe à venda, exporta ou adquire, guarda, tem em cativeiro ou depósito, utiliza ou transporta ovos, larvas ou espécimes da fauna silvestre, nativa ou em rota migratória, bem como produtos e objetos dela oriundos, provenientes de criadouros não autorizados ou sem a devida permissão, licença ou autorização da autoridade competente",
     "Introduzir espécime animal no País sem parecer técnico oficial favorável e licença (Art. 31)",
     "Exportar peles e couros de anfíbios e répteis sem permissão (Art. 32)",
     "Praticar ato de abuso, maus-tratos, ferir ou mutilar animais silvestres, domésticos ou domesticados (Art. 32)",
