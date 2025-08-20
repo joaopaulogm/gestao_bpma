@@ -74,6 +74,7 @@ const DestinacaoField: React.FC<DestinacaoFieldProps> = ({
           <SelectContent>
             <SelectItem value="CETAS/IBAMA">CETAS/IBAMA</SelectItem>
             <SelectItem value="HFAUS/IBRAM">HFAUS/IBRAM</SelectItem>
+            <SelectItem value="HVet/UnB">HVet/UnB</SelectItem>
             <SelectItem value="CEAPA/BPMA">CEAPA/BPMA</SelectItem>
             <SelectItem value="Soltura">Soltura</SelectItem>
             <SelectItem value="Vida Livre">Vida Livre</SelectItem>
@@ -82,7 +83,7 @@ const DestinacaoField: React.FC<DestinacaoFieldProps> = ({
         </Select>
       </FormField>
       
-      {(destinacao === 'CETAS/IBAMA' || destinacao === 'HFAUS/IBRAM') && (
+      {(destinacao === 'CETAS/IBAMA' || destinacao === 'HFAUS/IBRAM' || destinacao === 'HVet/UnB') && (
         <FormField id="numeroTermoEntrega" label="Nº Termo de Entrega" error={numeroTermoEntregaError} required={required}>
           <Input
             id="numeroTermoEntrega"
