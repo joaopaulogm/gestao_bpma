@@ -20,15 +20,14 @@ const Hotspots = () => {
       try {
         const { data: registrosData, error } = await supabase
           .from('registros')
-          .select('id, regiao_administrativa, latitude_origem, longitude_origem, origem')
+          .select('id, regiao_administrativa, latitude_origem, longitude_origem')
           .not('latitude_origem', 'is', null)
           .not('longitude_origem', 'is', null);
           
         if (error) throw error;
         
         const validLocations: RegistroLocation[] = [];
-        const regionCountsResgate: Record<string, number> = {};
-        const regionCountsApreensao: Record<string, number> = {};
+        const regionCounts: Record<string, number> = {};
         
         registrosData.forEach(registro => {
           if (!registro.latitude_origem || !registro.longitude_origem ||
@@ -42,42 +41,23 @@ const Hotspots = () => {
             regiao_administrativa: registro.regiao_administrativa,
             latitude: registro.latitude_origem,
             longitude: registro.longitude_origem,
-            count: 1,
-            origem: registro.origem
+            count: 1
           });
           
-          if (registro.origem === 'Resgate') {
-            if (regionCountsResgate[registro.regiao_administrativa]) {
-              regionCountsResgate[registro.regiao_administrativa]++;
-            } else {
-              regionCountsResgate[registro.regiao_administrativa] = 1;
-            }
-          } else if (registro.origem === 'Apreensão') {
-            if (regionCountsApreensao[registro.regiao_administrativa]) {
-              regionCountsApreensao[registro.regiao_administrativa]++;
-            } else {
-              regionCountsApreensao[registro.regiao_administrativa] = 1;
-            }
+          if (regionCounts[registro.regiao_administrativa]) {
+            regionCounts[registro.regiao_administrativa]++;
+          } else {
+            regionCounts[registro.regiao_administrativa] = 1;
           }
         });
         
-        const sortedResgates = Object.entries(regionCountsResgate)
-          .map(([regiao, contagem]) => ({ regiao, contagem, tipo: 'Resgate' }))
+        const sortedRegions = Object.entries(regionCounts)
+          .map(([regiao, contagem]) => ({ regiao, contagem }))
           .sort((a, b) => b.contagem - a.contagem)
-          .slice(0, 2);
-          
-        const sortedApreensoes = Object.entries(regionCountsApreensao)
-          .map(([regiao, contagem]) => ({ regiao, contagem, tipo: 'Apreensão' }))
-          .sort((a, b) => b.contagem - a.contagem)
-          .slice(0, 2);
-        
-        // Combine top regions from both types
-        const combinedRegions = [...sortedResgates, ...sortedApreensoes]
-          .sort((a, b) => b.contagem - a.contagem)
-          .slice(0, 4);
+          .slice(0, 3);
         
         setLocations(validLocations);
-        setHotspotRegions(combinedRegions);
+        setHotspotRegions(sortedRegions);
       } catch (error) {
         console.error('Erro ao buscar dados de hotspots:', error);
         toast.error('Erro ao carregar dados dos hotspots');
@@ -116,9 +96,9 @@ const Hotspots = () => {
           </CardContent>
         </Card>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {isLoading ? (
-            Array(4).fill(0).map((_, index) => (
+            Array(3).fill(0).map((_, index) => (
               <Card key={index}>
                 <CardContent className="p-6 animate-pulse">
                   <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
@@ -132,11 +112,12 @@ const Hotspots = () => {
               <HotspotCard key={index} region={region} index={index} />
             ))
           ) : (
-            Array(4).fill(0).map((_, index) => (
+            Array(3).fill(0).map((_, index) => (
               <Card key={index}>
                 <CardContent className="p-6">
                   <h3 className="text-lg font-medium text-fauna-blue mb-2">
-                    {index < 2 ? `Hotspot Resgate ${index + 1}` : `Hotspot Apreensão ${index - 1}`}
+                    {index === 0 ? 'Área de Maior Incidência' : 
+                     index === 1 ? 'Segundo Hotspot' : 'Terceiro Hotspot'}
                   </h3>
                   <p className="text-sm text-gray-700">Sem dados suficientes</p>
                   <p className="text-sm text-gray-500 mt-1">

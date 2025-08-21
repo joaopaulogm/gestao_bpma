@@ -5,13 +5,11 @@ export interface RegistroLocation {
   latitude: string;
   longitude: string;
   count: number;
-  origem: string;
 }
 
 export interface HotspotRegion {
   regiao: string;
   contagem: number;
-  tipo: string;
 }
 
 export interface Registro {
