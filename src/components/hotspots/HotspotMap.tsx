@@ -1,11 +1,9 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { RegistroLocation } from '@/types/hotspots';
-
-// Configuração do token do Mapbox
-mapboxgl.accessToken = 'pk.eyJ1Ijoiam9hb3BhdWxvZ20iLCJhIjoiY204NHZ4ODY0MmE0aTJ0cTE3ZWh3Z2lmcCJ9.P0DpsEES8FCV6jIobfqZVA';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HotspotMapProps {
   locations: RegistroLocation[];
@@ -14,9 +12,25 @@ interface HotspotMapProps {
 const HotspotMap = ({ locations }: HotspotMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+
+  // Fetch Mapbox token securely
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
+        if (error) throw error;
+        setMapboxToken(data.token);
+        mapboxgl.accessToken = data.token;
+      } catch (error) {
+        console.error('Failed to fetch Mapbox token:', error);
+      }
+    };
+    fetchToken();
+  }, []);
 
   useEffect(() => {
-    if (!mapContainer.current || !locations.length) return;
+    if (!mapContainer.current || !locations.length || !mapboxToken) return;
     
     try {
       if (map.current) return;
@@ -74,7 +88,7 @@ const HotspotMap = ({ locations }: HotspotMapProps) => {
         map.current = null;
       }
     };
-  }, [locations]);
+  }, [locations, mapboxToken]);
 
   return <div ref={mapContainer} className="absolute inset-0 rounded-lg" />;
 };
