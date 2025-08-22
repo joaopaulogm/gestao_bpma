@@ -20,6 +20,7 @@ const Hotspots = () => {
   });
   
   const isMobile = useIsMobile();
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,6 +51,8 @@ const Hotspots = () => {
       (item.tipo === 'soltura' && filters.solturas);
 
     let dateMatch = true;
+    
+    // Se algum filtro de data foi especificado, usa os filtros
     if (filters.dataInicio || filters.dataFim) {
       const itemDate = new Date(item.data_iso);
       if (filters.dataInicio) {
@@ -58,6 +61,11 @@ const Hotspots = () => {
       if (filters.dataFim) {
         dateMatch = dateMatch && itemDate <= new Date(filters.dataFim);
       }
+    } else {
+      // Se nenhum período foi especificado, filtra pelo ano vigente
+      const itemDate = new Date(item.data_iso);
+      const itemYear = itemDate.getFullYear();
+      dateMatch = itemYear === currentYear;
     }
 
     return typeMatch && dateMatch;
@@ -103,40 +111,47 @@ const Hotspots = () => {
   
   return (
     <Layout title="Hotspots de Ocorrências – Brasil" showBackButton>
-      <div className="relative w-full h-[calc(100vh-8rem)] animate-fade-in" lang="pt-BR">
-        <Card className="h-full">
-          <CardContent className="p-0 h-full">
-            <div className="relative h-full rounded-lg overflow-hidden">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center h-full gap-2">
-                  <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                  <p className="text-sm text-muted-foreground">Carregando dados do mapa...</p>
-                </div>
-              ) : data.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full gap-4">
-                  <MapPin className="h-12 w-12 text-primary" />
-                  <h3 className="text-lg font-medium">Sem dados de localização</h3>
-                  <p className="text-sm text-muted-foreground max-w-xs text-center">
-                    Não foram encontrados registros com dados de latitude e longitude válidos.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <BrazilHeatmap data={data} filters={filters} />
-                  <HeatmapFilterPanel
-                    filters={filters}
-                    onFiltersChange={handleFiltersChange}
-                    onClearFilters={handleClearFilters}
-                    onExportData={handleExportData}
-                    filteredData={filteredData}
-                    isMobile={isMobile}
-                  />
-                  <HeatmapLegend />
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="space-y-4" lang="pt-BR">
+        {/* Barra de filtros integrada */}
+        <div className="w-full">
+          <HeatmapFilterPanel
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            onClearFilters={handleClearFilters}
+            onExportData={handleExportData}
+            filteredData={filteredData}
+            isMobile={isMobile}
+          />
+        </div>
+        
+        {/* Mapa */}
+        <div className="w-full h-[calc(100vh-16rem)] animate-fade-in">
+          <Card className="h-full">
+            <CardContent className="p-0 h-full">
+              <div className="relative h-full rounded-lg overflow-hidden">
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center h-full gap-2">
+                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                    <p className="text-sm text-muted-foreground">Carregando dados do mapa...</p>
+                  </div>
+                ) : data.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full gap-4">
+                    <MapPin className="h-12 w-12 text-primary" />
+                    <h3 className="text-lg font-medium">Sem dados de localização</h3>
+                    <p className="text-sm text-muted-foreground max-w-xs text-center">
+                      Não foram encontrados registros com dados de latitude e longitude válidos.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <BrazilHeatmap data={filteredData} filters={filters} />
+                    <HeatmapLegend />
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </Layout>
   );
