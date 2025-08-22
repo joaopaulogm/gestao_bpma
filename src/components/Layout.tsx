@@ -14,9 +14,10 @@ const Layout = ({ children, title, showBackButton = false }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Use wider layout for registros page
+  // Use wider layout for registros and hotspots pages
   const isRegistrosPage = location.pathname === '/registros';
-  const maxWidthClass = isRegistrosPage ? 'max-w-full lg:max-w-[95%]' : 'max-w-4xl';
+  const isHotspotsPage = location.pathname === '/hotspots';
+  const maxWidthClass = (isRegistrosPage || isHotspotsPage) ? 'max-w-full lg:max-w-[95%]' : 'max-w-4xl';
 
   return (
     <div className="min-h-screen bg-white flex flex-col">

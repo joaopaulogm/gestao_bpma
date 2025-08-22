@@ -125,7 +125,7 @@ const Hotspots = () => {
         </div>
         
         {/* Mapa */}
-        <div className="w-full h-[calc(100vh-16rem)] animate-fade-in">
+        <div className="w-full h-[70vh] animate-fade-in">
           <Card className="h-full">
             <CardContent className="p-0 h-full">
               <div className="relative h-full rounded-lg overflow-hidden">
