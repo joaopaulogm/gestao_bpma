@@ -1,4 +1,23 @@
 
+export interface OcorrenciaData {
+  id: string;
+  tipo: 'resgate' | 'apreensao' | 'soltura';
+  lat: number;
+  lng: number;
+  data_iso: string;
+  municipio: string;
+  uf: string;
+  fonte: string;
+}
+
+export interface HeatmapFilters {
+  resgates: boolean;
+  apreensoes: boolean;
+  solturas: boolean;
+  dataInicio?: string;
+  dataFim?: string;
+}
+
 export interface RegistroLocation {
   id: string;
   regiao_administrativa: string;
