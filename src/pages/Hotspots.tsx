@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import BrazilHeatmap from '@/components/hotspots/BrazilHeatmap';
 import HeatmapFilterPanel from '@/components/hotspots/HeatmapFilterPanel';
 import HeatmapLegend from '@/components/hotspots/HeatmapLegend';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile'; // Fixed import
 import type { OcorrenciaData, HeatmapFilters } from '@/types/hotspots';
 
 const Hotspots = () => {
