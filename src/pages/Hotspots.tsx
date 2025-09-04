@@ -145,7 +145,10 @@ const Hotspots = () => {
                 ) : (
                   <>
                     <BrazilHeatmap data={filteredData} filters={filters} />
-                    <HeatmapLegend />
+                    <HeatmapLegend 
+                      filteredDataCount={filteredData.length}
+                      totalDataCount={data.length}
+                    />
                   </>
                 )}
               </div>
