@@ -8,7 +8,11 @@ export const crimesAmbientaisSchema = z.object({
   tipoCrime: z.string().min(1, "Tipo de Crime é obrigatório"),
   enquadramento: z.string().min(1, "Enquadramento é obrigatório"),
   desfecho: z.string().min(1, "Desfecho é obrigatório"),
-  procedimentoLegal: z.string().optional()
+  procedimentoLegal: z.string().optional(),
+  quantidadeDetidosMaiorIdade: z.number().min(0).max(1000).optional(),
+  quantidadeDetidosMenorIdade: z.number().min(0).max(1000).optional(),
+  quantidadeLiberadosMaiorIdade: z.number().min(0).max(1000).optional(),
+  quantidadeLiberadosMenorIdade: z.number().min(0).max(1000).optional()
 }).superRefine((data, ctx) => {
   // Se desfecho é "Flagrante", procedimento legal é obrigatório
   if (data.desfecho === "Flagrante" && !data.procedimentoLegal) {
@@ -83,7 +87,10 @@ export const ENQUADRAMENTOS = {
 };
 
 export const DESFECHOS = [
+  "Em Apuração pela PCDF",
+  "Em Monitoramento pela PMDF", 
   "Averiguado e Nada Constatado",
+  "Resolvido no Local",
   "Flagrante"
 ];
 

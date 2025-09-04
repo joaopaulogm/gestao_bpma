@@ -17,7 +17,11 @@ export const useCrimesAmbientaisForm = () => {
       tipoCrime: '',
       enquadramento: '',
       desfecho: '',
-      procedimentoLegal: ''
+      procedimentoLegal: '',
+      quantidadeDetidosMaiorIdade: 0,
+      quantidadeDetidosMenorIdade: 0,
+      quantidadeLiberadosMaiorIdade: 0,
+      quantidadeLiberadosMenorIdade: 0
     }
   });
 
@@ -27,7 +31,21 @@ export const useCrimesAmbientaisForm = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setValue(name as keyof CrimesAmbientaisFormData, value);
+    
+    // Handle numeric fields
+    const numericFields = [
+      'quantidadeDetidosMaiorIdade',
+      'quantidadeDetidosMenorIdade', 
+      'quantidadeLiberadosMaiorIdade',
+      'quantidadeLiberadosMenorIdade'
+    ];
+    
+    if (numericFields.includes(name)) {
+      const numericValue = value === '' ? 0 : parseInt(value, 10);
+      setValue(name as keyof CrimesAmbientaisFormData, numericValue);
+    } else {
+      setValue(name as keyof CrimesAmbientaisFormData, value);
+    }
     
     if (errors[name as keyof CrimesAmbientaisFormData]) {
       clearErrors(name as keyof CrimesAmbientaisFormData);
