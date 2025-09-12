@@ -33,9 +33,17 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
+    if (!mapContainer.current || !mapboxToken) {
+      console.log('Map initialization skipped - container or token not ready:', !!mapContainer.current, !!mapboxToken);
+      return;
+    }
 
-    if (map.current) return;
+    if (map.current) {
+      console.log('Map already initialized');
+      return;
+    }
+
+    console.log('Initializing Mapbox map with token:', mapboxToken);
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -54,6 +62,8 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
+    console.log('Map initialized successfully');
+
     return () => {
       if (map.current) {
         map.current.remove();
@@ -64,7 +74,13 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
 
   // Update layers function
   const updateLayers = useCallback((dataToRender: OcorrenciaData[]) => {
-    if (!map.current) return;
+    console.log('BrazilHeatmap updateLayers called with data:', dataToRender.length, 'items');
+    console.log('Sample data:', dataToRender.slice(0, 3));
+    
+    if (!map.current) {
+      console.log('Map not initialized yet');
+      return;
+    }
     
     // Remove existing sources and layers
     const heatmapId = 'resgates-heatmap';
@@ -81,7 +97,10 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
       map.current.removeSource(sourceId);
     }
 
-    if (dataToRender.length === 0) return;
+    if (dataToRender.length === 0) {
+      console.log('No data to render, skipping layer creation');
+      return;
+    }
 
     // Create GeoJSON source for rescue data
     const geojson: GeoJSON.FeatureCollection = {
@@ -103,6 +122,8 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
       }))
     };
 
+    console.log('Adding GeoJSON source with features:', geojson.features.length);
+    
     map.current.addSource(sourceId, {
       type: 'geojson',
       data: geojson

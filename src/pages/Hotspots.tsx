@@ -36,6 +36,10 @@ const Hotspots = () => {
   // Filter data to show only rescue operations
   const resgateData = data.filter(item => item.tipo === 'resgate');
   
+  console.log('Hotspots page - Total data loaded:', data.length);
+  console.log('Filtered rescue data:', resgateData.length);
+  console.log('Sample rescue data:', resgateData.slice(0, 2));
+  
   return (
     <Layout title="Hotspots de Resgates – Brasil" showBackButton>
       <div className="space-y-4" lang="pt-BR">
