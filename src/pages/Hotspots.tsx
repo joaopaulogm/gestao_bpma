@@ -61,11 +61,6 @@ const Hotspots = () => {
       if (filters.dataFim) {
         dateMatch = dateMatch && itemDate <= new Date(filters.dataFim);
       }
-    } else {
-      // Se nenhum período foi especificado, filtra pelo ano vigente
-      const itemDate = new Date(item.data_iso);
-      const itemYear = itemDate.getFullYear();
-      dateMatch = itemYear === currentYear;
     }
 
     return typeMatch && dateMatch;
@@ -124,36 +119,41 @@ const Hotspots = () => {
           />
         </div>
         
-        {/* Mapa */}
-        <div className="w-full h-[70vh] animate-fade-in">
-          <Card className="h-full">
-            <CardContent className="p-0 h-full">
-              <div className="relative h-full rounded-lg overflow-hidden">
-                {isLoading ? (
-                  <div className="flex flex-col items-center justify-center h-full gap-2">
-                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                    <p className="text-sm text-muted-foreground">Carregando dados do mapa...</p>
-                  </div>
-                ) : data.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full gap-4">
-                    <MapPin className="h-12 w-12 text-primary" />
-                    <h3 className="text-lg font-medium">Sem dados de localização</h3>
-                    <p className="text-sm text-muted-foreground max-w-xs text-center">
-                      Não foram encontrados registros com dados de latitude e longitude válidos.
-                    </p>
-                  </div>
-                ) : (
-                  <>
+        {/* Layout com mapa e legenda lado a lado */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[70vh] animate-fade-in">
+          {/* Mapa */}
+          <div className="lg:col-span-3 h-full">
+            <Card className="h-full">
+              <CardContent className="p-0 h-full">
+                <div className="relative h-full rounded-lg overflow-hidden">
+                  {isLoading ? (
+                    <div className="flex flex-col items-center justify-center h-full gap-2">
+                      <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                      <p className="text-sm text-muted-foreground">Carregando dados do mapa...</p>
+                    </div>
+                  ) : data.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full gap-4">
+                      <MapPin className="h-12 w-12 text-primary" />
+                      <h3 className="text-lg font-medium">Sem dados de localização</h3>
+                      <p className="text-sm text-muted-foreground max-w-xs text-center">
+                        Não foram encontrados registros com dados de latitude e longitude válidos.
+                      </p>
+                    </div>
+                  ) : (
                     <BrazilHeatmap data={filteredData} filters={filters} />
-                    <HeatmapLegend 
-                      filteredDataCount={filteredData.length}
-                      totalDataCount={data.length}
-                    />
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Legenda lateral */}
+          <div className="lg:col-span-1 h-full">
+            <HeatmapLegend 
+              filteredDataCount={filteredData.length}
+              totalDataCount={data.length}
+            />
+          </div>
         </div>
       </div>
     </Layout>

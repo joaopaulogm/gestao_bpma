@@ -9,7 +9,7 @@ interface HeatmapLegendProps {
 
 const HeatmapLegend = ({ filteredDataCount = 0, totalDataCount = 0 }: HeatmapLegendProps) => {
   return (
-    <Card className="fixed bottom-4 right-4 z-10 bg-background/95 backdrop-blur-sm shadow-lg max-w-xs">
+    <Card className="h-full bg-background shadow-lg">
       <CardHeader className="pb-2">
         <h3 className="text-sm font-semibold flex items-center gap-2">
           Legenda do Mapa
