@@ -123,20 +123,29 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
     };
 
     console.log('Adding GeoJSON source with features:', geojson.features.length);
+    console.log('Sample GeoJSON feature:', geojson.features[0]);
     
-    map.current.addSource(sourceId, {
-      type: 'geojson',
-      data: geojson
-    });
+    try {
+      map.current.addSource(sourceId, {
+        type: 'geojson',
+        data: geojson
+      });
+      console.log('GeoJSON source added successfully');
+    } catch (error) {
+      console.error('Error adding GeoJSON source:', error);
+      return;
+    }
 
-    // Add heatmap layer for rescue data with green color scheme
-    map.current.addLayer({
-      id: heatmapId,
-      type: 'heatmap',
-      source: sourceId,
-      paint: {
-        // Weight based on data density
-        'heatmap-weight': 1,
+    // Add heatmap layer for rescue data with blue-to-red gradient
+    try {
+      console.log('Adding heatmap layer...');
+      map.current.addLayer({
+        id: heatmapId,
+        type: 'heatmap',
+        source: sourceId,
+        paint: {
+          // Weight based on data density
+          'heatmap-weight': 1,
         // Enhanced intensity scaling
         'heatmap-intensity': [
           'interpolate',
@@ -183,13 +192,20 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
           16, 0.3
         ]
       }
-    });
+      });
+      console.log('Heatmap layer added successfully');
+    } catch (error) {
+      console.error('Error adding heatmap layer:', error);
+      return;
+    }
 
     // Add points layer for precise locations at high zoom
-    map.current.addLayer({
-      id: pointsId,
-      type: 'circle',
-      source: sourceId,
+    try {
+      console.log('Adding points layer...');
+      map.current.addLayer({
+        id: pointsId,
+        type: 'circle',
+        source: sourceId,
       paint: {
         // Adaptive circle size
         'circle-radius': [
@@ -223,7 +239,12 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
         'circle-stroke-color': '#ffffff',
         'circle-stroke-opacity': 0.9
       }
-    });
+      });
+      console.log('Points layer added successfully');
+    } catch (error) {
+      console.error('Error adding points layer:', error);
+      return;
+    }
 
     // Add click handler for points
     map.current.on('click', pointsId, (e) => {
@@ -282,9 +303,16 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
 
   // Update heatmap layers when data changes
   useEffect(() => {
-    if (!map.current) return;
+    console.log('Data effect triggered with data:', data.length, 'items');
+    console.log('Map current state:', !!map.current);
+    
+    if (!map.current) {
+      console.log('No map instance, skipping data update');
+      return;
+    }
 
     if (data.length === 0) {
+      console.log('No data available, clearing layers');
       // Clear layers if no data
       const heatmapId = 'resgates-heatmap';
       const pointsId = 'resgates-points';
@@ -302,10 +330,17 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
       return;
     }
 
+    console.log('Map style loaded status:', map.current.isStyleLoaded());
+    
     if (map.current.isStyleLoaded()) {
+      console.log('Style loaded, calling debouncedUpdate immediately');
       debouncedUpdate(data);
     } else {
-      map.current.on('load', () => debouncedUpdate(data));
+      console.log('Style not loaded, waiting for load event');
+      map.current.on('load', () => {
+        console.log('Map load event fired, calling debouncedUpdate');
+        debouncedUpdate(data);
+      });
     }
 
     // Cleanup timeout on unmount
