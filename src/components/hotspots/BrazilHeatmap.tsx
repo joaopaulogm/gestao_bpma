@@ -48,9 +48,9 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
-      center: [-51.9253, -14.2350], // Brazil center
-      zoom: 4,
-      minZoom: 3,
+      center: [-47.8822, -15.7942], // Distrito Federal center
+      zoom: 8,
+      minZoom: 6,
       maxZoom: 16,
       attributionControl: false
     });
@@ -142,45 +142,45 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
           'interpolate',
           ['linear'],
           ['zoom'],
-          3, 0.6,
           6, 1.0,
-          9, 1.4,
-          12, 1.8,
-          16, 2.2
+          8, 1.5,
+          10, 2.0,
+          12, 2.5,
+          16, 3.0
         ],
-        // Green color gradient for rescue heatmap
+        // Classic heatmap color gradient (blue to red)
         'heatmap-color': [
           'interpolate',
           ['linear'],
           ['heatmap-density'],
           0, 'rgba(0,0,0,0)',
-          0.1, 'rgba(16, 185, 129, 0.2)', // Light green
-          0.3, 'rgba(16, 185, 129, 0.6)', // Medium green
-          0.5, 'rgba(16, 185, 129, 0.9)', // Darker green
-          0.7, '#10B981',                 // Full green
-          0.9, '#059669',                 // Intense green
-          1, '#047857'                    // Hottest green
+          0.1, 'rgba(33, 102, 172, 0.6)',  // Blue
+          0.2, 'rgba(103, 169, 207, 0.7)', // Light blue
+          0.4, 'rgba(209, 229, 240, 0.8)', // Very light blue
+          0.6, 'rgba(253, 219, 199, 0.9)', // Light orange
+          0.8, 'rgba(239, 138, 98, 1.0)',  // Orange
+          1.0, 'rgba(178, 24, 43, 1.0)'    // Red
         ],
-        // Adaptive radius for different zoom levels
+        // Optimized radius for DF region
         'heatmap-radius': [
           'interpolate',
           ['linear'],
           ['zoom'],
-          3, 15,
-          6, 25,
-          9, 40,
-          12, 55,
-          16, 70
+          6, 20,
+          8, 30,
+          10, 45,
+          12, 60,
+          16, 80
         ],
         // Opacity control
         'heatmap-opacity': [
           'interpolate',
           ['linear'],
           ['zoom'],
-          3, 0.8,
-          9, 0.9,
-          12, 0.7,
-          16, 0.4
+          6, 0.9,
+          8, 0.8,
+          12, 0.6,
+          16, 0.3
         ]
       }
     });
