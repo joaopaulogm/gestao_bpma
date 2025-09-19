@@ -7,38 +7,66 @@ import { toast } from 'sonner';
 import BrazilHeatmap from '@/components/hotspots/BrazilHeatmap';
 import HeatmapLegend from '@/components/hotspots/HeatmapLegend';
 import type { OcorrenciaData } from '@/types/hotspots';
+import { supabase } from '@/integrations/supabase/client';
 
 const Hotspots = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<OcorrenciaData[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchRegistros = async () => {
       setIsLoading(true);
       try {
-        // Load demo data from JSON file
-        const response = await fetch('/data/ocorrencias.json');
-        if (!response.ok) throw new Error('Failed to fetch data');
+        console.log('Fetching registros for heatmap...');
         
-        const jsonData: OcorrenciaData[] = await response.json();
-        setData(jsonData);
+        // Buscar registros do Supabase
+        const { data: registros, error } = await supabase
+          .from('registros')
+          .select(`
+            id,
+            latitude_origem,
+            longitude_origem,
+            regiao_administrativa,
+            data,
+            origem,
+            nome_popular
+          `)
+          .not('latitude_origem', 'is', null)
+          .not('longitude_origem', 'is', null);
+
+        if (error) throw error;
+
+        console.log('Fetched registros:', registros?.length || 0, 'total items');
+
+        // Transformar dados do formato do Supabase para OcorrenciaData
+        const transformedData: OcorrenciaData[] = (registros || []).map(reg => ({
+          id: reg.id,
+          tipo: 'resgate',
+          lat: parseFloat(reg.latitude_origem),
+          lng: parseFloat(reg.longitude_origem),
+          municipio: reg.regiao_administrativa || 'Não informado',
+          uf: 'DF', // Todos os dados são do Distrito Federal
+          data_iso: reg.data || new Date().toISOString(),
+          fonte: 'IBRAM'
+        }));
+
+        console.log('Transformed data:', transformedData.length, 'items');
+        console.log('Sample transformed item:', transformedData[0]);
+
+        setData(transformedData);
       } catch (error) {
-        console.error('Erro ao buscar dados de hotspots:', error);
-        toast.error('Erro ao carregar dados dos hotspots');
+        console.error('Erro ao buscar registros para o heatmap:', error);
+        toast.error('Erro ao carregar dados dos registros');
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchData();
+    fetchRegistros();
   }, []);
 
-  // Filter data to show only rescue operations
-  const resgateData = data.filter(item => item.tipo === 'resgate');
-  
   console.log('Hotspots page - Total data loaded:', data.length);
-  console.log('Filtered rescue data:', resgateData.length);
-  console.log('Sample rescue data:', resgateData.slice(0, 2));
+  console.log('Sample data:', data.slice(0, 2));
   
   return (
     <Layout title="Hotspots de Resgates – Brasil" showBackButton>
@@ -55,7 +83,7 @@ const Hotspots = () => {
                       <Loader2 className="h-8 w-8 text-primary animate-spin" />
                       <p className="text-sm text-muted-foreground">Carregando dados do mapa...</p>
                     </div>
-                  ) : resgateData.length === 0 ? (
+                  ) : data.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full gap-4">
                       <MapPin className="h-12 w-12 text-primary" />
                       <h3 className="text-lg font-medium">Sem dados de resgate</h3>
@@ -64,7 +92,7 @@ const Hotspots = () => {
                       </p>
                     </div>
                   ) : (
-                    <BrazilHeatmap data={resgateData} />
+                    <BrazilHeatmap data={data} />
                   )}
                 </div>
               </CardContent>
@@ -74,7 +102,7 @@ const Hotspots = () => {
           {/* Legenda lateral */}
           <div className="lg:col-span-1 h-full">
             <HeatmapLegend 
-              dataCount={resgateData.length}
+              dataCount={data.length}
             />
           </div>
         </div>
