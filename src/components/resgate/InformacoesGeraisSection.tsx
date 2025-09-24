@@ -59,20 +59,7 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
         />
       )}
 
-      {/* Add the coordinates fields */}
-      <div className="col-span-full">
-        <CoordenadasOrigemField
-          latitudeOrigem={formData.latitudeOrigem}
-          longitudeOrigem={formData.longitudeOrigem}
-          onChange={handleChange}
-          errors={{
-            latitudeOrigem: errors.latitudeOrigem?.message,
-            longitudeOrigem: errors.longitudeOrigem?.message
-          }}
-          required={true}
-        />
-      </div>
-
+      {/* Desfecho da Apreensão - apenas se origem for Apreensão */}
       {formData.origem === 'Apreensão' && (
         <div className="col-span-full">
           <DesfechoApreensaoField
@@ -91,6 +78,20 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
           />
         </div>
       )}
+
+      {/* Add the coordinates fields */}
+      <div className="col-span-full">
+        <CoordenadasOrigemField
+          latitudeOrigem={formData.latitudeOrigem}
+          longitudeOrigem={formData.longitudeOrigem}
+          onChange={handleChange}
+          errors={{
+            latitudeOrigem: errors.latitudeOrigem?.message,
+            longitudeOrigem: errors.longitudeOrigem?.message
+          }}
+          required={true}
+        />
+      </div>
     </FormSection>
   );
 };
