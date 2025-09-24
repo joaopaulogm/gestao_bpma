@@ -49,12 +49,15 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
         required={true}
       />
 
-      <DesfechoResgateField
-        desfechoResgate={formData.desfechoResgate}
-        onDesfechoChange={(value) => handleSelectChange('desfechoResgate', value)}
-        error={errors.desfechoResgate?.message}
-        required={true}
-      />
+      {/* Desfecho do Resgate - apenas se origem for Resgate de Fauna */}
+      {formData.origem === 'Resgate de Fauna' && (
+        <DesfechoResgateField
+          desfechoResgate={formData.desfechoResgate}
+          onDesfechoChange={(value) => handleSelectChange('desfechoResgate', value)}
+          error={errors.desfechoResgate?.message}
+          required={true}
+        />
+      )}
 
       {/* Add the coordinates fields */}
       <div className="col-span-full">
