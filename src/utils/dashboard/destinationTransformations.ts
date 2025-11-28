@@ -1,4 +1,3 @@
-
 import { ChartDataItem, Registro } from '@/types/hotspots';
 
 /**
@@ -7,7 +6,10 @@ import { ChartDataItem, Registro } from '@/types/hotspots';
 export const transformDestinationTypesData = (registros: Registro[]): ChartDataItem[] => {
   const destinacaoMap = new Map<string, number>();
   registros.forEach(reg => {
-    destinacaoMap.set(reg.destinacao, (destinacaoMap.get(reg.destinacao) || 0) + 1);
+    const dest = reg.destinacao?.nome;
+    if (dest) {
+      destinacaoMap.set(dest, (destinacaoMap.get(dest) || 0) + 1);
+    }
   });
   
   return Array.from(destinacaoMap.entries())
@@ -21,7 +23,7 @@ export const transformDestinationTypesData = (registros: Registro[]): ChartDataI
 export const transformCEAPAReasonsData = (registros: Registro[]): ChartDataItem[] => {
   const motivosCEAPAMap = new Map<string, number>();
   registros
-    .filter(reg => reg.destinacao === 'CEAPA/BPMA' && reg.motivo_entrega_ceapa)
+    .filter(reg => reg.destinacao?.nome === 'CEAPA/BPMA' && reg.motivo_entrega_ceapa)
     .forEach(reg => {
       motivosCEAPAMap.set(
         reg.motivo_entrega_ceapa as string, 

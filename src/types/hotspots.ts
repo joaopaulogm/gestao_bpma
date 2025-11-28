@@ -34,30 +34,46 @@ export interface HotspotRegion {
 export interface Registro {
   id: string;
   data: string;
-  regiao_administrativa: string;
-  origem: string;
+  // Foreign key IDs
+  especie_id: string | null;
+  regiao_administrativa_id: string | null;
+  origem_id: string | null;
+  destinacao_id: string | null;
+  estado_saude_id: string | null;
+  estagio_vida_id: string | null;
+  desfecho_id: string | null;
+  // Joined dimension data (populated by joins)
+  regiao_administrativa?: { nome: string } | null;
+  origem?: { nome: string } | null;
+  destinacao?: { nome: string } | null;
+  estado_saude?: { nome: string } | null;
+  estagio_vida?: { nome: string } | null;
+  desfecho?: { nome: string; tipo: string } | null;
+  especie?: {
+    id: string;
+    classe_taxonomica: string;
+    nome_popular: string;
+    nome_cientifico: string;
+    ordem_taxonomica: string;
+    estado_de_conservacao: string;
+    tipo_de_fauna: string;
+  } | null;
+  // Location data
   latitude_origem: string;
   longitude_origem: string;
-  desfecho_apreensao: string | null;
-  desfecho_resgate: string | null;
+  latitude_soltura: string | null;
+  longitude_soltura: string | null;
+  // Additional fields
   numero_tco: string | null;
   outro_desfecho: string | null;
-  classe_taxonomica: string;
-  nome_cientifico: string;
-  nome_popular: string;
-  estado_saude: string;
   atropelamento: string;
-  estagio_vida: string;
   quantidade: number;
   quantidade_adulto: number | null;
   quantidade_filhote: number | null;
-  quantidade_total: number | null; // Adicionando o novo campo
-  destinacao: string;
+  quantidade_total: number | null;
   numero_termo_entrega: string | null;
   hora_guarda_ceapa: string | null;
   motivo_entrega_ceapa: string | null;
-  latitude_soltura: string | null;
-  longitude_soltura: string | null;
   outro_destinacao: string | null;
   created_at: string;
 }

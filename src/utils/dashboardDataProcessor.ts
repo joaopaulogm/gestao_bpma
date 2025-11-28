@@ -7,8 +7,8 @@ import * as transformations from './dashboardDataTransformations';
  */
 export const processDashboardData = (registros: Registro[]): DashboardData => {
   // Filter data for different categories
-  const resgates = registros.filter(r => r.origem === 'Resgate de Fauna');
-  const apreensoes = registros.filter(r => r.origem === 'Apreensão');
+  const resgates = registros.filter(r => r.origem?.nome === 'Resgate de Fauna');
+  const apreensoes = registros.filter(r => r.origem?.nome === 'Apreensão');
   const animaisAtropelados = registros.filter(r => r.atropelamento === 'Sim');
   
   // Transform data for different charts and metrics

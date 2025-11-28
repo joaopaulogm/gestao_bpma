@@ -22,7 +22,11 @@ export const transformDashboardMetrics = (
     : 0;
 
   // Count unique species
-  const uniqueSpecies = new Set(registros.map(reg => reg.nome_cientifico)).size;
+  const uniqueSpecies = new Set(
+    registros
+      .filter(reg => reg.especie?.nome_cientifico)
+      .map(reg => reg.especie!.nome_cientifico)
+  ).size;
 
   // Return dashboard metrics
   return [
