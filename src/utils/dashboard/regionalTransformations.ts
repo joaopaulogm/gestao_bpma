@@ -1,4 +1,3 @@
-
 import { ChartDataItem, Registro } from '@/types/hotspots';
 
 /**
@@ -7,7 +6,10 @@ import { ChartDataItem, Registro } from '@/types/hotspots';
 export const transformRegionalData = (registros: Registro[]): ChartDataItem[] => {
   const regiaoMap = new Map<string, number>();
   registros.forEach(reg => {
-    regiaoMap.set(reg.regiao_administrativa, (regiaoMap.get(reg.regiao_administrativa) || 0) + 1);
+    const nome = reg.regiao_administrativa?.nome;
+    if (nome) {
+      regiaoMap.set(nome, (regiaoMap.get(nome) || 0) + 1);
+    }
   });
   
   return Array.from(regiaoMap.entries())

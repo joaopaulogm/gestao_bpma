@@ -1,4 +1,3 @@
-
 import { ChartDataItem, Registro } from '@/types/hotspots';
 
 /**
@@ -7,7 +6,10 @@ import { ChartDataItem, Registro } from '@/types/hotspots';
 export const transformTaxonomicClassData = (registros: Registro[]): ChartDataItem[] => {
   const classeMap = new Map<string, number>();
   registros.forEach(reg => {
-    classeMap.set(reg.classe_taxonomica, (classeMap.get(reg.classe_taxonomica) || 0) + 1);
+    const classe = reg.especie?.classe_taxonomica;
+    if (classe) {
+      classeMap.set(classe, (classeMap.get(classe) || 0) + 1);
+    }
   });
   
   return Array.from(classeMap.entries())
@@ -21,7 +23,10 @@ export const transformTaxonomicClassData = (registros: Registro[]): ChartDataIte
 export const transformLifeStageData = (registros: Registro[]): ChartDataItem[] => {
   const estagioVidaMap = new Map<string, number>();
   registros.forEach(reg => {
-    estagioVidaMap.set(reg.estagio_vida, (estagioVidaMap.get(reg.estagio_vida) || 0) + 1);
+    const estagio = reg.estagio_vida?.nome;
+    if (estagio) {
+      estagioVidaMap.set(estagio, (estagioVidaMap.get(estagio) || 0) + 1);
+    }
   });
   
   return Array.from(estagioVidaMap.entries())

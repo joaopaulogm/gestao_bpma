@@ -21,9 +21,9 @@ export const transformTimeSeriesData = (registros: Registro[]): TimeSeriesItem[]
       const currentCount = dateMap.get(date)!;
       
       // Increment counts based on origem
-      if (registro.origem === 'Resgate de Fauna') {
+      if (registro.origem?.nome === 'Resgate de Fauna') {
         currentCount.resgates += 1;
-      } else if (registro.origem === 'Apreensão') {
+      } else if (registro.origem?.nome === 'Apreensão') {
         currentCount.apreensoes += 1;
       }
       

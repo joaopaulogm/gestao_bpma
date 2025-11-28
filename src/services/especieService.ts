@@ -1,14 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
-// Enable real-time updates for especies_fauna table
+// Enable real-time updates for dim_especies table
 const setupRealtimeUpdates = async () => {
   try {
     // Note: We don't need special setup for basic realtime functionality
     // The supabase client already supports realtime updates
     // The actual subscription is managed in the components that need it
-    console.log('Realtime updates configured for especies_fauna table');
+    console.log('Realtime updates configured for dim_especies table');
   } catch (error) {
-    console.error('Error setting up realtime for especies_fauna table:', error);
+    console.error('Error setting up realtime for dim_especies table:', error);
   }
 };
 
@@ -28,7 +28,7 @@ export interface Especie {
 export const buscarTodasEspecies = async (): Promise<Especie[]> => {
   try {
     const { data, error } = await supabase
-      .from("especies_fauna")
+      .from("dim_especies")
       .select("*")
       .order("nome_popular");
     
@@ -48,7 +48,7 @@ export const buscarEspeciesPorClasse = async (
   classe?: string
 ): Promise<Especie[]> => {
   try {
-    let query = supabase.from("especies_fauna").select("*");
+    let query = supabase.from("dim_especies").select("*");
     
     if (classe) {
       query = query.eq("classe_taxonomica", classe);
@@ -71,7 +71,7 @@ export const buscarEspeciesPorClasse = async (
 export const buscarClassesTaxonomicas = async (): Promise<string[]> => {
   try {
     const { data, error } = await supabase
-      .from("especies_fauna")
+      .from("dim_especies")
       .select("classe_taxonomica")
       .order("classe_taxonomica");
     
@@ -92,7 +92,7 @@ export const buscarClassesTaxonomicas = async (): Promise<string[]> => {
 export const buscarEspeciePorId = async (id: string): Promise<Especie | null> => {
   try {
     const { data, error } = await supabase
-      .from("especies_fauna")
+      .from("dim_especies")
       .select("*")
       .eq("id", id)
       .maybeSingle();
@@ -112,7 +112,7 @@ export const buscarEspeciePorId = async (id: string): Promise<Especie | null> =>
 export const buscarEspeciePorNomeCientifico = async (nomeCientifico: string): Promise<Especie | null> => {
   try {
     const { data, error } = await supabase
-      .from("especies_fauna")
+      .from("dim_especies")
       .select("*")
       .ilike("nome_cientifico", nomeCientifico)
       .maybeSingle();
@@ -132,7 +132,7 @@ export const buscarEspeciePorNomeCientifico = async (nomeCientifico: string): Pr
 export const cadastrarEspecie = async (especie: Omit<Especie, 'id'>): Promise<Especie | null> => {
   try {
     const { data, error } = await supabase
-      .from("especies_fauna")
+      .from("dim_especies")
       .insert([especie])
       .select()
       .maybeSingle();
@@ -152,7 +152,7 @@ export const cadastrarEspecie = async (especie: Omit<Especie, 'id'>): Promise<Es
 export const atualizarEspecie = async (id: string, especie: Omit<Especie, 'id'>): Promise<Especie | null> => {
   try {
     const { data, error } = await supabase
-      .from("especies_fauna")
+      .from("dim_especies")
       .update(especie)
       .eq("id", id)
       .select()
@@ -173,7 +173,7 @@ export const atualizarEspecie = async (id: string, especie: Omit<Especie, 'id'>)
 export const excluirEspecie = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from("especies_fauna")
+      .from("dim_especies")
       .delete()
       .eq("id", id);
     

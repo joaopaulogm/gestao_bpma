@@ -45,7 +45,16 @@ const Registros = () => {
     try {
       const { data, error } = await supabase
         .from('registros')
-        .select('*')
+        .select(`
+          *,
+          regiao_administrativa:dim_regiao_administrativa(nome),
+          origem:dim_origem(nome),
+          destinacao:dim_destinacao(nome),
+          estado_saude:dim_estado_saude(nome),
+          estagio_vida:dim_estagio_vida(nome),
+          desfecho:dim_desfecho(nome, tipo),
+          especie:dim_especies(*)
+        `)
         .order('data', { ascending: false });
       
       if (error) throw error;
@@ -61,21 +70,21 @@ const Registros = () => {
   
   const filteredRegistros = registros.filter(registro => {
     const matchesSearch = searchTerm === '' || 
-      registro.regiao_administrativa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      registro.nome_popular.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      registro.nome_cientifico.toLowerCase().includes(searchTerm.toLowerCase());
+      registro.regiao_administrativa?.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      registro.especie?.nome_popular.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      registro.especie?.nome_cientifico.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesTipo = filterTipo === 'all' || 
-      registro.origem === filterTipo;
+      registro.origem?.nome === filterTipo;
       
     const matchesEstado = filterEstado === 'all' || 
-      registro.estado_saude === filterEstado;
+      registro.estado_saude?.nome === filterEstado;
       
     const matchesDestinacao = filterDestinacao === 'all' || 
-      registro.destinacao === filterDestinacao;
+      registro.destinacao?.nome === filterDestinacao;
       
     const matchesClasse = filterClasse === 'all' || 
-      registro.classe_taxonomica === filterClasse;
+      registro.especie?.classe_taxonomica === filterClasse;
     
     return matchesSearch && matchesTipo && matchesEstado && matchesDestinacao && matchesClasse;
   });
@@ -142,18 +151,18 @@ const Registros = () => {
         
         return [
           formattedDate,
-          `"${registro.regiao_administrativa}"`,
-          registro.origem,
+          `"${registro.regiao_administrativa?.nome || ''}"`,
+          registro.origem?.nome || '',
           registro.latitude_origem,
           registro.longitude_origem,
-          registro.classe_taxonomica,
-          `"${registro.nome_cientifico}"`,
-          `"${registro.nome_popular}"`,
-          registro.estado_saude,
+          registro.especie?.classe_taxonomica || '',
+          `"${registro.especie?.nome_cientifico || ''}"`,
+          `"${registro.especie?.nome_popular || ''}"`,
+          registro.estado_saude?.nome || '',
           registro.atropelamento,
-          registro.estagio_vida,
+          registro.estagio_vida?.nome || '',
           registro.quantidade,
-          registro.destinacao
+          registro.destinacao?.nome || ''
         ].join(',');
       })
     ];
