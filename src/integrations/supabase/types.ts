@@ -14,7 +14,46 @@ export type Database = {
   }
   public: {
     Tables: {
-      especies_fauna: {
+      dim_desfecho: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
+      dim_destinacao: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      dim_especies: {
         Row: {
           classe_taxonomica: string
           estado_de_conservacao: string
@@ -44,17 +83,88 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_estado_saude: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      dim_estagio_vida: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      dim_origem: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      dim_regiao_administrativa: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       registros: {
         Row: {
           atropelamento: string
-          classe_taxonomica: string
           created_at: string
           data: string
-          desfecho_apreensao: string | null
-          desfecho_resgate: string | null
-          destinacao: string
-          estado_saude: string
-          estagio_vida: string
+          desfecho_id: string | null
+          destinacao_id: string | null
+          especie_id: string | null
+          estado_saude_id: string | null
+          estagio_vida_id: string | null
           hora_guarda_ceapa: string | null
           id: string
           latitude_origem: string
@@ -62,29 +172,26 @@ export type Database = {
           longitude_origem: string
           longitude_soltura: string | null
           motivo_entrega_ceapa: string | null
-          nome_cientifico: string
-          nome_popular: string
           numero_tco: string | null
           numero_termo_entrega: string | null
-          origem: string
+          origem_id: string | null
           outro_desfecho: string | null
           outro_destinacao: string | null
           quantidade: number | null
           quantidade_adulto: number | null
           quantidade_filhote: number | null
           quantidade_total: number | null
-          regiao_administrativa: string
+          regiao_administrativa_id: string | null
         }
         Insert: {
           atropelamento: string
-          classe_taxonomica: string
           created_at?: string
           data: string
-          desfecho_apreensao?: string | null
-          desfecho_resgate?: string | null
-          destinacao: string
-          estado_saude: string
-          estagio_vida: string
+          desfecho_id?: string | null
+          destinacao_id?: string | null
+          especie_id?: string | null
+          estado_saude_id?: string | null
+          estagio_vida_id?: string | null
           hora_guarda_ceapa?: string | null
           id?: string
           latitude_origem: string
@@ -92,29 +199,26 @@ export type Database = {
           longitude_origem: string
           longitude_soltura?: string | null
           motivo_entrega_ceapa?: string | null
-          nome_cientifico: string
-          nome_popular: string
           numero_tco?: string | null
           numero_termo_entrega?: string | null
-          origem: string
+          origem_id?: string | null
           outro_desfecho?: string | null
           outro_destinacao?: string | null
           quantidade?: number | null
           quantidade_adulto?: number | null
           quantidade_filhote?: number | null
           quantidade_total?: number | null
-          regiao_administrativa: string
+          regiao_administrativa_id?: string | null
         }
         Update: {
           atropelamento?: string
-          classe_taxonomica?: string
           created_at?: string
           data?: string
-          desfecho_apreensao?: string | null
-          desfecho_resgate?: string | null
-          destinacao?: string
-          estado_saude?: string
-          estagio_vida?: string
+          desfecho_id?: string | null
+          destinacao_id?: string | null
+          especie_id?: string | null
+          estado_saude_id?: string | null
+          estagio_vida_id?: string | null
           hora_guarda_ceapa?: string | null
           id?: string
           latitude_origem?: string
@@ -122,20 +226,68 @@ export type Database = {
           longitude_origem?: string
           longitude_soltura?: string | null
           motivo_entrega_ceapa?: string | null
-          nome_cientifico?: string
-          nome_popular?: string
           numero_tco?: string | null
           numero_termo_entrega?: string | null
-          origem?: string
+          origem_id?: string | null
           outro_desfecho?: string | null
           outro_destinacao?: string | null
           quantidade?: number | null
           quantidade_adulto?: number | null
           quantidade_filhote?: number | null
           quantidade_total?: number | null
-          regiao_administrativa?: string
+          regiao_administrativa_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_registros_desfecho"
+            columns: ["desfecho_id"]
+            isOneToOne: false
+            referencedRelation: "dim_desfecho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_destinacao"
+            columns: ["destinacao_id"]
+            isOneToOne: false
+            referencedRelation: "dim_destinacao"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_especie"
+            columns: ["especie_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_estado_saude"
+            columns: ["estado_saude_id"]
+            isOneToOne: false
+            referencedRelation: "dim_estado_saude"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_estagio_vida"
+            columns: ["estagio_vida_id"]
+            isOneToOne: false
+            referencedRelation: "dim_estagio_vida"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_origem"
+            columns: ["origem_id"]
+            isOneToOne: false
+            referencedRelation: "dim_origem"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_regiao"
+            columns: ["regiao_administrativa_id"]
+            isOneToOne: false
+            referencedRelation: "dim_regiao_administrativa"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
