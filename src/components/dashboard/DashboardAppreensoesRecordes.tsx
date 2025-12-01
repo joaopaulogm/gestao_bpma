@@ -10,11 +10,16 @@ import { ptBR } from 'date-fns/locale';
 interface Registro {
   id: string;
   data: string;
-  origem: string;
-  quantidade: number;
-  classe_taxonomica: string;
-  nome_cientifico: string;
-  nome_popular: string;
+  origem?: {
+    nome: string;
+  };
+  quantidade?: number;
+  quantidade_total?: number;
+  especie?: {
+    classe_taxonomica: string;
+    nome_cientifico: string;
+    nome_popular: string;
+  };
   numero_tco?: string;
   [key: string]: any;
 }
@@ -30,8 +35,11 @@ const DashboardAppreensoesRecordes: React.FC<DashboardAppreensoesRecordesProps> 
   const recordeMaiorQuantidade = useMemo(() => {
     if (!registros || registros.length === 0) return null;
     
-    return registros.reduce((maior, atual) => 
-      (atual.quantidade > maior.quantidade) ? atual : maior, registros[0]);
+    return registros.reduce((maior, atual) => {
+      const quantidadeAtual = atual.quantidade_total || atual.quantidade || 0;
+      const quantidadeMaior = maior.quantidade_total || maior.quantidade || 0;
+      return quantidadeAtual > quantidadeMaior ? atual : maior;
+    }, registros[0]);
   }, [registros]);
   
   // Find largest seizure (TCO) by number of animals
@@ -39,12 +47,15 @@ const DashboardAppreensoesRecordes: React.FC<DashboardAppreensoesRecordesProps> 
     if (!registros || registros.length === 0) return null;
     
     const apreensoes = registros.filter(r => 
-      r.origem === 'Apreensão' || r.origem === 'Apreensão/Resgate');
+      r.origem?.nome === 'Apreensão' || r.origem?.nome === 'Apreensão/Resgate');
     
     if (apreensoes.length === 0) return null;
     
-    return apreensoes.reduce((maior, atual) => 
-      (atual.quantidade > maior.quantidade) ? atual : maior, apreensoes[0]);
+    return apreensoes.reduce((maior, atual) => {
+      const quantidadeAtual = atual.quantidade_total || atual.quantidade || 0;
+      const quantidadeMaior = maior.quantidade_total || maior.quantidade || 0;
+      return quantidadeAtual > quantidadeMaior ? atual : maior;
+    }, apreensoes[0]);
   }, [registros]);
 
   return (
@@ -66,10 +77,10 @@ const DashboardAppreensoesRecordes: React.FC<DashboardAppreensoesRecordesProps> 
             <CardContent>
               <div className="flex flex-col space-y-1">
                 <span className="text-2xl font-bold text-blue-800">
-                  {recordeMaiorQuantidade.quantidade} {recordeMaiorQuantidade.quantidade > 1 ? 'animais' : 'animal'}
+                  {recordeMaiorQuantidade.quantidade_total || recordeMaiorQuantidade.quantidade || 0} {(recordeMaiorQuantidade.quantidade_total || recordeMaiorQuantidade.quantidade || 0) > 1 ? 'animais' : 'animal'}
                 </span>
                 <span className="text-sm text-blue-800">
-                  {recordeMaiorQuantidade.nome_popular} ({recordeMaiorQuantidade.nome_cientifico})
+                  {recordeMaiorQuantidade.especie?.nome_popular} ({recordeMaiorQuantidade.especie?.nome_cientifico})
                 </span>
                 <div className="flex items-center mt-1">
                   <Calendar className="h-3.5 w-3.5 text-blue-600 mr-1" />
@@ -78,7 +89,7 @@ const DashboardAppreensoesRecordes: React.FC<DashboardAppreensoesRecordesProps> 
                   </span>
                 </div>
                 <Badge variant="outline" className="mt-1 w-fit bg-blue-100 text-blue-700 border-blue-200">
-                  {recordeMaiorQuantidade.origem}
+                  {recordeMaiorQuantidade.origem?.nome}
                 </Badge>
               </div>
             </CardContent>
@@ -98,10 +109,10 @@ const DashboardAppreensoesRecordes: React.FC<DashboardAppreensoesRecordesProps> 
             <CardContent>
               <div className="flex flex-col space-y-1">
                 <span className="text-2xl font-bold text-purple-800">
-                  {recordeApreensao.quantidade} {recordeApreensao.quantidade > 1 ? 'animais' : 'animal'}
+                  {recordeApreensao.quantidade_total || recordeApreensao.quantidade || 0} {(recordeApreensao.quantidade_total || recordeApreensao.quantidade || 0) > 1 ? 'animais' : 'animal'}
                 </span>
                 <span className="text-sm text-purple-800">
-                  {recordeApreensao.nome_popular} ({recordeApreensao.nome_cientifico})
+                  {recordeApreensao.especie?.nome_popular} ({recordeApreensao.especie?.nome_cientifico})
                 </span>
                 <div className="flex items-center mt-1">
                   <Calendar className="h-3.5 w-3.5 text-purple-600 mr-1" />
