@@ -7,6 +7,22 @@ export const crimesAmbientaisSchema = z.object({
   longitudeOcorrencia: z.string().optional(),
   tipoCrime: z.string().min(1, "Tipo de Crime é obrigatório"),
   enquadramento: z.string().min(1, "Enquadramento é obrigatório"),
+  // Campos para Crime Contra a Fauna
+  classeTaxonomica: z.string().optional(),
+  especieId: z.string().optional(),
+  estadoSaudeId: z.string().optional(),
+  atropelamento: z.string().optional(),
+  estagioVidaId: z.string().optional(),
+  quantidadeAdulto: z.number().min(0).max(1000).optional(),
+  quantidadeFilhote: z.number().min(0).max(1000).optional(),
+  quantidadeTotal: z.number().min(0).max(2000).optional(),
+  destinacao: z.string().optional(),
+  // Campos para óbito
+  estagioVidaObito: z.string().optional(),
+  quantidadeAdultoObito: z.number().min(0).max(1000).optional(),
+  quantidadeFilhoteObito: z.number().min(0).max(1000).optional(),
+  quantidadeTotalObito: z.number().min(0).max(2000).optional(),
+  // Desfecho e quantidades de detidos/liberados
   desfecho: z.string().min(1, "Desfecho é obrigatório"),
   procedimentoLegal: z.string().optional(),
   quantidadeDetidosMaiorIdade: z.number().min(0).max(1000).optional(),
@@ -21,6 +37,63 @@ export const crimesAmbientaisSchema = z.object({
       message: "Procedimento Legal é obrigatório quando o desfecho é Flagrante",
       path: ["procedimentoLegal"]
     });
+  }
+  
+  // Se tipoCrime é "Crime Contra a Fauna", campos de espécie são obrigatórios
+  if (data.tipoCrime === "Crime Contra a Fauna") {
+    if (!data.classeTaxonomica) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Classe Taxonômica é obrigatória para Crime Contra a Fauna",
+        path: ["classeTaxonomica"]
+      });
+    }
+    if (!data.especieId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Espécie é obrigatória para Crime Contra a Fauna",
+        path: ["especieId"]
+      });
+    }
+    if (!data.estadoSaudeId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Estado de Saúde é obrigatório para Crime Contra a Fauna",
+        path: ["estadoSaudeId"]
+      });
+    }
+    if (!data.atropelamento) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Informação sobre atropelamento é obrigatória para Crime Contra a Fauna",
+        path: ["atropelamento"]
+      });
+    }
+    if (!data.estagioVidaId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Estágio da Vida é obrigatório para Crime Contra a Fauna",
+        path: ["estagioVidaId"]
+      });
+    }
+    if (!data.destinacao) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Destinação é obrigatória para Crime Contra a Fauna",
+        path: ["destinacao"]
+      });
+    }
+    
+    // Se destinação é Óbito, campos de óbito são obrigatórios
+    if (data.destinacao === "Óbito") {
+      if (!data.estagioVidaObito) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Estágio da Vida é obrigatório para óbito",
+          path: ["estagioVidaObito"]
+        });
+      }
+    }
   }
 });
 
