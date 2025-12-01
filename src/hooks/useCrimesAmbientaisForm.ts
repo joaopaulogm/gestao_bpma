@@ -16,6 +16,22 @@ export const useCrimesAmbientaisForm = () => {
       longitudeOcorrencia: '',
       tipoCrime: '',
       enquadramento: '',
+      // Crime Contra a Fauna
+      classeTaxonomica: '',
+      especieId: '',
+      estadoSaudeId: '',
+      atropelamento: '',
+      estagioVidaId: '',
+      quantidadeAdulto: 0,
+      quantidadeFilhote: 0,
+      quantidadeTotal: 0,
+      destinacao: '',
+      // Óbito
+      estagioVidaObito: '',
+      quantidadeAdultoObito: 0,
+      quantidadeFilhoteObito: 0,
+      quantidadeTotalObito: 0,
+      // Desfecho
       desfecho: '',
       procedimentoLegal: '',
       quantidadeDetidosMaiorIdade: 0,
@@ -37,7 +53,13 @@ export const useCrimesAmbientaisForm = () => {
       'quantidadeDetidosMaiorIdade',
       'quantidadeDetidosMenorIdade', 
       'quantidadeLiberadosMaiorIdade',
-      'quantidadeLiberadosMenorIdade'
+      'quantidadeLiberadosMenorIdade',
+      'quantidadeAdulto',
+      'quantidadeFilhote',
+      'quantidadeTotal',
+      'quantidadeAdultoObito',
+      'quantidadeFilhoteObito',
+      'quantidadeTotalObito'
     ];
     
     if (numericFields.includes(name)) {

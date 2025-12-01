@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { CrimesAmbientaisFormData, TIPOS_CRIME, ENQUADRAMENTOS, DESFECHOS, PROCEDIMENTOS_LEGAIS } from '@/schemas/crimesAmbientaisSchema';
 import { regioes } from '@/constants/regioes';
 import FormSection from '@/components/resgate/FormSection';
 import FormField from '@/components/resgate/FormField';
+import FaunaSection from './FaunaSection';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Save, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CrimesAmbientaisFormProps {
   form: UseFormReturn<CrimesAmbientaisFormData>;
@@ -29,6 +31,22 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
   getFieldError
 }) => {
   const enquadramentosDisponiveis = formData.tipoCrime ? ENQUADRAMENTOS[formData.tipoCrime as keyof typeof ENQUADRAMENTOS] || [] : [];
+  const [estadosSaude, setEstadosSaude] = useState<Array<{ id: string; nome: string }>>([]);
+  const [estagiosVida, setEstagiosVida] = useState<Array<{ id: string; nome: string }>>([]);
+
+  useEffect(() => {
+    const fetchDimensions = async () => {
+      const [estadosResult, estagiosResult] = await Promise.all([
+        supabase.from('dim_estado_saude').select('id, nome'),
+        supabase.from('dim_estagio_vida').select('id, nome')
+      ]);
+
+      if (estadosResult.data) setEstadosSaude(estadosResult.data);
+      if (estagiosResult.data) setEstagiosVida(estagiosResult.data);
+    };
+
+    fetchDimensions();
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -75,38 +93,39 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
             </Select>
           </FormField>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
+          <FormField
+            id="latitudeOcorrencia"
+            label="Latitude da Ocorrência"
+            error={getFieldError('latitudeOcorrencia')}
+          >
+            <Input
               id="latitudeOcorrencia"
-              label="Latitude da Ocorrência"
-              error={getFieldError('latitudeOcorrencia')}
-            >
-              <Input
-                id="latitudeOcorrencia"
-                name="latitudeOcorrencia"
-                placeholder="Ex: -15.7801"
-                value={formData.latitudeOcorrencia || ''}
-                onChange={handleChange}
-                className={getFieldError('latitudeOcorrencia') ? 'border-red-500' : ''}
-              />
-            </FormField>
+              name="latitudeOcorrencia"
+              placeholder="Ex: -15.7801"
+              value={formData.latitudeOcorrencia || ''}
+              onChange={handleChange}
+              className={getFieldError('latitudeOcorrencia') ? 'border-red-500' : ''}
+            />
+          </FormField>
 
-            <FormField
+          <FormField
+            id="longitudeOcorrencia"
+            label="Longitude da Ocorrência"
+            error={getFieldError('longitudeOcorrencia')}
+          >
+            <Input
               id="longitudeOcorrencia"
-              label="Longitude da Ocorrência"
-              error={getFieldError('longitudeOcorrencia')}
-            >
-              <Input
-                id="longitudeOcorrencia"
-                name="longitudeOcorrencia"
-                placeholder="Ex: -47.9292"
-                value={formData.longitudeOcorrencia || ''}
-                onChange={handleChange}
-                className={getFieldError('longitudeOcorrencia') ? 'border-red-500' : ''}
-              />
-            </FormField>
-          </div>
+              name="longitudeOcorrencia"
+              placeholder="Ex: -47.9292"
+              value={formData.longitudeOcorrencia || ''}
+              onChange={handleChange}
+              className={getFieldError('longitudeOcorrencia') ? 'border-red-500' : ''}
+            />
+          </FormField>
+        </FormSection>
 
+        {/* Tipo de Crime e Enquadramento */}
+        <FormSection columns>
           <FormField
             id="tipoCrime"
             label="Tipo de Crime"
@@ -161,6 +180,18 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
             </FormField>
           )}
         </FormSection>
+
+        {/* Seção de Fauna - apenas para Crime Contra a Fauna */}
+        {formData.tipoCrime === 'Crime Contra a Fauna' && (
+          <FaunaSection
+            formData={formData}
+            handleSelectChange={handleSelectChange}
+            handleChange={handleChange}
+            getFieldError={getFieldError}
+            estadosSaude={estadosSaude}
+            estagiosVida={estagiosVida}
+          />
+        )}
 
         {/* Desfecho */}
         <FormSection title="Desfecho" columns>
@@ -217,80 +248,77 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
               </Select>
             </FormField>
           )}
+        </FormSection>
 
-          {/* Quantidade de Detidos */}
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
+        {/* Quantidade */}
+        <FormSection title="Quantidade" columns>
+          <FormField
+            id="quantidadeDetidosMaiorIdade"
+            label="Qtd Detidos Maior de Idade"
+            error={getFieldError('quantidadeDetidosMaiorIdade')}
+          >
+            <Input
               id="quantidadeDetidosMaiorIdade"
-              label="Qtd Detidos Maior de Idade"
-              error={getFieldError('quantidadeDetidosMaiorIdade')}
-            >
-              <Input
-                id="quantidadeDetidosMaiorIdade"
-                name="quantidadeDetidosMaiorIdade"
-                type="number"
-                min={0}
-                max={1000}
-                value={formData.quantidadeDetidosMaiorIdade || 0}
-                onChange={handleChange}
-                className={getFieldError('quantidadeDetidosMaiorIdade') ? 'border-red-500' : ''}
-              />
-            </FormField>
+              name="quantidadeDetidosMaiorIdade"
+              type="number"
+              min={0}
+              max={1000}
+              value={formData.quantidadeDetidosMaiorIdade || 0}
+              onChange={handleChange}
+              className={getFieldError('quantidadeDetidosMaiorIdade') ? 'border-red-500' : ''}
+            />
+          </FormField>
 
-            <FormField
+          <FormField
+            id="quantidadeDetidosMenorIdade"
+            label="Qtd Detidos Menor de Idade"
+            error={getFieldError('quantidadeDetidosMenorIdade')}
+          >
+            <Input
               id="quantidadeDetidosMenorIdade"
-              label="Qtd Detidos Menor de Idade"
-              error={getFieldError('quantidadeDetidosMenorIdade')}
-            >
-              <Input
-                id="quantidadeDetidosMenorIdade"
-                name="quantidadeDetidosMenorIdade"
-                type="number"
-                min={0}
-                max={1000}
-                value={formData.quantidadeDetidosMenorIdade || 0}
-                onChange={handleChange}
-                className={getFieldError('quantidadeDetidosMenorIdade') ? 'border-red-500' : ''}
-              />
-            </FormField>
-          </div>
+              name="quantidadeDetidosMenorIdade"
+              type="number"
+              min={0}
+              max={1000}
+              value={formData.quantidadeDetidosMenorIdade || 0}
+              onChange={handleChange}
+              className={getFieldError('quantidadeDetidosMenorIdade') ? 'border-red-500' : ''}
+            />
+          </FormField>
 
-          {/* Quantidade de Liberados */}
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
+          <FormField
+            id="quantidadeLiberadosMaiorIdade"
+            label="Qtd Liberados Maior de Idade"
+            error={getFieldError('quantidadeLiberadosMaiorIdade')}
+          >
+            <Input
               id="quantidadeLiberadosMaiorIdade"
-              label="Qtd Liberados Maior de Idade"
-              error={getFieldError('quantidadeLiberadosMaiorIdade')}
-            >
-              <Input
-                id="quantidadeLiberadosMaiorIdade"
-                name="quantidadeLiberadosMaiorIdade"
-                type="number"
-                min={0}
-                max={1000}
-                value={formData.quantidadeLiberadosMaiorIdade || 0}
-                onChange={handleChange}
-                className={getFieldError('quantidadeLiberadosMaiorIdade') ? 'border-red-500' : ''}
-              />
-            </FormField>
+              name="quantidadeLiberadosMaiorIdade"
+              type="number"
+              min={0}
+              max={1000}
+              value={formData.quantidadeLiberadosMaiorIdade || 0}
+              onChange={handleChange}
+              className={getFieldError('quantidadeLiberadosMaiorIdade') ? 'border-red-500' : ''}
+            />
+          </FormField>
 
-            <FormField
+          <FormField
+            id="quantidadeLiberadosMenorIdade"
+            label="Qtd Liberados Menor de Idade"
+            error={getFieldError('quantidadeLiberadosMenorIdade')}
+          >
+            <Input
               id="quantidadeLiberadosMenorIdade"
-              label="Qtd Liberados Menor de Idade"
-              error={getFieldError('quantidadeLiberadosMenorIdade')}
-            >
-              <Input
-                id="quantidadeLiberadosMenorIdade"
-                name="quantidadeLiberadosMenorIdade"
-                type="number"
-                min={0}
-                max={1000}
-                value={formData.quantidadeLiberadosMenorIdade || 0}
-                onChange={handleChange}
-                className={getFieldError('quantidadeLiberadosMenorIdade') ? 'border-red-500' : ''}
-              />
-            </FormField>
-          </div>
+              name="quantidadeLiberadosMenorIdade"
+              type="number"
+              min={0}
+              max={1000}
+              value={formData.quantidadeLiberadosMenorIdade || 0}
+              onChange={handleChange}
+              className={getFieldError('quantidadeLiberadosMenorIdade') ? 'border-red-500' : ''}
+            />
+          </FormField>
         </FormSection>
 
         {/* Botão de Envio */}
