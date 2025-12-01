@@ -19,17 +19,17 @@ const Hotspots = () => {
       try {
         console.log('Fetching registros for heatmap...');
         
-        // Buscar registros do Supabase
+        // Buscar registros do Supabase com joins
         const { data: registros, error } = await supabase
           .from('registros')
           .select(`
             id,
             latitude_origem,
             longitude_origem,
-            regiao_administrativa,
             data,
-            origem,
-            nome_popular
+            regiao_administrativa:dim_regiao_administrativa(nome),
+            origem:dim_origem(nome),
+            especie:dim_especies(nome_popular)
           `)
           .not('latitude_origem', 'is', null)
           .not('longitude_origem', 'is', null);
@@ -44,7 +44,7 @@ const Hotspots = () => {
           tipo: 'resgate',
           lat: parseFloat(reg.latitude_origem),
           lng: parseFloat(reg.longitude_origem),
-          municipio: reg.regiao_administrativa || 'Não informado',
+          municipio: reg.regiao_administrativa?.nome || 'Não informado',
           uf: 'DF', // Todos os dados são do Distrito Federal
           data_iso: reg.data || new Date().toISOString(),
           fonte: 'IBRAM'

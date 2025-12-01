@@ -94,19 +94,19 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
             registros.map((registro) => (
               <TableRow key={registro.id} className="hover:bg-gray-50">
                 <TableCell className="px-1 md:px-2 whitespace-nowrap">{formatDateTime(registro.data)}</TableCell>
-                <TableCell className="px-1 md:px-2 truncate max-w-[100px] md:max-w-[130px]">{registro.regiao_administrativa}</TableCell>
-                <TableCell className="px-1 md:px-2 whitespace-nowrap">{registro.origem}</TableCell>
+                <TableCell className="px-1 md:px-2 truncate max-w-[100px] md:max-w-[130px]">{registro.regiao_administrativa?.nome || '-'}</TableCell>
+                <TableCell className="px-1 md:px-2 whitespace-nowrap">{registro.origem?.nome || '-'}</TableCell>
                 {!isMobile && (
                   <>
-                    <TableCell className="truncate max-w-[120px]">{registro.nome_popular}</TableCell>
-                    <TableCell className="hidden lg:table-cell truncate max-w-[120px] italic">{registro.nome_cientifico}</TableCell>
+                    <TableCell className="truncate max-w-[120px]">{registro.especie?.nome_popular || '-'}</TableCell>
+                    <TableCell className="hidden lg:table-cell truncate max-w-[120px] italic">{registro.especie?.nome_cientifico || '-'}</TableCell>
                   </>
                 )}
-                <TableCell className="hidden sm:table-cell truncate">{registro.classe_taxonomica}</TableCell>
-                <TableCell className="hidden sm:table-cell truncate">{registro.estado_saude}</TableCell>
-                <TableCell className="hidden md:table-cell truncate">{registro.estagio_vida}</TableCell>
+                <TableCell className="hidden sm:table-cell truncate">{registro.especie?.classe_taxonomica || '-'}</TableCell>
+                <TableCell className="hidden sm:table-cell truncate">{registro.estado_saude?.nome || '-'}</TableCell>
+                <TableCell className="hidden md:table-cell truncate">{registro.estagio_vida?.nome || '-'}</TableCell>
                 <TableCell className="px-1 md:px-2 text-center">{registro.quantidade}</TableCell>
-                <TableCell className="hidden md:table-cell truncate max-w-[90px]">{registro.destinacao}</TableCell>
+                <TableCell className="hidden md:table-cell truncate max-w-[90px]">{registro.destinacao?.nome || '-'}</TableCell>
                 <TableCell className="p-1 text-right">
                   <div className="flex justify-end gap-1">
                     <Button 
@@ -133,7 +133,7 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
                       variant="ghost" 
                       size="sm" 
                       className="h-7 w-7 p-0"
-                      onClick={() => onDelete(registro.id, registro.nome_popular)}
+                      onClick={() => onDelete(registro.id, registro.especie?.nome_popular || 'este registro')}
                       title="Excluir registro"
                     >
                       <Trash2 className="h-3.5 w-3.5 text-red-500" />

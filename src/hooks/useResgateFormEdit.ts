@@ -27,7 +27,7 @@ export const useResgateFormEdit = (
       
       if (registroFromState) {
         console.log("Registro encontrado no estado da navegação:", registroFromState);
-        console.log("Classe taxonômica do registro:", registroFromState.classe_taxonomica);
+        console.log("Classe taxonômica do registro:", registroFromState.especie?.classe_taxonomica);
         
         // Ensure the quantidade and other properties are properly set
         const processedRegistro: Registro = {
@@ -52,7 +52,16 @@ export const useResgateFormEdit = (
       setFetchError(null);
       const { data, error } = await supabase
         .from('registros')
-        .select('*')
+        .select(`
+          *,
+          regiao_administrativa:dim_regiao_administrativa(nome),
+          origem:dim_origem(nome),
+          destinacao:dim_destinacao(nome),
+          estado_saude:dim_estado_saude(nome),
+          estagio_vida:dim_estagio_vida(nome),
+          desfecho:dim_desfecho(nome, tipo),
+          especie:dim_especies(*)
+        `)
         .eq('id', id)
         .single();
       
@@ -60,7 +69,7 @@ export const useResgateFormEdit = (
       
       if (data) {
         console.log("Registro obtido do banco:", data);
-        console.log("Classe taxonômica do registro:", data.classe_taxonomica);
+        console.log("Classe taxonômica do registro:", data.especie?.classe_taxonomica);
         console.log("Data original do registro:", data.data);
         
         // Ensure the quantidade and other properties are properly set
@@ -121,23 +130,23 @@ export const useResgateFormEdit = (
     
     form.reset({
       data: formattedDate,
-      regiaoAdministrativa: registro.regiao_administrativa,
-      origem: registro.origem,
-      desfechoResgate: registro.desfecho_resgate || '',
+      regiaoAdministrativa: registro.regiao_administrativa?.nome || '',
+      origem: registro.origem?.nome || '',
+      desfechoResgate: (registro.desfecho?.tipo === 'resgate' ? registro.desfecho?.nome : '') || '',
       latitudeOrigem: registro.latitude_origem,
       longitudeOrigem: registro.longitude_origem,
-      desfechoApreensao: registro.desfecho_apreensao || '',
+      desfechoApreensao: (registro.desfecho?.tipo === 'apreensao' ? registro.desfecho?.nome : '') || '',
       numeroTCO: registro.numero_tco || '',
       outroDesfecho: registro.outro_desfecho || '',
-      classeTaxonomica: registro.classe_taxonomica,
+      classeTaxonomica: registro.especie?.classe_taxonomica || '',
       especieId: '',
-      estadoSaude: registro.estado_saude,
+      estadoSaude: registro.estado_saude?.nome || '',
       atropelamento: registro.atropelamento,
-      estagioVida: registro.estagio_vida,
+      estagioVida: registro.estagio_vida?.nome || '',
       quantidade,
       quantidadeAdulto,
       quantidadeFilhote,
-      destinacao: registro.destinacao,
+      destinacao: registro.destinacao?.nome || '',
       numeroTermoEntrega: registro.numero_termo_entrega || '',
       horaGuardaCEAPA: registro.hora_guarda_ceapa || '',
       motivoEntregaCEAPA: registro.motivo_entrega_ceapa || '',
@@ -149,7 +158,9 @@ export const useResgateFormEdit = (
     // Log the form values after setting them
     console.log("Valores do formulário após reset:", form.getValues());
     
-    fetchEspecieByNomeCientifico(registro.nome_cientifico);
+    if (registro.especie?.nome_cientifico) {
+      fetchEspecieByNomeCientifico(registro.especie.nome_cientifico);
+    }
   };
   
   const fetchEspecieByNomeCientifico = async (nomeCientifico: string) => {
