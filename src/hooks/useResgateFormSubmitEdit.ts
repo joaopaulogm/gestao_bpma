@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ResgateFormData } from '@/schemas/resgateSchema';
 import { Registro } from '@/types/hotspots';
 import { Especie } from '@/services/especieService';
+import { buscarIdPorNome } from '@/services/dimensionService';
 import { parse, format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -59,28 +60,39 @@ export const useResgateFormSubmitEdit = (
       console.log('Quantidade adulto:', data.quantidadeAdulto, 'Quantidade filhote:', data.quantidadeFilhote, 'Quantidade total:', data.quantidade);
       
       // O trigger no banco de dados atualizará quantidade_total automaticamente
+      // Find dimension IDs
+      const [regiaoId, origemId, estadoSaudeId, estagioVidaId, destinacaoId, desfechoId] = await Promise.all([
+        buscarIdPorNome('dim_regiao_administrativa', data.regiaoAdministrativa),
+        buscarIdPorNome('dim_origem', data.origem),
+        buscarIdPorNome('dim_estado_saude', data.estadoSaude),
+        buscarIdPorNome('dim_estagio_vida', data.estagioVida),
+        buscarIdPorNome('dim_destinacao', data.destinacao),
+        data.desfechoApreensao 
+          ? buscarIdPorNome('dim_desfecho', data.desfechoApreensao)
+          : data.desfechoResgate 
+            ? buscarIdPorNome('dim_desfecho', data.desfechoResgate)
+            : Promise.resolve(null)
+      ]);
+
       const { error } = await supabase
         .from('registros')
         .update({
           data: dataFormatada,
-          classe_taxonomica: data.classeTaxonomica,
-          nome_cientifico: especieSelecionada?.nome_cientifico || originalRegistro.nome_cientifico,
-          nome_popular: especieSelecionada?.nome_popular || originalRegistro.nome_popular,
-          regiao_administrativa: data.regiaoAdministrativa,
-          origem: data.origem,
+          especie_id: especieSelecionada?.id || originalRegistro.especie_id,
+          regiao_administrativa_id: regiaoId,
+          origem_id: origemId,
+          estado_saude_id: estadoSaudeId,
+          estagio_vida_id: estagioVidaId,
+          destinacao_id: destinacaoId,
+          desfecho_id: desfechoId,
           latitude_origem: data.latitudeOrigem,
           longitude_origem: data.longitudeOrigem,
-          desfecho_apreensao: data.desfechoApreensao || null,
-          desfecho_resgate: data.desfechoResgate || null,
           numero_tco: data.numeroTCO || null,
           outro_desfecho: data.outroDesfecho || null,
-          estado_saude: data.estadoSaude,
           atropelamento: data.atropelamento,
-          estagio_vida: data.estagioVida,
           quantidade: data.quantidade,
           quantidade_adulto: data.quantidadeAdulto,
           quantidade_filhote: data.quantidadeFilhote,
-          destinacao: data.destinacao,
           numero_termo_entrega: data.numeroTermoEntrega || null,
           hora_guarda_ceapa: data.horaGuardaCEAPA || null,
           motivo_entrega_ceapa: data.motivoEntregaCEAPA || null,

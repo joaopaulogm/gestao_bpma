@@ -27,7 +27,16 @@ const RegistroDetalhes = () => {
       try {
         const { data, error } = await supabase
           .from('registros')
-          .select('*')
+          .select(`
+            *,
+            regiao_administrativa:dim_regiao_administrativa(nome),
+            origem:dim_origem(nome),
+            destinacao:dim_destinacao(nome),
+            estado_saude:dim_estado_saude(nome),
+            estagio_vida:dim_estagio_vida(nome),
+            desfecho:dim_desfecho(nome, tipo),
+            especie:dim_especies(*)
+          `)
           .eq('id', id)
           .single();
         
@@ -110,36 +119,36 @@ const RegistroDetalhes = () => {
   }
 
   return (
-    <Layout title={`Detalhes do Registro: ${registro.nome_popular}`} showBackButton>
+    <Layout title={`Detalhes do Registro: ${registro.especie?.nome_popular || 'Registro'}`} showBackButton>
       <div className="space-y-6 animate-fade-in">
         <RegistroActionsBar onExportPDF={handleExportPDF} />
 
         <InformacoesGeraisCard 
           data={registro.data}
-          regiao_administrativa={registro.regiao_administrativa}
-          origem={registro.origem}
+          regiao_administrativa={registro.regiao_administrativa?.nome || ''}
+          origem={registro.origem?.nome || ''}
           latitude_origem={registro.latitude_origem}
           longitude_origem={registro.longitude_origem}
-          desfecho_apreensao={registro.desfecho_apreensao}
+          desfecho_apreensao={registro.desfecho?.tipo === 'apreensao' ? registro.desfecho?.nome : ''}
           numero_tco={registro.numero_tco}
           outro_desfecho={registro.outro_desfecho}
           formatDateTime={formatDateTime}
         />
 
         <InformacoesEspecieCard 
-          classe_taxonomica={registro.classe_taxonomica}
-          nome_cientifico={registro.nome_cientifico}
-          nome_popular={registro.nome_popular}
-          estado_saude={registro.estado_saude}
+          classe_taxonomica={registro.especie?.classe_taxonomica || ''}
+          nome_cientifico={registro.especie?.nome_cientifico || ''}
+          nome_popular={registro.especie?.nome_popular || ''}
+          estado_saude={registro.estado_saude?.nome || ''}
           atropelamento={registro.atropelamento}
-          estagio_vida={registro.estagio_vida}
+          estagio_vida={registro.estagio_vida?.nome || ''}
           quantidade={registro.quantidade || 0}
           quantidade_adulto={registro.quantidade_adulto || 0}
           quantidade_filhote={registro.quantidade_filhote || 0}
         />
 
         <InformacoesDestinacaoCard 
-          destinacao={registro.destinacao}
+          destinacao={registro.destinacao?.nome || ''}
           numero_termo_entrega={registro.numero_termo_entrega}
           hora_guarda_ceapa={registro.hora_guarda_ceapa}
           motivo_entrega_ceapa={registro.motivo_entrega_ceapa}

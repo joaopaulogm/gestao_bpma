@@ -22,14 +22,23 @@ const ResgateEditar = () => {
         
         const { data, error } = await supabase
           .from('registros')
-          .select('*')
+          .select(`
+            *,
+            regiao_administrativa:dim_regiao_administrativa(nome),
+            origem:dim_origem(nome),
+            destinacao:dim_destinacao(nome),
+            estado_saude:dim_estado_saude(nome),
+            estagio_vida:dim_estagio_vida(nome),
+            desfecho:dim_desfecho(nome, tipo),
+            especie:dim_especies(*)
+          `)
           .eq('id', id)
           .single();
         
         if (error) throw error;
         
         console.log("Registro encontrado:", data);
-        console.log("Classe taxonômica do registro:", data.classe_taxonomica);
+        console.log("Classe taxonômica do registro:", data.especie?.classe_taxonomica);
         console.log("Data original do registro:", data.data);
         
         // Process the data to ensure quantidade is calculated properly
