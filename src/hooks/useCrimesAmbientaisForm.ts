@@ -1,11 +1,13 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { crimesAmbientaisSchema, CrimesAmbientaisFormData } from '@/schemas/crimesAmbientaisSchema';
+import { FloraItem } from '@/components/crimes/FloraSection';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 export const useCrimesAmbientaisForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [floraItems, setFloraItems] = useState<FloraItem[]>([]);
 
   const form = useForm<CrimesAmbientaisFormData>({
     resolver: zodResolver(crimesAmbientaisSchema),
@@ -31,6 +33,9 @@ export const useCrimesAmbientaisForm = () => {
       quantidadeAdultoObito: 0,
       quantidadeFilhoteObito: 0,
       quantidadeTotalObito: 0,
+      // Flora
+      floraItems: [],
+      numeroTermoEntregaFlora: '',
       // Desfecho
       desfecho: '',
       procedimentoLegal: '',
@@ -82,6 +87,15 @@ export const useCrimesAmbientaisForm = () => {
     }
   };
 
+  const handleFloraItemsChange = (items: FloraItem[]) => {
+    setFloraItems(items);
+    setValue('floraItems', items as any);
+  };
+
+  const handleNumeroTermoEntregaFloraChange = (value: string) => {
+    setValue('numeroTermoEntregaFlora', value);
+  };
+
   const getFieldError = (fieldName: keyof CrimesAmbientaisFormData): string | undefined => {
     return errors[fieldName]?.message as string | undefined;
   };
@@ -100,6 +114,7 @@ export const useCrimesAmbientaisForm = () => {
       
       // Reset form
       form.reset();
+      setFloraItems([]);
       
     } catch (error) {
       console.error('Erro ao salvar crime ambiental:', error);
@@ -117,6 +132,9 @@ export const useCrimesAmbientaisForm = () => {
     handleSubmit: form.handleSubmit(handleSubmit),
     isSubmitting,
     getFieldError,
-    errors
+    errors,
+    floraItems,
+    handleFloraItemsChange,
+    handleNumeroTermoEntregaFloraChange
   };
 };

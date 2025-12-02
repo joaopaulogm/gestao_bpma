@@ -1,5 +1,25 @@
 import { z } from 'zod';
 
+// Schema para item de flora
+export const floraItemSchema = z.object({
+  id: z.string(),
+  especieId: z.string(),
+  nomePopular: z.string(),
+  nomeCientifico: z.string(),
+  classe: z.string(),
+  ordem: z.string(),
+  familia: z.string(),
+  estadoConservacao: z.string(),
+  tipoPlanta: z.string(),
+  madeiraLei: z.string(),
+  imuneCote: z.string(),
+  condicao: z.string(),
+  quantidade: z.number().min(1),
+  destinacao: z.string()
+});
+
+export type FloraItemData = z.infer<typeof floraItemSchema>;
+
 export const crimesAmbientaisSchema = z.object({
   data: z.string().min(1, "Data é obrigatória"),
   regiaoAdministrativa: z.string().min(1, "Região Administrativa é obrigatória"),
@@ -22,6 +42,9 @@ export const crimesAmbientaisSchema = z.object({
   quantidadeAdultoObito: z.number().min(0).max(1000).optional(),
   quantidadeFilhoteObito: z.number().min(0).max(1000).optional(),
   quantidadeTotalObito: z.number().min(0).max(2000).optional(),
+  // Campos para Crime Contra a Flora
+  floraItems: z.array(floraItemSchema).optional(),
+  numeroTermoEntregaFlora: z.string().optional(),
   // Desfecho e quantidades de detidos/liberados
   desfecho: z.string().min(1, "Desfecho é obrigatório"),
   procedimentoLegal: z.string().optional(),
@@ -93,6 +116,41 @@ export const crimesAmbientaisSchema = z.object({
           path: ["estagioVidaObito"]
         });
       }
+    }
+  }
+
+  // Se tipoCrime é "Crime Contra a Flora", validar itens de flora
+  if (data.tipoCrime === "Crime Contra a Flora") {
+    if (!data.floraItems || data.floraItems.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "É necessário adicionar pelo menos uma espécie de flora",
+        path: ["floraItems"]
+      });
+    } else {
+      data.floraItems.forEach((item, index) => {
+        if (!item.especieId) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Espécie é obrigatória para o item ${index + 1}`,
+            path: ["floraItems", index, "especieId"]
+          });
+        }
+        if (!item.condicao) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Condição é obrigatória para o item ${index + 1}`,
+            path: ["floraItems", index, "condicao"]
+          });
+        }
+        if (!item.destinacao) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Destinação é obrigatória para o item ${index + 1}`,
+            path: ["floraItems", index, "destinacao"]
+          });
+        }
+      });
     }
   }
 });
