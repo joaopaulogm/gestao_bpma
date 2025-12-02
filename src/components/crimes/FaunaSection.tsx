@@ -14,7 +14,7 @@ interface FaunaSectionProps {
   formData: any;
   handleSelectChange: (name: string, value: string) => void;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  getFieldError: (field: string) => string | undefined;
+  getFieldError: (field: any) => string | undefined;
   estadosSaude: Array<{ id: string; nome: string }>;
   estagiosVida: Array<{ id: string; nome: string }>;
 }

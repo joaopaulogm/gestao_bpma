@@ -19,7 +19,7 @@ interface CrimesAmbientaisFormProps {
   handleSelectChange: (name: string, value: string) => void;
   handleSubmit: () => void;
   isSubmitting: boolean;
-  getFieldError: (fieldName: keyof CrimesAmbientaisFormData) => string | undefined;
+  getFieldError: (fieldName: any) => string | undefined;
   floraItems: FloraItem[];
   onFloraItemsChange: (items: FloraItem[]) => void;
   onNumeroTermoEntregaFloraChange: (value: string) => void;

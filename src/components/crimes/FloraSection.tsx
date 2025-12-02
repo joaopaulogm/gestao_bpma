@@ -30,7 +30,7 @@ interface FloraSectionProps {
   onFloraItemsChange: (items: FloraItem[]) => void;
   numeroTermoEntrega: string;
   onNumeroTermoEntregaChange: (value: string) => void;
-  getFieldError: (field: string) => string | undefined;
+  getFieldError: (field: any) => string | undefined;
 }
 
 const CONDICOES_FLORA = [
