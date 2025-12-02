@@ -96,8 +96,8 @@ export const useCrimesAmbientaisForm = () => {
     setValue('numeroTermoEntregaFlora', value);
   };
 
-  const getFieldError = (fieldName: keyof CrimesAmbientaisFormData): string | undefined => {
-    return errors[fieldName]?.message as string | undefined;
+  const getFieldError = (fieldName: string): string | undefined => {
+    return (errors as any)[fieldName]?.message as string | undefined;
   };
 
   const handleSubmit = async (data: CrimesAmbientaisFormData) => {
