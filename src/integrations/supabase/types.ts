@@ -53,7 +53,36 @@ export type Database = {
         }
         Relationships: []
       }
-      dim_especies: {
+      dim_enquadramento: {
+        Row: {
+          Enquadramento: string | null
+          id_enquadramento: string
+          id_tipo_de_crime: string
+          "Tipo de Crime": string | null
+        }
+        Insert: {
+          Enquadramento?: string | null
+          id_enquadramento?: string
+          id_tipo_de_crime: string
+          "Tipo de Crime"?: string | null
+        }
+        Update: {
+          Enquadramento?: string | null
+          id_enquadramento?: string
+          id_tipo_de_crime?: string
+          "Tipo de Crime"?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dim_enquadramento_id_tipo_de_crime_fkey"
+            columns: ["id_tipo_de_crime"]
+            isOneToOne: false
+            referencedRelation: "dim_tipo_de_crime"
+            referencedColumns: ["id_tipo_de_crime"]
+          },
+        ]
+      }
+      dim_especies_fauna: {
         Row: {
           classe_taxonomica: string
           estado_de_conservacao: string
@@ -80,6 +109,45 @@ export type Database = {
           nome_popular?: string
           ordem_taxonomica?: string
           tipo_de_fauna?: string
+        }
+        Relationships: []
+      }
+      dim_especies_flora: {
+        Row: {
+          Classe: string | null
+          "Estado de Conservação": string | null
+          Família: string | null
+          id: string
+          "Imune ao Corte": string | null
+          "Madeira de Lei": string | null
+          "Nome Científico": string | null
+          "Nome Popular": string | null
+          Ordem: string | null
+          "Tipo de Planta": string | null
+        }
+        Insert: {
+          Classe?: string | null
+          "Estado de Conservação"?: string | null
+          Família?: string | null
+          id?: string
+          "Imune ao Corte"?: string | null
+          "Madeira de Lei"?: string | null
+          "Nome Científico"?: string | null
+          "Nome Popular"?: string | null
+          Ordem?: string | null
+          "Tipo de Planta"?: string | null
+        }
+        Update: {
+          Classe?: string | null
+          "Estado de Conservação"?: string | null
+          Família?: string | null
+          id?: string
+          "Imune ao Corte"?: string | null
+          "Madeira de Lei"?: string | null
+          "Nome Científico"?: string | null
+          "Nome Popular"?: string | null
+          Ordem?: string | null
+          "Tipo de Planta"?: string | null
         }
         Relationships: []
       }
@@ -119,6 +187,30 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_itens_apreensao: {
+        Row: {
+          Aplicacao: string | null
+          Categoria: string | null
+          id: string
+          Item: string | null
+          "Uso Ilicito": string | null
+        }
+        Insert: {
+          Aplicacao?: string | null
+          Categoria?: string | null
+          id?: string
+          Item?: string | null
+          "Uso Ilicito"?: string | null
+        }
+        Update: {
+          Aplicacao?: string | null
+          Categoria?: string | null
+          id?: string
+          Item?: string | null
+          "Uso Ilicito"?: string | null
+        }
+        Relationships: []
+      }
       dim_origem: {
         Row: {
           created_at: string | null
@@ -152,6 +244,42 @@ export type Database = {
           created_at?: string | null
           id?: string
           nome?: string
+        }
+        Relationships: []
+      }
+      dim_tipo_de_area: {
+        Row: {
+          created_at: string
+          id: string
+          "Tipo de Área": string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          "Tipo de Área"?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          "Tipo de Área"?: string | null
+        }
+        Relationships: []
+      }
+      dim_tipo_de_crime: {
+        Row: {
+          created_at: string
+          id_tipo_de_crime: string
+          "Tipo de Crime": string | null
+        }
+        Insert: {
+          created_at?: string
+          id_tipo_de_crime?: string
+          "Tipo de Crime"?: string | null
+        }
+        Update: {
+          created_at?: string
+          id_tipo_de_crime?: string
+          "Tipo de Crime"?: string | null
         }
         Relationships: []
       }
@@ -256,7 +384,7 @@ export type Database = {
             foreignKeyName: "fk_registros_especie"
             columns: ["especie_id"]
             isOneToOne: false
-            referencedRelation: "dim_especies"
+            referencedRelation: "dim_especies_fauna"
             referencedColumns: ["id"]
           },
           {

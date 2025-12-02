@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { CrimesAmbientaisFormData, TIPOS_CRIME, ENQUADRAMENTOS, DESFECHOS, PROCEDIMENTOS_LEGAIS } from '@/schemas/crimesAmbientaisSchema';
+import { CrimesAmbientaisFormData, FloraItemData, TIPOS_CRIME, ENQUADRAMENTOS, DESFECHOS, PROCEDIMENTOS_LEGAIS } from '@/schemas/crimesAmbientaisSchema';
 import { regioes } from '@/constants/regioes';
 import FormSection from '@/components/resgate/FormSection';
 import FormField from '@/components/resgate/FormField';
 import FaunaSection from './FaunaSection';
+import FloraSection, { FloraItem } from './FloraSection';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,9 @@ interface CrimesAmbientaisFormProps {
   handleSubmit: () => void;
   isSubmitting: boolean;
   getFieldError: (fieldName: keyof CrimesAmbientaisFormData) => string | undefined;
+  floraItems: FloraItem[];
+  onFloraItemsChange: (items: FloraItem[]) => void;
+  onNumeroTermoEntregaFloraChange: (value: string) => void;
 }
 
 const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
@@ -28,7 +32,10 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
   handleSelectChange,
   handleSubmit,
   isSubmitting,
-  getFieldError
+  getFieldError,
+  floraItems,
+  onFloraItemsChange,
+  onNumeroTermoEntregaFloraChange
 }) => {
   const enquadramentosDisponiveis = formData.tipoCrime ? ENQUADRAMENTOS[formData.tipoCrime as keyof typeof ENQUADRAMENTOS] || [] : [];
   const [estadosSaude, setEstadosSaude] = useState<Array<{ id: string; nome: string }>>([]);
@@ -190,6 +197,17 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
             getFieldError={getFieldError}
             estadosSaude={estadosSaude}
             estagiosVida={estagiosVida}
+          />
+        )}
+
+        {/* Seção de Flora - apenas para Crime Contra a Flora */}
+        {formData.tipoCrime === 'Crime Contra a Flora' && (
+          <FloraSection
+            floraItems={floraItems}
+            onFloraItemsChange={onFloraItemsChange}
+            numeroTermoEntrega={formData.numeroTermoEntregaFlora || ''}
+            onNumeroTermoEntregaChange={onNumeroTermoEntregaFloraChange}
+            getFieldError={getFieldError}
           />
         )}
 

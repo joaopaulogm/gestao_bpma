@@ -11,7 +11,10 @@ const CrimesAmbientais = () => {
     handleSelectChange,
     handleSubmit,
     isSubmitting,
-    getFieldError
+    getFieldError,
+    floraItems,
+    handleFloraItemsChange,
+    handleNumeroTermoEntregaFloraChange
   } = useCrimesAmbientaisForm();
 
   return (
@@ -24,6 +27,9 @@ const CrimesAmbientais = () => {
         handleSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         getFieldError={getFieldError}
+        floraItems={floraItems}
+        onFloraItemsChange={handleFloraItemsChange}
+        onNumeroTermoEntregaFloraChange={handleNumeroTermoEntregaFloraChange}
       />
     </Layout>
   );

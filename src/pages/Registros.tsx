@@ -53,7 +53,7 @@ const Registros = () => {
           estado_saude:dim_estado_saude(nome),
           estagio_vida:dim_estagio_vida(nome),
           desfecho:dim_desfecho(nome, tipo),
-          especie:dim_especies(*)
+          especie:dim_especies_fauna(*)
         `)
         .order('data', { ascending: false });
       
