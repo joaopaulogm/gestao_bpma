@@ -21,9 +21,15 @@ const FormSection: React.FC<FormSectionProps> = ({
   columns = false
 }) => {
   return (
-    <div className={cn("space-y-4 p-5 bg-card rounded-xl border border-border", className)}>
+    <div className={cn(
+      "space-y-4 p-6 rounded-2xl",
+      "bg-background/85 backdrop-blur-xl",
+      "border border-primary/10",
+      "shadow-[0_4px_24px_hsl(var(--primary)/0.04)]",
+      className
+    )}>
       {title && (
-        <div className="pb-3 border-b border-border">
+        <div className="pb-4 border-b border-primary/10">
           <h3 className="text-md font-semibold text-foreground">{title}</h3>
           {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
         </div>

@@ -203,24 +203,99 @@
   border: 1px solid hsl(var(--border)) !important;
 }
 
+/* Glassmorphism styles */
+.glass {
+  background: hsl(var(--background) / 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--primary) / 0.1);
+  box-shadow: 0 8px 32px hsl(var(--primary) / 0.08);
+}
+
+.glass-card {
+  background: hsl(var(--background) / 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid hsl(var(--primary) / 0.12);
+  box-shadow: 
+    0 4px 6px hsl(var(--primary) / 0.04),
+    0 10px 40px hsl(var(--primary) / 0.08);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: hsl(var(--background) / 0.95);
+  border-color: hsl(var(--primary) / 0.2);
+  box-shadow: 
+    0 8px 16px hsl(var(--primary) / 0.08),
+    0 20px 60px hsl(var(--primary) / 0.12);
+  transform: translateY(-2px);
+}
+
 /* Custom card styles for dashboard */
 .dashboard-card {
-  @apply rounded-xl shadow-sm hover:shadow-md transition-all duration-300;
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
+  @apply rounded-2xl transition-all duration-300;
+  background: hsl(var(--background) / 0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--primary) / 0.1);
+  box-shadow: 0 4px 24px hsl(var(--primary) / 0.06);
 }
 
 .dashboard-card:hover {
+  background: hsl(var(--background) / 0.98);
   border-color: hsl(var(--primary) / 0.2);
+  box-shadow: 0 8px 32px hsl(var(--primary) / 0.1);
 }
 
 /* Accent gradients */
 .card-gradient-accent {
-  background: linear-gradient(135deg, hsl(var(--accent) / 0.1), hsl(var(--background)));
+  background: linear-gradient(135deg, hsl(var(--accent) / 0.08), hsl(var(--background) / 0.9));
 }
 
 .card-gradient-primary {
-  background: linear-gradient(135deg, hsl(var(--primary) / 0.05), hsl(var(--background)));
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.05), hsl(var(--background) / 0.9));
+}
+
+/* Button glass effect */
+.btn-glass {
+  background: hsl(var(--primary) / 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid hsl(var(--primary));
+  box-shadow: 0 4px 14px hsl(var(--primary) / 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-glass:hover {
+  background: hsl(var(--primary));
+  box-shadow: 0 6px 20px hsl(var(--primary) / 0.4);
+  transform: translateY(-1px);
+}
+
+/* Input glass effect */
+.input-glass {
+  background: hsl(var(--background) / 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid hsl(var(--primary) / 0.15);
+  transition: all 0.2s ease;
+}
+
+.input-glass:focus {
+  background: hsl(var(--background) / 0.95);
+  border-color: hsl(var(--primary) / 0.4);
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+}
+
+/* Icon container */
+.icon-container {
+  background: hsl(var(--primary) / 0.08);
+  border: 1px solid hsl(var(--primary) / 0.12);
+  transition: all 0.3s ease;
+}
+
+.icon-container:hover,
+.group:hover .icon-container {
+  background: hsl(var(--primary) / 0.15);
+  border-color: hsl(var(--primary) / 0.25);
 }
 
 /* Mapbox custom styles */

@@ -22,18 +22,36 @@ const Card = ({
     <Link 
       to={to} 
       className={cn(
-        "group bg-card border border-border rounded-xl p-6 flex flex-col items-center justify-center gap-4",
-        "transition-all duration-300 hover:shadow-lg hover:border-primary/20 hover:-translate-y-1",
-        "animate-slide-up",
+        "group relative overflow-hidden rounded-2xl p-8 flex flex-col items-center justify-center gap-5",
+        "bg-background/85 backdrop-blur-xl",
+        "border border-primary/10",
+        "shadow-[0_4px_24px_hsl(var(--primary)/0.06)]",
+        "transition-all duration-300 ease-out",
+        "hover:bg-background/95 hover:border-primary/20",
+        "hover:shadow-[0_12px_40px_hsl(var(--primary)/0.12)]",
+        "hover:-translate-y-1",
+        "animate-fade-in",
         className
       )}
     >
-      <div className="h-16 w-16 flex items-center justify-center rounded-full bg-primary/5 border border-primary/10 group-hover:bg-primary/10 group-hover:border-primary/20 transition-colors">
-        <Icon className="h-8 w-8 text-primary" />
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
+      
+      {/* Icon container */}
+      <div className={cn(
+        "relative h-16 w-16 flex items-center justify-center rounded-full",
+        "bg-primary/8 border border-primary/12",
+        "transition-all duration-300",
+        "group-hover:bg-primary/12 group-hover:border-primary/20",
+        "group-hover:scale-105"
+      )}>
+        <Icon className="h-7 w-7 text-primary transition-transform duration-300 group-hover:scale-110" />
       </div>
-      <div className="text-center">
-        <h3 className="font-semibold text-foreground text-lg">{title}</h3>
-        <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+      
+      {/* Content */}
+      <div className="relative text-center space-y-2">
+        <h3 className="font-semibold text-foreground text-lg leading-tight">{title}</h3>
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
       </div>
     </Link>
   );
