@@ -69,13 +69,16 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold text-fauna-blue">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md border-border shadow-lg">
+        <CardHeader className="space-y-1 text-center pb-6">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Lock className="h-8 w-8 text-primary" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-foreground">
             {isSignup ? 'Cadastro SOI/BPMA' : 'Área Restrita SOI/BPMA'}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             {isSignup 
               ? 'Registrar novo usuário autorizado' 
               : 'Acesso restrito a usuários autorizados'
@@ -86,7 +89,7 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   type="email"
                   placeholder="E-mail"
@@ -99,7 +102,7 @@ const Login = () => {
             </div>
             <div className="space-y-2">
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   type="password"
                   placeholder="Senha"
@@ -114,7 +117,7 @@ const Login = () => {
             {isSignup && (
               <div className="space-y-2">
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     type="password"
                     placeholder="Confirmar Senha"
@@ -129,7 +132,8 @@ const Login = () => {
             
             <Button 
               type="submit" 
-              className="w-full bg-fauna-blue hover:bg-fauna-blue/90"
+              className="w-full"
+              size="lg"
               disabled={isLoading}
             >
               {isLoading 
@@ -143,7 +147,7 @@ const Login = () => {
                 type="button"
                 variant="ghost"
                 onClick={() => setIsSignup(!isSignup)}
-                className="text-sm text-fauna-blue hover:text-fauna-blue/80"
+                className="text-sm text-primary hover:text-primary/80"
               >
                 <UserPlus className="mr-2 h-4 w-4" />
                 {isSignup ? 'Já tem conta? Fazer login' : 'Cadastrar novo usuário'}
@@ -151,7 +155,7 @@ const Login = () => {
             </div>
           </form>
         </CardContent>
-        <CardFooter className="text-center text-sm text-gray-600">
+        <CardFooter className="text-center text-sm text-muted-foreground pt-0">
           <p className="w-full">
             Este sistema é de uso exclusivo para membros autorizados do SOI/BPMA.
           </p>

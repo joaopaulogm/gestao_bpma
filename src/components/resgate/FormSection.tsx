@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 interface FormSectionProps {
   title?: string;
@@ -21,11 +21,11 @@ const FormSection: React.FC<FormSectionProps> = ({
   columns = false
 }) => {
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={cn("space-y-4 p-5 bg-card rounded-xl border border-border", className)}>
       {title && (
-        <div>
-          <h3 className="text-md font-medium text-gray-700">{title}</h3>
-          {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
+        <div className="pb-3 border-b border-border">
+          <h3 className="text-md font-semibold text-foreground">{title}</h3>
+          {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
         </div>
       )}
       <div className={columns 

@@ -20,6 +20,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -40,168 +41,159 @@ const Sidebar = () => {
     return location.pathname === path;
   };
 
+  const linkClasses = (path: string, indented = false) => cn(
+    "flex items-center gap-3 py-2.5 px-3 rounded-lg transition-all duration-200",
+    indented && "ml-3",
+    isActive(path) 
+      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium" 
+      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+  );
+
   return (
-    <div 
-      className={`h-screen bg-white border-r border-fauna-border transition-all duration-300 flex flex-col ${
-        isOpen ? 'w-64' : 'w-20'
-      }`}
+    <aside 
+      className={cn(
+        "h-screen bg-sidebar text-sidebar-foreground transition-all duration-300 flex flex-col border-r border-sidebar-border",
+        isOpen ? "w-64" : "w-20"
+      )}
     >
+      {/* Header */}
       <div className="flex items-center justify-between p-4">
         {isOpen && (
-          <h1 className="text-fauna-blue text-lg font-medium">Gestão de Dados do BPMA</h1>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-sidebar-primary flex items-center justify-center flex-shrink-0">
+              <span className="text-sidebar-primary-foreground font-bold text-sm">SOI</span>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-semibold text-sm truncate">BPMA</span>
+              <span className="text-xs text-sidebar-foreground/70 truncate">Gestão de Dados</span>
+            </div>
+          </div>
         )}
         <button 
           onClick={toggleSidebar} 
-          className="text-fauna-blue p-1 rounded hover:bg-fauna-light focus:outline-none"
+          className="p-2 rounded-lg hover:bg-sidebar-accent transition-colors flex-shrink-0"
+          aria-label={isOpen ? "Colapsar menu" : "Expandir menu"}
         >
           {isOpen ? (
-            <ChevronLeft size={24} />
+            <ChevronLeft className="h-5 w-5" />
           ) : (
-            <ChevronRight size={24} />
+            <ChevronRight className="h-5 w-5" />
           )}
         </button>
       </div>
       
-      <Separator />
+      <Separator className="bg-sidebar-border" />
       
-      {/* Public Links */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <Link 
-          to="/" 
-          className={`flex items-center gap-3 py-2 px-3 rounded-md ${
-            isActive('/') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
-          } transition-colors mb-2`}
-        >
-          <Home size={20} />
-          {isOpen && <span>Página Inicial</span>}
-        </Link>
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto p-3">
+        <ul className="space-y-1">
+          <li>
+            <Link to="/" className={linkClasses('/')}>
+              <Home className="h-5 w-5 flex-shrink-0" />
+              {isOpen && <span className="truncate">Página Inicial</span>}
+            </Link>
+          </li>
+          
+          <li>
+            <Link to="/resgate-cadastro" className={linkClasses('/resgate-cadastro')}>
+              <Clipboard className="h-5 w-5 flex-shrink-0" />
+              {isOpen && <span className="truncate">Ocorrências de Resgate</span>}
+            </Link>
+          </li>
+          
+          <li>
+            <Link to="/crimes-ambientais" className={linkClasses('/crimes-ambientais')}>
+              <Shield className="h-5 w-5 flex-shrink-0" />
+              {isOpen && <span className="truncate">Crimes Ambientais</span>}
+            </Link>
+          </li>
+        </ul>
         
-        {/* Ocorrências de Resgate e Animais Apreendidos - Public */}
-        <Link 
-          to="/resgate-cadastro" 
-          className={`flex items-center gap-3 py-2 px-3 rounded-md ${
-            isActive('/resgate-cadastro') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
-          } transition-colors mb-2`}
-        >
-          <Clipboard size={20} />
-          {isOpen && <span>Ocorrências de Resgate e Animais Apreendidos</span>}
-        </Link>
+        <Separator className="my-4 bg-sidebar-border" />
         
-        {/* Ocorrências Crimes Ambientais - Public */}
-        <Link 
-          to="/crimes-ambientais" 
-          className={`flex items-center gap-3 py-2 px-3 rounded-md ${
-            isActive('/crimes-ambientais') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
-          } transition-colors mb-2`}
-        >
-          <Shield size={20} />
-          {isOpen && <span>Ocorrências Crimes Ambientais</span>}
-        </Link>
-        
-        <Separator className="my-4" />
-        
-        {/* Restricted Area Section */}
+        {/* Restricted Area */}
         <div className="mb-2">
-          <div className={`flex items-center gap-3 py-2 px-3 text-fauna-blue font-medium`}>
-            <Lock size={20} />
-            {isOpen && <span>Área Restrita SOI/BPMA</span>}
+          <div className="flex items-center gap-3 py-2 px-3 text-sidebar-primary font-medium">
+            <Lock className="h-5 w-5 flex-shrink-0" />
+            {isOpen && <span className="text-sm truncate">Área Restrita</span>}
           </div>
           
-          {!isAuthenticated ? (
-            <Link 
-              to="/login" 
-              className={`flex items-center gap-3 py-2 px-3 rounded-md ${
-                isActive('/login') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
-              } transition-colors ml-3`}
-            >
-              <LogIn size={20} />
-              {isOpen && <span>Fazer Login</span>}
-            </Link>
-          ) : (
-            <>
-              <Link 
-                to="/fauna-cadastro" 
-                className={`flex items-center gap-3 py-2 px-3 rounded-md ${
-                  isActive('/fauna-cadastro') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
-                } transition-colors ml-3`}
-              >
-                <PlusCircle size={20} />
-                {isOpen && <span>Cadastrar Fauna</span>}
-              </Link>
-              
-              <Link 
-                to="/fauna-cadastrada" 
-                className={`flex items-center gap-3 py-2 px-3 rounded-md ${
-                  isActive('/fauna-cadastrada') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
-                } transition-colors ml-3`}
-              >
-                <List size={20} />
-                {isOpen && <span>Fauna Cadastrada</span>}
-              </Link>
-              
-              <Link 
-                to="/dashboard" 
-                className={`flex items-center gap-3 py-2 px-3 rounded-md ${
-                  isActive('/dashboard') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
-                } transition-colors ml-3`}
-              >
-                <BarChart size={20} />
-                {isOpen && <span>Dashboard</span>}
-              </Link>
-              
-              <Link 
-                to="/hotspots" 
-                className={`flex items-center gap-3 py-2 px-3 rounded-md ${
-                  isActive('/hotspots') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
-                } transition-colors ml-3`}
-              >
-                <MapPin size={20} />
-                {isOpen && <span>Hotspots</span>}
-              </Link>
-              
-              <Link 
-                to="/registros" 
-                className={`flex items-center gap-3 py-2 px-3 rounded-md ${
-                  isActive('/registros') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
-                } transition-colors ml-3`}
-              >
-                <Table size={20} />
-                {isOpen && <span>Lista de Registros</span>}
-              </Link>
-              
-              <Link 
-                to="/relatorios" 
-                className={`flex items-center gap-3 py-2 px-3 rounded-md ${
-                  isActive('/relatorios') ? 'bg-fauna-light text-fauna-blue' : 'text-gray-700 hover:bg-fauna-light hover:text-fauna-blue'
-                } transition-colors ml-3`}
-              >
-                <FileText size={20} />
-                {isOpen && <span>Relatórios</span>}
-              </Link>
-            </>
-          )}
+          <ul className="space-y-1 mt-1">
+            {!isAuthenticated ? (
+              <li>
+                <Link to="/login" className={linkClasses('/login', true)}>
+                  <LogIn className="h-5 w-5 flex-shrink-0" />
+                  {isOpen && <span className="truncate">Fazer Login</span>}
+                </Link>
+              </li>
+            ) : (
+              <>
+                <li>
+                  <Link to="/fauna-cadastro" className={linkClasses('/fauna-cadastro', true)}>
+                    <PlusCircle className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Cadastrar Fauna</span>}
+                  </Link>
+                </li>
+                
+                <li>
+                  <Link to="/fauna-cadastrada" className={linkClasses('/fauna-cadastrada', true)}>
+                    <List className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Fauna Cadastrada</span>}
+                  </Link>
+                </li>
+                
+                <li>
+                  <Link to="/dashboard" className={linkClasses('/dashboard', true)}>
+                    <BarChart className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Dashboard</span>}
+                  </Link>
+                </li>
+                
+                <li>
+                  <Link to="/hotspots" className={linkClasses('/hotspots', true)}>
+                    <MapPin className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Hotspots</span>}
+                  </Link>
+                </li>
+                
+                <li>
+                  <Link to="/registros" className={linkClasses('/registros', true)}>
+                    <Table className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Lista de Registros</span>}
+                  </Link>
+                </li>
+                
+                <li>
+                  <Link to="/relatorios" className={linkClasses('/relatorios', true)}>
+                    <FileText className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Relatórios</span>}
+                  </Link>
+                </li>
+              </>
+            )}
+          </ul>
         </div>
-      </div>
+      </nav>
       
       {/* User Info & Logout */}
       {isAuthenticated && (
-        <div className="p-4 border-t border-fauna-border">
-          {isOpen && (
-            <div className="mb-2 px-3 text-sm text-gray-600 truncate">
-              {user?.email}
+        <div className="p-3 border-t border-sidebar-border">
+          {isOpen && user?.email && (
+            <div className="mb-2 px-3 text-xs text-sidebar-foreground/70 truncate">
+              {user.email}
             </div>
           )}
           <Button 
             variant="ghost" 
-            className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-50"
+            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={handleLogout}
           >
-            <LogOut size={20} className="mr-2" />
+            <LogOut className="h-5 w-5 mr-2" />
             {isOpen && "Sair"}
           </Button>
         </div>
       )}
-    </div>
+    </aside>
   );
 };
 
