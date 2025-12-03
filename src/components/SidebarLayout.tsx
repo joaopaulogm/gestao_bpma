@@ -8,7 +8,7 @@ interface SidebarLayoutProps {
 
 const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen w-full bg-background">
       <Sidebar />
       <div className="flex-1 overflow-auto">
         {children}
