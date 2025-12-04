@@ -42,6 +42,7 @@ export interface Registro {
   estado_saude_id: string | null;
   estagio_vida_id: string | null;
   desfecho_id: string | null;
+  tipo_area_id: string | null;
   // Joined dimension data (populated by joins)
   regiao_administrativa?: { nome: string } | null;
   origem?: { nome: string } | null;

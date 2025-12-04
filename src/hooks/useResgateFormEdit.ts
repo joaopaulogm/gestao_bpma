@@ -138,6 +138,7 @@ export const useResgateFormEdit = (
       desfechoApreensao: (registro.desfecho?.tipo === 'apreensao' ? registro.desfecho?.nome : '') || '',
       numeroTCO: registro.numero_tco || '',
       outroDesfecho: registro.outro_desfecho || '',
+      tipoAreaId: registro.tipo_area_id || '',
       classeTaxonomica: registro.especie?.classe_taxonomica || '',
       especieId: '',
       estadoSaude: registro.estado_saude?.nome || '',

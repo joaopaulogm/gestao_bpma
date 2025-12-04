@@ -71,6 +71,7 @@ export const useResgateSubmission = () => {
         estagio_vida_id: estagioVidaId,
         destinacao_id: destinacaoId,
         desfecho_id: desfechoId,
+        tipo_area_id: data.tipoAreaId || null,
         latitude_origem: data.latitudeOrigem,
         longitude_origem: data.longitudeOrigem,
         numero_tco: data.numeroTCO || null,
