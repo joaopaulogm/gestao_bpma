@@ -5,6 +5,7 @@ import FormSection from './FormSection';
 import DataField from './DataField';
 import OrigemField from './OrigemField';
 import RegiaoAdministrativaField from './RegiaoAdministrativaField';
+import TipoAreaField from './TipoAreaField';
 import DesfechoResgateField from './DesfechoResgateField';
 import DesfechoApreensaoField from './DesfechoApreensaoField';
 import CoordenadasOrigemField from './CoordenadasOrigemField';
@@ -38,6 +39,12 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
         error={errors.regiaoAdministrativa?.message}
         required={true}
         regioes={regioes}
+      />
+
+      <TipoAreaField
+        value={formData.tipoAreaId || ''}
+        onChange={(value) => handleSelectChange('tipoAreaId', value)}
+        error={errors.tipoAreaId?.message}
       />
 
       <OrigemField

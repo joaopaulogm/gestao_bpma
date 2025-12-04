@@ -19,7 +19,7 @@ export const useRegistroDelete = (onDeleteSuccess: (deletedId: string) => void) 
     setIsDeleting(true);
     try {
       const { error } = await supabase
-        .from('registros')
+        .from('fat_registros_de_resgate')
         .delete()
         .eq('id', registroToDelete.id);
       

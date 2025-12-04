@@ -11,7 +11,7 @@ export const fetchRegistryData = async (filters: FilterState) => {
   
   // Construir query de data base com joins para as tabelas de dimensão
   let query = supabase
-    .from('registros')
+    .from('fat_registros_de_resgate')
     .select(`
       *,
       regiao_administrativa:dim_regiao_administrativa(nome),

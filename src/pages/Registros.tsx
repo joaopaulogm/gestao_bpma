@@ -44,7 +44,7 @@ const Registros = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('registros')
+        .from('fat_registros_de_resgate')
         .select(`
           *,
           regiao_administrativa:dim_regiao_administrativa(nome),

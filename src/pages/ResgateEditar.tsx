@@ -21,7 +21,7 @@ const ResgateEditar = () => {
         console.log("Buscando registro para edição, ID:", id);
         
         const { data, error } = await supabase
-          .from('registros')
+          .from('fat_registros_de_resgate')
           .select(`
             *,
             regiao_administrativa:dim_regiao_administrativa(nome),

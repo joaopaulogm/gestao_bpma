@@ -14,6 +14,8 @@ const CrimesAmbientais = () => {
     getFieldError,
     floraItems,
     handleFloraItemsChange,
+    faunaItems,
+    handleFaunaItemsChange,
     handleNumeroTermoEntregaFloraChange
   } = useCrimesAmbientaisForm();
 
@@ -29,6 +31,8 @@ const CrimesAmbientais = () => {
         getFieldError={getFieldError}
         floraItems={floraItems}
         onFloraItemsChange={handleFloraItemsChange}
+        faunaItems={faunaItems}
+        onFaunaItemsChange={handleFaunaItemsChange}
         onNumeroTermoEntregaFloraChange={handleNumeroTermoEntregaFloraChange}
       />
     </Layout>

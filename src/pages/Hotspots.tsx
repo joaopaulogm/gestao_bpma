@@ -21,7 +21,7 @@ const Hotspots = () => {
         
         // Buscar registros do Supabase com joins
         const { data: registros, error } = await supabase
-          .from('registros')
+          .from('fat_registros_de_resgate')
           .select(`
             id,
             latitude_origem,
@@ -29,7 +29,7 @@ const Hotspots = () => {
             data,
             regiao_administrativa:dim_regiao_administrativa(nome),
             origem:dim_origem(nome),
-            especie:dim_especies(nome_popular)
+            especie:dim_especies_fauna(nome_popular)
           `)
           .not('latitude_origem', 'is', null)
           .not('longitude_origem', 'is', null);

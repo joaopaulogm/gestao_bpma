@@ -75,7 +75,7 @@ export const useResgateFormSubmitEdit = (
       ]);
 
       const { error } = await supabase
-        .from('registros')
+        .from('fat_registros_de_resgate')
         .update({
           data: dataFormatada,
           especie_id: especieSelecionada?.id || originalRegistro.especie_id,
