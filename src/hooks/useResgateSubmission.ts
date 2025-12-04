@@ -62,7 +62,7 @@ export const useResgateSubmission = () => {
       
       // Não precisamos calcular quantidade_total explicitamente
       // O trigger no banco de dados fará isso automaticamente
-      const { error } = await supabase.from('registros').insert({
+      const { error } = await supabase.from('fat_registros_de_resgate').insert({
         data: dataFormatada,
         especie_id: especieSelecionada.id,
         regiao_administrativa_id: regiaoId,

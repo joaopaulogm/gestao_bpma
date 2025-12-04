@@ -283,6 +283,223 @@ export type Database = {
         }
         Relationships: []
       }
+      fat_registros_de_crime: {
+        Row: {
+          atropelamento: string | null
+          classe_flora: string | null
+          classe_taxonomica: string | null
+          condicao_flora: string | null
+          created_at: string
+          data: string
+          desfecho: string | null
+          destinacao_fauna: string | null
+          destinacao_flora: string | null
+          enquadramento_id: string | null
+          especie_fauna_id: string | null
+          especie_flora_id: string | null
+          estado_conservacao_fauna: string | null
+          estado_conservacao_flora: string | null
+          estado_saude_id: string | null
+          estagio_vida_id: string | null
+          estagio_vida_obito_id: string | null
+          familia_flora: string | null
+          id: string
+          imune_corte: string | null
+          latitude_ocorrencia: string | null
+          longitude_ocorrencia: string | null
+          madeira_lei: string | null
+          nome_cientifico_fauna: string | null
+          nome_cientifico_flora: string | null
+          nome_popular_fauna: string | null
+          nome_popular_flora: string | null
+          numero_termo_entrega: string | null
+          ordem_flora: string | null
+          ordem_taxonomica: string | null
+          procedimento_legal: string | null
+          quantidade_adulto: number | null
+          quantidade_adulto_obito: number | null
+          quantidade_detidos_maior_idade: number | null
+          quantidade_detidos_menor_idade: number | null
+          quantidade_filhote: number | null
+          quantidade_filhote_obito: number | null
+          quantidade_flora: number | null
+          quantidade_liberados_maior_idade: number | null
+          quantidade_liberados_menor_idade: number | null
+          quantidade_total: number | null
+          quantidade_total_obito: number | null
+          regiao_administrativa_id: string | null
+          tipo_area_id: string | null
+          tipo_crime_id: string | null
+          tipo_fauna: string | null
+          tipo_planta: string | null
+          tipo_registro: string
+        }
+        Insert: {
+          atropelamento?: string | null
+          classe_flora?: string | null
+          classe_taxonomica?: string | null
+          condicao_flora?: string | null
+          created_at?: string
+          data: string
+          desfecho?: string | null
+          destinacao_fauna?: string | null
+          destinacao_flora?: string | null
+          enquadramento_id?: string | null
+          especie_fauna_id?: string | null
+          especie_flora_id?: string | null
+          estado_conservacao_fauna?: string | null
+          estado_conservacao_flora?: string | null
+          estado_saude_id?: string | null
+          estagio_vida_id?: string | null
+          estagio_vida_obito_id?: string | null
+          familia_flora?: string | null
+          id?: string
+          imune_corte?: string | null
+          latitude_ocorrencia?: string | null
+          longitude_ocorrencia?: string | null
+          madeira_lei?: string | null
+          nome_cientifico_fauna?: string | null
+          nome_cientifico_flora?: string | null
+          nome_popular_fauna?: string | null
+          nome_popular_flora?: string | null
+          numero_termo_entrega?: string | null
+          ordem_flora?: string | null
+          ordem_taxonomica?: string | null
+          procedimento_legal?: string | null
+          quantidade_adulto?: number | null
+          quantidade_adulto_obito?: number | null
+          quantidade_detidos_maior_idade?: number | null
+          quantidade_detidos_menor_idade?: number | null
+          quantidade_filhote?: number | null
+          quantidade_filhote_obito?: number | null
+          quantidade_flora?: number | null
+          quantidade_liberados_maior_idade?: number | null
+          quantidade_liberados_menor_idade?: number | null
+          quantidade_total?: number | null
+          quantidade_total_obito?: number | null
+          regiao_administrativa_id?: string | null
+          tipo_area_id?: string | null
+          tipo_crime_id?: string | null
+          tipo_fauna?: string | null
+          tipo_planta?: string | null
+          tipo_registro: string
+        }
+        Update: {
+          atropelamento?: string | null
+          classe_flora?: string | null
+          classe_taxonomica?: string | null
+          condicao_flora?: string | null
+          created_at?: string
+          data?: string
+          desfecho?: string | null
+          destinacao_fauna?: string | null
+          destinacao_flora?: string | null
+          enquadramento_id?: string | null
+          especie_fauna_id?: string | null
+          especie_flora_id?: string | null
+          estado_conservacao_fauna?: string | null
+          estado_conservacao_flora?: string | null
+          estado_saude_id?: string | null
+          estagio_vida_id?: string | null
+          estagio_vida_obito_id?: string | null
+          familia_flora?: string | null
+          id?: string
+          imune_corte?: string | null
+          latitude_ocorrencia?: string | null
+          longitude_ocorrencia?: string | null
+          madeira_lei?: string | null
+          nome_cientifico_fauna?: string | null
+          nome_cientifico_flora?: string | null
+          nome_popular_fauna?: string | null
+          nome_popular_flora?: string | null
+          numero_termo_entrega?: string | null
+          ordem_flora?: string | null
+          ordem_taxonomica?: string | null
+          procedimento_legal?: string | null
+          quantidade_adulto?: number | null
+          quantidade_adulto_obito?: number | null
+          quantidade_detidos_maior_idade?: number | null
+          quantidade_detidos_menor_idade?: number | null
+          quantidade_filhote?: number | null
+          quantidade_filhote_obito?: number | null
+          quantidade_flora?: number | null
+          quantidade_liberados_maior_idade?: number | null
+          quantidade_liberados_menor_idade?: number | null
+          quantidade_total?: number | null
+          quantidade_total_obito?: number | null
+          regiao_administrativa_id?: string | null
+          tipo_area_id?: string | null
+          tipo_crime_id?: string | null
+          tipo_fauna?: string | null
+          tipo_planta?: string | null
+          tipo_registro?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_registros_de_crime_enquadramento_id_fkey"
+            columns: ["enquadramento_id"]
+            isOneToOne: false
+            referencedRelation: "dim_enquadramento"
+            referencedColumns: ["id_enquadramento"]
+          },
+          {
+            foreignKeyName: "fat_registros_de_crime_especie_fauna_id_fkey"
+            columns: ["especie_fauna_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_registros_de_crime_especie_flora_id_fkey"
+            columns: ["especie_flora_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_flora"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_registros_de_crime_estado_saude_id_fkey"
+            columns: ["estado_saude_id"]
+            isOneToOne: false
+            referencedRelation: "dim_estado_saude"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_registros_de_crime_estagio_vida_id_fkey"
+            columns: ["estagio_vida_id"]
+            isOneToOne: false
+            referencedRelation: "dim_estagio_vida"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_registros_de_crime_estagio_vida_obito_id_fkey"
+            columns: ["estagio_vida_obito_id"]
+            isOneToOne: false
+            referencedRelation: "dim_estagio_vida"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_registros_de_crime_regiao_administrativa_id_fkey"
+            columns: ["regiao_administrativa_id"]
+            isOneToOne: false
+            referencedRelation: "dim_regiao_administrativa"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_registros_de_crime_tipo_area_id_fkey"
+            columns: ["tipo_area_id"]
+            isOneToOne: false
+            referencedRelation: "dim_tipo_de_area"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_registros_de_crime_tipo_crime_id_fkey"
+            columns: ["tipo_crime_id"]
+            isOneToOne: false
+            referencedRelation: "dim_tipo_de_crime"
+            referencedColumns: ["id_tipo_de_crime"]
+          },
+        ]
+      }
       fat_registros_de_resgate: {
         Row: {
           atropelamento: string
@@ -310,6 +527,7 @@ export type Database = {
           quantidade_filhote: number | null
           quantidade_total: number | null
           regiao_administrativa_id: string | null
+          tipo_area_id: string | null
         }
         Insert: {
           atropelamento: string
@@ -337,6 +555,7 @@ export type Database = {
           quantidade_filhote?: number | null
           quantidade_total?: number | null
           regiao_administrativa_id?: string | null
+          tipo_area_id?: string | null
         }
         Update: {
           atropelamento?: string
@@ -364,8 +583,16 @@ export type Database = {
           quantidade_filhote?: number | null
           quantidade_total?: number | null
           regiao_administrativa_id?: string | null
+          tipo_area_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fat_registros_de_resgate_tipo_area_id_fkey"
+            columns: ["tipo_area_id"]
+            isOneToOne: false
+            referencedRelation: "dim_tipo_de_area"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_registros_desfecho"
             columns: ["desfecho_id"]

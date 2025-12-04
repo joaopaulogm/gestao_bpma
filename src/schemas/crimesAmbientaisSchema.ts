@@ -23,6 +23,7 @@ export type FloraItemData = z.infer<typeof floraItemSchema>;
 export const crimesAmbientaisSchema = z.object({
   data: z.string().min(1, "Data é obrigatória"),
   regiaoAdministrativa: z.string().min(1, "Região Administrativa é obrigatória"),
+  tipoAreaId: z.string().optional(),
   latitudeOcorrencia: z.string().optional(),
   longitudeOcorrencia: z.string().optional(),
   tipoCrime: z.string().min(1, "Tipo de Crime é obrigatório"),

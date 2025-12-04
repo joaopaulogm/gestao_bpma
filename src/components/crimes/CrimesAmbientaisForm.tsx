@@ -4,7 +4,8 @@ import { CrimesAmbientaisFormData, FloraItemData, TIPOS_CRIME, ENQUADRAMENTOS, D
 import { regioes } from '@/constants/regioes';
 import FormSection from '@/components/resgate/FormSection';
 import FormField from '@/components/resgate/FormField';
-import FaunaSection from './FaunaSection';
+import TipoAreaField from '@/components/resgate/TipoAreaField';
+import FaunaSection, { FaunaItem } from './FaunaSection';
 import FloraSection, { FloraItem } from './FloraSection';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -23,6 +24,8 @@ interface CrimesAmbientaisFormProps {
   floraItems: FloraItem[];
   onFloraItemsChange: (items: FloraItem[]) => void;
   onNumeroTermoEntregaFloraChange: (value: string) => void;
+  faunaItems: FaunaItem[];
+  onFaunaItemsChange: (items: FaunaItem[]) => void;
 }
 
 const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
@@ -35,25 +38,11 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
   getFieldError,
   floraItems,
   onFloraItemsChange,
-  onNumeroTermoEntregaFloraChange
+  onNumeroTermoEntregaFloraChange,
+  faunaItems,
+  onFaunaItemsChange
 }) => {
   const enquadramentosDisponiveis = formData.tipoCrime ? ENQUADRAMENTOS[formData.tipoCrime as keyof typeof ENQUADRAMENTOS] || [] : [];
-  const [estadosSaude, setEstadosSaude] = useState<Array<{ id: string; nome: string }>>([]);
-  const [estagiosVida, setEstagiosVida] = useState<Array<{ id: string; nome: string }>>([]);
-
-  useEffect(() => {
-    const fetchDimensions = async () => {
-      const [estadosResult, estagiosResult] = await Promise.all([
-        supabase.from('dim_estado_saude').select('id, nome'),
-        supabase.from('dim_estagio_vida').select('id, nome')
-      ]);
-
-      if (estadosResult.data) setEstadosSaude(estadosResult.data);
-      if (estagiosResult.data) setEstagiosVida(estagiosResult.data);
-    };
-
-    fetchDimensions();
-  }, []);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -99,6 +88,12 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
               </SelectContent>
             </Select>
           </FormField>
+
+          <TipoAreaField
+            value={formData.tipoAreaId || ''}
+            onChange={(value) => handleSelectChange('tipoAreaId', value)}
+            error={getFieldError('tipoAreaId')}
+          />
 
           <FormField
             id="latitudeOcorrencia"
@@ -193,12 +188,9 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
          formData.enquadramento && 
          !formData.enquadramento.startsWith('Exportar pele de') && (
           <FaunaSection
-            formData={formData}
-            handleSelectChange={handleSelectChange}
-            handleChange={handleChange}
+            faunaItems={faunaItems}
+            onFaunaItemsChange={onFaunaItemsChange}
             getFieldError={getFieldError}
-            estadosSaude={estadosSaude}
-            estagiosVida={estagiosVida}
           />
         )}
 

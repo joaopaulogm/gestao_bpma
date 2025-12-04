@@ -51,7 +51,7 @@ export const useResgateFormEdit = (
     try {
       setFetchError(null);
       const { data, error } = await supabase
-        .from('registros')
+        .from('fat_registros_de_resgate')
         .select(`
           *,
           regiao_administrativa:dim_regiao_administrativa(nome),

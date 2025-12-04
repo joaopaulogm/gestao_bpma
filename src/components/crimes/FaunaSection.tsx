@@ -1,365 +1,616 @@
 import React, { useState, useEffect } from 'react';
 import FormSection from '@/components/resgate/FormSection';
 import FormField from '@/components/resgate/FormField';
-import ClasseTaxonomicaField from '@/components/resgate/ClasseTaxonomicaField';
-import EspecieField from '@/components/resgate/EspecieField';
-import EspecieDetailsPanel from '@/components/resgate/EspecieDetailsPanel';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Minus, Plus } from 'lucide-react';
-import { useEspecieSelector } from '@/hooks/useEspecieSelector';
+import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
 
-interface FaunaSectionProps {
-  formData: any;
-  handleSelectChange: (name: string, value: string) => void;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  getFieldError: (field: any) => string | undefined;
-  estadosSaude: Array<{ id: string; nome: string }>;
-  estagiosVida: Array<{ id: string; nome: string }>;
+export interface FaunaItem {
+  id: string;
+  especieId: string;
+  nomePopular: string;
+  nomeCientifico: string;
+  classeTaxonomica: string;
+  ordemTaxonomica: string;
+  tipoFauna: string;
+  estadoConservacao: string;
+  estadoSaudeId: string;
+  estagioVidaId: string;
+  atropelamento: string;
+  quantidadeAdulto: number;
+  quantidadeFilhote: number;
+  quantidadeTotal: number;
+  destinacao: string;
+  estagioVidaObitoId: string;
+  quantidadeAdultoObito: number;
+  quantidadeFilhoteObito: number;
+  quantidadeTotalObito: number;
 }
 
-const FaunaSection: React.FC<FaunaSectionProps> = ({
-  formData,
-  handleSelectChange,
-  handleChange,
-  getFieldError,
-  estadosSaude,
-  estagiosVida
+interface FaunaSectionProps {
+  faunaItems: FaunaItem[];
+  onFaunaItemsChange: (items: FaunaItem[]) => void;
+  getFieldError: (field: any) => string | undefined;
+}
+
+interface EspecieFauna {
+  id: string;
+  nome_popular: string;
+  nome_cientifico: string;
+  classe_taxonomica: string;
+  ordem_taxonomica: string;
+  tipo_de_fauna: string;
+  estado_de_conservacao: string;
+}
+
+const DESTINACOES_FAUNA = [
+  "CETAS-IBAMA",
+  "HFAUS-IBRAM",
+  "Óbito"
+];
+
+const FloraSection: React.FC<FaunaSectionProps> = ({
+  faunaItems,
+  onFaunaItemsChange,
+  getFieldError
 }) => {
-  const { especieSelecionada, carregandoEspecie, buscarDetalhesEspecie, limparEspecie } = useEspecieSelector();
+  const [especiesFauna, setEspeciesFauna] = useState<EspecieFauna[]>([]);
+  const [classesTaxonomicas, setClassesTaxonomicas] = useState<string[]>([]);
+  const [estadosSaude, setEstadosSaude] = useState<Array<{ id: string; nome: string }>>([]);
+  const [estagiosVida, setEstagiosVida] = useState<Array<{ id: string; nome: string }>>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (formData.especieId) {
-      buscarDetalhesEspecie(formData.especieId);
-    } else {
-      limparEspecie();
-    }
-  }, [formData.especieId]);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [especiesResult, estadosResult, estagiosResult] = await Promise.all([
+          supabase.from('dim_especies_fauna').select('*').order('nome_popular', { ascending: true }),
+          supabase.from('dim_estado_saude').select('id, nome'),
+          supabase.from('dim_estagio_vida').select('id, nome')
+        ]);
 
-  const handleQuantidadeChange = (field: 'quantidadeAdulto' | 'quantidadeFilhote', increment: boolean) => {
-    const currentValue = formData[field] || 0;
-    const newValue = increment ? currentValue + 1 : Math.max(0, currentValue - 1);
-    handleSelectChange(field, String(newValue));
-    
-    // Atualizar total
-    const otherField = field === 'quantidadeAdulto' ? 'quantidadeFilhote' : 'quantidadeAdulto';
-    const otherValue = formData[otherField] || 0;
-    handleSelectChange('quantidadeTotal', String(newValue + otherValue));
+        if (especiesResult.data) {
+          setEspeciesFauna(especiesResult.data);
+          // Extrair classes taxonômicas únicas
+          const classes = [...new Set(especiesResult.data.map(e => e.classe_taxonomica))].sort();
+          setClassesTaxonomicas(classes);
+        }
+        if (estadosResult.data) setEstadosSaude(estadosResult.data);
+        if (estagiosResult.data) setEstagiosVida(estagiosResult.data);
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err);
+      }
+      setLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  const createEmptyFaunaItem = (): FaunaItem => ({
+    id: crypto.randomUUID(),
+    especieId: '',
+    nomePopular: '',
+    nomeCientifico: '',
+    classeTaxonomica: '',
+    ordemTaxonomica: '',
+    tipoFauna: '',
+    estadoConservacao: '',
+    estadoSaudeId: '',
+    estagioVidaId: '',
+    atropelamento: '',
+    quantidadeAdulto: 0,
+    quantidadeFilhote: 0,
+    quantidadeTotal: 0,
+    destinacao: '',
+    estagioVidaObitoId: '',
+    quantidadeAdultoObito: 0,
+    quantidadeFilhoteObito: 0,
+    quantidadeTotalObito: 0
+  });
+
+  const handleAddItem = () => {
+    if (faunaItems.length < 50) {
+      onFaunaItemsChange([...faunaItems, createEmptyFaunaItem()]);
+    }
   };
 
-  const handleQuantidadeObitoChange = (field: 'quantidadeAdultoObito' | 'quantidadeFilhoteObito', increment: boolean) => {
-    const currentValue = formData[field] || 0;
+  const handleRemoveItem = (id: string) => {
+    onFaunaItemsChange(faunaItems.filter(item => item.id !== id));
+  };
+
+  const handleItemChange = (id: string, field: keyof FaunaItem, value: string | number) => {
+    onFaunaItemsChange(
+      faunaItems.map(item => {
+        if (item.id !== id) return item;
+
+        // Se mudou a classe taxonômica, limpar espécie
+        if (field === 'classeTaxonomica') {
+          return {
+            ...item,
+            classeTaxonomica: value as string,
+            especieId: '',
+            nomePopular: '',
+            nomeCientifico: '',
+            ordemTaxonomica: '',
+            tipoFauna: '',
+            estadoConservacao: ''
+          };
+        }
+        
+        // Se mudou a espécie, atualizar os detalhes
+        if (field === 'especieId') {
+          const especie = especiesFauna.find(e => e.id === value);
+          if (especie) {
+            return {
+              ...item,
+              especieId: value as string,
+              nomePopular: especie.nome_popular,
+              nomeCientifico: especie.nome_cientifico,
+              classeTaxonomica: especie.classe_taxonomica,
+              ordemTaxonomica: especie.ordem_taxonomica,
+              tipoFauna: especie.tipo_de_fauna,
+              estadoConservacao: especie.estado_de_conservacao
+            };
+          }
+        }
+
+        // Atualizar quantidades
+        if (field === 'quantidadeAdulto' || field === 'quantidadeFilhote') {
+          const adulto = field === 'quantidadeAdulto' ? Number(value) : item.quantidadeAdulto;
+          const filhote = field === 'quantidadeFilhote' ? Number(value) : item.quantidadeFilhote;
+          return {
+            ...item,
+            [field]: Number(value),
+            quantidadeTotal: adulto + filhote
+          };
+        }
+
+        if (field === 'quantidadeAdultoObito' || field === 'quantidadeFilhoteObito') {
+          const adulto = field === 'quantidadeAdultoObito' ? Number(value) : item.quantidadeAdultoObito;
+          const filhote = field === 'quantidadeFilhoteObito' ? Number(value) : item.quantidadeFilhoteObito;
+          return {
+            ...item,
+            [field]: Number(value),
+            quantidadeTotalObito: adulto + filhote
+          };
+        }
+        
+        return { ...item, [field]: value };
+      })
+    );
+  };
+
+  const handleQuantidadeChange = (id: string, field: 'quantidadeAdulto' | 'quantidadeFilhote', increment: boolean) => {
+    const item = faunaItems.find(i => i.id === id);
+    if (!item) return;
+    const currentValue = item[field];
     const newValue = increment ? currentValue + 1 : Math.max(0, currentValue - 1);
-    handleSelectChange(field, String(newValue));
-    
-    // Atualizar total
-    const otherField = field === 'quantidadeAdultoObito' ? 'quantidadeFilhoteObito' : 'quantidadeAdultoObito';
-    const otherValue = formData[otherField] || 0;
-    handleSelectChange('quantidadeTotalObito', String(newValue + otherValue));
+    handleItemChange(id, field, newValue);
+  };
+
+  const handleQuantidadeObitoChange = (id: string, field: 'quantidadeAdultoObito' | 'quantidadeFilhoteObito', increment: boolean) => {
+    const item = faunaItems.find(i => i.id === id);
+    if (!item) return;
+    const currentValue = item[field];
+    const newValue = increment ? currentValue + 1 : Math.max(0, currentValue - 1);
+    handleItemChange(id, field, newValue);
+  };
+
+  // Inicializar com um item vazio se não houver nenhum
+  useEffect(() => {
+    if (faunaItems.length === 0) {
+      onFaunaItemsChange([createEmptyFaunaItem()]);
+    }
+  }, []);
+
+  const getEspeciesPorClasse = (classe: string) => {
+    return especiesFauna.filter(e => e.classe_taxonomica === classe);
   };
 
   return (
     <div className="space-y-6">
-      <FormSection title="Identificação da Espécie" columns>
-        <ClasseTaxonomicaField
-          value={formData.classeTaxonomica || ''}
-          onChange={(value) => {
-            handleSelectChange('classeTaxonomica', value);
-            handleSelectChange('especieId', ''); // Limpar espécie ao mudar classe
-          }}
-          error={getFieldError('classeTaxonomica')}
-          required
-        />
-        
-        <EspecieField
-          classeTaxonomica={formData.classeTaxonomica || ''}
-          value={formData.especieId || ''}
-          onChange={(value) => handleSelectChange('especieId', value)}
-          error={getFieldError('especieId')}
-          required
-        />
+      <FormSection title="Identificação das Espécies de Fauna">
+        <div className="space-y-4">
+          {faunaItems.map((item, index) => (
+            <Card key={item.id} className="relative">
+              <CardContent className="pt-6">
+                <div className="absolute top-2 right-2 flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground font-medium">
+                    Espécie {index + 1}
+                  </span>
+                  {faunaItems.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveItem(item.id)}
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
 
-        <div className="col-span-full">
-          <EspecieDetailsPanel 
-            especie={especieSelecionada} 
-            isLoading={carregandoEspecie} 
-          />
+                {/* Identificação da Espécie */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <FormField
+                    id={`classeTaxonomica-${item.id}`}
+                    label="Classe Taxonômica"
+                    required
+                  >
+                    <Select
+                      value={item.classeTaxonomica}
+                      onValueChange={(value) => handleItemChange(item.id, 'classeTaxonomica', value)}
+                      disabled={loading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={loading ? "Carregando..." : "Selecione a classe"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {classesTaxonomicas.map((classe) => (
+                          <SelectItem key={classe} value={classe}>
+                            {classe}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+
+                  <FormField
+                    id={`especie-${item.id}`}
+                    label="Espécie (Nome Popular)"
+                    required
+                  >
+                    <Select
+                      value={item.especieId}
+                      onValueChange={(value) => handleItemChange(item.id, 'especieId', value)}
+                      disabled={loading || !item.classeTaxonomica}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={!item.classeTaxonomica ? "Selecione a classe primeiro" : "Selecione a espécie"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getEspeciesPorClasse(item.classeTaxonomica).map((especie) => (
+                          <SelectItem key={especie.id} value={especie.id}>
+                            {especie.nome_popular}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+
+                  <FormField
+                    id={`nomeCientifico-${item.id}`}
+                    label="Nome Científico"
+                  >
+                    <Input
+                      value={item.nomeCientifico}
+                      readOnly
+                      className="bg-muted"
+                    />
+                  </FormField>
+
+                  <FormField
+                    id={`ordemTaxonomica-${item.id}`}
+                    label="Ordem Taxonômica"
+                  >
+                    <Input
+                      value={item.ordemTaxonomica}
+                      readOnly
+                      className="bg-muted"
+                    />
+                  </FormField>
+
+                  <FormField
+                    id={`estadoConservacao-${item.id}`}
+                    label="Estado de Conservação"
+                  >
+                    <Input
+                      value={item.estadoConservacao}
+                      readOnly
+                      className="bg-muted"
+                    />
+                  </FormField>
+
+                  <FormField
+                    id={`tipoFauna-${item.id}`}
+                    label="Tipo de Fauna"
+                  >
+                    <Input
+                      value={item.tipoFauna}
+                      readOnly
+                      className="bg-muted"
+                    />
+                  </FormField>
+                </div>
+
+                {/* Informações do Animal */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t">
+                  <FormField
+                    id={`estadoSaude-${item.id}`}
+                    label="Estado de Saúde"
+                    required
+                  >
+                    <Select
+                      value={item.estadoSaudeId}
+                      onValueChange={(value) => handleItemChange(item.id, 'estadoSaudeId', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {estadosSaude.map((estado) => (
+                          <SelectItem key={estado.id} value={estado.id}>
+                            {estado.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+
+                  <FormField
+                    id={`atropelamento-${item.id}`}
+                    label="Atropelamento?"
+                    required
+                  >
+                    <Select
+                      value={item.atropelamento}
+                      onValueChange={(value) => handleItemChange(item.id, 'atropelamento', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Sim">Sim</SelectItem>
+                        <SelectItem value="Não">Não</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+
+                  <FormField
+                    id={`estagioVida-${item.id}`}
+                    label="Estágio da Vida"
+                    required
+                  >
+                    <Select
+                      value={item.estagioVidaId}
+                      onValueChange={(value) => handleItemChange(item.id, 'estagioVidaId', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {estagiosVida.map((estagio) => (
+                          <SelectItem key={estagio.id} value={estagio.id}>
+                            {estagio.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+                </div>
+
+                {/* Quantidades */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <FormField
+                    id={`quantidadeAdulto-${item.id}`}
+                    label="Quantidade (Adultos)"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleQuantidadeChange(item.id, 'quantidadeAdulto', false)}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        type="number"
+                        value={item.quantidadeAdulto}
+                        readOnly
+                        className="text-center"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleQuantidadeChange(item.id, 'quantidadeAdulto', true)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </FormField>
+
+                  <FormField
+                    id={`quantidadeFilhote-${item.id}`}
+                    label="Quantidade (Filhotes)"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleQuantidadeChange(item.id, 'quantidadeFilhote', false)}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        type="number"
+                        value={item.quantidadeFilhote}
+                        readOnly
+                        className="text-center"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleQuantidadeChange(item.id, 'quantidadeFilhote', true)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </FormField>
+
+                  <FormField
+                    id={`quantidadeTotal-${item.id}`}
+                    label="Quantidade Total"
+                  >
+                    <Input
+                      type="number"
+                      value={item.quantidadeTotal}
+                      readOnly
+                      className="bg-muted text-center"
+                    />
+                  </FormField>
+                </div>
+
+                {/* Destinação */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t">
+                  <FormField
+                    id={`destinacao-${item.id}`}
+                    label="Destinação"
+                    required
+                  >
+                    <Select
+                      value={item.destinacao}
+                      onValueChange={(value) => handleItemChange(item.id, 'destinacao', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a destinação" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DESTINACOES_FAUNA.map((destinacao) => (
+                          <SelectItem key={destinacao} value={destinacao}>
+                            {destinacao}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+                </div>
+
+                {/* Seção de Óbito */}
+                {item.destinacao === 'Óbito' && (
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 pt-4 border-t bg-muted/50 p-4 rounded-md">
+                    <FormField
+                      id={`estagioVidaObito-${item.id}`}
+                      label="Estágio da Vida (Óbito)"
+                      required
+                    >
+                      <Select
+                        value={item.estagioVidaObitoId}
+                        onValueChange={(value) => handleItemChange(item.id, 'estagioVidaObitoId', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {estagiosVida.map((estagio) => (
+                            <SelectItem key={estagio.id} value={estagio.id}>
+                              {estagio.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormField>
+
+                    <FormField
+                      id={`quantidadeAdultoObito-${item.id}`}
+                      label="Adultos (Óbito)"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleQuantidadeObitoChange(item.id, 'quantidadeAdultoObito', false)}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <Input
+                          type="number"
+                          value={item.quantidadeAdultoObito}
+                          readOnly
+                          className="text-center"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleQuantidadeObitoChange(item.id, 'quantidadeAdultoObito', true)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </FormField>
+
+                    <FormField
+                      id={`quantidadeFilhoteObito-${item.id}`}
+                      label="Filhotes (Óbito)"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleQuantidadeObitoChange(item.id, 'quantidadeFilhoteObito', false)}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <Input
+                          type="number"
+                          value={item.quantidadeFilhoteObito}
+                          readOnly
+                          className="text-center"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleQuantidadeObitoChange(item.id, 'quantidadeFilhoteObito', true)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </FormField>
+
+                    <FormField
+                      id={`quantidadeTotalObito-${item.id}`}
+                      label="Total (Óbito)"
+                    >
+                      <Input
+                        type="number"
+                        value={item.quantidadeTotalObito}
+                        readOnly
+                        className="bg-muted text-center"
+                      />
+                    </FormField>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+
+          {faunaItems.length < 50 && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddItem}
+              className="w-full"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Espécie ({faunaItems.length}/50)
+            </Button>
+          )}
         </div>
-      </FormSection>
-
-      <FormSection title="Informações do Animal" columns>
-        <FormField
-          id="estadoSaudeId"
-          label="Estado de Saúde"
-          required
-          error={getFieldError('estadoSaudeId')}
-        >
-          <Select
-            value={formData.estadoSaudeId || ''}
-            onValueChange={(value) => handleSelectChange('estadoSaudeId', value)}
-          >
-            <SelectTrigger className={getFieldError('estadoSaudeId') ? 'border-red-500' : ''}>
-              <SelectValue placeholder="Selecione o estado de saúde" />
-            </SelectTrigger>
-            <SelectContent>
-              {estadosSaude.map((estado) => (
-                <SelectItem key={estado.id} value={estado.id}>
-                  {estado.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </FormField>
-
-        <FormField
-          id="atropelamento"
-          label="Animal sofreu atropelamento?"
-          required
-          error={getFieldError('atropelamento')}
-        >
-          <Select
-            value={formData.atropelamento || ''}
-            onValueChange={(value) => handleSelectChange('atropelamento', value)}
-          >
-            <SelectTrigger className={getFieldError('atropelamento') ? 'border-red-500' : ''}>
-              <SelectValue placeholder="Selecione" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Sim">Sim</SelectItem>
-              <SelectItem value="Não">Não</SelectItem>
-            </SelectContent>
-          </Select>
-        </FormField>
-
-        <FormField
-          id="estagioVidaId"
-          label="Estágio da Vida"
-          required
-          error={getFieldError('estagioVidaId')}
-        >
-          <Select
-            value={formData.estagioVidaId || ''}
-            onValueChange={(value) => handleSelectChange('estagioVidaId', value)}
-          >
-            <SelectTrigger className={getFieldError('estagioVidaId') ? 'border-red-500' : ''}>
-              <SelectValue placeholder="Selecione o estágio da vida" />
-            </SelectTrigger>
-            <SelectContent>
-              {estagiosVida.map((estagio) => (
-                <SelectItem key={estagio.id} value={estagio.id}>
-                  {estagio.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </FormField>
-
-        <FormField
-          id="quantidadeAdulto"
-          label="Quantidade (Adultos)"
-          required
-          error={getFieldError('quantidadeAdulto')}
-        >
-          <div className="flex items-center space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => handleQuantidadeChange('quantidadeAdulto', false)}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <Input
-              type="number"
-              value={formData.quantidadeAdulto || 0}
-              readOnly
-              className="text-center"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => handleQuantidadeChange('quantidadeAdulto', true)}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-        </FormField>
-
-        <FormField
-          id="quantidadeFilhote"
-          label="Quantidade (Filhotes)"
-          required
-          error={getFieldError('quantidadeFilhote')}
-        >
-          <div className="flex items-center space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => handleQuantidadeChange('quantidadeFilhote', false)}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <Input
-              type="number"
-              value={formData.quantidadeFilhote || 0}
-              readOnly
-              className="text-center"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => handleQuantidadeChange('quantidadeFilhote', true)}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-        </FormField>
-
-        <FormField
-          id="quantidadeTotal"
-          label="Quantidade Total"
-          required
-          error={getFieldError('quantidadeTotal')}
-        >
-          <Input
-            type="number"
-            value={formData.quantidadeTotal || 0}
-            readOnly
-            className="bg-gray-50"
-          />
-        </FormField>
-      </FormSection>
-
-      <FormSection title="Destinação" columns>
-        <FormField
-          id="destinacao"
-          label="Destinação"
-          required
-          error={getFieldError('destinacao')}
-        >
-          <Select
-            value={formData.destinacao || ''}
-            onValueChange={(value) => handleSelectChange('destinacao', value)}
-          >
-            <SelectTrigger className={getFieldError('destinacao') ? 'border-red-500' : ''}>
-              <SelectValue placeholder="Selecione a destinação" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="CETAS-IBAMA">CETAS-IBAMA</SelectItem>
-              <SelectItem value="HFAUS-IBRAM">HFAUS-IBRAM</SelectItem>
-              <SelectItem value="Óbito">Óbito</SelectItem>
-            </SelectContent>
-          </Select>
-        </FormField>
-
-        {formData.destinacao === 'Óbito' && (
-          <>
-            <FormField
-              id="estagioVidaObito"
-              label="Estágio da Vida (Óbito)"
-              required
-              error={getFieldError('estagioVidaObito')}
-            >
-              <Select
-                value={formData.estagioVidaObito || ''}
-                onValueChange={(value) => handleSelectChange('estagioVidaObito', value)}
-              >
-                <SelectTrigger className={getFieldError('estagioVidaObito') ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Selecione o estágio da vida" />
-                </SelectTrigger>
-                <SelectContent>
-                  {estagiosVida.map((estagio) => (
-                    <SelectItem key={estagio.id} value={estagio.id}>
-                      {estagio.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormField>
-
-            <FormField
-              id="quantidadeAdultoObito"
-              label="Quantidade (Adultos)"
-              error={getFieldError('quantidadeAdultoObito')}
-            >
-              <div className="flex items-center space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleQuantidadeObitoChange('quantidadeAdultoObito', false)}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="number"
-                  value={formData.quantidadeAdultoObito || 0}
-                  readOnly
-                  className="text-center"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleQuantidadeObitoChange('quantidadeAdultoObito', true)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </FormField>
-
-            <FormField
-              id="quantidadeFilhoteObito"
-              label="Quantidade (Filhotes)"
-              error={getFieldError('quantidadeFilhoteObito')}
-            >
-              <div className="flex items-center space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleQuantidadeObitoChange('quantidadeFilhoteObito', false)}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="number"
-                  value={formData.quantidadeFilhoteObito || 0}
-                  readOnly
-                  className="text-center"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleQuantidadeObitoChange('quantidadeFilhoteObito', true)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </FormField>
-
-            <FormField
-              id="quantidadeTotalObito"
-              label="Quantidade Total"
-              error={getFieldError('quantidadeTotalObito')}
-            >
-              <Input
-                type="number"
-                value={formData.quantidadeTotalObito || 0}
-                readOnly
-                className="bg-gray-50"
-              />
-            </FormField>
-          </>
-        )}
       </FormSection>
     </div>
   );
 };
 
-export default FaunaSection;
+export default FloraSection;
