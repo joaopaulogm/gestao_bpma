@@ -1,12 +1,13 @@
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ResgateFormData } from '@/schemas/resgateSchema';
 import { Especie } from '@/services/especieService';
 import FormSection from './FormSection';
-import ClasseTaxonomicaField from './ClasseTaxonomicaField';
-import EspeciesField from './EspeciesField';
-import EspecieDetailsPanel from './EspecieDetailsPanel';
+import FormField from './FormField';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EspecieSectionProps {
   formData: ResgateFormData;
@@ -17,6 +18,16 @@ interface EspecieSectionProps {
   isEvadido?: boolean;
 }
 
+interface EspecieFauna {
+  id: string;
+  nome_popular: string;
+  nome_cientifico: string;
+  classe_taxonomica: string;
+  ordem_taxonomica: string;
+  tipo_de_fauna: string;
+  estado_de_conservacao: string;
+}
+
 const EspecieSection: React.FC<EspecieSectionProps> = ({
   formData,
   handleSelectChange,
@@ -25,15 +36,56 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
   carregandoEspecie,
   isEvadido = false
 }) => {
-  // For debugging
+  const [especiesFauna, setEspeciesFauna] = useState<EspecieFauna[]>([]);
+  const [classesTaxonomicas, setClassesTaxonomicas] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    console.log("EspecieSection - classeTaxonomica atual:", formData.classeTaxonomica);
-    console.log("EspecieSection - especieId atual:", formData.especieId);
-    console.log("EspecieSection - especieSelecionada:", especieSelecionada);
-  }, [formData.classeTaxonomica, formData.especieId, especieSelecionada]);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('dim_especies_fauna')
+          .select('*')
+          .order('nome_popular', { ascending: true });
+
+        if (data) {
+          setEspeciesFauna(data);
+          const classes = [...new Set(data.map(e => e.classe_taxonomica))].sort();
+          setClassesTaxonomicas(classes);
+          console.log('Classes encontradas:', classes.join(', '));
+        }
+        if (error) {
+          console.error('Erro ao carregar espécies:', error);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err);
+      }
+      setLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  const getEspeciesPorClasse = (classe: string) => {
+    return especiesFauna.filter(e => e.classe_taxonomica === classe);
+  };
+
+  const getEspecieDetails = () => {
+    if (especieSelecionada) {
+      return especieSelecionada;
+    }
+    // Fallback: buscar nos dados locais
+    if (formData.especieId) {
+      return especiesFauna.find(e => e.id === formData.especieId) || null;
+    }
+    return null;
+  };
+
+  const selectedEspecie = getEspecieDetails();
 
   return (
-    <FormSection title="Espécie">
+    <FormSection title="Identificação da Espécie">
       {isEvadido && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
           <div className="flex items-start">
@@ -49,32 +101,99 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
         </div>
       )}
 
-      <ClasseTaxonomicaField 
-        value={formData.classeTaxonomica}
-        onChange={(value) => handleSelectChange('classeTaxonomica', value)}
-        error={errors.classeTaxonomica?.message}
-        required={!isEvadido}
-      />
-      
-      {formData.classeTaxonomica && (
-        <div className="space-y-6">
-          <EspeciesField 
-            classeTaxonomica={formData.classeTaxonomica}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          id="classeTaxonomica"
+          label="Classe Taxonômica"
+          required={!isEvadido}
+          error={errors.classeTaxonomica?.message}
+        >
+          <Select
+            value={formData.classeTaxonomica}
+            onValueChange={(value) => handleSelectChange('classeTaxonomica', value)}
+            disabled={loading}
+          >
+            <SelectTrigger className={errors.classeTaxonomica?.message ? "border-red-500" : ""}>
+              <SelectValue placeholder={loading ? "Carregando..." : "Selecione a classe"} />
+            </SelectTrigger>
+            <SelectContent>
+              {classesTaxonomicas.map((classe) => (
+                <SelectItem key={classe} value={classe}>
+                  {classe}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+
+        <FormField
+          id="especieId"
+          label="Espécie (Nome Popular)"
+          required={!isEvadido}
+          error={errors.especieId?.message}
+        >
+          <Select
             value={formData.especieId}
-            onChange={(value) => handleSelectChange('especieId', value)}
-            error={errors.especieId?.message}
-            isLoading={carregandoEspecie}
-            required={!isEvadido}
+            onValueChange={(value) => handleSelectChange('especieId', value)}
+            disabled={loading || !formData.classeTaxonomica}
+          >
+            <SelectTrigger className={errors.especieId?.message ? "border-red-500" : ""}>
+              <SelectValue placeholder={!formData.classeTaxonomica ? "Selecione a classe primeiro" : "Selecione a espécie"} />
+            </SelectTrigger>
+            <SelectContent>
+              {getEspeciesPorClasse(formData.classeTaxonomica).map((especie) => (
+                <SelectItem key={especie.id} value={especie.id}>
+                  {especie.nome_popular}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+
+        <FormField
+          id="nomeCientifico"
+          label="Nome Científico"
+        >
+          <Input
+            value={selectedEspecie?.nome_cientifico || ''}
+            readOnly
+            className="bg-muted"
           />
-          
-          {especieSelecionada && (
-            <EspecieDetailsPanel 
-              especie={especieSelecionada} 
-              isLoading={carregandoEspecie} 
-            />
-          )}
-        </div>
-      )}
+        </FormField>
+
+        <FormField
+          id="ordemTaxonomica"
+          label="Ordem Taxonômica"
+        >
+          <Input
+            value={selectedEspecie?.ordem_taxonomica || ''}
+            readOnly
+            className="bg-muted"
+          />
+        </FormField>
+
+        <FormField
+          id="estadoConservacao"
+          label="Estado de Conservação"
+        >
+          <Input
+            value={selectedEspecie?.estado_de_conservacao || ''}
+            readOnly
+            className="bg-muted"
+          />
+        </FormField>
+
+        <FormField
+          id="tipoFauna"
+          label="Tipo de Fauna"
+        >
+          <Input
+            value={selectedEspecie?.tipo_de_fauna || ''}
+            readOnly
+            className="bg-muted"
+          />
+        </FormField>
+      </div>
     </FormSection>
   );
 };
