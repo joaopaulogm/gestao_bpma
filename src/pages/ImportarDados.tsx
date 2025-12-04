@@ -75,12 +75,10 @@ const COORDENADA_PADRAO_DF = { lat: '-15.7942', lng: '-47.8822' };
 
 // Função para obter coordenadas da RA (usa padrão se não encontrar)
 const obterCoordenadasRA = (regiaoAdministrativa: string): { lat: string; lng: string } => {
-  // Tenta encontrar correspondência exata
   if (COORDENADAS_REGIOES_DF[regiaoAdministrativa]) {
     return COORDENADAS_REGIOES_DF[regiaoAdministrativa];
   }
   
-  // Tenta encontrar correspondência parcial (ignora case e acentos)
   const normalizar = (str: string) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const regiaoNormalizada = normalizar(regiaoAdministrativa);
   
@@ -92,7 +90,6 @@ const obterCoordenadasRA = (regiaoAdministrativa: string): { lat: string; lng: s
     }
   }
   
-  // Retorna coordenada padrão (Plano Piloto) se não encontrar
   return COORDENADA_PADRAO_DF;
 };
 
@@ -108,7 +105,6 @@ const ImportarDados: React.FC = () => {
     const lines = text.split('\n').filter(line => line.trim());
     const records: CSVRecord[] = [];
     
-    // Skip header line
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
       const parts = line.split(';');
@@ -116,7 +112,7 @@ const ImportarDados: React.FC = () => {
       if (parts.length >= 15) {
         records.push({
           data: parts[2]?.trim() || '',
-          regiao_administrativa: parts[3]?.trim() || 'Plano Piloto', // Coluna 3 = RA
+          regiao_administrativa: parts[3]?.trim() || 'Plano Piloto',
           nome_popular: parts[4]?.trim() || '',
           nome_cientifico: parts[5]?.trim() || '',
           classe_taxonomica: parts[6]?.trim() || '',
@@ -142,25 +138,22 @@ const ImportarDados: React.FC = () => {
     setFile(selectedFile);
     setResult(null);
     
-    // Preview first 10 records
     const text = await selectedFile.text();
     const records = parseCSV(text);
     setPreviewData(records.slice(0, 10));
   };
 
   const findOrCreateEspecie = async (record: CSVRecord): Promise<string | null> => {
-    // First try to find existing species by scientific name
     const { data: existingEspecie } = await supabase
       .from('dim_especies_fauna')
       .select('id')
       .eq('nome_cientifico', record.nome_cientifico)
-      .single();
+      .maybeSingle();
     
     if (existingEspecie) {
       return existingEspecie.id;
     }
     
-    // Create new species if not found
     const { data: newEspecie, error } = await supabase
       .from('dim_especies_fauna')
       .insert({
@@ -200,7 +193,6 @@ const ImportarDados: React.FC = () => {
       const records = parseCSV(text);
       importResult.total = records.length;
       
-      // Cache dimension IDs using the existing service
       const origemId = await buscarIdPorNome('dim_origem', 'Resgate de Fauna');
       const estadoSaudeNormalId = await buscarIdPorNome('dim_estado_saude', 'Normal');
       const estadoSaudeFeriidoId = await buscarIdPorNome('dim_estado_saude', 'Ferido');
@@ -210,10 +202,7 @@ const ImportarDados: React.FC = () => {
       const desfechoObitoId = await buscarIdPorNome('dim_desfecho', 'Óbito');
       const desfechoSolturaId = await buscarIdPorNome('dim_desfecho', 'Soltura no Local');
       
-      // Species cache to avoid repeated queries
       const speciesCache = new Map<string, string>();
-      
-      // Process in batches
       const batchSize = 50;
       
       for (let i = 0; i < records.length; i += batchSize) {
@@ -221,7 +210,6 @@ const ImportarDados: React.FC = () => {
         
         for (const record of batch) {
           try {
-            // Parse date from DD/MM/YYYY format
             let dataFormatada: string;
             const parsedDate = parse(record.data, 'dd/MM/yyyy', new Date(), { locale: ptBR });
             
@@ -231,7 +219,6 @@ const ImportarDados: React.FC = () => {
               throw new Error(`Data inválida: ${record.data}`);
             }
             
-            // Get or create species
             let especieId = speciesCache.get(record.nome_cientifico);
             if (!especieId) {
               const foundId = await findOrCreateEspecie(record);
@@ -245,14 +232,10 @@ const ImportarDados: React.FC = () => {
               throw new Error(`Não foi possível encontrar/criar espécie: ${record.nome_cientifico}`);
             }
             
-            // Determine quantities and status based on CSV data
             const quantidadeAdulto = Math.max(0, record.resgates - record.filhotes);
             const quantidadeFilhote = record.filhotes;
-            
-            // Determine health status based on feridos column
             const estadoSaudeId = record.feridos > 0 ? estadoSaudeFeriidoId : estadoSaudeNormalId;
             
-            // Determine desfecho based on obitos and solturas
             let desfechoId: string | null = null;
             if (record.obitos > 0) {
               desfechoId = desfechoObitoId;
@@ -260,13 +243,9 @@ const ImportarDados: React.FC = () => {
               desfechoId = desfechoSolturaId;
             }
             
-            // Buscar ID da região administrativa
             const regiaoId = await buscarIdPorNome('dim_regiao_administrativa', record.regiao_administrativa);
-            
-            // Obter coordenadas do centro da RA (dentro dos limites do DF)
             const coordenadas = obterCoordenadasRA(record.regiao_administrativa);
             
-            // Create record in fat_registros_de_resgate
             const { error } = await supabase.from('fat_registros_de_resgate').insert({
               data: dataFormatada,
               especie_id: especieId,
@@ -321,147 +300,142 @@ const ImportarDados: React.FC = () => {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-        <Card className="backdrop-blur-md bg-white/70 border-secondary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-secondary">
-              <FileSpreadsheet className="h-6 w-6" />
-              Importar Dados Históricos
-            </CardTitle>
-            <CardDescription>
-              Importe registros de resgate de fauna a partir de arquivo CSV (formato DD/MM/AAAA)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* File Upload */}
-            <div className="border-2 border-dashed border-secondary/30 rounded-lg p-8 text-center">
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                className="hidden"
-                id="csv-upload"
-                disabled={isProcessing}
-              />
-              <label
-                htmlFor="csv-upload"
-                className="cursor-pointer flex flex-col items-center gap-3"
-              >
-                <Upload className="h-12 w-12 text-secondary/50" />
-                <span className="text-secondary/70">
-                  {file ? file.name : 'Clique para selecionar arquivo CSV'}
-                </span>
-              </label>
-            </div>
-            
-            {/* Preview */}
-            {previewData.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="font-semibold text-secondary">Prévia dos dados ({previewData.length} primeiros registros)</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm border-collapse">
-                    <thead>
-                      <tr className="bg-secondary/10">
-                        <th className="p-2 text-left border border-secondary/20">Data</th>
-                        <th className="p-2 text-left border border-secondary/20">RA</th>
-                        <th className="p-2 text-left border border-secondary/20">Espécie</th>
-                        <th className="p-2 text-left border border-secondary/20">Classe</th>
-                        <th className="p-2 text-center border border-secondary/20">Resgates</th>
+      <Card className="backdrop-blur-md bg-white/70 border-secondary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-secondary">
+            <FileSpreadsheet className="h-6 w-6" />
+            Importar Dados Históricos
+          </CardTitle>
+          <CardDescription>
+            Importe registros de resgate de fauna a partir de arquivo CSV (formato DD/MM/AAAA)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="border-2 border-dashed border-secondary/30 rounded-lg p-8 text-center">
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="hidden"
+              id="csv-upload"
+              disabled={isProcessing}
+            />
+            <label
+              htmlFor="csv-upload"
+              className="cursor-pointer flex flex-col items-center gap-3"
+            >
+              <Upload className="h-12 w-12 text-secondary/50" />
+              <span className="text-secondary/70">
+                {file ? file.name : 'Clique para selecionar arquivo CSV'}
+              </span>
+            </label>
+          </div>
+          
+          {previewData.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="font-semibold text-secondary">Prévia dos dados ({previewData.length} primeiros registros)</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-secondary/10">
+                      <th className="p-2 text-left border border-secondary/20">Data</th>
+                      <th className="p-2 text-left border border-secondary/20">RA</th>
+                      <th className="p-2 text-left border border-secondary/20">Espécie</th>
+                      <th className="p-2 text-left border border-secondary/20">Classe</th>
+                      <th className="p-2 text-center border border-secondary/20">Resgates</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewData.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-secondary/5">
+                        <td className="p-2 border border-secondary/20">{row.data}</td>
+                        <td className="p-2 border border-secondary/20">{row.regiao_administrativa}</td>
+                        <td className="p-2 border border-secondary/20">{row.nome_popular}</td>
+                        <td className="p-2 border border-secondary/20">{row.classe_taxonomica}</td>
+                        <td className="p-2 text-center border border-secondary/20">{row.resgates}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {previewData.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-secondary/5">
-                          <td className="p-2 border border-secondary/20">{row.data}</td>
-                          <td className="p-2 border border-secondary/20">{row.regiao_administrativa}</td>
-                          <td className="p-2 border border-secondary/20">{row.nome_popular}</td>
-                          <td className="p-2 border border-secondary/20">{row.classe_taxonomica}</td>
-                          <td className="p-2 text-center border border-secondary/20">{row.resgates}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-            
-            {/* Progress */}
-            {isProcessing && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-secondary" />
-                  <span className="text-secondary">Importando registros...</span>
-                </div>
-                <Progress value={progress} className="h-2" />
-                <span className="text-sm text-secondary/70">{progress}% concluído</span>
-              </div>
-            )}
-            
-            {/* Results */}
-            {result && (
-              <div className="space-y-3 p-4 rounded-lg bg-secondary/5 border border-secondary/20">
-                <h3 className="font-semibold text-secondary">Resultado da Importação</h3>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-2xl font-bold text-secondary">{result.total}</p>
-                    <p className="text-sm text-secondary/70">Total</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-green-600">{result.success}</p>
-                    <p className="text-sm text-secondary/70">Sucesso</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-destructive">{result.failed}</p>
-                    <p className="text-sm text-secondary/70">Falhas</p>
-                  </div>
-                </div>
-                
-                {result.errors.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-sm font-medium text-destructive mb-2">Erros encontrados:</p>
-                    <ul className="text-xs text-destructive/80 space-y-1 max-h-40 overflow-y-auto">
-                      {result.errors.map((err, idx) => (
-                        <li key={idx} className="flex items-start gap-1">
-                          <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                          {err}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {/* Actions */}
-            <div className="flex gap-3">
-              <Button
-                onClick={processImport}
-                disabled={!file || isProcessing}
-                className="bg-secondary hover:bg-secondary/90"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Importando...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Iniciar Importação
-                  </>
-                )}
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => navigate('/registros')}
-                disabled={isProcessing}
-              >
-                Ver Registros
-              </Button>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+          
+          {isProcessing && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-secondary" />
+                <span className="text-secondary">Importando registros...</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+              <span className="text-sm text-secondary/70">{progress}% concluído</span>
+            </div>
+          )}
+          
+          {result && (
+            <div className="space-y-3 p-4 rounded-lg bg-secondary/5 border border-secondary/20">
+              <h3 className="font-semibold text-secondary">Resultado da Importação</h3>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold text-secondary">{result.total}</p>
+                  <p className="text-sm text-secondary/70">Total</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-green-600">{result.success}</p>
+                  <p className="text-sm text-secondary/70">Sucesso</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-destructive">{result.failed}</p>
+                  <p className="text-sm text-secondary/70">Falhas</p>
+                </div>
+              </div>
+              
+              {result.errors.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-destructive mb-2">Erros encontrados:</p>
+                  <ul className="text-xs text-destructive/80 space-y-1 max-h-40 overflow-y-auto">
+                    {result.errors.map((err, idx) => (
+                      <li key={idx} className="flex items-start gap-1">
+                        <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                        {err}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className="flex gap-3">
+            <Button
+              onClick={processImport}
+              disabled={!file || isProcessing}
+              className="bg-secondary hover:bg-secondary/90"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Importando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Iniciar Importação
+                </>
+              )}
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => navigate('/registros')}
+              disabled={isProcessing}
+            >
+              Ver Registros
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
