@@ -106,13 +106,19 @@ const FloraSection: React.FC<FloraSectionProps> = ({
   useEffect(() => {
     const fetchEspeciesFlora = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('dim_especies_flora')
-        .select('*')
-        .order('"Nome Popular"');
-      
-      if (data && !error) {
-        setEspeciesFlora(data as EspecieFlora[]);
+      try {
+        const { data, error } = await supabase
+          .from('dim_especies_flora')
+          .select('*')
+          .order('Nome Popular', { ascending: true });
+        
+        if (error) {
+          console.error('Erro ao carregar espécies de flora:', error);
+        } else if (data) {
+          setEspeciesFlora(data as EspecieFlora[]);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar espécies de flora:', err);
       }
       setLoading(false);
     };

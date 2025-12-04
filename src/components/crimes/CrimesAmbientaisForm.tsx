@@ -188,8 +188,10 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
           )}
         </FormSection>
 
-        {/* Seção de Fauna - apenas para Crime Contra a Fauna */}
-        {formData.tipoCrime === 'Crime Contra a Fauna' && (
+        {/* Seção de Fauna - apenas para Crime Contra a Fauna E após selecionar enquadramento (exceto "Exportar pele de...") */}
+        {formData.tipoCrime === 'Crime Contra a Fauna' && 
+         formData.enquadramento && 
+         !formData.enquadramento.startsWith('Exportar pele de') && (
           <FaunaSection
             formData={formData}
             handleSelectChange={handleSelectChange}
@@ -200,8 +202,8 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
           />
         )}
 
-        {/* Seção de Flora - apenas para Crime Contra a Flora */}
-        {formData.tipoCrime === 'Crime Contra a Flora' && (
+        {/* Seção de Flora - apenas para Crime Contra a Flora E após selecionar enquadramento */}
+        {formData.tipoCrime === 'Crime Contra a Flora' && formData.enquadramento && (
           <FloraSection
             floraItems={floraItems}
             onFloraItemsChange={onFloraItemsChange}
