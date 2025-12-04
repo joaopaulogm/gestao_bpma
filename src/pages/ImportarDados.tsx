@@ -32,6 +32,46 @@ interface ImportResult {
   errors: string[];
 }
 
+// Coordenadas do centro de cada Região Administrativa do DF
+const COORDENADAS_REGIOES_DF: Record<string, { lat: string; lng: string }> = {
+  'Plano Piloto': { lat: '-15.7942', lng: '-47.8822' },
+  'Gama': { lat: '-16.0103', lng: '-48.0615' },
+  'Taguatinga': { lat: '-15.8365', lng: '-48.0536' },
+  'Brazlândia': { lat: '-15.6806', lng: '-48.1969' },
+  'Sobradinho': { lat: '-15.6517', lng: '-47.7897' },
+  'Planaltina': { lat: '-15.6214', lng: '-47.6486' },
+  'Paranoá': { lat: '-15.7744', lng: '-47.7803' },
+  'Núcleo Bandeirante': { lat: '-15.8711', lng: '-47.9683' },
+  'Ceilândia': { lat: '-15.8206', lng: '-48.1117' },
+  'Guará': { lat: '-15.8350', lng: '-47.9817' },
+  'Cruzeiro': { lat: '-15.7922', lng: '-47.9328' },
+  'Samambaia': { lat: '-15.8789', lng: '-48.0828' },
+  'Santa Maria': { lat: '-16.0197', lng: '-48.0117' },
+  'São Sebastião': { lat: '-15.9028', lng: '-47.7669' },
+  'Recanto das Emas': { lat: '-15.9147', lng: '-48.0608' },
+  'Lago Sul': { lat: '-15.8350', lng: '-47.8294' },
+  'Riacho Fundo': { lat: '-15.8761', lng: '-48.0200' },
+  'Lago Norte': { lat: '-15.7350', lng: '-47.8364' },
+  'Candangolândia': { lat: '-15.8528', lng: '-47.9511' },
+  'Águas Claras': { lat: '-15.8394', lng: '-48.0275' },
+  'Riacho Fundo II': { lat: '-15.8917', lng: '-48.0472' },
+  'Sudoeste/Octogonal': { lat: '-15.8014', lng: '-47.9286' },
+  'Varjão': { lat: '-15.7111', lng: '-47.8692' },
+  'Park Way': { lat: '-15.8989', lng: '-47.9586' },
+  'SCIA/Estrutural': { lat: '-15.7844', lng: '-47.9969' },
+  'Sobradinho II': { lat: '-15.6442', lng: '-47.8239' },
+  'Jardim Botânico': { lat: '-15.8697', lng: '-47.8036' },
+  'Itapoã': { lat: '-15.7567', lng: '-47.7711' },
+  'SIA': { lat: '-15.8083', lng: '-47.9550' },
+  'Vicente Pires': { lat: '-15.8017', lng: '-48.0258' },
+  'Fercal': { lat: '-15.6019', lng: '-47.8867' },
+  'Sol Nascente/Pôr do Sol': { lat: '-15.8108', lng: '-48.1189' },
+  'Arniqueira': { lat: '-15.8367', lng: '-48.0061' },
+};
+
+// Coordenada padrão: Centro do Plano Piloto (sempre dentro do DF)
+const COORDENADA_PADRAO_DF = { lat: '-15.7942', lng: '-47.8822' };
+
 const ImportarDados: React.FC = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
@@ -196,6 +236,7 @@ const ImportarDados: React.FC = () => {
             }
             
             // Create record in fat_registros_de_resgate
+            // Usa coordenadas do centro do Plano Piloto (dentro dos limites do DF)
             const { error } = await supabase.from('fat_registros_de_resgate').insert({
               data: dataFormatada,
               especie_id: especieId,
@@ -205,8 +246,8 @@ const ImportarDados: React.FC = () => {
               destinacao_id: record.solturas > 0 ? destinacaoSolturaId : null,
               desfecho_id: desfechoId,
               atropelamento: 'Não',
-              latitude_origem: '-15.7801',
-              longitude_origem: '-47.9292',
+              latitude_origem: COORDENADA_PADRAO_DF.lat,
+              longitude_origem: COORDENADA_PADRAO_DF.lng,
               quantidade: record.resgates,
               quantidade_adulto: quantidadeAdulto,
               quantidade_filhote: quantidadeFilhote,
