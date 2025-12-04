@@ -33,8 +33,7 @@ interface ImportResult {
   errors: string[];
 }
 
-// Coordenadas do centro de cada Região Administrativa do DF
-const COORDENADAS_REGIOES_DF: Record<string, { lat: string; lng: string }> = {
+const COORDENADAS_REGIOES: Record<string, { lat: string; lng: string }> = {
   'Plano Piloto': { lat: '-15.7942', lng: '-47.8822' },
   'Gama': { lat: '-16.0103', lng: '-48.0615' },
   'Taguatinga': { lat: '-15.8365', lng: '-48.0536' },
@@ -70,30 +69,24 @@ const COORDENADAS_REGIOES_DF: Record<string, { lat: string; lng: string }> = {
   'Arniqueira': { lat: '-15.8367', lng: '-48.0061' },
 };
 
-// Coordenada padrão: Centro do Plano Piloto (sempre dentro do DF)
-const COORDENADA_PADRAO_DF = { lat: '-15.7942', lng: '-47.8822' };
+const COORD_PADRAO = { lat: '-15.7942', lng: '-47.8822' };
 
-// Função para obter coordenadas da RA (usa padrão se não encontrar)
-const obterCoordenadasRA = (regiaoAdministrativa: string): { lat: string; lng: string } => {
-  if (COORDENADAS_REGIOES_DF[regiaoAdministrativa]) {
-    return COORDENADAS_REGIOES_DF[regiaoAdministrativa];
-  }
+function obterCoordenadas(ra: string): { lat: string; lng: string } {
+  if (COORDENADAS_REGIOES[ra]) return COORDENADAS_REGIOES[ra];
   
-  const normalizar = (str: string) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const regiaoNormalizada = normalizar(regiaoAdministrativa);
+  const normalizar = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const raNorm = normalizar(ra);
   
-  for (const [regiao, coords] of Object.entries(COORDENADAS_REGIOES_DF)) {
-    if (normalizar(regiao) === regiaoNormalizada || 
-        normalizar(regiao).includes(regiaoNormalizada) ||
-        regiaoNormalizada.includes(normalizar(regiao))) {
+  for (const [regiao, coords] of Object.entries(COORDENADAS_REGIOES)) {
+    if (normalizar(regiao).includes(raNorm) || raNorm.includes(normalizar(regiao))) {
       return coords;
     }
   }
   
-  return COORDENADA_PADRAO_DF;
-};
+  return COORD_PADRAO;
+}
 
-const ImportarDados: React.FC = () => {
+const ImportarDados = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -106,9 +99,7 @@ const ImportarDados: React.FC = () => {
     const records: CSVRecord[] = [];
     
     for (let i = 1; i < lines.length; i++) {
-      const line = lines[i];
-      const parts = line.split(';');
-      
+      const parts = lines[i].split(';');
       if (parts.length >= 15) {
         records.push({
           data: parts[2]?.trim() || '',
@@ -127,34 +118,28 @@ const ImportarDados: React.FC = () => {
         });
       }
     }
-    
     return records;
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
-    
     setFile(selectedFile);
     setResult(null);
-    
     const text = await selectedFile.text();
-    const records = parseCSV(text);
-    setPreviewData(records.slice(0, 10));
+    setPreviewData(parseCSV(text).slice(0, 10));
   };
 
   const findOrCreateEspecie = async (record: CSVRecord): Promise<string | null> => {
-    const { data: existingEspecie } = await supabase
+    const { data: existing } = await supabase
       .from('dim_especies_fauna')
       .select('id')
       .eq('nome_cientifico', record.nome_cientifico)
       .maybeSingle();
     
-    if (existingEspecie) {
-      return existingEspecie.id;
-    }
+    if (existing) return existing.id;
     
-    const { data: newEspecie, error } = await supabase
+    const { data: created, error } = await supabase
       .from('dim_especies_fauna')
       .insert({
         nome_popular: record.nome_popular,
@@ -167,26 +152,16 @@ const ImportarDados: React.FC = () => {
       .select('id')
       .single();
     
-    if (error) {
-      console.error('Error creating species:', error);
-      return null;
-    }
-    
-    return newEspecie?.id || null;
+    if (error) return null;
+    return created?.id || null;
   };
 
   const processImport = async () => {
     if (!file) return;
-    
     setIsProcessing(true);
     setProgress(0);
     
-    const importResult: ImportResult = {
-      total: 0,
-      success: 0,
-      failed: 0,
-      errors: [],
-    };
+    const importResult: ImportResult = { total: 0, success: 0, failed: 0, errors: [] };
     
     try {
       const text = await file.text();
@@ -194,8 +169,8 @@ const ImportarDados: React.FC = () => {
       importResult.total = records.length;
       
       const origemId = await buscarIdPorNome('dim_origem', 'Resgate de Fauna');
-      const estadoSaudeNormalId = await buscarIdPorNome('dim_estado_saude', 'Normal');
-      const estadoSaudeFeriidoId = await buscarIdPorNome('dim_estado_saude', 'Ferido');
+      const estadoNormalId = await buscarIdPorNome('dim_estado_saude', 'Normal');
+      const estadoFeridoId = await buscarIdPorNome('dim_estado_saude', 'Ferido');
       const estagioAdultoId = await buscarIdPorNome('dim_estagio_vida', 'Adulto');
       const estagioFilhoteId = await buscarIdPorNome('dim_estagio_vida', 'Filhote');
       const destinacaoSolturaId = await buscarIdPorNome('dim_destinacao', 'Soltura');
@@ -203,21 +178,15 @@ const ImportarDados: React.FC = () => {
       const desfechoSolturaId = await buscarIdPorNome('dim_desfecho', 'Soltura no Local');
       
       const speciesCache = new Map<string, string>();
-      const batchSize = 50;
       
-      for (let i = 0; i < records.length; i += batchSize) {
-        const batch = records.slice(i, Math.min(i + batchSize, records.length));
+      for (let i = 0; i < records.length; i += 50) {
+        const batch = records.slice(i, Math.min(i + 50, records.length));
         
         for (const record of batch) {
           try {
-            let dataFormatada: string;
             const parsedDate = parse(record.data, 'dd/MM/yyyy', new Date(), { locale: ptBR });
-            
-            if (isValid(parsedDate)) {
-              dataFormatada = format(parsedDate, 'yyyy-MM-dd');
-            } else {
-              throw new Error(`Data inválida: ${record.data}`);
-            }
+            if (!isValid(parsedDate)) throw new Error(`Data inválida: ${record.data}`);
+            const dataFormatada = format(parsedDate, 'yyyy-MM-dd');
             
             let especieId = speciesCache.get(record.nome_cientifico);
             if (!especieId) {
@@ -228,70 +197,44 @@ const ImportarDados: React.FC = () => {
               }
             }
             
-            if (!especieId) {
-              throw new Error(`Não foi possível encontrar/criar espécie: ${record.nome_cientifico}`);
-            }
-            
-            const quantidadeAdulto = Math.max(0, record.resgates - record.filhotes);
-            const quantidadeFilhote = record.filhotes;
-            const estadoSaudeId = record.feridos > 0 ? estadoSaudeFeriidoId : estadoSaudeNormalId;
-            
-            let desfechoId: string | null = null;
-            if (record.obitos > 0) {
-              desfechoId = desfechoObitoId;
-            } else if (record.solturas > 0) {
-              desfechoId = desfechoSolturaId;
-            }
+            if (!especieId) throw new Error(`Espécie não encontrada: ${record.nome_cientifico}`);
             
             const regiaoId = await buscarIdPorNome('dim_regiao_administrativa', record.regiao_administrativa);
-            const coordenadas = obterCoordenadasRA(record.regiao_administrativa);
+            const coords = obterCoordenadas(record.regiao_administrativa);
             
             const { error } = await supabase.from('fat_registros_de_resgate').insert({
               data: dataFormatada,
               especie_id: especieId,
               origem_id: origemId,
-              estado_saude_id: estadoSaudeId,
-              estagio_vida_id: quantidadeFilhote > 0 ? estagioFilhoteId : estagioAdultoId,
+              estado_saude_id: record.feridos > 0 ? estadoFeridoId : estadoNormalId,
+              estagio_vida_id: record.filhotes > 0 ? estagioFilhoteId : estagioAdultoId,
               destinacao_id: record.solturas > 0 ? destinacaoSolturaId : null,
-              desfecho_id: desfechoId,
+              desfecho_id: record.obitos > 0 ? desfechoObitoId : (record.solturas > 0 ? desfechoSolturaId : null),
               regiao_administrativa_id: regiaoId,
               atropelamento: 'Não',
-              latitude_origem: coordenadas.lat,
-              longitude_origem: coordenadas.lng,
+              latitude_origem: coords.lat,
+              longitude_origem: coords.lng,
               quantidade: record.resgates,
-              quantidade_adulto: quantidadeAdulto,
-              quantidade_filhote: quantidadeFilhote,
+              quantidade_adulto: Math.max(0, record.resgates - record.filhotes),
+              quantidade_filhote: record.filhotes,
             });
             
-            if (error) {
-              throw new Error(error.message);
-            }
-            
+            if (error) throw new Error(error.message);
             importResult.success++;
           } catch (err) {
             importResult.failed++;
             if (importResult.errors.length < 20) {
-              importResult.errors.push(
-                `Linha ${i + batch.indexOf(record) + 2}: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
-              );
+              importResult.errors.push(`Linha ${i + batch.indexOf(record) + 2}: ${err instanceof Error ? err.message : 'Erro'}`);
             }
           }
         }
-        
         setProgress(Math.round(((i + batch.length) / records.length) * 100));
       }
       
       setResult(importResult);
-      
-      if (importResult.success > 0) {
-        toast.success(`${importResult.success} registros importados com sucesso!`);
-      }
-      
-      if (importResult.failed > 0) {
-        toast.error(`${importResult.failed} registros falharam`);
-      }
+      if (importResult.success > 0) toast.success(`${importResult.success} registros importados!`);
+      if (importResult.failed > 0) toast.error(`${importResult.failed} registros falharam`);
     } catch (error) {
-      console.error('Import error:', error);
       toast.error('Erro ao processar arquivo');
     } finally {
       setIsProcessing(false);
@@ -307,33 +250,21 @@ const ImportarDados: React.FC = () => {
             Importar Dados Históricos
           </CardTitle>
           <CardDescription>
-            Importe registros de resgate de fauna a partir de arquivo CSV (formato DD/MM/AAAA)
+            Importe registros de resgate de fauna a partir de arquivo CSV
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="border-2 border-dashed border-secondary/30 rounded-lg p-8 text-center">
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleFileChange}
-              className="hidden"
-              id="csv-upload"
-              disabled={isProcessing}
-            />
-            <label
-              htmlFor="csv-upload"
-              className="cursor-pointer flex flex-col items-center gap-3"
-            >
+            <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" id="csv-upload" disabled={isProcessing} />
+            <label htmlFor="csv-upload" className="cursor-pointer flex flex-col items-center gap-3">
               <Upload className="h-12 w-12 text-secondary/50" />
-              <span className="text-secondary/70">
-                {file ? file.name : 'Clique para selecionar arquivo CSV'}
-              </span>
+              <span className="text-secondary/70">{file ? file.name : 'Clique para selecionar arquivo CSV'}</span>
             </label>
           </div>
           
           {previewData.length > 0 && (
             <div className="space-y-3">
-              <h3 className="font-semibold text-secondary">Prévia dos dados ({previewData.length} primeiros registros)</h3>
+              <h3 className="font-semibold text-secondary">Prévia ({previewData.length} registros)</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border-collapse">
                   <thead>
@@ -341,7 +272,6 @@ const ImportarDados: React.FC = () => {
                       <th className="p-2 text-left border border-secondary/20">Data</th>
                       <th className="p-2 text-left border border-secondary/20">RA</th>
                       <th className="p-2 text-left border border-secondary/20">Espécie</th>
-                      <th className="p-2 text-left border border-secondary/20">Classe</th>
                       <th className="p-2 text-center border border-secondary/20">Resgates</th>
                     </tr>
                   </thead>
@@ -351,7 +281,6 @@ const ImportarDados: React.FC = () => {
                         <td className="p-2 border border-secondary/20">{row.data}</td>
                         <td className="p-2 border border-secondary/20">{row.regiao_administrativa}</td>
                         <td className="p-2 border border-secondary/20">{row.nome_popular}</td>
-                        <td className="p-2 border border-secondary/20">{row.classe_taxonomica}</td>
                         <td className="p-2 text-center border border-secondary/20">{row.resgates}</td>
                       </tr>
                     ))}
@@ -365,73 +294,36 @@ const ImportarDados: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin text-secondary" />
-                <span className="text-secondary">Importando registros...</span>
+                <span className="text-secondary">Importando...</span>
               </div>
               <Progress value={progress} className="h-2" />
-              <span className="text-sm text-secondary/70">{progress}% concluído</span>
+              <span className="text-sm text-secondary/70">{progress}%</span>
             </div>
           )}
           
           {result && (
             <div className="space-y-3 p-4 rounded-lg bg-secondary/5 border border-secondary/20">
-              <h3 className="font-semibold text-secondary">Resultado da Importação</h3>
+              <h3 className="font-semibold text-secondary">Resultado</h3>
               <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-secondary">{result.total}</p>
-                  <p className="text-sm text-secondary/70">Total</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-green-600">{result.success}</p>
-                  <p className="text-sm text-secondary/70">Sucesso</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-destructive">{result.failed}</p>
-                  <p className="text-sm text-secondary/70">Falhas</p>
-                </div>
+                <div><p className="text-2xl font-bold text-secondary">{result.total}</p><p className="text-sm text-secondary/70">Total</p></div>
+                <div><p className="text-2xl font-bold text-green-600">{result.success}</p><p className="text-sm text-secondary/70">Sucesso</p></div>
+                <div><p className="text-2xl font-bold text-destructive">{result.failed}</p><p className="text-sm text-secondary/70">Falhas</p></div>
               </div>
-              
               {result.errors.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-sm font-medium text-destructive mb-2">Erros encontrados:</p>
-                  <ul className="text-xs text-destructive/80 space-y-1 max-h-40 overflow-y-auto">
-                    {result.errors.map((err, idx) => (
-                      <li key={idx} className="flex items-start gap-1">
-                        <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                        {err}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <ul className="text-xs text-destructive/80 space-y-1 max-h-40 overflow-y-auto mt-4">
+                  {result.errors.map((err, idx) => (
+                    <li key={idx} className="flex items-start gap-1"><AlertCircle className="h-3 w-3 mt-0.5" />{err}</li>
+                  ))}
+                </ul>
               )}
             </div>
           )}
           
           <div className="flex gap-3">
-            <Button
-              onClick={processImport}
-              disabled={!file || isProcessing}
-              className="bg-secondary hover:bg-secondary/90"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Importando...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Iniciar Importação
-                </>
-              )}
+            <Button onClick={processImport} disabled={!file || isProcessing} className="bg-secondary hover:bg-secondary/90">
+              {isProcessing ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Importando...</> : <><CheckCircle className="h-4 w-4 mr-2" />Iniciar Importação</>}
             </Button>
-            
-            <Button
-              variant="outline"
-              onClick={() => navigate('/registros')}
-              disabled={isProcessing}
-            >
-              Ver Registros
-            </Button>
+            <Button variant="outline" onClick={() => navigate('/registros')} disabled={isProcessing}>Ver Registros</Button>
           </div>
         </CardContent>
       </Card>
