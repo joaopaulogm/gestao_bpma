@@ -283,7 +283,7 @@ export type Database = {
         }
         Relationships: []
       }
-      registros: {
+      fat_registros_de_resgate: {
         Row: {
           atropelamento: string
           created_at: string
