@@ -15,8 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogIn,
-  Shield,
-  Upload
+  Shield
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -168,13 +167,6 @@ const Sidebar = () => {
                   <Link to="/relatorios" className={linkClasses('/relatorios', true)}>
                     <FileText className="h-5 w-5 flex-shrink-0" />
                     {isOpen && <span className="truncate">Relatórios</span>}
-                  </Link>
-                </li>
-                
-                <li>
-                  <Link to="/importar-dados" className={linkClasses('/importar-dados', true)}>
-                    <Upload className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Importar Dados</span>}
                   </Link>
                 </li>
               </>
