@@ -42,10 +42,12 @@ export const useFormResgateData = () => {
 
   // Enhanced select change handler that also handles especie-related logic
   const handleSelectChange = (name: string, value: string) => {
+    console.log(`handleSelectChange chamado: ${name} = ${value}`);
     baseHandleSelectChange(name, value);
     
     // Se o campo alterado for a espécie, busca os detalhes da espécie
     if (name === 'especieId' && value) {
+      console.log('Buscando detalhes da espécie com ID:', value);
       buscarDetalhesEspecie(value);
     }
     
