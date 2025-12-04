@@ -18,7 +18,9 @@ export const useEspecieSelector = () => {
     setEspecieError(null);
     
     try {
+      console.log('useEspecieSelector - Buscando espécie por ID:', especieId);
       const especie = await buscarEspeciePorId(especieId);
+      console.log('useEspecieSelector - Espécie encontrada:', especie);
       setEspecieSelecionada(especie);
     } catch (error) {
       console.error("Erro ao buscar detalhes da espécie:", error);

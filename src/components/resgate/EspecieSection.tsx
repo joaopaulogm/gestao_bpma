@@ -28,7 +28,9 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
   // For debugging
   useEffect(() => {
     console.log("EspecieSection - classeTaxonomica atual:", formData.classeTaxonomica);
-  }, [formData.classeTaxonomica]);
+    console.log("EspecieSection - especieId atual:", formData.especieId);
+    console.log("EspecieSection - especieSelecionada:", especieSelecionada);
+  }, [formData.classeTaxonomica, formData.especieId, especieSelecionada]);
 
   return (
     <FormSection title="Espécie">
