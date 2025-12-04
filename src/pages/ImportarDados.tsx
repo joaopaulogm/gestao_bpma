@@ -12,6 +12,7 @@ import { ptBR } from 'date-fns/locale';
 
 interface CSVRecord {
   data: string;
+  regiao_administrativa: string;
   nome_popular: string;
   nome_cientifico: string;
   classe_taxonomica: string;
@@ -24,6 +25,29 @@ interface CSVRecord {
   feridos: number;
   filhotes: number;
 }
+
+// Função para obter coordenadas da RA (usa padrão se não encontrar)
+const obterCoordenadasRA = (regiaoAdministrativa: string): { lat: string; lng: string } => {
+  // Tenta encontrar correspondência exata
+  if (COORDENADAS_REGIOES_DF[regiaoAdministrativa]) {
+    return COORDENADAS_REGIOES_DF[regiaoAdministrativa];
+  }
+  
+  // Tenta encontrar correspondência parcial (ignora case e acentos)
+  const normalizar = (str: string) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const regiaoNormalizada = normalizar(regiaoAdministrativa);
+  
+  for (const [regiao, coords] of Object.entries(COORDENADAS_REGIOES_DF)) {
+    if (normalizar(regiao) === regiaoNormalizada || 
+        normalizar(regiao).includes(regiaoNormalizada) ||
+        regiaoNormalizada.includes(normalizar(regiao))) {
+      return coords;
+    }
+  }
+  
+  // Retorna coordenada padrão (Plano Piloto) se não encontrar
+  return COORDENADA_PADRAO_DF;
+};
 
 interface ImportResult {
   total: number;
@@ -92,6 +116,7 @@ const ImportarDados: React.FC = () => {
       if (parts.length >= 15) {
         records.push({
           data: parts[2]?.trim() || '',
+          regiao_administrativa: parts[3]?.trim() || 'Plano Piloto', // Coluna 3 = RA
           nome_popular: parts[4]?.trim() || '',
           nome_cientifico: parts[5]?.trim() || '',
           classe_taxonomica: parts[6]?.trim() || '',
@@ -235,8 +260,13 @@ const ImportarDados: React.FC = () => {
               desfechoId = desfechoSolturaId;
             }
             
+            // Buscar ID da região administrativa
+            const regiaoId = await buscarIdPorNome('dim_regiao_administrativa', record.regiao_administrativa);
+            
+            // Obter coordenadas do centro da RA (dentro dos limites do DF)
+            const coordenadas = obterCoordenadasRA(record.regiao_administrativa);
+            
             // Create record in fat_registros_de_resgate
-            // Usa coordenadas do centro do Plano Piloto (dentro dos limites do DF)
             const { error } = await supabase.from('fat_registros_de_resgate').insert({
               data: dataFormatada,
               especie_id: especieId,
@@ -245,9 +275,10 @@ const ImportarDados: React.FC = () => {
               estagio_vida_id: quantidadeFilhote > 0 ? estagioFilhoteId : estagioAdultoId,
               destinacao_id: record.solturas > 0 ? destinacaoSolturaId : null,
               desfecho_id: desfechoId,
+              regiao_administrativa_id: regiaoId,
               atropelamento: 'Não',
-              latitude_origem: COORDENADA_PADRAO_DF.lat,
-              longitude_origem: COORDENADA_PADRAO_DF.lng,
+              latitude_origem: coordenadas.lat,
+              longitude_origem: coordenadas.lng,
               quantidade: record.resgates,
               quantidade_adulto: quantidadeAdulto,
               quantidade_filhote: quantidadeFilhote,
@@ -331,20 +362,20 @@ const ImportarDados: React.FC = () => {
                     <thead>
                       <tr className="bg-secondary/10">
                         <th className="p-2 text-left border border-secondary/20">Data</th>
+                        <th className="p-2 text-left border border-secondary/20">RA</th>
                         <th className="p-2 text-left border border-secondary/20">Espécie</th>
                         <th className="p-2 text-left border border-secondary/20">Classe</th>
                         <th className="p-2 text-center border border-secondary/20">Resgates</th>
-                        <th className="p-2 text-center border border-secondary/20">Filhotes</th>
                       </tr>
                     </thead>
                     <tbody>
                       {previewData.map((row, idx) => (
                         <tr key={idx} className="hover:bg-secondary/5">
                           <td className="p-2 border border-secondary/20">{row.data}</td>
+                          <td className="p-2 border border-secondary/20">{row.regiao_administrativa}</td>
                           <td className="p-2 border border-secondary/20">{row.nome_popular}</td>
                           <td className="p-2 border border-secondary/20">{row.classe_taxonomica}</td>
                           <td className="p-2 text-center border border-secondary/20">{row.resgates}</td>
-                          <td className="p-2 text-center border border-secondary/20">{row.filhotes}</td>
                         </tr>
                       ))}
                     </tbody>
