@@ -26,29 +26,6 @@ interface CSVRecord {
   filhotes: number;
 }
 
-// Função para obter coordenadas da RA (usa padrão se não encontrar)
-const obterCoordenadasRA = (regiaoAdministrativa: string): { lat: string; lng: string } => {
-  // Tenta encontrar correspondência exata
-  if (COORDENADAS_REGIOES_DF[regiaoAdministrativa]) {
-    return COORDENADAS_REGIOES_DF[regiaoAdministrativa];
-  }
-  
-  // Tenta encontrar correspondência parcial (ignora case e acentos)
-  const normalizar = (str: string) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const regiaoNormalizada = normalizar(regiaoAdministrativa);
-  
-  for (const [regiao, coords] of Object.entries(COORDENADAS_REGIOES_DF)) {
-    if (normalizar(regiao) === regiaoNormalizada || 
-        normalizar(regiao).includes(regiaoNormalizada) ||
-        regiaoNormalizada.includes(normalizar(regiao))) {
-      return coords;
-    }
-  }
-  
-  // Retorna coordenada padrão (Plano Piloto) se não encontrar
-  return COORDENADA_PADRAO_DF;
-};
-
 interface ImportResult {
   total: number;
   success: number;
@@ -95,6 +72,29 @@ const COORDENADAS_REGIOES_DF: Record<string, { lat: string; lng: string }> = {
 
 // Coordenada padrão: Centro do Plano Piloto (sempre dentro do DF)
 const COORDENADA_PADRAO_DF = { lat: '-15.7942', lng: '-47.8822' };
+
+// Função para obter coordenadas da RA (usa padrão se não encontrar)
+const obterCoordenadasRA = (regiaoAdministrativa: string): { lat: string; lng: string } => {
+  // Tenta encontrar correspondência exata
+  if (COORDENADAS_REGIOES_DF[regiaoAdministrativa]) {
+    return COORDENADAS_REGIOES_DF[regiaoAdministrativa];
+  }
+  
+  // Tenta encontrar correspondência parcial (ignora case e acentos)
+  const normalizar = (str: string) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const regiaoNormalizada = normalizar(regiaoAdministrativa);
+  
+  for (const [regiao, coords] of Object.entries(COORDENADAS_REGIOES_DF)) {
+    if (normalizar(regiao) === regiaoNormalizada || 
+        normalizar(regiao).includes(regiaoNormalizada) ||
+        regiaoNormalizada.includes(normalizar(regiao))) {
+      return coords;
+    }
+  }
+  
+  // Retorna coordenada padrão (Plano Piloto) se não encontrar
+  return COORDENADA_PADRAO_DF;
+};
 
 const ImportarDados: React.FC = () => {
   const navigate = useNavigate();
