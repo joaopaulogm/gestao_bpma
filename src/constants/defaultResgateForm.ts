@@ -26,4 +26,5 @@ export const defaultResgateForm: ResgateFormData = {
   outroDestinacao: '',
   classeTaxonomica: '',
   especieId: '',
+  tipoAreaId: '',
 };
