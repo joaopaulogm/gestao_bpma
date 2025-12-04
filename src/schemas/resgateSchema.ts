@@ -34,6 +34,7 @@ export const resgateSchema = z.object({
   outroDestinacao: z.string().optional(),
   classeTaxonomica: z.string().optional(),
   especieId: z.string().optional(),
+  tipoAreaId: z.string().optional(),
 })
 .superRefine((data, ctx) => {
   // If desfechoResgate is "Evadido", several fields become optional
