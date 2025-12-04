@@ -31,28 +31,28 @@ const EspecieTaxonomicaFields: React.FC<EspecieTaxonomicaFieldsProps> = ({
   required = false
 }) => {
   return (
-    <FormSection columns={true}>
-      <ClasseTaxonomicaField
-        value={classeTaxonomica}
-        onChange={onClasseTaxonomicaChange}
-        error={errors.classeTaxonomica}
-        required={required}
-      />
-      
-      <EspecieField
-        classeTaxonomica={classeTaxonomica}
-        value={especieId}
-        onChange={onEspecieChange}
-        error={errors.especieId}
-        required={required}
-      />
-      
-      <div className="col-span-full mt-2">
-        <EspecieDetailsPanel 
-          especie={especieSelecionada} 
-          isLoading={carregandoEspecie} 
+    <FormSection columns={false}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ClasseTaxonomicaField
+          value={classeTaxonomica}
+          onChange={onClasseTaxonomicaChange}
+          error={errors.classeTaxonomica}
+          required={required}
+        />
+        
+        <EspecieField
+          classeTaxonomica={classeTaxonomica}
+          value={especieId}
+          onChange={onEspecieChange}
+          error={errors.especieId}
+          required={required}
         />
       </div>
+      
+      <EspecieDetailsPanel 
+        especie={especieSelecionada} 
+        isLoading={carregandoEspecie} 
+      />
     </FormSection>
   );
 };

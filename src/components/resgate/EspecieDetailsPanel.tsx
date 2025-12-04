@@ -14,11 +14,21 @@ const EspecieDetailsPanel: React.FC<EspecieDetailsPanelProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="mt-4 p-4 bg-secondary/5 border border-secondary/20 rounded-md animate-pulse">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
+        <div className="space-y-2">
+          <div className="h-4 w-24 bg-secondary/10 rounded"></div>
           <div className="h-10 bg-secondary/10 rounded"></div>
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 w-24 bg-secondary/10 rounded"></div>
           <div className="h-10 bg-secondary/10 rounded"></div>
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 w-24 bg-secondary/10 rounded"></div>
           <div className="h-10 bg-secondary/10 rounded"></div>
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 w-24 bg-secondary/10 rounded"></div>
           <div className="h-10 bg-secondary/10 rounded"></div>
         </div>
       </div>
@@ -28,40 +38,38 @@ const EspecieDetailsPanel: React.FC<EspecieDetailsPanelProps> = ({
   if (!especie) return null;
 
   return (
-    <div className="mt-4 p-4 bg-secondary/5 border border-secondary/20 rounded-md backdrop-blur-sm">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="text-secondary/70 text-sm">Nome Científico</Label>
-          <Input 
-            value={especie.nome_cientifico} 
-            readOnly 
-            className="bg-background/50 border-secondary/20 text-secondary"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-secondary/70 text-sm">Ordem Taxonômica</Label>
-          <Input 
-            value={especie.ordem_taxonomica} 
-            readOnly 
-            className="bg-background/50 border-secondary/20 text-secondary"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-secondary/70 text-sm">Estado de Conservação</Label>
-          <Input 
-            value={especie.estado_de_conservacao} 
-            readOnly 
-            className="bg-background/50 border-secondary/20 text-secondary"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-secondary/70 text-sm">Tipo de Fauna</Label>
-          <Input 
-            value={especie.tipo_de_fauna} 
-            readOnly 
-            className="bg-background/50 border-secondary/20 text-secondary"
-          />
-        </div>
+    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label className="text-secondary text-sm font-normal">Nome Científico</Label>
+        <Input 
+          value={especie.nome_cientifico} 
+          readOnly 
+          className="bg-background border-secondary/30 text-secondary"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-secondary text-sm font-normal">Ordem Taxonômica</Label>
+        <Input 
+          value={especie.ordem_taxonomica} 
+          readOnly 
+          className="bg-background border-secondary/30 text-secondary"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-secondary text-sm font-normal">Estado de Conservação</Label>
+        <Input 
+          value={especie.estado_de_conservacao} 
+          readOnly 
+          className="bg-background border-secondary/30 text-secondary"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-secondary text-sm font-normal">Tipo de Fauna</Label>
+        <Input 
+          value={especie.tipo_de_fauna} 
+          readOnly 
+          className="bg-background border-secondary/30 text-secondary"
+        />
       </div>
     </div>
   );
