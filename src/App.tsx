@@ -11,6 +11,7 @@ import CrimesAmbientais from '@/pages/CrimesAmbientais';
 import FaunaCadastrada from '@/pages/FaunaCadastrada';
 import FaunaCadastro from '@/pages/FaunaCadastro';
 import Relatorios from '@/pages/Relatorios';
+import ImportarDados from '@/pages/ImportarDados';
 import NotFound from '@/pages/NotFound';
 import Login from '@/pages/Login';
 import { Toaster } from 'sonner';
@@ -139,6 +140,16 @@ function App() {
                 <ProtectedRoute>
                   <SidebarLayout>
                     <Relatorios />
+                  </SidebarLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/importar-dados" 
+              element={
+                <ProtectedRoute>
+                  <SidebarLayout>
+                    <ImportarDados />
                   </SidebarLayout>
                 </ProtectedRoute>
               } 
