@@ -35,8 +35,11 @@ const OrigemField: React.FC<OrigemFieldProps> = ({
           <SelectValue placeholder="Selecione a origem" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="Resgate de Fauna">Resgate de Fauna</SelectItem>
-          <SelectItem value="Apreensão">Apreensão</SelectItem>
+          <SelectItem value="COPOM">COPOM</SelectItem>
+          <SelectItem value="Ação Policial">Ação Policial</SelectItem>
+          <SelectItem value="Comunidade">Comunidade</SelectItem>
+          <SelectItem value="Outras instituições">Outras instituições</SelectItem>
+          <SelectItem value="PMDF">PMDF</SelectItem>
         </SelectContent>
       </Select>
     </FormField>

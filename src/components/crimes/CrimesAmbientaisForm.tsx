@@ -9,6 +9,8 @@ import FaunaSection, { FaunaItem } from './FaunaSection';
 import FloraSection, { FloraItem } from './FloraSection';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Save, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -182,6 +184,22 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
             </FormField>
           )}
         </FormSection>
+
+        {/* Ocorreu Apreensão? */}
+        {formData.enquadramento && (
+          <FormSection>
+            <div className="flex items-center space-x-3 p-4 bg-secondary/5 rounded-lg border border-border">
+              <Switch
+                id="ocorreuApreensao"
+                checked={formData.ocorreuApreensao || false}
+                onCheckedChange={(checked) => handleSelectChange('ocorreuApreensao', String(checked))}
+              />
+              <Label htmlFor="ocorreuApreensao" className="text-base font-medium cursor-pointer">
+                Ocorreu Apreensão?
+              </Label>
+            </div>
+          </FormSection>
+        )}
 
         {/* Seção de Fauna - apenas para Crime Contra a Fauna E após selecionar enquadramento (exceto "Exportar pele de...") */}
         {formData.tipoCrime === 'Crime Contra a Fauna' && 

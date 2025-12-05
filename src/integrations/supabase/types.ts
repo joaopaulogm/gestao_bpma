@@ -313,6 +313,7 @@ export type Database = {
           nome_popular_fauna: string | null
           nome_popular_flora: string | null
           numero_termo_entrega: string | null
+          ocorreu_apreensao: boolean | null
           ordem_flora: string | null
           ordem_taxonomica: string | null
           procedimento_legal: string | null
@@ -363,6 +364,7 @@ export type Database = {
           nome_popular_fauna?: string | null
           nome_popular_flora?: string | null
           numero_termo_entrega?: string | null
+          ocorreu_apreensao?: boolean | null
           ordem_flora?: string | null
           ordem_taxonomica?: string | null
           procedimento_legal?: string | null
@@ -413,6 +415,7 @@ export type Database = {
           nome_popular_fauna?: string | null
           nome_popular_flora?: string | null
           numero_termo_entrega?: string | null
+          ocorreu_apreensao?: boolean | null
           ordem_flora?: string | null
           ordem_taxonomica?: string | null
           procedimento_legal?: string | null
