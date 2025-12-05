@@ -25,6 +25,7 @@ export const useCrimesAmbientaisForm = () => {
       longitudeOcorrencia: '',
       tipoCrime: '',
       enquadramento: '',
+      ocorreuApreensao: false,
       // Crime Contra a Fauna
       classeTaxonomica: '',
       especieId: '',
@@ -87,7 +88,12 @@ export const useCrimesAmbientaisForm = () => {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setValue(name as keyof CrimesAmbientaisFormData, value);
+    // Handle boolean field for ocorreuApreensao
+    if (name === 'ocorreuApreensao') {
+      setValue(name as keyof CrimesAmbientaisFormData, value === 'true');
+    } else {
+      setValue(name as keyof CrimesAmbientaisFormData, value);
+    }
     
     if (errors[name as keyof CrimesAmbientaisFormData]) {
       clearErrors(name as keyof CrimesAmbientaisFormData);
@@ -145,6 +151,7 @@ export const useCrimesAmbientaisForm = () => {
         longitude_ocorrencia: data.longitudeOcorrencia || null,
         tipo_crime_id: tipoCrimeId,
         enquadramento_id: enquadramentoId,
+        ocorreu_apreensao: data.ocorreuApreensao || false,
         desfecho: data.desfecho,
         procedimento_legal: data.procedimentoLegal || null,
         quantidade_detidos_maior_idade: data.quantidadeDetidosMaiorIdade || 0,

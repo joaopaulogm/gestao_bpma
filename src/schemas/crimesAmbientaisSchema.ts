@@ -28,6 +28,7 @@ export const crimesAmbientaisSchema = z.object({
   longitudeOcorrencia: z.string().optional(),
   tipoCrime: z.string().min(1, "Tipo de Crime é obrigatório"),
   enquadramento: z.string().min(1, "Enquadramento é obrigatório"),
+  ocorreuApreensao: z.boolean().default(false),
   // Campos para Crime Contra a Fauna
   classeTaxonomica: z.string().optional(),
   especieId: z.string().optional(),

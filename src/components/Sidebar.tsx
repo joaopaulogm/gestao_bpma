@@ -97,7 +97,7 @@ const Sidebar = () => {
           <li>
             <Link to="/resgate-cadastro" className={linkClasses('/resgate-cadastro')}>
               <Clipboard className="h-5 w-5 flex-shrink-0" />
-              {isOpen && <span className="truncate">Ocorrências de Resgate</span>}
+              {isOpen && <span className="truncate">Resgate de Fauna</span>}
             </Link>
           </li>
           
