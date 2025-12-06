@@ -169,9 +169,25 @@ export const useCrimesAmbientaisForm = () => {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    // Handle boolean field for ocorreuApreensao
-    if (name === 'ocorreuApreensao') {
+    // Handle boolean fields
+    const booleanFields = [
+      'ocorreuApreensao',
+      'animalAfetado',
+      'vegetacaoAfetada', 
+      'alteracaoVisual',
+      'odorForte',
+      'mortandadeAnimais',
+      'maquinasPresentes',
+      'materialApreendidoUrbano',
+      'documentoIndicioVisual',
+      'materialApreendidoAdmin',
+      'veiculoRelacionado'
+    ];
+    
+    if (booleanFields.includes(name)) {
       setValue(name as keyof CrimesAmbientaisFormData, value === 'true');
+    } else if (name === 'quantidadeEstruturas') {
+      setValue(name as keyof CrimesAmbientaisFormData, parseInt(value) || 0);
     } else {
       setValue(name as keyof CrimesAmbientaisFormData, value);
     }
