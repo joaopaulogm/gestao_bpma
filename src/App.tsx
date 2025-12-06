@@ -6,8 +6,6 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import SidebarLayout from '@/components/SidebarLayout';
 
-import CrimesAmbientais from '@/pages/CrimesAmbientais';
-
 // Lazy load pages
 const Index = React.lazy(() => import('@/pages/Index'));
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
@@ -35,7 +33,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<SidebarLayout><Index /></SidebarLayout>} />
               <Route path="/resgate-cadastro" element={<SidebarLayout><ResgateCadastro /></SidebarLayout>} />
-              <Route path="/crimes-ambientais" element={<SidebarLayout><CrimesAmbientais /></SidebarLayout>} />
+              
               <Route path="/dashboard" element={<ProtectedRoute><SidebarLayout><Dashboard /></SidebarLayout></ProtectedRoute>} />
               <Route path="/hotspots" element={<ProtectedRoute><SidebarLayout><Hotspots /></SidebarLayout></ProtectedRoute>} />
               <Route path="/registros" element={<ProtectedRoute><SidebarLayout><Registros /></SidebarLayout></ProtectedRoute>} />
