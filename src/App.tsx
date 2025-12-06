@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import CrimesAmbientaisCadastro from '@/pages/CrimesAmbientaisCadastro';
 import SidebarLayout from '@/components/SidebarLayout';
 
 // Lazy load pages
@@ -33,6 +34,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<SidebarLayout><Index /></SidebarLayout>} />
               <Route path="/resgate-cadastro" element={<SidebarLayout><ResgateCadastro /></SidebarLayout>} />
+              <Route path="/crimes-ambientais" element={<SidebarLayout><CrimesAmbientaisCadastro /></SidebarLayout>} />
               
               <Route path="/dashboard" element={<ProtectedRoute><SidebarLayout><Dashboard /></SidebarLayout></ProtectedRoute>} />
               <Route path="/hotspots" element={<ProtectedRoute><SidebarLayout><Hotspots /></SidebarLayout></ProtectedRoute>} />
