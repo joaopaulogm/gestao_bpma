@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { CrimesAmbientaisFormData, FloraItemData, TIPOS_CRIME, ENQUADRAMENTOS, DESFECHOS, PROCEDIMENTOS_LEGAIS } from '@/schemas/crimesAmbientaisSchema';
+import { CrimesAmbientaisFormData, FloraItemData, DESFECHOS, PROCEDIMENTOS_LEGAIS } from '@/schemas/crimesAmbientaisSchema';
 import { regioes } from '@/constants/regioes';
 import FormSection from '@/components/resgate/FormSection';
 import FormField from '@/components/resgate/FormField';
@@ -14,6 +14,18 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Save, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+
+interface TipoCrime {
+  id_tipo_de_crime: string;
+  "Tipo de Crime": string;
+}
+
+interface Enquadramento {
+  id_enquadramento: string;
+  id_tipo_de_crime: string;
+  "Tipo de Crime": string;
+  "Enquadramento": string;
+}
 
 interface CrimesAmbientaisFormProps {
   form: UseFormReturn<CrimesAmbientaisFormData>;
@@ -44,7 +56,67 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
   faunaItems,
   onFaunaItemsChange
 }) => {
-  const enquadramentosDisponiveis = formData.tipoCrime ? ENQUADRAMENTOS[formData.tipoCrime as keyof typeof ENQUADRAMENTOS] || [] : [];
+  const [tiposCrime, setTiposCrime] = useState<TipoCrime[]>([]);
+  const [enquadramentos, setEnquadramentos] = useState<Enquadramento[]>([]);
+  const [enquadramentosFiltrados, setEnquadramentosFiltrados] = useState<Enquadramento[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Carregar tipos de crime e enquadramentos do banco
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const [tiposCrimeRes, enquadramentosRes] = await Promise.all([
+          supabase
+            .from('dim_tipo_de_crime')
+            .select('*')
+            .order('Tipo de Crime'),
+          supabase
+            .from('dim_enquadramento')
+            .select('*')
+            .order('Enquadramento')
+        ]);
+
+        if (tiposCrimeRes.data) {
+          setTiposCrime(tiposCrimeRes.data);
+        }
+        if (enquadramentosRes.data) {
+          setEnquadramentos(enquadramentosRes.data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Filtrar enquadramentos com base no tipo de crime selecionado
+  useEffect(() => {
+    if (formData.tipoCrime && tiposCrime.length > 0) {
+      const tipoCrimeSelecionado = tiposCrime.find(
+        t => t["Tipo de Crime"] === formData.tipoCrime
+      );
+      
+      if (tipoCrimeSelecionado) {
+        const enquadramentosFiltrados = enquadramentos.filter(
+          e => e.id_tipo_de_crime === tipoCrimeSelecionado.id_tipo_de_crime
+        );
+        setEnquadramentosFiltrados(enquadramentosFiltrados);
+      } else {
+        setEnquadramentosFiltrados([]);
+      }
+    } else {
+      setEnquadramentosFiltrados([]);
+    }
+  }, [formData.tipoCrime, tiposCrime, enquadramentos]);
+
+  // Verificar se é crime contra fauna
+  const isCrimeContraFauna = formData.tipoCrime === 'Contra a Fauna';
+  // Verificar se é crime contra flora
+  const isCrimeContraFlora = formData.tipoCrime === 'Contra a Flora';
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -64,7 +136,7 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
               type="date"
               value={formData.data || ''}
               onChange={handleChange}
-              className={getFieldError('data') ? 'border-red-500' : ''}
+              className={`h-11 rounded-xl border-primary/15 bg-background/80 backdrop-blur-md focus:border-primary/30 focus:ring-accent/50 ${getFieldError('data') ? 'border-destructive' : ''}`}
             />
           </FormField>
 
@@ -78,7 +150,7 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
               value={formData.regiaoAdministrativa || ''}
               onValueChange={(value) => handleSelectChange('regiaoAdministrativa', value)}
             >
-              <SelectTrigger className={getFieldError('regiaoAdministrativa') ? 'border-red-500' : ''}>
+              <SelectTrigger className={getFieldError('regiaoAdministrativa') ? 'border-destructive' : ''}>
                 <SelectValue placeholder="Selecione a região administrativa" />
               </SelectTrigger>
               <SelectContent>
@@ -108,7 +180,7 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
               placeholder="Ex: -15.7801"
               value={formData.latitudeOcorrencia || ''}
               onChange={handleChange}
-              className={getFieldError('latitudeOcorrencia') ? 'border-red-500' : ''}
+              className={`h-11 rounded-xl border-primary/15 bg-background/80 backdrop-blur-md focus:border-primary/30 focus:ring-accent/50 ${getFieldError('latitudeOcorrencia') ? 'border-destructive' : ''}`}
             />
           </FormField>
 
@@ -123,13 +195,13 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
               placeholder="Ex: -47.9292"
               value={formData.longitudeOcorrencia || ''}
               onChange={handleChange}
-              className={getFieldError('longitudeOcorrencia') ? 'border-red-500' : ''}
+              className={`h-11 rounded-xl border-primary/15 bg-background/80 backdrop-blur-md focus:border-primary/30 focus:ring-accent/50 ${getFieldError('longitudeOcorrencia') ? 'border-destructive' : ''}`}
             />
           </FormField>
         </FormSection>
 
         {/* Tipo de Crime e Enquadramento */}
-        <FormSection columns>
+        <FormSection title="Classificação do Crime" columns>
           <FormField
             id="tipoCrime"
             label="Tipo de Crime"
@@ -145,14 +217,15 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
                   handleSelectChange('enquadramento', '');
                 }
               }}
+              disabled={isLoading}
             >
-              <SelectTrigger className={getFieldError('tipoCrime') ? 'border-red-500' : ''}>
-                <SelectValue placeholder="Selecione o tipo de crime" />
+              <SelectTrigger className={getFieldError('tipoCrime') ? 'border-destructive' : ''}>
+                <SelectValue placeholder={isLoading ? "Carregando..." : "Selecione o tipo de crime"} />
               </SelectTrigger>
               <SelectContent>
-                {TIPOS_CRIME.map((tipo) => (
-                  <SelectItem key={tipo} value={tipo}>
-                    {tipo}
+                {tiposCrime.map((tipo) => (
+                  <SelectItem key={tipo.id_tipo_de_crime} value={tipo["Tipo de Crime"] || ''}>
+                    {tipo["Tipo de Crime"]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -169,14 +242,22 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
               <Select
                 value={formData.enquadramento || ''}
                 onValueChange={(value) => handleSelectChange('enquadramento', value)}
+                disabled={enquadramentosFiltrados.length === 0}
               >
-                <SelectTrigger className={getFieldError('enquadramento') ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Selecione o enquadramento" />
+                <SelectTrigger className={getFieldError('enquadramento') ? 'border-destructive' : ''}>
+                  <SelectValue placeholder={
+                    enquadramentosFiltrados.length === 0 
+                      ? "Nenhum enquadramento disponível" 
+                      : "Selecione o enquadramento"
+                  } />
                 </SelectTrigger>
                 <SelectContent>
-                  {enquadramentosDisponiveis.map((enquadramento, index) => (
-                    <SelectItem key={index} value={enquadramento}>
-                      {enquadramento}
+                  {enquadramentosFiltrados.map((enquadramento) => (
+                    <SelectItem 
+                      key={enquadramento.id_enquadramento} 
+                      value={enquadramento["Enquadramento"] || ''}
+                    >
+                      {enquadramento["Enquadramento"]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -188,21 +269,26 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
         {/* Ocorreu Apreensão? */}
         {formData.enquadramento && (
           <FormSection>
-            <div className="flex items-center space-x-3 p-4 bg-secondary/5 rounded-lg border border-border">
+            <div className="flex items-center gap-4 p-5 bg-background/80 backdrop-blur-xl rounded-xl border border-primary/15 shadow-sm">
               <Switch
                 id="ocorreuApreensao"
                 checked={formData.ocorreuApreensao || false}
                 onCheckedChange={(checked) => handleSelectChange('ocorreuApreensao', String(checked))}
               />
-              <Label htmlFor="ocorreuApreensao" className="text-base font-medium cursor-pointer">
-                Ocorreu Apreensão?
-              </Label>
+              <div className="flex flex-col">
+                <Label htmlFor="ocorreuApreensao" className="text-base font-semibold text-foreground cursor-pointer">
+                  Ocorreu Apreensão?
+                </Label>
+                <span className="text-sm text-muted-foreground">
+                  Marque se houve apreensão de animais, flora ou itens
+                </span>
+              </div>
             </div>
           </FormSection>
         )}
 
         {/* Seção de Fauna - apenas para Crime Contra a Fauna E após selecionar enquadramento (exceto "Exportar pele de...") */}
-        {formData.tipoCrime === 'Crime Contra a Fauna' && 
+        {isCrimeContraFauna && 
          formData.enquadramento && 
          !formData.enquadramento.startsWith('Exportar pele de') && (
           <FaunaSection
@@ -213,7 +299,7 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
         )}
 
         {/* Seção de Flora - apenas para Crime Contra a Flora E após selecionar enquadramento */}
-        {formData.tipoCrime === 'Crime Contra a Flora' && formData.enquadramento && (
+        {isCrimeContraFlora && formData.enquadramento && (
           <FloraSection
             floraItems={floraItems}
             onFloraItemsChange={onFloraItemsChange}
@@ -241,7 +327,7 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
                 }
               }}
             >
-              <SelectTrigger className={getFieldError('desfecho') ? 'border-red-500' : ''}>
+              <SelectTrigger className={getFieldError('desfecho') ? 'border-destructive' : ''}>
                 <SelectValue placeholder="Selecione o desfecho" />
               </SelectTrigger>
               <SelectContent>
@@ -265,7 +351,7 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
                 value={formData.procedimentoLegal || ''}
                 onValueChange={(value) => handleSelectChange('procedimentoLegal', value)}
               >
-                <SelectTrigger className={getFieldError('procedimentoLegal') ? 'border-red-500' : ''}>
+                <SelectTrigger className={getFieldError('procedimentoLegal') ? 'border-destructive' : ''}>
                   <SelectValue placeholder="Selecione o procedimento legal" />
                 </SelectTrigger>
                 <SelectContent>
@@ -281,7 +367,7 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
         </FormSection>
 
         {/* Quantidade */}
-        <FormSection title="Quantidade" columns>
+        <FormSection title="Quantidade de Envolvidos" columns>
           <FormField
             id="quantidadeDetidosMaiorIdade"
             label="Qtd Detidos Maior de Idade"
@@ -295,7 +381,7 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
               max={1000}
               value={formData.quantidadeDetidosMaiorIdade || 0}
               onChange={handleChange}
-              className={getFieldError('quantidadeDetidosMaiorIdade') ? 'border-red-500' : ''}
+              className={`h-11 rounded-xl border-primary/15 bg-background/80 backdrop-blur-md focus:border-primary/30 focus:ring-accent/50 ${getFieldError('quantidadeDetidosMaiorIdade') ? 'border-destructive' : ''}`}
             />
           </FormField>
 
@@ -312,7 +398,7 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
               max={1000}
               value={formData.quantidadeDetidosMenorIdade || 0}
               onChange={handleChange}
-              className={getFieldError('quantidadeDetidosMenorIdade') ? 'border-red-500' : ''}
+              className={`h-11 rounded-xl border-primary/15 bg-background/80 backdrop-blur-md focus:border-primary/30 focus:ring-accent/50 ${getFieldError('quantidadeDetidosMenorIdade') ? 'border-destructive' : ''}`}
             />
           </FormField>
 
@@ -329,7 +415,7 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
               max={1000}
               value={formData.quantidadeLiberadosMaiorIdade || 0}
               onChange={handleChange}
-              className={getFieldError('quantidadeLiberadosMaiorIdade') ? 'border-red-500' : ''}
+              className={`h-11 rounded-xl border-primary/15 bg-background/80 backdrop-blur-md focus:border-primary/30 focus:ring-accent/50 ${getFieldError('quantidadeLiberadosMaiorIdade') ? 'border-destructive' : ''}`}
             />
           </FormField>
 
@@ -346,7 +432,7 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
               max={1000}
               value={formData.quantidadeLiberadosMenorIdade || 0}
               onChange={handleChange}
-              className={getFieldError('quantidadeLiberadosMenorIdade') ? 'border-red-500' : ''}
+              className={`h-11 rounded-xl border-primary/15 bg-background/80 backdrop-blur-md focus:border-primary/30 focus:ring-accent/50 ${getFieldError('quantidadeLiberadosMenorIdade') ? 'border-destructive' : ''}`}
             />
           </FormField>
         </FormSection>
@@ -356,16 +442,16 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="bg-fauna-blue hover:bg-fauna-blue/90 text-white"
+            size="lg"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Salvando...
               </>
             ) : (
               <>
-                <Save className="mr-2 h-4 w-4" />
+                <Save className="mr-2 h-5 w-5" />
                 Salvar Ocorrência
               </>
             )}
