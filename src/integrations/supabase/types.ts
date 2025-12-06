@@ -71,6 +71,48 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_efetivo: {
+        Row: {
+          antiguidade: number | null
+          created_at: string
+          id: string
+          lotacao: string
+          matricula: string
+          nome: string
+          nome_guerra: string
+          posto_graduacao: string
+          quadro: string
+          quadro_sigla: string
+          sexo: string
+        }
+        Insert: {
+          antiguidade?: number | null
+          created_at?: string
+          id?: string
+          lotacao?: string
+          matricula: string
+          nome: string
+          nome_guerra: string
+          posto_graduacao: string
+          quadro: string
+          quadro_sigla: string
+          sexo: string
+        }
+        Update: {
+          antiguidade?: number | null
+          created_at?: string
+          id?: string
+          lotacao?: string
+          matricula?: string
+          nome?: string
+          nome_guerra?: string
+          posto_graduacao?: string
+          quadro?: string
+          quadro_sigla?: string
+          sexo?: string
+        }
+        Relationships: []
+      }
       dim_enquadramento: {
         Row: {
           Enquadramento: string | null

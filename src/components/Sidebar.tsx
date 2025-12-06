@@ -16,6 +16,7 @@ import {
   ChevronRight,
   LogIn,
   Shield,
+  Users,
   Package,
   Leaf
 } from 'lucide-react';
@@ -190,6 +191,13 @@ const Sidebar = () => {
                   <Link to="/flora-cadastrada" className={linkClasses('/flora-cadastrada', true)}>
                     <List className="h-5 w-5 flex-shrink-0" />
                     {isOpen && <span className="truncate">Flora Cadastrada</span>}
+                  </Link>
+                </li>
+                
+                <li>
+                  <Link to="/efetivo" className={linkClasses('/efetivo', true)}>
+                    <Users className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Efetivo BPMA</span>}
                   </Link>
                 </li>
               </>
