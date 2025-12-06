@@ -73,10 +73,10 @@ interface FloraItem {
 
 interface ItemApreendido {
   id: string;
-  tipo_crime_relacionado: string;
-  categoria: string;
-  item: string;
-  uso_ilicito: string;
+  Categoria: string;
+  Item: string;
+  'Uso Ilicito': string;
+  Aplicacao: string;
 }
 
 interface BemApreendido {
@@ -221,7 +221,7 @@ const CrimesAmbientaisCadastro = () => {
         supabase.from('dim_estado_saude').select('id, nome'),
         supabase.from('dim_estagio_vida').select('id, nome'),
         supabase.from('dim_destinacao').select('id, nome'),
-        supabase.from('dim_itens_apreendidos').select('*'),
+        supabase.from('dim_itens_apreensao').select('*'),
         supabase.from('dim_area_protegida').select('id, nome')
       ]);
 
@@ -240,7 +240,7 @@ const CrimesAmbientaisCadastro = () => {
       if (estadosSaudeRes.data) setEstadosSaude(estadosSaudeRes.data);
       if (estagiosVidaRes.data) setEstagiosVida(estagiosVidaRes.data);
       if (destinacoesRes.data) setDestinacoes(destinacoesRes.data);
-      if (itensRes.data) setItensApreendidos(itensRes.data as ItemApreendido[]);
+      if (itensRes.data) setItensApreendidos(itensRes.data as unknown as ItemApreendido[]);
       if (areasRes.data) setAreasProtegidas(areasRes.data);
     } catch (error) {
       console.error('Erro ao carregar dimensões:', error);
@@ -524,7 +524,7 @@ const CrimesAmbientaisCadastro = () => {
 
   // Group itens by category
   const itensPorCategoria = itensApreendidos.reduce((acc, item) => {
-    const cat = item.categoria || 'Outros';
+    const cat = item.Categoria || 'Outros';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(item);
     return acc;
@@ -1253,7 +1253,7 @@ const CrimesAmbientaisCadastro = () => {
                                 </div>
                                 {items.map(item => (
                                   <SelectItem key={item.id} value={item.id}>
-                                    {item.item} ({item.uso_ilicito})
+                                    {item.Item} ({item['Uso Ilicito']})
                                   </SelectItem>
                                 ))}
                               </div>
@@ -1275,8 +1275,8 @@ const CrimesAmbientaisCadastro = () => {
 
                       {itemSelecionado && (
                         <div className="md:col-span-3 text-xs text-muted-foreground">
-                          <span className="font-medium">Uso ilícito:</span> {itemSelecionado.uso_ilicito} | 
-                          <span className="font-medium ml-2">Categoria:</span> {itemSelecionado.categoria}
+                          <span className="font-medium">Uso ilícito:</span> {itemSelecionado['Uso Ilicito']} | 
+                          <span className="font-medium ml-2">Categoria:</span> {itemSelecionado.Categoria}
                         </div>
                       )}
                     </div>
