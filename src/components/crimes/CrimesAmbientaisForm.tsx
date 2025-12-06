@@ -7,6 +7,10 @@ import FormField from '@/components/resgate/FormField';
 import TipoAreaField from '@/components/resgate/TipoAreaField';
 import FaunaSection, { FaunaItem } from './FaunaSection';
 import FloraSection, { FloraItem } from './FloraSection';
+import PoluicaoSection, { PoluicaoData } from './PoluicaoSection';
+import OrdenamentoUrbanoSection, { OrdenamentoUrbanoData } from './OrdenamentoUrbanoSection';
+import AdministracaoAmbientalSection, { AdministracaoAmbientalData } from './AdministracaoAmbientalSection';
+import BensApreendidosSection, { BemApreendido } from './BensApreendidosSection';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -40,6 +44,8 @@ interface CrimesAmbientaisFormProps {
   onNumeroTermoEntregaFloraChange: (value: string) => void;
   faunaItems: FaunaItem[];
   onFaunaItemsChange: (items: FaunaItem[]) => void;
+  bensApreendidos: BemApreendido[];
+  onBensApreendidosChange: (bens: BemApreendido[]) => void;
 }
 
 const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
@@ -54,7 +60,9 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
   onFloraItemsChange,
   onNumeroTermoEntregaFloraChange,
   faunaItems,
-  onFaunaItemsChange
+  onFaunaItemsChange,
+  bensApreendidos,
+  onBensApreendidosChange
 }) => {
   const [tiposCrime, setTiposCrime] = useState<TipoCrime[]>([]);
   const [enquadramentos, setEnquadramentos] = useState<Enquadramento[]>([]);
@@ -115,11 +123,60 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
     }
   }, [formData.tipoCrime, tiposCrime, enquadramentos]);
 
-  // Verificar se é crime contra fauna (match parcial, case insensitive)
+  // Verificar tipos de crime (match parcial, case insensitive)
   const isCrimeContraFauna = formData.tipoCrime?.toLowerCase().includes('fauna') || false;
-  // Verificar se é crime contra flora (match parcial, case insensitive)
   const isCrimeContraFlora = formData.tipoCrime?.toLowerCase().includes('flora') || false;
+  const isCrimePoluicao = formData.tipoCrime?.toLowerCase().includes('poluição') || false;
+  const isCrimeOrdenamentoUrbano = formData.tipoCrime?.toLowerCase().includes('ordenamento') || formData.tipoCrime?.toLowerCase().includes('patrimônio') || false;
+  const isCrimeAdministracao = formData.tipoCrime?.toLowerCase().includes('administração') || false;
 
+  // Dados para as seções específicas
+  const poluicaoData = {
+    tipoPoluicao: formData.tipoPoluicao || '',
+    descricaoSituacaoPoluicao: formData.descricaoSituacaoPoluicao || '',
+    materialVisivel: formData.materialVisivel || '',
+    volumeAparente: formData.volumeAparente || '',
+    origemAparente: formData.origemAparente || '',
+    animalAfetado: formData.animalAfetado || false,
+    vegetacaoAfetada: formData.vegetacaoAfetada || false,
+    alteracaoVisual: formData.alteracaoVisual || false,
+    odorForte: formData.odorForte || false,
+    mortandadeAnimais: formData.mortandadeAnimais || false,
+    riscoImediato: formData.riscoImediato || '',
+    intensidadePercebida: formData.intensidadePercebida || ''
+  };
+
+  const ordenamentoData = {
+    tipoIntervencaoIrregular: formData.tipoIntervencaoIrregular || '',
+    estruturasEncontradas: formData.estruturasEncontradas || '',
+    quantidadeEstruturas: formData.quantidadeEstruturas || 0,
+    danoAlteracaoPerceptivel: formData.danoAlteracaoPerceptivel || '',
+    maquinasPresentes: formData.maquinasPresentes || false,
+    materialApreendidoUrbano: formData.materialApreendidoUrbano || false,
+    descricaoMaterialUrbano: formData.descricaoMaterialUrbano || ''
+  };
+
+  const administracaoData = {
+    tipoImpedimentoObstrucao: formData.tipoImpedimentoObstrucao || '',
+    descricaoAdministracao: formData.descricaoAdministracao || '',
+    documentoIndicioVisual: formData.documentoIndicioVisual || false,
+    tipoIndicio: formData.tipoIndicio || '',
+    materialApreendidoAdmin: formData.materialApreendidoAdmin || false,
+    descricaoMaterialAdmin: formData.descricaoMaterialAdmin || '',
+    veiculoRelacionado: formData.veiculoRelacionado || false
+  };
+
+  const handlePoluicaoChange = (field: string, value: string | boolean) => {
+    handleSelectChange(field, String(value));
+  };
+
+  const handleOrdenamentoChange = (field: string, value: string | boolean | number) => {
+    handleSelectChange(field, String(value));
+  };
+
+  const handleAdministracaoChange = (field: string, value: string | boolean) => {
+    handleSelectChange(field, String(value));
+  };
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>

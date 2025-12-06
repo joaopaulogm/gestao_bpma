@@ -49,10 +49,21 @@ interface FaunaItem {
   quantidadeTotalObito: number;
 }
 
+interface BemApreendido {
+  id: string;
+  itemId: string;
+  categoria: string;
+  item: string;
+  usoIlicito: string;
+  aplicacao: string;
+  quantidade: number;
+}
+
 export const useCrimesAmbientaisForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [floraItems, setFloraItems] = useState<FloraItem[]>([]);
   const [faunaItems, setFaunaItems] = useState<FaunaItem[]>([]);
+  const [bensApreendidos, setBensApreendidos] = useState<BemApreendido[]>([]);
 
   const form = useForm<CrimesAmbientaisFormData>({
     resolver: zodResolver(crimesAmbientaisSchema),
@@ -89,7 +100,38 @@ export const useCrimesAmbientaisForm = () => {
       quantidadeDetidosMaiorIdade: 0,
       quantidadeDetidosMenorIdade: 0,
       quantidadeLiberadosMaiorIdade: 0,
-      quantidadeLiberadosMenorIdade: 0
+      quantidadeLiberadosMenorIdade: 0,
+      // Novos campos - Poluição
+      tipoPoluicao: '',
+      descricaoSituacaoPoluicao: '',
+      materialVisivel: '',
+      volumeAparente: '',
+      origemAparente: '',
+      animalAfetado: false,
+      vegetacaoAfetada: false,
+      alteracaoVisual: false,
+      odorForte: false,
+      mortandadeAnimais: false,
+      riscoImediato: '',
+      intensidadePercebida: '',
+      // Novos campos - Ordenamento Urbano
+      tipoIntervencaoIrregular: '',
+      estruturasEncontradas: '',
+      quantidadeEstruturas: 0,
+      danoAlteracaoPerceptivel: '',
+      maquinasPresentes: false,
+      materialApreendidoUrbano: false,
+      descricaoMaterialUrbano: '',
+      // Novos campos - Administração Ambiental
+      tipoImpedimentoObstrucao: '',
+      descricaoAdministracao: '',
+      documentoIndicioVisual: false,
+      tipoIndicio: '',
+      materialApreendidoAdmin: false,
+      descricaoMaterialAdmin: '',
+      veiculoRelacionado: false,
+      // Bens apreendidos
+      bensApreendidos: []
     }
   });
 
@@ -146,6 +188,11 @@ export const useCrimesAmbientaisForm = () => {
 
   const handleFaunaItemsChange = (items: FaunaItem[]) => {
     setFaunaItems(items);
+  };
+
+  const handleBensApreendidosChange = (bens: BemApreendido[]) => {
+    setBensApreendidos(bens);
+    setValue('bensApreendidos', bens as any);
   };
 
   const handleNumeroTermoEntregaFloraChange = (value: string) => {
@@ -307,7 +354,9 @@ export const useCrimesAmbientaisForm = () => {
     handleFloraItemsChange,
     faunaItems,
     handleFaunaItemsChange,
-    handleNumeroTermoEntregaFloraChange
+    handleNumeroTermoEntregaFloraChange,
+    bensApreendidos,
+    handleBensApreendidosChange
   };
 };
 
