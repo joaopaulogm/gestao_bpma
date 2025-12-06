@@ -52,7 +52,7 @@ const DESTINACOES_FAUNA = [
   "Óbito"
 ];
 
-const FloraSection: React.FC<FaunaSectionProps> = ({
+const FaunaSection: React.FC<FaunaSectionProps> = ({
   faunaItems,
   onFaunaItemsChange,
   getFieldError
@@ -613,4 +613,4 @@ const FloraSection: React.FC<FaunaSectionProps> = ({
   );
 };
 
-export default FloraSection;
+export default FaunaSection;
