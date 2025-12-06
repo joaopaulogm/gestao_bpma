@@ -160,30 +160,34 @@ export const useCrimesAmbientaisForm = () => {
         quantidade_liberados_menor_idade: data.quantidadeLiberadosMenorIdade || 0
       };
 
+      // Verificar tipo de crime - usar includes para match parcial
+      const isCrimeContraFauna = data.tipoCrime?.toLowerCase().includes('fauna');
+      const isCrimeContraFlora = data.tipoCrime?.toLowerCase().includes('flora');
+
       // Se for crime contra fauna, criar registros para cada fauna item
-      if (data.tipoCrime === 'Crime Contra a Fauna' && faunaItems.length > 0) {
+      if (isCrimeContraFauna && faunaItems.length > 0) {
         for (const item of faunaItems) {
           const faunaRecord = {
             ...baseRecord,
             tipo_registro: 'fauna',
             especie_fauna_id: item.especieId || null,
-            nome_popular_fauna: item.nomePopular,
-            nome_cientifico_fauna: item.nomeCientifico,
-            classe_taxonomica: item.classeTaxonomica,
-            ordem_taxonomica: item.ordemTaxonomica,
-            tipo_fauna: item.tipoFauna,
-            estado_conservacao_fauna: item.estadoConservacao,
+            nome_popular_fauna: item.nomePopular || null,
+            nome_cientifico_fauna: item.nomeCientifico || null,
+            classe_taxonomica: item.classeTaxonomica || null,
+            ordem_taxonomica: item.ordemTaxonomica || null,
+            tipo_fauna: item.tipoFauna || null,
+            estado_conservacao_fauna: item.estadoConservacao || null,
             estado_saude_id: item.estadoSaudeId || null,
             estagio_vida_id: item.estagioVidaId || null,
-            atropelamento: item.atropelamento,
-            quantidade_adulto: item.quantidadeAdulto,
-            quantidade_filhote: item.quantidadeFilhote,
-            quantidade_total: item.quantidadeTotal,
-            destinacao_fauna: item.destinacao,
+            atropelamento: item.atropelamento || null,
+            quantidade_adulto: item.quantidadeAdulto || 0,
+            quantidade_filhote: item.quantidadeFilhote || 0,
+            quantidade_total: item.quantidadeTotal || 0,
+            destinacao_fauna: item.destinacao || null,
             estagio_vida_obito_id: item.estagioVidaObitoId || null,
-            quantidade_adulto_obito: item.quantidadeAdultoObito,
-            quantidade_filhote_obito: item.quantidadeFilhoteObito,
-            quantidade_total_obito: item.quantidadeTotalObito
+            quantidade_adulto_obito: item.quantidadeAdultoObito || 0,
+            quantidade_filhote_obito: item.quantidadeFilhoteObito || 0,
+            quantidade_total_obito: item.quantidadeTotalObito || 0
           };
 
           const { error } = await supabase
@@ -194,24 +198,24 @@ export const useCrimesAmbientaisForm = () => {
         }
       }
       // Se for crime contra flora, criar registros para cada flora item
-      else if (data.tipoCrime === 'Crime Contra a Flora' && floraItems.length > 0) {
+      else if (isCrimeContraFlora && floraItems.length > 0) {
         for (const item of floraItems) {
           const floraRecord = {
             ...baseRecord,
             tipo_registro: 'flora',
             especie_flora_id: item.especieId || null,
-            nome_popular_flora: item.nomePopular,
-            nome_cientifico_flora: item.nomeCientifico,
-            classe_flora: item.classe,
-            ordem_flora: item.ordem,
-            familia_flora: item.familia,
-            estado_conservacao_flora: item.estadoConservacao,
-            tipo_planta: item.tipoPlanta,
-            madeira_lei: item.madeiraLei,
-            imune_corte: item.imuneCote,
-            condicao_flora: item.condicao,
-            quantidade_flora: item.quantidade,
-            destinacao_flora: item.destinacao,
+            nome_popular_flora: item.nomePopular || null,
+            nome_cientifico_flora: item.nomeCientifico || null,
+            classe_flora: item.classe || null,
+            ordem_flora: item.ordem || null,
+            familia_flora: item.familia || null,
+            estado_conservacao_flora: item.estadoConservacao || null,
+            tipo_planta: item.tipoPlanta || null,
+            madeira_lei: item.madeiraLei || null,
+            imune_corte: item.imuneCote || null,
+            condicao_flora: item.condicao || null,
+            quantidade_flora: item.quantidade || 1,
+            destinacao_flora: item.destinacao || null,
             numero_termo_entrega: data.numeroTermoEntregaFlora || null
           };
 
@@ -270,6 +274,8 @@ export const useCrimesAmbientaisForm = () => {
 
 // Funções auxiliares para buscar IDs
 async function buscarTipoCrimeId(tipoCrime: string): Promise<string | null> {
+  if (!tipoCrime) return null;
+  
   const { data } = await supabase
     .from('dim_tipo_de_crime')
     .select('id_tipo_de_crime')
@@ -280,6 +286,8 @@ async function buscarTipoCrimeId(tipoCrime: string): Promise<string | null> {
 }
 
 async function buscarEnquadramentoId(enquadramento: string): Promise<string | null> {
+  if (!enquadramento) return null;
+  
   const { data } = await supabase
     .from('dim_enquadramento')
     .select('id_enquadramento')

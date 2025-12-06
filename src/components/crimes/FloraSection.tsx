@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import FormSection from '@/components/resgate/FormSection';
 import FormField from '@/components/resgate/FormField';
 import { Input } from '@/components/ui/input';
@@ -102,6 +102,7 @@ const FloraSection: React.FC<FloraSectionProps> = ({
 }) => {
   const [especiesFlora, setEspeciesFlora] = useState<EspecieFlora[]>([]);
   const [loading, setLoading] = useState(true);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     const fetchEspeciesFlora = async () => {
@@ -185,10 +186,11 @@ const FloraSection: React.FC<FloraSectionProps> = ({
 
   // Inicializar com um item vazio se não houver nenhum
   useEffect(() => {
-    if (floraItems.length === 0) {
+    if (floraItems.length === 0 && !initializedRef.current) {
+      initializedRef.current = true;
       onFloraItemsChange([createEmptyFloraItem()]);
     }
-  }, []);
+  }, [floraItems.length, onFloraItemsChange]);
 
   return (
     <div className="space-y-6">
