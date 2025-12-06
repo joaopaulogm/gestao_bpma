@@ -588,20 +588,21 @@ const CrimesAmbientaisCadastro = () => {
           </div>
 
           {areaProtegida && (
-            <div className="col-span-full space-y-2">
-              <Label className="text-sm font-medium">Tipos de Área Protegida</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {areasProtegidas.map(area => (
-                  <div key={area.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={area.id}
-                      checked={areasProtegidasSelecionadas.includes(area.id)}
-                      onCheckedChange={() => toggleAreaProtegida(area.id)}
-                    />
-                    <label htmlFor={area.id} className="text-sm">{area.nome}</label>
-                  </div>
-                ))}
-              </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Tipo de Área Protegida</Label>
+              <Select 
+                value={areasProtegidasSelecionadas[0] || ''} 
+                onValueChange={(v) => setAreasProtegidasSelecionadas([v])}
+              >
+                <SelectTrigger className="input-glass">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {areasProtegidas.map(area => (
+                    <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
