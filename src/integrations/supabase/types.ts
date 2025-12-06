@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      dim_area_protegida: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       dim_desfecho: {
         Row: {
           created_at: string | null
@@ -187,6 +205,33 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_itens_apreendidos: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          id: string
+          item: string | null
+          tipo_crime_relacionado: string | null
+          uso_ilicito: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string | null
+          id?: string
+          item?: string | null
+          tipo_crime_relacionado?: string | null
+          uso_ilicito?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string | null
+          id?: string
+          item?: string | null
+          tipo_crime_relacionado?: string | null
+          uso_ilicito?: string | null
+        }
+        Relationships: []
+      }
       dim_itens_apreensao: {
         Row: {
           Aplicacao: string | null
@@ -283,39 +328,162 @@ export type Database = {
         }
         Relationships: []
       }
-      fat_ocorrencia_apreensao: {
+      fat_crime_fauna: {
         Row: {
-          created_at: string
+          atropelamento: boolean | null
+          created_at: string | null
+          destinacao_id: string | null
+          especie_id: string | null
+          estado_saude_id: string | null
+          estagio_vida_id: string | null
           id: string
-          item_id: string
-          ocorrencia_id: string
-          quantidade: number
+          id_ocorrencia: string | null
+          quantidade_adulto: number | null
+          quantidade_filhote: number | null
+          quantidade_total: number | null
         }
         Insert: {
-          created_at?: string
+          atropelamento?: boolean | null
+          created_at?: string | null
+          destinacao_id?: string | null
+          especie_id?: string | null
+          estado_saude_id?: string | null
+          estagio_vida_id?: string | null
           id?: string
-          item_id: string
-          ocorrencia_id: string
-          quantidade?: number
+          id_ocorrencia?: string | null
+          quantidade_adulto?: number | null
+          quantidade_filhote?: number | null
+          quantidade_total?: number | null
         }
         Update: {
-          created_at?: string
+          atropelamento?: boolean | null
+          created_at?: string | null
+          destinacao_id?: string | null
+          especie_id?: string | null
+          estado_saude_id?: string | null
+          estagio_vida_id?: string | null
           id?: string
-          item_id?: string
-          ocorrencia_id?: string
-          quantidade?: number
+          id_ocorrencia?: string | null
+          quantidade_adulto?: number | null
+          quantidade_filhote?: number | null
+          quantidade_total?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "fat_ocorrencia_apreensao_item_id_fkey"
-            columns: ["item_id"]
+            foreignKeyName: "fat_crime_fauna_destinacao_id_fkey"
+            columns: ["destinacao_id"]
             isOneToOne: false
-            referencedRelation: "dim_itens_apreensao"
+            referencedRelation: "dim_destinacao"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fat_ocorrencia_apreensao_ocorrencia_id_fkey"
-            columns: ["ocorrencia_id"]
+            foreignKeyName: "fat_crime_fauna_especie_id_fkey"
+            columns: ["especie_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_crime_fauna_estado_saude_id_fkey"
+            columns: ["estado_saude_id"]
+            isOneToOne: false
+            referencedRelation: "dim_estado_saude"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_crime_fauna_estagio_vida_id_fkey"
+            columns: ["estagio_vida_id"]
+            isOneToOne: false
+            referencedRelation: "dim_estagio_vida"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_crime_fauna_id_ocorrencia_fkey"
+            columns: ["id_ocorrencia"]
+            isOneToOne: false
+            referencedRelation: "fat_registros_de_crime"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_crime_flora: {
+        Row: {
+          condicao: string | null
+          created_at: string | null
+          destinacao: string | null
+          especie_id: string | null
+          id: string
+          id_ocorrencia: string | null
+          quantidade: number | null
+        }
+        Insert: {
+          condicao?: string | null
+          created_at?: string | null
+          destinacao?: string | null
+          especie_id?: string | null
+          id?: string
+          id_ocorrencia?: string | null
+          quantidade?: number | null
+        }
+        Update: {
+          condicao?: string | null
+          created_at?: string | null
+          destinacao?: string | null
+          especie_id?: string | null
+          id?: string
+          id_ocorrencia?: string | null
+          quantidade?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_crime_flora_especie_id_fkey"
+            columns: ["especie_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_flora"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_crime_flora_id_ocorrencia_fkey"
+            columns: ["id_ocorrencia"]
+            isOneToOne: false
+            referencedRelation: "fat_registros_de_crime"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_ocorrencia_apreensao: {
+        Row: {
+          created_at: string | null
+          id: string
+          id_item_apreendido: string | null
+          id_ocorrencia: string | null
+          quantidade: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          id_item_apreendido?: string | null
+          id_ocorrencia?: string | null
+          quantidade?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          id_item_apreendido?: string | null
+          id_ocorrencia?: string | null
+          quantidade?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_ocorrencia_apreensao_id_item_apreendido_fkey"
+            columns: ["id_item_apreendido"]
+            isOneToOne: false
+            referencedRelation: "dim_itens_apreendidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_ocorrencia_apreensao_id_ocorrencia_fkey"
+            columns: ["id_ocorrencia"]
             isOneToOne: false
             referencedRelation: "fat_registros_de_crime"
             referencedColumns: ["id"]
@@ -326,76 +494,45 @@ export type Database = {
         Row: {
           alteracao_visual: boolean | null
           animal_afetado: boolean | null
-          atropelamento: string | null
-          classe_flora: string | null
-          classe_taxonomica: string | null
-          condicao_flora: string | null
-          created_at: string
-          dano_alteracao_perceptivel: string | null
+          area_protegida: boolean | null
+          areas_protegidas_ids: string[] | null
+          created_at: string | null
+          dano_perceptivel: string | null
           data: string
-          descricao_administracao: string | null
-          descricao_material_admin: string | null
-          descricao_material_urbano: string | null
-          descricao_situacao_poluicao: string | null
-          desfecho: string | null
-          destinacao_fauna: string | null
-          destinacao_flora: string | null
-          documento_indicio_visual: boolean | null
+          descricao_adm_ambiental: string | null
+          descricao_material_adm: string | null
+          descricao_material_ord: string | null
+          descricao_poluicao: string | null
+          desfecho_id: string | null
+          doc_irregular: boolean | null
           enquadramento_id: string | null
-          especie_fauna_id: string | null
-          especie_flora_id: string | null
-          estado_conservacao_fauna: string | null
-          estado_conservacao_flora: string | null
-          estado_saude_id: string | null
-          estagio_vida_id: string | null
-          estagio_vida_obito_id: string | null
           estruturas_encontradas: string | null
-          familia_flora: string | null
           id: string
-          imune_corte: string | null
           intensidade_percebida: string | null
-          latitude_ocorrencia: string | null
-          longitude_ocorrencia: string | null
-          madeira_lei: string | null
+          latitude: string
+          longitude: string
           maquinas_presentes: boolean | null
-          material_apreendido_admin: boolean | null
-          material_apreendido_urbano: boolean | null
+          material_apreendido_adm: boolean | null
+          material_apreendido_ord: boolean | null
           material_visivel: string | null
           mortandade_animais: boolean | null
-          nome_cientifico_fauna: string | null
-          nome_cientifico_flora: string | null
-          nome_popular_fauna: string | null
-          nome_popular_flora: string | null
-          numero_termo_entrega: string | null
           ocorreu_apreensao: boolean | null
           odor_forte: boolean | null
-          ordem_flora: string | null
-          ordem_taxonomica: string | null
           origem_aparente: string | null
           procedimento_legal: string | null
-          quantidade_adulto: number | null
-          quantidade_adulto_obito: number | null
-          quantidade_detidos_maior_idade: number | null
-          quantidade_detidos_menor_idade: number | null
-          quantidade_estruturas: number | null
-          quantidade_filhote: number | null
-          quantidade_filhote_obito: number | null
-          quantidade_flora: number | null
-          quantidade_liberados_maior_idade: number | null
-          quantidade_liberados_menor_idade: number | null
-          quantidade_total: number | null
-          quantidade_total_obito: number | null
+          qtd_detidos_maior: number | null
+          qtd_detidos_menor: number | null
+          qtd_estruturas: number | null
+          qtd_liberados_maior: number | null
+          qtd_liberados_menor: number | null
           regiao_administrativa_id: string | null
-          risco_imediato: string | null
+          risco_imediato: boolean | null
           tipo_area_id: string | null
           tipo_crime_id: string | null
-          tipo_fauna: string | null
-          tipo_impedimento_obstrucao: string | null
-          tipo_indicio: string | null
-          tipo_intervencao_irregular: string | null
-          tipo_planta: string | null
+          tipo_impedimento: string | null
+          tipo_intervencao: string | null
+          tipo_irregularidade_visual: string | null
           tipo_poluicao: string | null
-          tipo_registro: string
           vegetacao_afetada: boolean | null
           veiculo_relacionado: boolean | null
           volume_aparente: string | null
@@ -403,76 +540,45 @@ export type Database = {
         Insert: {
           alteracao_visual?: boolean | null
           animal_afetado?: boolean | null
-          atropelamento?: string | null
-          classe_flora?: string | null
-          classe_taxonomica?: string | null
-          condicao_flora?: string | null
-          created_at?: string
-          dano_alteracao_perceptivel?: string | null
+          area_protegida?: boolean | null
+          areas_protegidas_ids?: string[] | null
+          created_at?: string | null
+          dano_perceptivel?: string | null
           data: string
-          descricao_administracao?: string | null
-          descricao_material_admin?: string | null
-          descricao_material_urbano?: string | null
-          descricao_situacao_poluicao?: string | null
-          desfecho?: string | null
-          destinacao_fauna?: string | null
-          destinacao_flora?: string | null
-          documento_indicio_visual?: boolean | null
+          descricao_adm_ambiental?: string | null
+          descricao_material_adm?: string | null
+          descricao_material_ord?: string | null
+          descricao_poluicao?: string | null
+          desfecho_id?: string | null
+          doc_irregular?: boolean | null
           enquadramento_id?: string | null
-          especie_fauna_id?: string | null
-          especie_flora_id?: string | null
-          estado_conservacao_fauna?: string | null
-          estado_conservacao_flora?: string | null
-          estado_saude_id?: string | null
-          estagio_vida_id?: string | null
-          estagio_vida_obito_id?: string | null
           estruturas_encontradas?: string | null
-          familia_flora?: string | null
           id?: string
-          imune_corte?: string | null
           intensidade_percebida?: string | null
-          latitude_ocorrencia?: string | null
-          longitude_ocorrencia?: string | null
-          madeira_lei?: string | null
+          latitude: string
+          longitude: string
           maquinas_presentes?: boolean | null
-          material_apreendido_admin?: boolean | null
-          material_apreendido_urbano?: boolean | null
+          material_apreendido_adm?: boolean | null
+          material_apreendido_ord?: boolean | null
           material_visivel?: string | null
           mortandade_animais?: boolean | null
-          nome_cientifico_fauna?: string | null
-          nome_cientifico_flora?: string | null
-          nome_popular_fauna?: string | null
-          nome_popular_flora?: string | null
-          numero_termo_entrega?: string | null
           ocorreu_apreensao?: boolean | null
           odor_forte?: boolean | null
-          ordem_flora?: string | null
-          ordem_taxonomica?: string | null
           origem_aparente?: string | null
           procedimento_legal?: string | null
-          quantidade_adulto?: number | null
-          quantidade_adulto_obito?: number | null
-          quantidade_detidos_maior_idade?: number | null
-          quantidade_detidos_menor_idade?: number | null
-          quantidade_estruturas?: number | null
-          quantidade_filhote?: number | null
-          quantidade_filhote_obito?: number | null
-          quantidade_flora?: number | null
-          quantidade_liberados_maior_idade?: number | null
-          quantidade_liberados_menor_idade?: number | null
-          quantidade_total?: number | null
-          quantidade_total_obito?: number | null
+          qtd_detidos_maior?: number | null
+          qtd_detidos_menor?: number | null
+          qtd_estruturas?: number | null
+          qtd_liberados_maior?: number | null
+          qtd_liberados_menor?: number | null
           regiao_administrativa_id?: string | null
-          risco_imediato?: string | null
+          risco_imediato?: boolean | null
           tipo_area_id?: string | null
           tipo_crime_id?: string | null
-          tipo_fauna?: string | null
-          tipo_impedimento_obstrucao?: string | null
-          tipo_indicio?: string | null
-          tipo_intervencao_irregular?: string | null
-          tipo_planta?: string | null
+          tipo_impedimento?: string | null
+          tipo_intervencao?: string | null
+          tipo_irregularidade_visual?: string | null
           tipo_poluicao?: string | null
-          tipo_registro: string
           vegetacao_afetada?: boolean | null
           veiculo_relacionado?: boolean | null
           volume_aparente?: string | null
@@ -480,121 +586,55 @@ export type Database = {
         Update: {
           alteracao_visual?: boolean | null
           animal_afetado?: boolean | null
-          atropelamento?: string | null
-          classe_flora?: string | null
-          classe_taxonomica?: string | null
-          condicao_flora?: string | null
-          created_at?: string
-          dano_alteracao_perceptivel?: string | null
+          area_protegida?: boolean | null
+          areas_protegidas_ids?: string[] | null
+          created_at?: string | null
+          dano_perceptivel?: string | null
           data?: string
-          descricao_administracao?: string | null
-          descricao_material_admin?: string | null
-          descricao_material_urbano?: string | null
-          descricao_situacao_poluicao?: string | null
-          desfecho?: string | null
-          destinacao_fauna?: string | null
-          destinacao_flora?: string | null
-          documento_indicio_visual?: boolean | null
+          descricao_adm_ambiental?: string | null
+          descricao_material_adm?: string | null
+          descricao_material_ord?: string | null
+          descricao_poluicao?: string | null
+          desfecho_id?: string | null
+          doc_irregular?: boolean | null
           enquadramento_id?: string | null
-          especie_fauna_id?: string | null
-          especie_flora_id?: string | null
-          estado_conservacao_fauna?: string | null
-          estado_conservacao_flora?: string | null
-          estado_saude_id?: string | null
-          estagio_vida_id?: string | null
-          estagio_vida_obito_id?: string | null
           estruturas_encontradas?: string | null
-          familia_flora?: string | null
           id?: string
-          imune_corte?: string | null
           intensidade_percebida?: string | null
-          latitude_ocorrencia?: string | null
-          longitude_ocorrencia?: string | null
-          madeira_lei?: string | null
+          latitude?: string
+          longitude?: string
           maquinas_presentes?: boolean | null
-          material_apreendido_admin?: boolean | null
-          material_apreendido_urbano?: boolean | null
+          material_apreendido_adm?: boolean | null
+          material_apreendido_ord?: boolean | null
           material_visivel?: string | null
           mortandade_animais?: boolean | null
-          nome_cientifico_fauna?: string | null
-          nome_cientifico_flora?: string | null
-          nome_popular_fauna?: string | null
-          nome_popular_flora?: string | null
-          numero_termo_entrega?: string | null
           ocorreu_apreensao?: boolean | null
           odor_forte?: boolean | null
-          ordem_flora?: string | null
-          ordem_taxonomica?: string | null
           origem_aparente?: string | null
           procedimento_legal?: string | null
-          quantidade_adulto?: number | null
-          quantidade_adulto_obito?: number | null
-          quantidade_detidos_maior_idade?: number | null
-          quantidade_detidos_menor_idade?: number | null
-          quantidade_estruturas?: number | null
-          quantidade_filhote?: number | null
-          quantidade_filhote_obito?: number | null
-          quantidade_flora?: number | null
-          quantidade_liberados_maior_idade?: number | null
-          quantidade_liberados_menor_idade?: number | null
-          quantidade_total?: number | null
-          quantidade_total_obito?: number | null
+          qtd_detidos_maior?: number | null
+          qtd_detidos_menor?: number | null
+          qtd_estruturas?: number | null
+          qtd_liberados_maior?: number | null
+          qtd_liberados_menor?: number | null
           regiao_administrativa_id?: string | null
-          risco_imediato?: string | null
+          risco_imediato?: boolean | null
           tipo_area_id?: string | null
           tipo_crime_id?: string | null
-          tipo_fauna?: string | null
-          tipo_impedimento_obstrucao?: string | null
-          tipo_indicio?: string | null
-          tipo_intervencao_irregular?: string | null
-          tipo_planta?: string | null
+          tipo_impedimento?: string | null
+          tipo_intervencao?: string | null
+          tipo_irregularidade_visual?: string | null
           tipo_poluicao?: string | null
-          tipo_registro?: string
           vegetacao_afetada?: boolean | null
           veiculo_relacionado?: boolean | null
           volume_aparente?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "fat_registros_de_crime_enquadramento_id_fkey"
-            columns: ["enquadramento_id"]
+            foreignKeyName: "fat_registros_de_crime_desfecho_id_fkey"
+            columns: ["desfecho_id"]
             isOneToOne: false
-            referencedRelation: "dim_enquadramento"
-            referencedColumns: ["id_enquadramento"]
-          },
-          {
-            foreignKeyName: "fat_registros_de_crime_especie_fauna_id_fkey"
-            columns: ["especie_fauna_id"]
-            isOneToOne: false
-            referencedRelation: "dim_especies_fauna"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fat_registros_de_crime_especie_flora_id_fkey"
-            columns: ["especie_flora_id"]
-            isOneToOne: false
-            referencedRelation: "dim_especies_flora"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fat_registros_de_crime_estado_saude_id_fkey"
-            columns: ["estado_saude_id"]
-            isOneToOne: false
-            referencedRelation: "dim_estado_saude"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fat_registros_de_crime_estagio_vida_id_fkey"
-            columns: ["estagio_vida_id"]
-            isOneToOne: false
-            referencedRelation: "dim_estagio_vida"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fat_registros_de_crime_estagio_vida_obito_id_fkey"
-            columns: ["estagio_vida_obito_id"]
-            isOneToOne: false
-            referencedRelation: "dim_estagio_vida"
+            referencedRelation: "dim_desfecho"
             referencedColumns: ["id"]
           },
           {
@@ -610,13 +650,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "dim_tipo_de_area"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fat_registros_de_crime_tipo_crime_id_fkey"
-            columns: ["tipo_crime_id"]
-            isOneToOne: false
-            referencedRelation: "dim_tipo_de_crime"
-            referencedColumns: ["id_tipo_de_crime"]
           },
         ]
       }
