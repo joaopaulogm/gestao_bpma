@@ -38,8 +38,10 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
   const [itensDisponiveis, setItensDisponiveis] = useState<ItemApreensao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<string>('');
-  const [categoriasFiltradas, setCategoriasFiltradas] = useState<string[]>([]);
+  const [categorias, setCategorias] = useState<string[]>([]);
+  const [usosIlicitos, setUsosIlicitos] = useState<string[]>([]);
   const [categoriaFilter, setCategoriaFilter] = useState<string>('');
+  const [usoIlicitoFilter, setUsoIlicitoFilter] = useState<string>('');
 
   useEffect(() => {
     const loadItens = async () => {
@@ -56,8 +58,11 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
         if (data) {
           setItensDisponiveis(data);
           // Extrair categorias únicas
-          const categorias = [...new Set(data.map(item => item.Categoria).filter(Boolean))] as string[];
-          setCategoriasFiltradas(categorias);
+          const cats = [...new Set(data.map(item => item.Categoria).filter(Boolean))] as string[];
+          setCategorias(cats);
+          // Extrair usos ilícitos únicos
+          const usos = [...new Set(data.map(item => item['Uso Ilicito']).filter(Boolean))] as string[];
+          setUsosIlicitos(usos);
         }
       } catch (error) {
         console.error('Erro ao carregar itens de apreensão:', error);
@@ -69,9 +74,11 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
     loadItens();
   }, []);
 
-  const itensFiltrados = categoriaFilter
-    ? itensDisponiveis.filter(item => item.Categoria === categoriaFilter)
-    : itensDisponiveis;
+  const itensFiltrados = itensDisponiveis.filter(item => {
+    const matchCategoria = !categoriaFilter || item.Categoria === categoriaFilter;
+    const matchUso = !usoIlicitoFilter || item['Uso Ilicito'] === usoIlicitoFilter;
+    return matchCategoria && matchUso;
+  });
 
   const handleAddItem = () => {
     if (!selectedItem) return;
@@ -121,21 +128,40 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
   return (
     <FormSection title="Bens Apreendidos">
       <div className="space-y-4">
-        {/* Seletor de itens */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Filtros e seletor de itens */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <FormField id="categoriaFilter" label="Filtrar por Categoria">
             <Select
               value={categoriaFilter || '__all__'}
               onValueChange={(val) => setCategoriaFilter(val === '__all__' ? '' : val)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-background">
                 <SelectValue placeholder="Todas as categorias" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background z-50">
                 <SelectItem value="__all__">Todas as categorias</SelectItem>
-                {categoriasFiltradas.map((cat) => (
+                {categorias.map((cat) => (
                   <SelectItem key={cat} value={cat}>
                     {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormField>
+
+          <FormField id="usoIlicitoFilter" label="Filtrar por Uso Ilícito">
+            <Select
+              value={usoIlicitoFilter || '__all__'}
+              onValueChange={(val) => setUsoIlicitoFilter(val === '__all__' ? '' : val)}
+            >
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder="Todos os usos" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50 max-h-60">
+                <SelectItem value="__all__">Todos os usos</SelectItem>
+                {usosIlicitos.map((uso) => (
+                  <SelectItem key={uso} value={uso}>
+                    {uso}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -148,17 +174,17 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
               onValueChange={setSelectedItem}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-background">
                 <SelectValue placeholder={isLoading ? "Carregando..." : "Selecione um item"} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background z-50 max-h-60">
                 {itensFiltrados.map((item) => (
                   <SelectItem 
                     key={item.id} 
                     value={item.id}
                     disabled={bensApreendidos.some(b => b.itemId === item.id)}
                   >
-                    {item.Item} ({item.Categoria})
+                    {item.Item}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -173,7 +199,7 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
               className="w-full"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Adicionar Item
+              Adicionar
             </Button>
           </div>
         </div>
