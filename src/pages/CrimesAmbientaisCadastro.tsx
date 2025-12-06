@@ -184,6 +184,11 @@ const CrimesAmbientaisCadastro = () => {
   const isFlagrante = desfechoSelecionado?.nome?.toLowerCase().includes('flagrante');
   
   const enquadramentosFiltrados = enquadramentos.filter(e => e.id_tipo_de_crime === tipoCrimeId);
+  
+  // Debug logs
+  console.log('tipoCrimeId:', tipoCrimeId);
+  console.log('enquadramentos total:', enquadramentos.length);
+  console.log('enquadramentosFiltrados:', enquadramentosFiltrados.length);
 
   // Load dimensions on mount
   useEffect(() => {
@@ -210,7 +215,7 @@ const CrimesAmbientaisCadastro = () => {
         supabase.from('dim_tipo_de_area').select('id, "Tipo de Área"'),
         supabase.from('dim_tipo_de_crime').select('id_tipo_de_crime, "Tipo de Crime"'),
         supabase.from('dim_enquadramento').select('id_enquadramento, id_tipo_de_crime, "Enquadramento"'),
-        supabase.from('dim_desfecho').select('id, nome'),
+        supabase.from('dim_desfecho').select('id, nome, tipo'),
         supabase.from('dim_especies_fauna').select('*').order('nome_popular'),
         supabase.from('dim_especies_flora').select('*').order('"Nome Popular"'),
         supabase.from('dim_estado_saude').select('id, nome'),
@@ -1303,24 +1308,29 @@ const CrimesAmbientaisCadastro = () => {
                 <SelectValue placeholder="Selecione o desfecho" />
               </SelectTrigger>
               <SelectContent>
-                {desfechos.map(d => (
-                  <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>
-                ))}
+                {desfechos
+                  .filter(d => ['Em Apuração pela PCDF', 'Em Monitoramento pela PMDF', 'Averiguado e Nada Constatado', 'Resolvido no Local', 'Flagrante'].includes(d.nome))
+                  .map(d => (
+                    <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
 
           {isFlagrante && (
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Procedimento Legal</Label>
+              <Label className="text-sm font-medium">
+                Procedimento Legal <span className="text-destructive">*</span>
+              </Label>
               <Select value={procedimentoLegal} onValueChange={setProcedimentoLegal}>
                 <SelectTrigger className="input-glass">
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder="Selecione o procedimento" />
                 </SelectTrigger>
                 <SelectContent>
-                  {['TCO PMDF', 'TCO PCDF', 'Em Apuração PCDF', 'QT'].map(opt => (
-                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                  ))}
+                  <SelectItem value="TCO-PMDF">TCO-PMDF</SelectItem>
+                  <SelectItem value="TCO-PCDF">TCO-PCDF</SelectItem>
+                  <SelectItem value="Em Apuração PCDF">Em Apuração PCDF</SelectItem>
+                  <SelectItem value="QT">QT</SelectItem>
                 </SelectContent>
               </Select>
             </div>
