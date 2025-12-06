@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import CrimesAmbientaisForm from '@/components/crimes/CrimesAmbientaisForm';
 import { useCrimesAmbientaisForm } from '@/hooks/useCrimesAmbientaisForm';
 
-const CrimesAmbientais = () => {
+const CrimesAmbientais: React.FC = () => {
   const {
     form,
     formData,
