@@ -366,6 +366,41 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
           />
         )}
 
+        {/* Seção de Poluição - apenas para Crime de Poluição E após selecionar enquadramento */}
+        {isCrimePoluicao && formData.enquadramento && (
+          <PoluicaoSection
+            data={poluicaoData}
+            onChange={handlePoluicaoChange}
+            getFieldError={getFieldError}
+          />
+        )}
+
+        {/* Seção de Ordenamento Urbano - apenas para Crime Contra Ordenamento Urbano E após selecionar enquadramento */}
+        {isCrimeOrdenamentoUrbano && formData.enquadramento && (
+          <OrdenamentoUrbanoSection
+            data={ordenamentoData}
+            onChange={handleOrdenamentoChange}
+            getFieldError={getFieldError}
+          />
+        )}
+
+        {/* Seção de Administração Ambiental - apenas para Crime Contra Administração E após selecionar enquadramento */}
+        {isCrimeAdministracao && formData.enquadramento && (
+          <AdministracaoAmbientalSection
+            data={administracaoData}
+            onChange={handleAdministracaoChange}
+            getFieldError={getFieldError}
+          />
+        )}
+
+        {/* Bens Apreendidos - apenas quando ocorreu apreensão */}
+        {formData.ocorreuApreensao && (
+          <BensApreendidosSection
+            bensApreendidos={bensApreendidos}
+            onBensChange={onBensApreendidosChange}
+          />
+        )}
+
         {/* Desfecho */}
         <FormSection title="Desfecho" columns>
           <FormField
