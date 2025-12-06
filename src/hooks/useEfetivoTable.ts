@@ -16,6 +16,51 @@ export interface Efetivo {
   created_at: string;
 }
 
+// Ordem hierárquica dos postos (Oficiais)
+const ORDEM_OFICIAIS: Record<string, number> = {
+  'CEL QOPM': 1,
+  'TC QOPM': 2,
+  'MAJ QOPM': 3,
+  'CAP QOPM': 4,
+  '1º TEN QOPM': 5,
+  '2º TEN QOPM': 6,
+  'ASP QOPM': 7,
+  'CAP QOPMA': 8,
+  '1º TEN QOPMA': 9,
+  '2º TEN QOPMA': 10,
+};
+
+// Ordem hierárquica das graduações (Praças)
+const ORDEM_PRACAS: Record<string, number> = {
+  'ST QPPMC': 1,
+  '1º SGT QPPMC': 2,
+  '2º SGT QPPMC': 3,
+  '3º SGT QPPMC': 4,
+  'CB QPPMC': 5,
+  'SD QPPMC': 6,
+  'SD 2ª CL QPPMC': 7,
+};
+
+// Função de ordenação por antiguidade militar
+const sortByAntiguidade = (a: Efetivo, b: Efetivo): number => {
+  // Oficiais sempre antes de Praças
+  if (a.quadro === 'Oficiais' && b.quadro === 'Praças') return -1;
+  if (a.quadro === 'Praças' && b.quadro === 'Oficiais') return 1;
+  
+  // Dentro do mesmo quadro, ordenar por posto/graduação
+  const ordemA = a.quadro === 'Oficiais' 
+    ? ORDEM_OFICIAIS[a.posto_graduacao] || 999 
+    : ORDEM_PRACAS[a.posto_graduacao] || 999;
+  const ordemB = b.quadro === 'Oficiais' 
+    ? ORDEM_OFICIAIS[b.posto_graduacao] || 999 
+    : ORDEM_PRACAS[b.posto_graduacao] || 999;
+  
+  if (ordemA !== ordemB) return ordemA - ordemB;
+  
+  // Dentro do mesmo posto/graduação, ordenar por número de antiguidade
+  return (a.antiguidade || 999) - (b.antiguidade || 999);
+};
+
 export const useEfetivoTable = () => {
   const [efetivo, setEfetivo] = useState<Efetivo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,17 +106,19 @@ export const useEfetivoTable = () => {
     }
   };
 
-  const filteredEfetivo = efetivo.filter((item) => {
-    const matchesSearch = 
-      item.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.nome_guerra.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.matricula.includes(searchTerm);
-    
-    const matchesQuadro = quadroFilter === 'all' || item.quadro === quadroFilter;
-    const matchesPosto = postoFilter === 'all' || item.posto_graduacao === postoFilter;
-    
-    return matchesSearch && matchesQuadro && matchesPosto;
-  });
+  const filteredEfetivo = efetivo
+    .filter((item) => {
+      const matchesSearch = 
+        item.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.nome_guerra.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.matricula.includes(searchTerm);
+      
+      const matchesQuadro = quadroFilter === 'all' || item.quadro === quadroFilter;
+      const matchesPosto = postoFilter === 'all' || item.posto_graduacao === postoFilter;
+      
+      return matchesSearch && matchesQuadro && matchesPosto;
+    })
+    .sort(sortByAntiguidade);
 
   // Get unique postos for the selected quadro
   const postosDisponiveis = [...new Set(
