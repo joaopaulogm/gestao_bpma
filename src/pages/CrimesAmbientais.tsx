@@ -17,7 +17,9 @@ const CrimesAmbientais = () => {
     handleFloraItemsChange,
     faunaItems,
     handleFaunaItemsChange,
-    handleNumeroTermoEntregaFloraChange
+    handleNumeroTermoEntregaFloraChange,
+    bensApreendidos,
+    handleBensApreendidosChange
   } = useCrimesAmbientaisForm();
 
   return (
@@ -35,6 +37,8 @@ const CrimesAmbientais = () => {
         faunaItems={faunaItems}
         onFaunaItemsChange={handleFaunaItemsChange}
         onNumeroTermoEntregaFloraChange={handleNumeroTermoEntregaFloraChange}
+        bensApreendidos={bensApreendidos}
+        onBensApreendidosChange={handleBensApreendidosChange}
       />
     </Layout>
   );
