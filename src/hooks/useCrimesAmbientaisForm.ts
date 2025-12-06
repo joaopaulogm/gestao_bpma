@@ -273,7 +273,7 @@ async function buscarTipoCrimeId(tipoCrime: string): Promise<string | null> {
   const { data } = await supabase
     .from('dim_tipo_de_crime')
     .select('id_tipo_de_crime')
-    .eq('Tipo de Crime', tipoCrime)
+    .ilike('Tipo de Crime', `%${tipoCrime}%`)
     .maybeSingle();
   
   return data?.id_tipo_de_crime || null;

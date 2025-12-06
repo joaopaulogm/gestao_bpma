@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from '@/components/ui/label';
 
@@ -26,18 +25,21 @@ const FormField: React.FC<FormFieldProps> = ({
 }) => {
   return (
     <div className={`space-y-2 ${error ? 'animate-shake' : ''} ${className}`}>
-      <Label htmlFor={id} className="flex items-center">
+      <Label 
+        htmlFor={id} 
+        className="flex items-center text-sm font-medium text-foreground"
+      >
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-        {loading && <span className="ml-2 text-gray-500 text-sm">(Carregando...)</span>}
+        {required && <span className="text-destructive ml-1">*</span>}
+        {loading && <span className="ml-2 text-muted-foreground text-sm">(Carregando...)</span>}
       </Label>
       
-      <div className={error ? "ring-1 ring-red-500 rounded-md" : ""}>
+      <div className={error ? "ring-1 ring-destructive/50 rounded-xl" : ""}>
         {children}
       </div>
       
       {error && (
-        <div className="text-red-500 text-sm font-medium bg-red-50 p-2 rounded-md border-l-2 border-red-500">
+        <div className="text-destructive text-sm font-medium bg-destructive/5 backdrop-blur-sm p-2.5 rounded-lg border-l-2 border-destructive">
           {error}
         </div>
       )}
