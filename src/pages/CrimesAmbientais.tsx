@@ -578,12 +578,12 @@ export default function CrimesAmbientais() {
     }
   }
 
-  const tipoCrimeLower = formData.tipoCrime?.toLowerCase() || '';
-  const isFauna = tipoCrimeLower.includes('fauna');
-  const isFlora = tipoCrimeLower.includes('flora');
-  const isPoluicao = tipoCrimeLower.includes('poluição') || tipoCrimeLower.includes('poluicao');
-  const isOrdenamento = tipoCrimeLower.includes('ordenamento') || tipoCrimeLower.includes('patrimônio');
-  const isAdministracao = tipoCrimeLower.includes('administração') || tipoCrimeLower.includes('administracao');
+  const tipoCrimeNorm = formData.tipoCrime?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
+  const isFauna = tipoCrimeNorm.includes('fauna');
+  const isFlora = tipoCrimeNorm.includes('flora');
+  const isPoluicao = tipoCrimeNorm.includes('poluicao');
+  const isOrdenamento = tipoCrimeNorm.includes('ordenamento') || tipoCrimeNorm.includes('patrimonio');
+  const isAdministracao = tipoCrimeNorm.includes('administracao');
 
   const categorias = [...new Set(itensApreensao.map(i => i["Categoria"]).filter(Boolean))];
 
