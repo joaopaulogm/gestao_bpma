@@ -6,7 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import SidebarLayout from '@/components/SidebarLayout';
 
-// Lazy load pages to prevent import errors from breaking the app
+// Lazy load pages
 const Index = React.lazy(() => import('@/pages/Index'));
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
 const Hotspots = React.lazy(() => import('@/pages/Hotspots'));
