@@ -1,14 +1,53 @@
+// Hook para gerenciamento do formulário de crimes ambientais
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { crimesAmbientaisSchema, CrimesAmbientaisFormData } from '@/schemas/crimesAmbientaisSchema';
-import { FloraItem } from '@/components/crimes/FloraSection';
-import { FaunaItem } from '@/components/crimes/FaunaSection';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { buscarIdPorNome } from '@/services/dimensionService';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+// Interfaces locais para evitar import circular
+interface FloraItem {
+  id: string;
+  especieId: string;
+  nomePopular: string;
+  nomeCientifico: string;
+  classe: string;
+  ordem: string;
+  familia: string;
+  estadoConservacao: string;
+  tipoPlanta: string;
+  madeiraLei: string;
+  imuneCote: string;
+  condicao: string;
+  quantidade: number;
+  destinacao: string;
+}
+
+interface FaunaItem {
+  id: string;
+  especieId: string;
+  nomePopular: string;
+  nomeCientifico: string;
+  classeTaxonomica: string;
+  ordemTaxonomica: string;
+  tipoFauna: string;
+  estadoConservacao: string;
+  estadoSaudeId: string;
+  estagioVidaId: string;
+  atropelamento: string;
+  quantidadeAdulto: number;
+  quantidadeFilhote: number;
+  quantidadeTotal: number;
+  destinacao: string;
+  estagioVidaObitoId: string;
+  quantidadeAdultoObito: number;
+  quantidadeFilhoteObito: number;
+  quantidadeTotalObito: number;
+}
 
 export const useCrimesAmbientaisForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
