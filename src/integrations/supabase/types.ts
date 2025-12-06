@@ -207,27 +207,27 @@ export type Database = {
       }
       dim_itens_apreensao: {
         Row: {
-          Aplicacao: string
-          Categoria: string
+          "Bem Apreendido": string
           created_at: string | null
           id: string
           Item: string
+          "Tipo de Crime": string
           "Uso Ilicito": string
         }
         Insert: {
-          Aplicacao: string
-          Categoria: string
+          "Bem Apreendido": string
           created_at?: string | null
           id?: string
           Item: string
+          "Tipo de Crime": string
           "Uso Ilicito": string
         }
         Update: {
-          Aplicacao?: string
-          Categoria?: string
+          "Bem Apreendido"?: string
           created_at?: string | null
           id?: string
           Item?: string
+          "Tipo de Crime"?: string
           "Uso Ilicito"?: string
         }
         Relationships: []

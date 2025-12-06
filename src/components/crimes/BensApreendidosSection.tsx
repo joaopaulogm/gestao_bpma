@@ -10,19 +10,19 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface ItemApreensao {
   id: string;
-  Categoria: string | null;
+  'Tipo de Crime': string | null;
+  'Bem Apreendido': string | null;
   Item: string | null;
   'Uso Ilicito': string | null;
-  Aplicacao: string | null;
 }
 
 export interface BemApreendido {
   id: string;
   itemId: string;
-  categoria: string;
+  tipoCrime: string;
+  bemApreendido: string;
   item: string;
   usoIlicito: string;
-  aplicacao: string;
   quantidade: number;
 }
 
@@ -38,9 +38,15 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
   const [itensDisponiveis, setItensDisponiveis] = useState<ItemApreensao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<string>('');
-  const [categorias, setCategorias] = useState<string[]>([]);
+  
+  // Listas para filtros
+  const [tiposCrime, setTiposCrime] = useState<string[]>([]);
+  const [bensApreendidosList, setBensApreendidosList] = useState<string[]>([]);
   const [usosIlicitos, setUsosIlicitos] = useState<string[]>([]);
-  const [categoriaFilter, setCategoriaFilter] = useState<string>('');
+  
+  // Filtros selecionados
+  const [tipoCrimeFilter, setTipoCrimeFilter] = useState<string>('');
+  const [bemApreendidoFilter, setBemApreendidoFilter] = useState<string>('');
   const [usoIlicitoFilter, setUsoIlicitoFilter] = useState<string>('');
 
   useEffect(() => {
@@ -50,17 +56,18 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
         const { data, error } = await supabase
           .from('dim_itens_apreensao')
           .select('*')
-          .order('Categoria')
+          .order('Bem Apreendido')
           .order('Item');
 
         if (error) throw error;
 
         if (data) {
-          setItensDisponiveis(data);
-          // Extrair categorias únicas
-          const cats = [...new Set(data.map(item => item.Categoria).filter(Boolean))] as string[];
-          setCategorias(cats);
-          // Extrair usos ilícitos únicos
+          setItensDisponiveis(data as unknown as ItemApreensao[]);
+          // Extrair valores únicos para filtros
+          const tipos = [...new Set(data.map(item => item['Tipo de Crime']).filter(Boolean))] as string[];
+          setTiposCrime(tipos);
+          const bens = [...new Set(data.map(item => item['Bem Apreendido']).filter(Boolean))] as string[];
+          setBensApreendidosList(bens);
           const usos = [...new Set(data.map(item => item['Uso Ilicito']).filter(Boolean))] as string[];
           setUsosIlicitos(usos);
         }
@@ -74,10 +81,12 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
     loadItens();
   }, []);
 
+  // Filtrar itens baseado nos filtros selecionados
   const itensFiltrados = itensDisponiveis.filter(item => {
-    const matchCategoria = !categoriaFilter || item.Categoria === categoriaFilter;
+    const matchTipo = !tipoCrimeFilter || item['Tipo de Crime'] === tipoCrimeFilter;
+    const matchBem = !bemApreendidoFilter || item['Bem Apreendido'] === bemApreendidoFilter;
     const matchUso = !usoIlicitoFilter || item['Uso Ilicito'] === usoIlicitoFilter;
-    return matchCategoria && matchUso;
+    return matchTipo && matchBem && matchUso;
   });
 
   const handleAddItem = () => {
@@ -93,10 +102,10 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
     const novoBem: BemApreendido = {
       id: crypto.randomUUID(),
       itemId: itemSelecionado.id,
-      categoria: itemSelecionado.Categoria || '',
+      tipoCrime: itemSelecionado['Tipo de Crime'] || '',
+      bemApreendido: itemSelecionado['Bem Apreendido'] || '',
       item: itemSelecionado.Item || '',
       usoIlicito: itemSelecionado['Uso Ilicito'] || '',
-      aplicacao: itemSelecionado.Aplicacao || '',
       quantidade: 1
     };
 
@@ -116,40 +125,59 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
     );
   };
 
-  // Agrupar por categoria para exibição
+  // Agrupar por Bem Apreendido para exibição
   const bensAgrupados = bensApreendidos.reduce((acc, bem) => {
-    if (!acc[bem.categoria]) {
-      acc[bem.categoria] = [];
+    if (!acc[bem.bemApreendido]) {
+      acc[bem.bemApreendido] = [];
     }
-    acc[bem.categoria].push(bem);
+    acc[bem.bemApreendido].push(bem);
     return acc;
   }, {} as Record<string, BemApreendido[]>);
 
   return (
     <FormSection title="Bens Apreendidos">
       <div className="space-y-4">
-        {/* Filtros e seletor de itens */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <FormField id="categoriaFilter" label="Filtrar por Categoria">
+        {/* Filtros */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <FormField id="tipoCrimeFilter" label="Tipo de Crime">
             <Select
-              value={categoriaFilter || '__all__'}
-              onValueChange={(val) => setCategoriaFilter(val === '__all__' ? '' : val)}
+              value={tipoCrimeFilter || '__all__'}
+              onValueChange={(val) => setTipoCrimeFilter(val === '__all__' ? '' : val)}
             >
               <SelectTrigger className="bg-background">
-                <SelectValue placeholder="Todas as categorias" />
+                <SelectValue placeholder="Todos os tipos" />
               </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="__all__">Todas as categorias</SelectItem>
-                {categorias.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
+              <SelectContent className="bg-background z-50 max-h-60">
+                <SelectItem value="__all__">Todos os tipos</SelectItem>
+                {tiposCrime.map((tipo) => (
+                  <SelectItem key={tipo} value={tipo}>
+                    {tipo}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </FormField>
 
-          <FormField id="usoIlicitoFilter" label="Filtrar por Uso Ilícito">
+          <FormField id="bemApreendidoFilter" label="Bem Apreendido">
+            <Select
+              value={bemApreendidoFilter || '__all__'}
+              onValueChange={(val) => setBemApreendidoFilter(val === '__all__' ? '' : val)}
+            >
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder="Todos os bens" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50 max-h-60">
+                <SelectItem value="__all__">Todos os bens</SelectItem>
+                {bensApreendidosList.map((bem) => (
+                  <SelectItem key={bem} value={bem}>
+                    {bem}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormField>
+
+          <FormField id="usoIlicitoFilter" label="Uso Ilícito">
             <Select
               value={usoIlicitoFilter || '__all__'}
               onValueChange={(val) => setUsoIlicitoFilter(val === '__all__' ? '' : val)}
@@ -168,7 +196,7 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
             </Select>
           </FormField>
 
-          <FormField id="selectedItem" label="Selecionar Item">
+          <FormField id="selectedItem" label="Item">
             <Select
               value={selectedItem}
               onValueChange={setSelectedItem}
@@ -190,19 +218,18 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
               </SelectContent>
             </Select>
           </FormField>
-
-          <div className="flex items-end">
-            <Button
-              type="button"
-              onClick={handleAddItem}
-              disabled={!selectedItem}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar
-            </Button>
-          </div>
         </div>
+
+        {/* Botão Adicionar */}
+        <Button
+          type="button"
+          onClick={handleAddItem}
+          disabled={!selectedItem}
+          className="w-full md:w-auto"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar Item
+        </Button>
 
         {/* Lista de bens apreendidos */}
         {bensApreendidos.length === 0 ? (
@@ -215,11 +242,11 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
-            {Object.entries(bensAgrupados).map(([categoria, bens]) => (
-              <div key={categoria} className="space-y-2">
+            {Object.entries(bensAgrupados).map(([bemApreendido, bens]) => (
+              <div key={bemApreendido} className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">
-                    {categoria}
+                    {bemApreendido}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
                     ({bens.length} {bens.length === 1 ? 'item' : 'itens'})
@@ -237,16 +264,12 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
                           {bem.item}
                         </p>
                         <div className="flex flex-wrap gap-2 mt-1">
-                          {bem.usoIlicito && (
-                            <span className="text-xs text-muted-foreground">
-                              Uso: {bem.usoIlicito}
-                            </span>
-                          )}
-                          {bem.aplicacao && (
-                            <Badge variant="outline" className="text-xs">
-                              {bem.aplicacao}
-                            </Badge>
-                          )}
+                          <span className="text-xs text-muted-foreground">
+                            Uso: {bem.usoIlicito}
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            {bem.tipoCrime}
+                          </Badge>
                         </div>
                       </div>
 
