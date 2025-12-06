@@ -95,15 +95,17 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
 
   // Filtrar enquadramentos com base no tipo de crime selecionado
   useEffect(() => {
-    if (formData.tipoCrime && tiposCrime.length > 0) {
+    if (formData.tipoCrime && tiposCrime.length > 0 && enquadramentos.length > 0) {
       const tipoCrimeSelecionado = tiposCrime.find(
         t => t["Tipo de Crime"] === formData.tipoCrime
       );
       
       if (tipoCrimeSelecionado) {
         const filtrados = enquadramentos.filter(
-          e => e.id_tipo_de_crime === tipoCrimeSelecionado.id_tipo_de_crime
+          e => e.id_tipo_de_crime === tipoCrimeSelecionado.id_tipo_de_crime && e["Enquadramento"]
         );
+        console.log('Tipo de crime selecionado:', tipoCrimeSelecionado);
+        console.log('Enquadramentos filtrados:', filtrados);
         setEnquadramentosFiltrados(filtrados);
       } else {
         setEnquadramentosFiltrados([]);
