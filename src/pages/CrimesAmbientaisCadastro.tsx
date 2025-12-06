@@ -26,7 +26,7 @@ interface TipoCrime {
 interface Enquadramento {
   id_enquadramento: string;
   id_tipo_de_crime: string;
-  Enquadramento: string;
+  Enquadramento: string | null;
 }
 
 interface EspecieFauna {
@@ -225,7 +225,10 @@ const CrimesAmbientaisCadastro = () => {
         setTiposArea(tiposAreaRes.data.map(t => ({ id: t.id, nome: t['Tipo de Área'] || '' })));
       }
       if (tiposCrimeRes.data) setTiposCrime(tiposCrimeRes.data as TipoCrime[]);
-      if (enquadramentosRes.data) setEnquadramentos(enquadramentosRes.data as Enquadramento[]);
+      if (enquadramentosRes.data) {
+        console.log('Enquadramentos carregados:', enquadramentosRes.data);
+        setEnquadramentos(enquadramentosRes.data as Enquadramento[]);
+      }
       if (desfechosRes.data) setDesfechos(desfechosRes.data);
       if (especiesFaunaRes.data) setEspeciesFauna(especiesFaunaRes.data);
       if (especiesFloraRes.data) setEspeciesFlora(especiesFloraRes.data as unknown as EspecieFlora[]);
@@ -606,32 +609,34 @@ const CrimesAmbientaisCadastro = () => {
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="latitude" className="text-sm font-medium">
-              Latitude da Ocorrência <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="latitude"
-              value={latitude}
-              onChange={(e) => setLatitude(e.target.value)}
-              placeholder="Ex: -15.7801"
-              required
-              className="input-glass"
-            />
-          </div>
+          <div className="col-span-full grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="latitude" className="text-sm font-medium">
+                Latitude da Ocorrência <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="latitude"
+                value={latitude}
+                onChange={(e) => setLatitude(e.target.value)}
+                placeholder="Ex: -15.7801"
+                required
+                className="input-glass"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="longitude" className="text-sm font-medium">
-              Longitude da Ocorrência <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="longitude"
-              value={longitude}
-              onChange={(e) => setLongitude(e.target.value)}
-              placeholder="Ex: -47.9292"
-              required
-              className="input-glass"
-            />
+            <div className="space-y-2">
+              <Label htmlFor="longitude" className="text-sm font-medium">
+                Longitude da Ocorrência <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="longitude"
+                value={longitude}
+                onChange={(e) => setLongitude(e.target.value)}
+                placeholder="Ex: -47.9292"
+                required
+                className="input-glass"
+              />
+            </div>
           </div>
         </FormSection>
 
@@ -666,7 +671,7 @@ const CrimesAmbientaisCadastro = () => {
               <SelectContent>
                 {enquadramentosFiltrados.map(e => (
                   <SelectItem key={e.id_enquadramento} value={e.id_enquadramento}>
-                    {e.Enquadramento}
+                    {e.Enquadramento || 'Sem descrição'}
                   </SelectItem>
                 ))}
               </SelectContent>
