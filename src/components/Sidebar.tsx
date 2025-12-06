@@ -185,6 +185,13 @@ const Sidebar = () => {
                     {isOpen && <span className="truncate">Cadastrar Flora</span>}
                   </Link>
                 </li>
+                
+                <li>
+                  <Link to="/flora-cadastrada" className={linkClasses('/flora-cadastrada', true)}>
+                    <List className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Flora Cadastrada</span>}
+                  </Link>
+                </li>
               </>
             )}
           </ul>
