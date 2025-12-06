@@ -205,54 +205,30 @@ export type Database = {
         }
         Relationships: []
       }
-      dim_itens_apreendidos: {
-        Row: {
-          categoria: string | null
-          created_at: string | null
-          id: string
-          item: string | null
-          tipo_crime_relacionado: string | null
-          uso_ilicito: string | null
-        }
-        Insert: {
-          categoria?: string | null
-          created_at?: string | null
-          id?: string
-          item?: string | null
-          tipo_crime_relacionado?: string | null
-          uso_ilicito?: string | null
-        }
-        Update: {
-          categoria?: string | null
-          created_at?: string | null
-          id?: string
-          item?: string | null
-          tipo_crime_relacionado?: string | null
-          uso_ilicito?: string | null
-        }
-        Relationships: []
-      }
       dim_itens_apreensao: {
         Row: {
-          Aplicacao: string | null
-          Categoria: string | null
+          Aplicacao: string
+          Categoria: string
+          created_at: string | null
           id: string
-          Item: string | null
-          "Uso Ilicito": string | null
+          Item: string
+          "Uso Ilicito": string
         }
         Insert: {
-          Aplicacao?: string | null
-          Categoria?: string | null
+          Aplicacao: string
+          Categoria: string
+          created_at?: string | null
           id?: string
-          Item?: string | null
-          "Uso Ilicito"?: string | null
+          Item: string
+          "Uso Ilicito": string
         }
         Update: {
-          Aplicacao?: string | null
-          Categoria?: string | null
+          Aplicacao?: string
+          Categoria?: string
+          created_at?: string | null
           id?: string
-          Item?: string | null
-          "Uso Ilicito"?: string | null
+          Item?: string
+          "Uso Ilicito"?: string
         }
         Relationships: []
       }
@@ -474,13 +450,6 @@ export type Database = {
           quantidade?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fat_ocorrencia_apreensao_id_item_apreendido_fkey"
-            columns: ["id_item_apreendido"]
-            isOneToOne: false
-            referencedRelation: "dim_itens_apreendidos"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "fat_ocorrencia_apreensao_id_ocorrencia_fkey"
             columns: ["id_ocorrencia"]
