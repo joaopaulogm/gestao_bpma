@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { CrimesAmbientaisFormData, FloraItemData, DESFECHOS, PROCEDIMENTOS_LEGAIS } from '@/schemas/crimesAmbientaisSchema';
+import { CrimesAmbientaisFormData, DESFECHOS, PROCEDIMENTOS_LEGAIS } from '@/schemas/crimesAmbientaisSchema';
 import { regioes } from '@/constants/regioes';
 import FormSection from '@/components/resgate/FormSection';
 import FormField from '@/components/resgate/FormField';
@@ -17,14 +17,14 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface TipoCrime {
   id_tipo_de_crime: string;
-  "Tipo de Crime": string;
+  "Tipo de Crime": string | null;
 }
 
 interface Enquadramento {
   id_enquadramento: string;
   id_tipo_de_crime: string;
-  "Tipo de Crime": string;
-  "Enquadramento": string;
+  "Tipo de Crime": string | null;
+  "Enquadramento": string | null;
 }
 
 interface CrimesAmbientaisFormProps {
@@ -101,10 +101,10 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
       );
       
       if (tipoCrimeSelecionado) {
-        const enquadramentosFiltrados = enquadramentos.filter(
+        const filtrados = enquadramentos.filter(
           e => e.id_tipo_de_crime === tipoCrimeSelecionado.id_tipo_de_crime
         );
-        setEnquadramentosFiltrados(enquadramentosFiltrados);
+        setEnquadramentosFiltrados(filtrados);
       } else {
         setEnquadramentosFiltrados([]);
       }
@@ -113,10 +113,10 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
     }
   }, [formData.tipoCrime, tiposCrime, enquadramentos]);
 
-  // Verificar se é crime contra fauna
-  const isCrimeContraFauna = formData.tipoCrime === 'Contra a Fauna';
-  // Verificar se é crime contra flora
-  const isCrimeContraFlora = formData.tipoCrime === 'Contra a Flora';
+  // Verificar se é crime contra fauna (match parcial, case insensitive)
+  const isCrimeContraFauna = formData.tipoCrime?.toLowerCase().includes('fauna') || false;
+  // Verificar se é crime contra flora (match parcial, case insensitive)
+  const isCrimeContraFlora = formData.tipoCrime?.toLowerCase().includes('flora') || false;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -287,10 +287,8 @@ const CrimesAmbientaisForm: React.FC<CrimesAmbientaisFormProps> = ({
           </FormSection>
         )}
 
-        {/* Seção de Fauna - apenas para Crime Contra a Fauna E após selecionar enquadramento (exceto "Exportar pele de...") */}
-        {isCrimeContraFauna && 
-         formData.enquadramento && 
-         !formData.enquadramento.startsWith('Exportar pele de') && (
+        {/* Seção de Fauna - apenas para Crime Contra a Fauna E após selecionar enquadramento */}
+        {isCrimeContraFauna && formData.enquadramento && (
           <FaunaSection
             faunaItems={faunaItems}
             onFaunaItemsChange={onFaunaItemsChange}

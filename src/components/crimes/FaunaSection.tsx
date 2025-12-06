@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import FormSection from '@/components/resgate/FormSection';
 import FormField from '@/components/resgate/FormField';
 import { Input } from '@/components/ui/input';
@@ -62,6 +62,7 @@ const FaunaSection: React.FC<FaunaSectionProps> = ({
   const [estadosSaude, setEstadosSaude] = useState<Array<{ id: string; nome: string }>>([]);
   const [estagiosVida, setEstagiosVida] = useState<Array<{ id: string; nome: string }>>([]);
   const [loading, setLoading] = useState(true);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -202,10 +203,11 @@ const FaunaSection: React.FC<FaunaSectionProps> = ({
 
   // Inicializar com um item vazio se não houver nenhum
   useEffect(() => {
-    if (faunaItems.length === 0) {
+    if (faunaItems.length === 0 && !initializedRef.current) {
+      initializedRef.current = true;
       onFaunaItemsChange([createEmptyFaunaItem()]);
     }
-  }, []);
+  }, [faunaItems.length, onFaunaItemsChange]);
 
   const getEspeciesPorClasse = (classe: string) => {
     return especiesFauna.filter(e => e.classe_taxonomica === classe);
