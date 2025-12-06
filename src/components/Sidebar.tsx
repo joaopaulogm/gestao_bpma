@@ -16,7 +16,8 @@ import {
   ChevronRight,
   LogIn,
   Shield,
-  Package
+  Package,
+  Leaf
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -175,6 +176,13 @@ const Sidebar = () => {
                   <Link to="/bens-apreendidos" className={linkClasses('/bens-apreendidos', true)}>
                     <Package className="h-5 w-5 flex-shrink-0" />
                     {isOpen && <span className="truncate">Bens Apreendidos</span>}
+                  </Link>
+                </li>
+                
+                <li>
+                  <Link to="/flora-cadastro" className={linkClasses('/flora-cadastro', true)}>
+                    <Leaf className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Cadastrar Flora</span>}
                   </Link>
                 </li>
               </>
