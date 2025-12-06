@@ -125,14 +125,14 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField id="categoriaFilter" label="Filtrar por Categoria">
             <Select
-              value={categoriaFilter}
-              onValueChange={setCategoriaFilter}
+              value={categoriaFilter || '__all__'}
+              onValueChange={(val) => setCategoriaFilter(val === '__all__' ? '' : val)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todas as categorias" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as categorias</SelectItem>
+                <SelectItem value="__all__">Todas as categorias</SelectItem>
                 {categoriasFiltradas.map((cat) => (
                   <SelectItem key={cat} value={cat}>
                     {cat}
