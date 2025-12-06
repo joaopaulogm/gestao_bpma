@@ -6,6 +6,8 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import SidebarLayout from '@/components/SidebarLayout';
 
+import CrimesAmbientais from '@/pages/CrimesAmbientais';
+
 // Lazy load pages
 const Index = React.lazy(() => import('@/pages/Index'));
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
@@ -13,7 +15,6 @@ const Hotspots = React.lazy(() => import('@/pages/Hotspots'));
 const Registros = React.lazy(() => import('@/pages/Registros'));
 const RegistroDetalhes = React.lazy(() => import('@/pages/RegistroDetalhes'));
 const ResgateCadastro = React.lazy(() => import('@/pages/ResgateCadastro'));
-const CrimesAmbientais = React.lazy(() => import('@/pages/CrimesAmbientais'));
 const FaunaCadastrada = React.lazy(() => import('@/pages/FaunaCadastrada'));
 const FaunaCadastro = React.lazy(() => import('@/pages/FaunaCadastro'));
 const Relatorios = React.lazy(() => import('@/pages/Relatorios'));
