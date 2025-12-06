@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import BensApreendidosSection, { BemApreendido as BemApreendidoType } from '@/components/crimes/BensApreendidosSection';
 
 // Types
 interface DimensionItem {
@@ -79,11 +80,7 @@ interface ItemApreendido {
   Aplicacao: string;
 }
 
-interface BemApreendido {
-  id: string;
-  itemId: string;
-  quantidade: number;
-}
+// Usando BemApreendidoType do componente BensApreendidosSection
 
 interface AreaProtegida {
   id: string;
@@ -160,7 +157,7 @@ const CrimesAmbientaisCadastro = () => {
   const [floraItems, setFloraItems] = useState<FloraItem[]>([]);
   
   // Bens apreendidos
-  const [bensApreendidos, setBensApreendidos] = useState<BemApreendido[]>([]);
+  const [bensApreendidos, setBensApreendidos] = useState<BemApreendidoType[]>([]);
   
   // Conclusão
   const [desfechoId, setDesfechoId] = useState('');
@@ -291,22 +288,7 @@ const CrimesAmbientaisCadastro = () => {
     setFloraItems(floraItems.map(f => f.id === id ? { ...f, [field]: value } : f));
   };
 
-  // Add bem apreendido
-  const addBemApreendido = () => {
-    setBensApreendidos([...bensApreendidos, {
-      id: crypto.randomUUID(),
-      itemId: '',
-      quantidade: 1
-    }]);
-  };
-
-  const removeBemApreendido = (id: string) => {
-    setBensApreendidos(bensApreendidos.filter(b => b.id !== id));
-  };
-
-  const updateBemApreendido = (id: string, field: keyof BemApreendido, value: any) => {
-    setBensApreendidos(bensApreendidos.map(b => b.id === id ? { ...b, [field]: value } : b));
-  };
+  // Funções removidas - agora gerenciadas pelo componente BensApreendidosSection
 
   // Toggle area protegida
   const toggleAreaProtegida = (areaId: string) => {
@@ -1216,85 +1198,10 @@ const CrimesAmbientaisCadastro = () => {
 
         {/* Card: Bens Apreendidos */}
         {ocorreuApreensao && (
-          <FormSection title="Bens Apreendidos">
-            <div className="space-y-4">
-              {bensApreendidos.map((bem, index) => {
-                const itemSelecionado = itensApreendidos.find(i => i.id === bem.itemId);
-                return (
-                  <div key={bem.id} className="p-4 rounded-lg border border-primary/10 bg-muted/30 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">Item {index + 1}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeBemApreendido(bem.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="md:col-span-2 space-y-2">
-                        <Label className="text-sm">Item Apreendido</Label>
-                        <Select 
-                          value={bem.itemId} 
-                          onValueChange={(v) => updateBemApreendido(bem.id, 'itemId', v)}
-                        >
-                          <SelectTrigger className="input-glass">
-                            <SelectValue placeholder="Selecione o item" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(itensPorCategoria).map(([categoria, items]) => (
-                              <div key={categoria}>
-                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
-                                  {categoria}
-                                </div>
-                                {items.map(item => (
-                                  <SelectItem key={item.id} value={item.id}>
-                                    {item.Item} ({item['Uso Ilicito']})
-                                  </SelectItem>
-                                ))}
-                              </div>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-sm">Quantidade</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={bem.quantidade}
-                          onChange={(e) => updateBemApreendido(bem.id, 'quantidade', parseInt(e.target.value) || 1)}
-                          className="input-glass"
-                        />
-                      </div>
-
-                      {itemSelecionado && (
-                        <div className="md:col-span-3 text-xs text-muted-foreground">
-                          <span className="font-medium">Uso ilícito:</span> {itemSelecionado['Uso Ilicito']} | 
-                          <span className="font-medium ml-2">Categoria:</span> {itemSelecionado.Categoria}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addBemApreendido}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar Item Apreendido
-              </Button>
-            </div>
-          </FormSection>
+          <BensApreendidosSection 
+            bensApreendidos={bensApreendidos}
+            onBensChange={setBensApreendidos}
+          />
         )}
 
         {/* Card: Conclusão da Ocorrência */}
