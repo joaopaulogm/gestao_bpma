@@ -1,44 +1,28 @@
-// Environmental Crimes Form Page
 import React from 'react';
 import Layout from '@/components/Layout';
 import CrimesAmbientaisForm from '@/components/crimes/CrimesAmbientaisForm';
 import { useCrimesAmbientaisForm } from '@/hooks/useCrimesAmbientaisForm';
 
-const CrimesAmbientais: React.FC = () => {
-  const {
-    form,
-    formData,
-    handleChange,
-    handleSelectChange,
-    handleSubmit,
-    isSubmitting,
-    getFieldError,
-    floraItems,
-    handleFloraItemsChange,
-    faunaItems,
-    handleFaunaItemsChange,
-    handleNumeroTermoEntregaFloraChange,
-    bensApreendidos,
-    handleBensApreendidosChange
-  } = useCrimesAmbientaisForm();
+const CrimesAmbientais = () => {
+  const formHook = useCrimesAmbientaisForm();
 
   return (
     <Layout title="Ocorrências Crimes Ambientais" showBackButton>
       <CrimesAmbientaisForm
-        form={form}
-        formData={formData}
-        handleChange={handleChange}
-        handleSelectChange={handleSelectChange}
-        handleSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-        getFieldError={getFieldError}
-        floraItems={floraItems}
-        onFloraItemsChange={handleFloraItemsChange}
-        faunaItems={faunaItems}
-        onFaunaItemsChange={handleFaunaItemsChange}
-        onNumeroTermoEntregaFloraChange={handleNumeroTermoEntregaFloraChange}
-        bensApreendidos={bensApreendidos}
-        onBensApreendidosChange={handleBensApreendidosChange}
+        form={formHook.form}
+        formData={formHook.formData}
+        handleChange={formHook.handleChange}
+        handleSelectChange={formHook.handleSelectChange}
+        handleSubmit={formHook.handleSubmit}
+        isSubmitting={formHook.isSubmitting}
+        getFieldError={formHook.getFieldError}
+        floraItems={formHook.floraItems}
+        onFloraItemsChange={formHook.handleFloraItemsChange}
+        faunaItems={formHook.faunaItems}
+        onFaunaItemsChange={formHook.handleFaunaItemsChange}
+        onNumeroTermoEntregaFloraChange={formHook.handleNumeroTermoEntregaFloraChange}
+        bensApreendidos={formHook.bensApreendidos}
+        onBensApreendidosChange={formHook.handleBensApreendidosChange}
       />
     </Layout>
   );
