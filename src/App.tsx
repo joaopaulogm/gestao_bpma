@@ -20,6 +20,7 @@ const Relatorios = React.lazy(() => import('@/pages/Relatorios'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 const Login = React.lazy(() => import('@/pages/Login'));
 const ResgateEditar = React.lazy(() => import('@/pages/ResgateEditar'));
+const BensApreendidosCadastro = React.lazy(() => import('@/pages/BensApreendidosCadastro'));
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ function App() {
               <Route path="/fauna-cadastrada" element={<ProtectedRoute><SidebarLayout><FaunaCadastrada /></SidebarLayout></ProtectedRoute>} />
               <Route path="/fauna-cadastro" element={<ProtectedRoute><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/relatorios" element={<ProtectedRoute><SidebarLayout><Relatorios /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/bens-apreendidos" element={<ProtectedRoute><SidebarLayout><BensApreendidosCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </React.Suspense>
