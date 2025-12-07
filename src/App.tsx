@@ -4,7 +4,6 @@ import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import CrimesAmbientaisCadastro from '@/pages/CrimesAmbientaisCadastro';
 import SidebarLayout from '@/components/SidebarLayout';
 
 // Lazy load pages
@@ -25,6 +24,7 @@ const FloraCadastro = React.lazy(() => import('@/pages/FloraCadastro'));
 const FloraCadastrada = React.lazy(() => import('@/pages/FloraCadastrada'));
 const EfetivoBPMA = React.lazy(() => import('@/pages/EfetivoBPMA'));
 const POP = React.lazy(() => import('@/pages/POP'));
+const CrimesAmbientaisCadastro = React.lazy(() => import('@/pages/CrimesAmbientaisCadastro'));
 
 const queryClient = new QueryClient();
 
