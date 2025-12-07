@@ -24,6 +24,7 @@ const BensApreendidosCadastro = React.lazy(() => import('@/pages/BensApreendidos
 const FloraCadastro = React.lazy(() => import('@/pages/FloraCadastro'));
 const FloraCadastrada = React.lazy(() => import('@/pages/FloraCadastrada'));
 const EfetivoBPMA = React.lazy(() => import('@/pages/EfetivoBPMA'));
+const POP = React.lazy(() => import('@/pages/POP'));
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ function App() {
               <Route path="/flora-cadastro/:id" element={<ProtectedRoute><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/flora-cadastrada" element={<ProtectedRoute><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
               <Route path="/efetivo" element={<ProtectedRoute><SidebarLayout><EfetivoBPMA /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/pop" element={<POP />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </React.Suspense>
