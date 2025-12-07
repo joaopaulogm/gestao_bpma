@@ -18,7 +18,8 @@ import {
   Shield,
   Users,
   Package,
-  Leaf
+  Leaf,
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -108,6 +109,13 @@ const Sidebar = () => {
             <Link to="/crimes-ambientais" className={linkClasses('/crimes-ambientais')}>
               <Shield className="h-5 w-5 flex-shrink-0" />
               {isOpen && <span className="truncate">Crimes Ambientais</span>}
+            </Link>
+          </li>
+          
+          <li>
+            <Link to="/pop" className={linkClasses('/pop')}>
+              <BookOpen className="h-5 w-5 flex-shrink-0" />
+              {isOpen && <span className="truncate">POP Ambiental</span>}
             </Link>
           </li>
         </ul>
