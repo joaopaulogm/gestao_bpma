@@ -1,4 +1,4 @@
-import React from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -6,25 +6,25 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import SidebarLayout from '@/components/SidebarLayout';
 
-// Lazy load pages
-const Index = React.lazy(() => import('@/pages/Index'));
-const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
-const Hotspots = React.lazy(() => import('@/pages/Hotspots'));
-const Registros = React.lazy(() => import('@/pages/Registros'));
-const RegistroDetalhes = React.lazy(() => import('@/pages/RegistroDetalhes'));
-const ResgateCadastro = React.lazy(() => import('@/pages/ResgateCadastro'));
-const FaunaCadastrada = React.lazy(() => import('@/pages/FaunaCadastrada'));
-const FaunaCadastro = React.lazy(() => import('@/pages/FaunaCadastro'));
-const Relatorios = React.lazy(() => import('@/pages/Relatorios'));
-const NotFound = React.lazy(() => import('@/pages/NotFound'));
-const Login = React.lazy(() => import('@/pages/Login'));
-const ResgateEditar = React.lazy(() => import('@/pages/ResgateEditar'));
-const BensApreendidosCadastro = React.lazy(() => import('@/pages/BensApreendidosCadastro'));
-const FloraCadastro = React.lazy(() => import('@/pages/FloraCadastro'));
-const FloraCadastrada = React.lazy(() => import('@/pages/FloraCadastrada'));
-const EfetivoBPMA = React.lazy(() => import('@/pages/EfetivoBPMA'));
-const POP = React.lazy(() => import('@/pages/POP'));
-const CrimesAmbientaisCadastro = React.lazy(() => import('@/pages/CrimesAmbientaisCadastro'));
+// Lazy load all pages
+const Index = lazy(() => import('@/pages/Index'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Hotspots = lazy(() => import('@/pages/Hotspots'));
+const Registros = lazy(() => import('@/pages/Registros'));
+const RegistroDetalhes = lazy(() => import('@/pages/RegistroDetalhes'));
+const ResgateCadastro = lazy(() => import('@/pages/ResgateCadastro'));
+const FaunaCadastrada = lazy(() => import('@/pages/FaunaCadastrada'));
+const FaunaCadastro = lazy(() => import('@/pages/FaunaCadastro'));
+const Relatorios = lazy(() => import('@/pages/Relatorios'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+const Login = lazy(() => import('@/pages/Login'));
+const ResgateEditar = lazy(() => import('@/pages/ResgateEditar'));
+const BensApreendidosCadastro = lazy(() => import('@/pages/BensApreendidosCadastro'));
+const FloraCadastro = lazy(() => import('@/pages/FloraCadastro'));
+const FloraCadastrada = lazy(() => import('@/pages/FloraCadastrada'));
+const EfetivoBPMA = lazy(() => import('@/pages/EfetivoBPMA'));
+const POP = lazy(() => import('@/pages/POP'));
+const CrimesAmbientaisCadastro = lazy(() => import('@/pages/CrimesAmbientaisCadastro'));
 
 const queryClient = new QueryClient();
 
@@ -34,7 +34,7 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Toaster />
-          <React.Suspense fallback={<div className="flex items-center justify-center h-screen">Carregando...</div>}>
+          <Suspense fallback={<div className="flex items-center justify-center h-screen">Carregando...</div>}>
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<SidebarLayout><Index /></SidebarLayout>} />
@@ -48,6 +48,7 @@ function App() {
               <Route path="/resgate-editar/:id" element={<ProtectedRoute><SidebarLayout><ResgateEditar /></SidebarLayout></ProtectedRoute>} />
               <Route path="/fauna-cadastrada" element={<ProtectedRoute><SidebarLayout><FaunaCadastrada /></SidebarLayout></ProtectedRoute>} />
               <Route path="/fauna-cadastro" element={<ProtectedRoute><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/fauna-cadastro/:id" element={<ProtectedRoute><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/relatorios" element={<ProtectedRoute><SidebarLayout><Relatorios /></SidebarLayout></ProtectedRoute>} />
               <Route path="/bens-apreendidos" element={<ProtectedRoute><SidebarLayout><BensApreendidosCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/flora-cadastro" element={<ProtectedRoute><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
@@ -57,7 +58,7 @@ function App() {
               <Route path="/pop" element={<POP />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </React.Suspense>
+          </Suspense>
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
