@@ -65,7 +65,7 @@ function App() {
               <Route path="/flora-cadastro/:id" element={<ProtectedRoute><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/flora-cadastrada" element={<ProtectedRoute><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
               <Route path="/efetivo" element={<ProtectedRoute><SidebarLayout><EfetivoBPMA /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/pop" element={<POP />} />
+              <Route path="/pop" element={<ProtectedRoute><SidebarLayout><POP /></SidebarLayout></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
