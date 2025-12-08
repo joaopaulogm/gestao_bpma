@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { ResgateFormData } from '@/schemas/resgateSchema';
-import { Especie } from '@/services/especieService';
 import ResgateFormWrapper from './ResgateFormWrapper';
 import { MembroEquipe } from './EquipeSection';
+import { EspecieItem } from './EspeciesMultiplasSection';
 
 interface ResgateFormProps {
   form: UseFormReturn<ResgateFormData>;
@@ -13,9 +13,7 @@ interface ResgateFormProps {
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
   handleQuantidadeChange: (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;
-  handleFormSubmit: (data: ResgateFormData, membrosEquipe?: MembroEquipe[]) => Promise<void>;
-  especieSelecionada: Especie | null;
-  carregandoEspecie: boolean;
+  handleFormSubmit: (data: ResgateFormData, membrosEquipe?: MembroEquipe[], especies?: EspecieItem[]) => Promise<void>;
   isSubmitting: boolean;
   isEditing: boolean;
   fetchError?: string | null;
@@ -23,21 +21,33 @@ interface ResgateFormProps {
 
 const ResgateForm: React.FC<ResgateFormProps> = (props) => {
   const [membrosEquipe, setMembrosEquipe] = useState<MembroEquipe[]>([]);
+  const [especies, setEspecies] = useState<EspecieItem[]>([]);
 
-  const handleFormSubmitWithEquipe = async (data: ResgateFormData) => {
-    await props.handleFormSubmit(data, membrosEquipe);
-    // Reset equipe after successful submit if not editing
+  const handleFormSubmitWithData = async (data: ResgateFormData) => {
+    await props.handleFormSubmit(data, membrosEquipe, especies);
+    // Reset after successful submit if not editing
     if (!props.isEditing) {
       setMembrosEquipe([]);
+      setEspecies([]);
     }
   };
 
   return (
     <ResgateFormWrapper 
-      {...props} 
-      handleFormSubmit={handleFormSubmitWithEquipe}
+      form={props.form}
+      formData={props.formData}
+      errors={props.errors}
+      handleChange={props.handleChange}
+      handleSelectChange={props.handleSelectChange}
+      handleQuantidadeChange={props.handleQuantidadeChange}
+      handleFormSubmit={handleFormSubmitWithData}
+      isSubmitting={props.isSubmitting}
+      isEditing={props.isEditing}
+      fetchError={props.fetchError}
       membrosEquipe={membrosEquipe}
       onMembrosEquipeChange={setMembrosEquipe}
+      especies={especies}
+      onEspeciesChange={setEspecies}
     />
   );
 };
