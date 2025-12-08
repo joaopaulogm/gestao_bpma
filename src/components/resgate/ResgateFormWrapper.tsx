@@ -10,6 +10,7 @@ import InformacoesGeraisSection from './InformacoesGeraisSection';
 import EspecieSection from './EspecieSection';
 import AnimalInfoSection from './AnimalInfoSection';
 import DestinacaoSection from './DestinacaoSection';
+import EquipeSection, { MembroEquipe } from './EquipeSection';
 
 interface ResgateFormWrapperProps {
   form: UseFormReturn<ResgateFormData>;
@@ -24,6 +25,8 @@ interface ResgateFormWrapperProps {
   isSubmitting: boolean;
   isEditing: boolean;
   fetchError?: string | null;
+  membrosEquipe: MembroEquipe[];
+  onMembrosEquipeChange: (membros: MembroEquipe[]) => void;
 }
 
 const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
@@ -38,7 +41,9 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
   carregandoEspecie,
   isSubmitting,
   isEditing,
-  fetchError
+  fetchError,
+  membrosEquipe,
+  onMembrosEquipeChange
 }) => {
   // Check if we have form-level errors
   const formLevelError = errors.root?.message || errors._errors?.join(', ');
@@ -61,6 +66,11 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
           handleChange={handleChange}
           handleSelectChange={handleSelectChange}
           errors={errors}
+        />
+
+        <EquipeSection
+          membros={membrosEquipe}
+          onMembrosChange={onMembrosEquipeChange}
         />
         
         <EspecieSection 

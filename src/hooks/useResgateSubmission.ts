@@ -8,11 +8,19 @@ import { buscarIdPorNome } from '@/services/dimensionService';
 import { parse, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+export interface MembroEquipeSubmit {
+  efetivo_id: string;
+}
+
 export const useResgateSubmission = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
-  const salvarRegistroNoBanco = async (data: ResgateFormData, especieSelecionada: Especie | null) => {
+  const salvarRegistroNoBanco = async (
+    data: ResgateFormData, 
+    especieSelecionada: Especie | null,
+    membrosEquipe?: MembroEquipeSubmit[]
+  ) => {
     if (!especieSelecionada) {
       setSubmissionError("É necessário selecionar uma espécie para continuar");
       toast.error("É necessário selecionar uma espécie para continuar");
@@ -60,39 +68,60 @@ export const useResgateSubmission = () => {
             : Promise.resolve(null)
       ]);
       
-      // Não precisamos calcular quantidade_total explicitamente
-      // O trigger no banco de dados fará isso automaticamente
-      const { error } = await supabase.from('fat_registros_de_resgate').insert({
-        data: dataFormatada,
-        especie_id: especieSelecionada.id,
-        regiao_administrativa_id: regiaoId,
-        origem_id: origemId,
-        estado_saude_id: estadoSaudeId,
-        estagio_vida_id: estagioVidaId,
-        destinacao_id: destinacaoId,
-        desfecho_id: desfechoId,
-        tipo_area_id: data.tipoAreaId || null,
-        latitude_origem: data.latitudeOrigem,
-        longitude_origem: data.longitudeOrigem,
-        numero_tco: data.numeroTCO || null,
-        outro_desfecho: data.outroDesfecho || null,
-        atropelamento: data.atropelamento,
-        quantidade: data.quantidade,
-        quantidade_adulto: data.quantidadeAdulto,
-        quantidade_filhote: data.quantidadeFilhote,
-        numero_termo_entrega: data.numeroTermoEntrega || null,
-        hora_guarda_ceapa: data.horaGuardaCEAPA || null,
-        motivo_entrega_ceapa: data.motivoEntregaCEAPA || null,
-        latitude_soltura: data.latitudeSoltura || null,
-        longitude_soltura: data.longitudeSoltura || null,
-        outro_destinacao: data.outroDestinacao || null
-      });
+      // Insert the main record and get the ID
+      const { data: insertedRecord, error } = await supabase
+        .from('fat_registros_de_resgate')
+        .insert({
+          data: dataFormatada,
+          especie_id: especieSelecionada.id,
+          regiao_administrativa_id: regiaoId,
+          origem_id: origemId,
+          estado_saude_id: estadoSaudeId,
+          estagio_vida_id: estagioVidaId,
+          destinacao_id: destinacaoId,
+          desfecho_id: desfechoId,
+          tipo_area_id: data.tipoAreaId || null,
+          latitude_origem: data.latitudeOrigem,
+          longitude_origem: data.longitudeOrigem,
+          numero_tco: data.numeroTCO || null,
+          outro_desfecho: data.outroDesfecho || null,
+          atropelamento: data.atropelamento,
+          quantidade: data.quantidade,
+          quantidade_adulto: data.quantidadeAdulto,
+          quantidade_filhote: data.quantidadeFilhote,
+          numero_termo_entrega: data.numeroTermoEntrega || null,
+          hora_guarda_ceapa: data.horaGuardaCEAPA || null,
+          motivo_entrega_ceapa: data.motivoEntregaCEAPA || null,
+          latitude_soltura: data.latitudeSoltura || null,
+          longitude_soltura: data.longitudeSoltura || null,
+          outro_destinacao: data.outroDestinacao || null
+        })
+        .select('id')
+        .single();
 
       if (error) {
         setSubmissionError(`Erro ao salvar registro: ${error.message}`);
         console.error("Erro ao salvar registro:", error);
         toast.error("Erro ao salvar registro: " + error.message);
         return false;
+      }
+
+      // Save team members if provided
+      if (membrosEquipe && membrosEquipe.length > 0 && insertedRecord) {
+        const equipeRecords = membrosEquipe.map(m => ({
+          registro_id: insertedRecord.id,
+          efetivo_id: m.efetivo_id
+        }));
+
+        const { error: equipeError } = await supabase
+          .from('fat_equipe_resgate')
+          .insert(equipeRecords);
+
+        if (equipeError) {
+          console.error("Erro ao salvar equipe:", equipeError);
+          // Don't fail the whole operation, just log the error
+          toast.warning("Registro salvo, mas houve erro ao salvar a equipe");
+        }
       }
 
       setSubmissionError(null);
@@ -115,3 +144,4 @@ export const useResgateSubmission = () => {
     salvarRegistroNoBanco
   };
 };
+

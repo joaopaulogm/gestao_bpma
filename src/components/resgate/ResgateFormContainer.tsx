@@ -49,8 +49,12 @@ const ResgateFormContainer = () => {
     }
   }, [editingId, location.state, formData.classeTaxonomica]);
   
-  const onFormSubmit = async (data: ResgateFormData) => {
-    await handleFormSubmit(data, isEditing, editingId, originalRegistro, especieSelecionada);
+  const onFormSubmit = async (data: ResgateFormData, membrosEquipe?: any[]) => {
+    if (isEditing) {
+      await handleFormSubmit(data, isEditing, editingId, originalRegistro, especieSelecionada);
+    } else {
+      await handleSubmit(data, membrosEquipe);
+    }
   };
 
   return (
@@ -61,7 +65,7 @@ const ResgateFormContainer = () => {
       handleChange={handleChange}
       handleSelectChange={handleSelectChange}
       handleQuantidadeChange={handleQuantidadeChange}
-      handleFormSubmit={form.handleSubmit(onFormSubmit)}
+      handleFormSubmit={onFormSubmit}
       especieSelecionada={especieSelecionada}
       carregandoEspecie={carregandoEspecie}
       isSubmitting={isSubmitting}
