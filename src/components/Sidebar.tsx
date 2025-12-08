@@ -111,13 +111,6 @@ const Sidebar = () => {
               {isOpen && <span className="truncate">Crimes Ambientais</span>}
             </Link>
           </li>
-          
-          <li>
-            <Link to="/pop" className={linkClasses('/pop')}>
-              <BookOpen className="h-5 w-5 flex-shrink-0" />
-              {isOpen && <span className="truncate">POP Ambiental</span>}
-            </Link>
-          </li>
         </ul>
         
         <Separator className="my-4 bg-sidebar-border" />
@@ -206,6 +199,13 @@ const Sidebar = () => {
                   <Link to="/efetivo" className={linkClasses('/efetivo', true)}>
                     <Users className="h-5 w-5 flex-shrink-0" />
                     {isOpen && <span className="truncate">Efetivo BPMA</span>}
+                  </Link>
+                </li>
+                
+                <li>
+                  <Link to="/pop" className={linkClasses('/pop', true)}>
+                    <BookOpen className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">POP Ambiental</span>}
                   </Link>
                 </li>
               </>
