@@ -469,6 +469,71 @@ export type Database = {
           },
         ]
       }
+      fat_equipe_crime: {
+        Row: {
+          created_at: string
+          efetivo_id: string
+          id: string
+          registro_id: string
+        }
+        Insert: {
+          created_at?: string
+          efetivo_id: string
+          id?: string
+          registro_id: string
+        }
+        Update: {
+          created_at?: string
+          efetivo_id?: string
+          id?: string
+          registro_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_equipe_crime_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_equipe_crime_registro_id_fkey"
+            columns: ["registro_id"]
+            isOneToOne: false
+            referencedRelation: "fat_registros_de_crime"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_equipe_resgate: {
+        Row: {
+          created_at: string
+          efetivo_id: string
+          id: string
+          registro_id: string
+        }
+        Insert: {
+          created_at?: string
+          efetivo_id: string
+          id?: string
+          registro_id: string
+        }
+        Update: {
+          created_at?: string
+          efetivo_id?: string
+          id?: string
+          registro_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_equipe_resgate_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fat_ocorrencia_apreensao: {
         Row: {
           created_at: string | null

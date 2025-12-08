@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import FormSection from '@/components/resgate/FormSection';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,18 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, Search } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import BensApreendidosSection, { BemApreendido as BemApreendidoType } from '@/components/crimes/BensApreendidosSection';
+
+// Interface for team member
+interface MembroEquipeCrime {
+  id: string;
+  efetivo_id: string;
+  matricula: string;
+  posto_graduacao: string;
+  nome_guerra: string;
+}
 
 // Types
 interface DimensionItem {
@@ -159,6 +168,11 @@ const CrimesAmbientaisCadastro = () => {
   // Bens apreendidos
   const [bensApreendidos, setBensApreendidos] = useState<BemApreendidoType[]>([]);
   
+  // Equipe
+  const [membrosEquipe, setMembrosEquipe] = useState<MembroEquipeCrime[]>([]);
+  const [matriculaInput, setMatriculaInput] = useState('');
+  const [isSearchingMembro, setIsSearchingMembro] = useState(false);
+  
   // Conclusão
   const [desfechoId, setDesfechoId] = useState('');
   const [procedimentoLegal, setProcedimentoLegal] = useState('');
@@ -289,6 +303,50 @@ const CrimesAmbientaisCadastro = () => {
   };
 
   // Funções removidas - agora gerenciadas pelo componente BensApreendidosSection
+
+  // Equipe functions
+  const buscarPolicial = useCallback(async () => {
+    if (!matriculaInput.trim()) {
+      toast.error('Digite uma matrícula');
+      return;
+    }
+    const matriculaSemZeros = matriculaInput.replace(/^0+/, '');
+    if (membrosEquipe.some(m => m.matricula === matriculaSemZeros || m.matricula === matriculaInput)) {
+      toast.error('Este policial já foi adicionado');
+      return;
+    }
+    setIsSearchingMembro(true);
+    try {
+      const { data: policialData, error } = await supabase
+        .from('dim_efetivo')
+        .select('id, matricula, posto_graduacao, nome_guerra')
+        .or(`matricula.eq.${matriculaInput},matricula.eq.${matriculaSemZeros}`)
+        .limit(1)
+        .single();
+      if (error || !policialData) {
+        toast.error('Policial não encontrado');
+        return;
+      }
+      const novoMembro: MembroEquipeCrime = {
+        id: crypto.randomUUID(),
+        efetivo_id: policialData.id,
+        matricula: policialData.matricula,
+        posto_graduacao: policialData.posto_graduacao,
+        nome_guerra: policialData.nome_guerra
+      };
+      setMembrosEquipe([...membrosEquipe, novoMembro]);
+      setMatriculaInput('');
+      toast.success(`${policialData.posto_graduacao} ${policialData.nome_guerra} adicionado`);
+    } catch (err) {
+      toast.error('Erro ao buscar policial');
+    } finally {
+      setIsSearchingMembro(false);
+    }
+  }, [matriculaInput, membrosEquipe]);
+
+  const removerMembro = (id: string) => {
+    setMembrosEquipe(membrosEquipe.filter(m => m.id !== id));
+  };
 
   // Toggle area protegida
   const toggleAreaProtegida = (areaId: string) => {
@@ -425,6 +483,20 @@ const CrimesAmbientaisCadastro = () => {
         }
       }
 
+      // Save team members
+      if (membrosEquipe.length > 0) {
+        const equipeRecords = membrosEquipe.map(m => ({
+          registro_id: ocorrenciaId,
+          efetivo_id: m.efetivo_id
+        }));
+        const { error: equipeError } = await supabase
+          .from('fat_equipe_crime')
+          .insert(equipeRecords);
+        if (equipeError) {
+          console.error('Erro ao salvar equipe:', equipeError);
+        }
+      }
+
       toast.success('Ocorrência registrada com sucesso!');
       
       // Reset form
@@ -478,6 +550,8 @@ const CrimesAmbientaisCadastro = () => {
     setFaunaItems([]);
     setFloraItems([]);
     setBensApreendidos([]);
+    setMembrosEquipe([]);
+    setMatriculaInput('');
     setDesfechoId('');
     setProcedimentoLegal('');
     setQtdDetidosMaior(0);
@@ -624,6 +698,47 @@ const CrimesAmbientaisCadastro = () => {
                 className="input-glass"
               />
             </div>
+          </div>
+        </FormSection>
+
+        {/* Card: Identificação da Equipe */}
+        <FormSection title="Identificação da Equipe">
+          <div className="space-y-4">
+            <div className="flex gap-2 items-end">
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="matriculaCrime" className="text-sm font-medium">Matrícula do Policial</Label>
+                <Input
+                  id="matriculaCrime"
+                  type="text"
+                  value={matriculaInput}
+                  onChange={(e) => setMatriculaInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), buscarPolicial())}
+                  placeholder="Digite a matrícula"
+                  className="input-glass"
+                />
+              </div>
+              <Button type="button" onClick={buscarPolicial} disabled={isSearchingMembro || !matriculaInput.trim()} className="btn-primary">
+                {isSearchingMembro ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Search className="h-4 w-4 mr-2" />Buscar</>}
+              </Button>
+            </div>
+            {membrosEquipe.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">Policiais na Equipe ({membrosEquipe.length})</Label>
+                {membrosEquipe.map((membro) => (
+                  <div key={membro.id} className="flex items-center justify-between p-3 rounded-lg bg-accent/50 border border-border/50">
+                    <div className="flex items-center gap-4">
+                      <span className="font-medium">{membro.matricula}</span>
+                      <span className="text-muted-foreground">{membro.posto_graduacao}</span>
+                      <span className="font-medium">{membro.nome_guerra}</span>
+                    </div>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removerMembro(membro.id)} className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {membrosEquipe.length === 0 && <p className="text-sm text-muted-foreground italic">Nenhum policial adicionado</p>}
           </div>
         </FormSection>
 

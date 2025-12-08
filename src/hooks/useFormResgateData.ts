@@ -6,8 +6,9 @@ import { useForm } from 'react-hook-form';
 import { resgateSchema, type ResgateFormData } from '@/schemas/resgateSchema';
 import { defaultResgateForm } from '@/constants/defaultResgateForm';
 import { useEspecieSelector } from './useEspecieSelector';
-import { useResgateSubmission } from './useResgateSubmission';
+import { useResgateSubmission, MembroEquipeSubmit } from './useResgateSubmission';
 import { useResgateFormFields } from './useResgateFormFields';
+import { MembroEquipe } from '@/components/resgate/EquipeSection';
 
 export { regioes } from '@/constants/regioes';
 
@@ -56,12 +57,17 @@ export const useFormResgateData = () => {
     }
   };
 
-  const handleSubmit = form.handleSubmit(async (data) => {
+  const handleSubmitWithEquipe = async (data: ResgateFormData, membrosEquipe?: MembroEquipe[]) => {
     console.log('Form submitted:', data);
     
     setIsSubmitting(true);
     try {
-      const sucesso = await salvarRegistroNoBanco(data, especieSelecionada);
+      // Convert MembroEquipe to MembroEquipeSubmit
+      const membrosSubmit: MembroEquipeSubmit[] | undefined = membrosEquipe?.map(m => ({
+        efetivo_id: m.efetivo_id
+      }));
+      
+      const sucesso = await salvarRegistroNoBanco(data, especieSelecionada, membrosSubmit);
       
       if (sucesso) {
         toast.success('Registro de resgate cadastrado com sucesso!');
@@ -76,7 +82,7 @@ export const useFormResgateData = () => {
     } finally {
       setIsSubmitting(false);
     }
-  });
+  };
 
   return {
     form,
@@ -85,10 +91,11 @@ export const useFormResgateData = () => {
     handleChange,
     handleSelectChange,
     handleQuantidadeChange,
-    handleSubmit,
+    handleSubmit: handleSubmitWithEquipe,
     especieSelecionada,
     carregandoEspecie,
     buscarDetalhesEspecie,
     isSubmitting
   };
 };
+
