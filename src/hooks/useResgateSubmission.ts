@@ -50,11 +50,10 @@ export const useResgateSubmission = () => {
       console.log('Saving date to database:', dataFormatada);
       console.log('Espécies a salvar:', especies.length);
       
-      // Find dimension IDs
-      const [regiaoId, origemId, destinacaoId, desfechoId] = await Promise.all([
+      // Find dimension IDs (apenas os que não são por espécie)
+      const [regiaoId, origemId, desfechoId] = await Promise.all([
         buscarIdPorNome('dim_regiao_administrativa', data.regiaoAdministrativa),
         buscarIdPorNome('dim_origem', data.origem),
-        buscarIdPorNome('dim_destinacao', data.destinacao),
         data.desfechoApreensao 
           ? buscarIdPorNome('dim_desfecho', data.desfechoApreensao)
           : data.desfechoResgate 
@@ -66,10 +65,11 @@ export const useResgateSubmission = () => {
       const registrosInseridos: string[] = [];
 
       for (const especie of especies) {
-        // Buscar IDs das dimensões específicas da espécie
-        const [estadoSaudeId, estagioVidaId] = await Promise.all([
+        // Buscar IDs das dimensões específicas da espécie (incluindo destinação)
+        const [estadoSaudeId, estagioVidaId, destinacaoId] = await Promise.all([
           buscarIdPorNome('dim_estado_saude', especie.estadoSaude),
-          buscarIdPorNome('dim_estagio_vida', especie.estagioVida)
+          buscarIdPorNome('dim_estagio_vida', especie.estagioVida),
+          buscarIdPorNome('dim_destinacao', especie.destinacao)
         ]);
 
         const { data: insertedRecord, error } = await supabase
@@ -92,12 +92,12 @@ export const useResgateSubmission = () => {
             quantidade: especie.quantidadeTotal,
             quantidade_adulto: especie.quantidadeAdulto,
             quantidade_filhote: especie.quantidadeFilhote,
-            numero_termo_entrega: data.numeroTermoEntrega || null,
-            hora_guarda_ceapa: data.horaGuardaCEAPA || null,
-            motivo_entrega_ceapa: data.motivoEntregaCEAPA || null,
-            latitude_soltura: data.latitudeSoltura || null,
-            longitude_soltura: data.longitudeSoltura || null,
-            outro_destinacao: data.outroDestinacao || null
+            numero_termo_entrega: especie.numeroTermoEntrega || null,
+            hora_guarda_ceapa: especie.horaGuardaCEAPA || null,
+            motivo_entrega_ceapa: especie.motivoEntregaCEAPA || null,
+            latitude_soltura: especie.latitudeSoltura || null,
+            longitude_soltura: especie.longitudeSoltura || null,
+            outro_destinacao: especie.outroDestinacao || null
           })
           .select('id')
           .single();
