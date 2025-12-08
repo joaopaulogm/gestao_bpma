@@ -1,8 +1,10 @@
 
+
 import React, { useState, useEffect } from 'react';
 import FormSection from './FormSection';
 import FormField from './FormField';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
@@ -22,6 +24,13 @@ export interface EspecieItem {
   quantidadeAdulto: number;
   quantidadeFilhote: number;
   quantidadeTotal: number;
+  destinacao: string;
+  numeroTermoEntrega: string;
+  horaGuardaCEAPA: string;
+  motivoEntregaCEAPA: string;
+  latitudeSoltura: string;
+  longitudeSoltura: string;
+  outroDestinacao: string;
 }
 
 interface EspecieFauna {
@@ -104,7 +113,14 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
       estagioVida: '',
       quantidadeAdulto: 0,
       quantidadeFilhote: 0,
-      quantidadeTotal: 0
+      quantidadeTotal: 0,
+      destinacao: '',
+      numeroTermoEntrega: '',
+      horaGuardaCEAPA: '',
+      motivoEntregaCEAPA: '',
+      latitudeSoltura: '',
+      longitudeSoltura: '',
+      outroDestinacao: ''
     };
     onEspeciesChange([...especies, novaEspecie]);
   };
@@ -355,6 +371,90 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                   className="bg-muted text-center font-semibold"
                 />
               </FormField>
+            </div>
+
+            {/* Destinação por Espécie */}
+            <div className="md:col-span-2 pt-4 border-t mt-4">
+              <h5 className="font-medium text-secondary mb-3">Destinação desta Espécie</h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField id={`destinacao-${especie.id}`} label="Destinação" required={!isEvadido}>
+                  <Select
+                    value={especie.destinacao}
+                    onValueChange={(value) => handleEspecieChange(especie.id, 'destinacao', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a destinação" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CETAS/IBAMA">CETAS/IBAMA</SelectItem>
+                      <SelectItem value="HFAUS/IBRAM">HFAUS/IBRAM</SelectItem>
+                      <SelectItem value="HVet/UnB">HVet/UnB</SelectItem>
+                      <SelectItem value="CEAPA/BPMA">CEAPA/BPMA</SelectItem>
+                      <SelectItem value="Soltura">Soltura</SelectItem>
+                      <SelectItem value="Vida Livre">Vida Livre</SelectItem>
+                      <SelectItem value="Outros">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+
+                {(especie.destinacao === 'CETAS/IBAMA' || especie.destinacao === 'HFAUS/IBRAM' || especie.destinacao === 'HVet/UnB') && (
+                  <FormField id={`numeroTermoEntrega-${especie.id}`} label="Nº Termo de Entrega" required={!isEvadido}>
+                    <Input
+                      value={especie.numeroTermoEntrega}
+                      onChange={(e) => handleEspecieChange(especie.id, 'numeroTermoEntrega', e.target.value)}
+                      placeholder="Número do termo"
+                    />
+                  </FormField>
+                )}
+
+                {especie.destinacao === 'CEAPA/BPMA' && (
+                  <>
+                    <FormField id={`horaGuardaCEAPA-${especie.id}`} label="Hora de Guarda no CEAPA" required={!isEvadido}>
+                      <Input
+                        value={especie.horaGuardaCEAPA}
+                        onChange={(e) => handleEspecieChange(especie.id, 'horaGuardaCEAPA', e.target.value)}
+                        placeholder="HH:MM (formato 24h)"
+                      />
+                    </FormField>
+                    <FormField id={`motivoEntregaCEAPA-${especie.id}`} label="Motivo" required={!isEvadido} className="md:col-span-2">
+                      <Textarea
+                        value={especie.motivoEntregaCEAPA}
+                        onChange={(e) => handleEspecieChange(especie.id, 'motivoEntregaCEAPA', e.target.value)}
+                        placeholder="Descreva o motivo da entrega"
+                      />
+                    </FormField>
+                  </>
+                )}
+
+                {especie.destinacao === 'Soltura' && (
+                  <>
+                    <FormField id={`latitudeSoltura-${especie.id}`} label="Latitude da Soltura" required={!isEvadido}>
+                      <Input
+                        value={especie.latitudeSoltura}
+                        onChange={(e) => handleEspecieChange(especie.id, 'latitudeSoltura', e.target.value)}
+                        placeholder="Ex: -15.7801"
+                      />
+                    </FormField>
+                    <FormField id={`longitudeSoltura-${especie.id}`} label="Longitude da Soltura" required={!isEvadido}>
+                      <Input
+                        value={especie.longitudeSoltura}
+                        onChange={(e) => handleEspecieChange(especie.id, 'longitudeSoltura', e.target.value)}
+                        placeholder="Ex: -47.9292"
+                      />
+                    </FormField>
+                  </>
+                )}
+
+                {especie.destinacao === 'Outros' && (
+                  <FormField id={`outroDestinacao-${especie.id}`} label="Especifique a Destinação" required={!isEvadido} className="md:col-span-2">
+                    <Textarea
+                      value={especie.outroDestinacao}
+                      onChange={(e) => handleEspecieChange(especie.id, 'outroDestinacao', e.target.value)}
+                      placeholder="Descreva a destinação"
+                    />
+                  </FormField>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -7,7 +7,6 @@ import FormErrorDisplay from './FormErrorDisplay';
 import ResgateFormSubmitButton from './ResgateFormSubmitButton';
 import InformacoesGeraisSection from './InformacoesGeraisSection';
 import EspeciesMultiplasSection, { EspecieItem } from './EspeciesMultiplasSection';
-import DestinacaoSection from './DestinacaoSection';
 import EquipeSection, { MembroEquipe } from './EquipeSection';
 
 interface ResgateFormWrapperProps {
@@ -74,13 +73,6 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
           especies={especies}
           onEspeciesChange={onEspeciesChange}
           isEvadido={isEvadido}
-          errors={errors}
-        />
-        
-        <DestinacaoSection 
-          formData={formData}
-          handleSelectChange={handleSelectChange}
-          handleChange={handleChange}
           errors={errors}
         />
         
