@@ -6,6 +6,8 @@ import { useResgateFormEdit } from '@/hooks/useResgateFormEdit';
 import { useResgateFormSubmitEdit } from '@/hooks/useResgateFormSubmitEdit';
 import ResgateForm from './ResgateForm';
 import { ResgateFormData } from '@/schemas/resgateSchema';
+import { MembroEquipe } from './EquipeSection';
+import { EspecieItem } from './EspeciesMultiplasSection';
 
 const ResgateFormContainer = () => {
   const { 
@@ -16,9 +18,6 @@ const ResgateFormContainer = () => {
     handleSelectChange, 
     handleQuantidadeChange, 
     handleSubmit,
-    especieSelecionada,
-    carregandoEspecie,
-    buscarDetalhesEspecie,
     isSubmitting: isSubmittingCreate
   } = useFormResgateData();
   
@@ -31,10 +30,10 @@ const ResgateFormContainer = () => {
     isEditing,
     originalRegistro,
     fetchError
-  } = useResgateFormEdit(form, editingId, buscarDetalhesEspecie);
+  } = useResgateFormEdit(form, editingId, null);
   
   const {
-    handleFormSubmit,
+    handleFormSubmit: handleFormSubmitEdit,
     isSubmitting: isSubmittingEdit
   } = useResgateFormSubmitEdit(form, handleSubmit);
 
@@ -45,15 +44,14 @@ const ResgateFormContainer = () => {
     if (editingId) {
       console.log("Modo de edição ativado, ID:", editingId);
       console.log("Dados recebidos do estado:", location.state);
-      console.log("Classe taxonomica no formData:", formData.classeTaxonomica);
     }
-  }, [editingId, location.state, formData.classeTaxonomica]);
+  }, [editingId, location.state]);
   
-  const onFormSubmit = async (data: ResgateFormData, membrosEquipe?: any[]) => {
+  const onFormSubmit = async (data: ResgateFormData, membrosEquipe?: MembroEquipe[], especies?: EspecieItem[]) => {
     if (isEditing) {
-      await handleFormSubmit(data, isEditing, editingId, originalRegistro, especieSelecionada);
+      await handleFormSubmitEdit(data, isEditing, editingId, originalRegistro, null);
     } else {
-      await handleSubmit(data, membrosEquipe);
+      await handleSubmit(data, membrosEquipe, especies);
     }
   };
 
@@ -66,8 +64,6 @@ const ResgateFormContainer = () => {
       handleSelectChange={handleSelectChange}
       handleQuantidadeChange={handleQuantidadeChange}
       handleFormSubmit={onFormSubmit}
-      especieSelecionada={especieSelecionada}
-      carregandoEspecie={carregandoEspecie}
       isSubmitting={isSubmitting}
       isEditing={isEditing}
       fetchError={fetchError}

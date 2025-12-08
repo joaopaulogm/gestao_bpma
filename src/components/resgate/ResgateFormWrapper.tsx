@@ -2,13 +2,11 @@
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { ResgateFormData } from '@/schemas/resgateSchema';
-import { Especie } from '@/services/especieService';
 import ResgateFormHeader from './ResgateFormHeader';
 import FormErrorDisplay from './FormErrorDisplay';
 import ResgateFormSubmitButton from './ResgateFormSubmitButton';
 import InformacoesGeraisSection from './InformacoesGeraisSection';
-import EspecieSection from './EspecieSection';
-import AnimalInfoSection from './AnimalInfoSection';
+import EspeciesMultiplasSection, { EspecieItem } from './EspeciesMultiplasSection';
 import DestinacaoSection from './DestinacaoSection';
 import EquipeSection, { MembroEquipe } from './EquipeSection';
 
@@ -20,13 +18,13 @@ interface ResgateFormWrapperProps {
   handleSelectChange: (name: string, value: string) => void;
   handleQuantidadeChange: (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;
   handleFormSubmit: (data: any) => Promise<void>;
-  especieSelecionada: Especie | null;
-  carregandoEspecie: boolean;
   isSubmitting: boolean;
   isEditing: boolean;
   fetchError?: string | null;
   membrosEquipe: MembroEquipe[];
   onMembrosEquipeChange: (membros: MembroEquipe[]) => void;
+  especies: EspecieItem[];
+  onEspeciesChange: (especies: EspecieItem[]) => void;
 }
 
 const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
@@ -35,15 +33,14 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
   errors,
   handleChange,
   handleSelectChange,
-  handleQuantidadeChange,
   handleFormSubmit,
-  especieSelecionada,
-  carregandoEspecie,
   isSubmitting,
   isEditing,
   fetchError,
   membrosEquipe,
-  onMembrosEquipeChange
+  onMembrosEquipeChange,
+  especies,
+  onEspeciesChange
 }) => {
   // Check if we have form-level errors
   const formLevelError = errors.root?.message || errors._errors?.join(', ');
@@ -73,21 +70,11 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
           onMembrosChange={onMembrosEquipeChange}
         />
         
-        <EspecieSection 
-          formData={formData}
-          handleSelectChange={handleSelectChange}
-          errors={errors}
-          especieSelecionada={especieSelecionada}
-          carregandoEspecie={carregandoEspecie}
+        <EspeciesMultiplasSection 
+          especies={especies}
+          onEspeciesChange={onEspeciesChange}
           isEvadido={isEvadido}
-        />
-        
-        <AnimalInfoSection 
-          formData={formData}
-          handleSelectChange={handleSelectChange}
-          handleQuantidadeChange={handleQuantidadeChange}
           errors={errors}
-          isEvadido={isEvadido}
         />
         
         <DestinacaoSection 

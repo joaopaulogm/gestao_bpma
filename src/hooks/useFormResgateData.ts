@@ -5,10 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { resgateSchema, type ResgateFormData } from '@/schemas/resgateSchema';
 import { defaultResgateForm } from '@/constants/defaultResgateForm';
-import { useEspecieSelector } from './useEspecieSelector';
 import { useResgateSubmission, MembroEquipeSubmit } from './useResgateSubmission';
 import { useResgateFormFields } from './useResgateFormFields';
 import { MembroEquipe } from '@/components/resgate/EquipeSection';
+import { EspecieItem } from '@/components/resgate/EspeciesMultiplasSection';
 
 export { regioes } from '@/constants/regioes';
 
@@ -22,13 +22,6 @@ export const useFormResgateData = () => {
   const { errors } = formState;
   
   const { 
-    especieSelecionada, 
-    carregandoEspecie, 
-    buscarDetalhesEspecie, 
-    limparEspecie 
-  } = useEspecieSelector();
-  
-  const { 
     isSubmitting, 
     setIsSubmitting, 
     salvarRegistroNoBanco 
@@ -37,28 +30,13 @@ export const useFormResgateData = () => {
   const { 
     formData, 
     handleChange, 
-    handleSelectChange: baseHandleSelectChange, 
+    handleSelectChange, 
     handleQuantidadeChange 
   } = useResgateFormFields(form);
 
-  // Enhanced select change handler that also handles especie-related logic
-  const handleSelectChange = (name: string, value: string) => {
-    baseHandleSelectChange(name, value);
-    
-    // Se o campo alterado for a espécie, busca os detalhes da espécie
-    if (name === 'especieId' && value) {
-      buscarDetalhesEspecie(value);
-    }
-    
-    // Se o campo alterado for a classe taxonômica, limpa a espécie selecionada
-    if (name === 'classeTaxonomica') {
-      baseHandleSelectChange('especieId', '');
-      limparEspecie();
-    }
-  };
-
-  const handleSubmitWithEquipe = async (data: ResgateFormData, membrosEquipe?: MembroEquipe[]) => {
+  const handleSubmitWithData = async (data: ResgateFormData, membrosEquipe?: MembroEquipe[], especies?: EspecieItem[]) => {
     console.log('Form submitted:', data);
+    console.log('Espécies:', especies);
     
     setIsSubmitting(true);
     try {
@@ -67,14 +45,11 @@ export const useFormResgateData = () => {
         efetivo_id: m.efetivo_id
       }));
       
-      const sucesso = await salvarRegistroNoBanco(data, especieSelecionada, membrosSubmit);
+      const sucesso = await salvarRegistroNoBanco(data, especies || [], membrosSubmit);
       
       if (sucesso) {
         toast.success('Registro de resgate cadastrado com sucesso!');
-        
-        // Resetar formulário após envio bem-sucedido
         reset();
-        limparEspecie();
       }
     } catch (error) {
       console.error("Erro ao processar submissão:", error);
@@ -91,10 +66,7 @@ export const useFormResgateData = () => {
     handleChange,
     handleSelectChange,
     handleQuantidadeChange,
-    handleSubmit: handleSubmitWithEquipe,
-    especieSelecionada,
-    carregandoEspecie,
-    buscarDetalhesEspecie,
+    handleSubmit: handleSubmitWithData,
     isSubmitting
   };
 };

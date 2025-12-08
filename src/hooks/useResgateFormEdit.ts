@@ -12,7 +12,7 @@ import { ptBR } from 'date-fns/locale';
 export const useResgateFormEdit = (
   form: UseFormReturn<ResgateFormData>,
   editingId: string | null,
-  buscarDetalhesEspecie: (especieId: string) => Promise<void>
+  buscarDetalhesEspecie: ((especieId: string) => Promise<void>) | null
 ) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -165,6 +165,8 @@ export const useResgateFormEdit = (
   };
   
   const fetchEspecieByNomeCientifico = async (nomeCientifico: string) => {
+    if (!buscarDetalhesEspecie) return;
+    
     try {
       const especie = await buscarEspeciePorNomeCientifico(nomeCientifico);
       

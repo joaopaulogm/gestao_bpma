@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { type ResgateFormData } from '@/schemas/resgateSchema';
-import { type Especie } from '@/services/especieService';
 import { buscarIdPorNome } from '@/services/dimensionService';
 import { parse, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { EspecieItem } from '@/components/resgate/EspeciesMultiplasSection';
 
 export interface MembroEquipeSubmit {
   efetivo_id: string;
@@ -18,13 +18,14 @@ export const useResgateSubmission = () => {
 
   const salvarRegistroNoBanco = async (
     data: ResgateFormData, 
-    especieSelecionada: Especie | null,
+    especies: EspecieItem[],
     membrosEquipe?: MembroEquipeSubmit[]
   ) => {
-    if (!especieSelecionada) {
-      setSubmissionError("É necessário selecionar uma espécie para continuar");
-      toast.error("É necessário selecionar uma espécie para continuar");
-      console.error("Espécie não selecionada");
+    // Validar que tem pelo menos uma espécie (a menos que seja evadido)
+    const isEvadido = data.desfechoResgate === "Evadido";
+    if (!isEvadido && especies.length === 0) {
+      setSubmissionError("É necessário adicionar pelo menos uma espécie");
+      toast.error("É necessário adicionar pelo menos uma espécie");
       return false;
     }
 
@@ -34,32 +35,25 @@ export const useResgateSubmission = () => {
       // Parse the date from DD/MM/YYYY format to Date object
       let dataObj: Date;
       
-      // Check if data.data is in DD/MM/YYYY format
       if (data.data.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-        // Parse from Brazilian date format DD/MM/YYYY
         dataObj = parse(data.data, 'dd/MM/yyyy', new Date(), { locale: ptBR });
       } else {
-        // Fallback to direct Date parsing
         dataObj = new Date(data.data);
       }
       
-      // Check if date is valid
       if (isNaN(dataObj.getTime())) {
         throw new Error('Data inválida');
       }
       
-      // Format date as YYYY-MM-DD for PostgreSQL
       const dataFormatada = format(dataObj, 'yyyy-MM-dd');
       
-      console.log('Saving date to database:', dataFormatada, 'Original value:', data.data);
-      console.log('Quantidade adulto:', data.quantidadeAdulto, 'Quantidade filhote:', data.quantidadeFilhote, 'Quantidade total:', data.quantidade);
+      console.log('Saving date to database:', dataFormatada);
+      console.log('Espécies a salvar:', especies.length);
       
-      // Find dimension IDs using the dimension service
-      const [regiaoId, origemId, estadoSaudeId, estagioVidaId, destinacaoId, desfechoId] = await Promise.all([
+      // Find dimension IDs
+      const [regiaoId, origemId, destinacaoId, desfechoId] = await Promise.all([
         buscarIdPorNome('dim_regiao_administrativa', data.regiaoAdministrativa),
         buscarIdPorNome('dim_origem', data.origem),
-        buscarIdPorNome('dim_estado_saude', data.estadoSaude),
-        buscarIdPorNome('dim_estagio_vida', data.estagioVida),
         buscarIdPorNome('dim_destinacao', data.destinacao),
         data.desfechoApreensao 
           ? buscarIdPorNome('dim_desfecho', data.desfechoApreensao)
@@ -67,65 +61,81 @@ export const useResgateSubmission = () => {
             ? buscarIdPorNome('dim_desfecho', data.desfechoResgate)
             : Promise.resolve(null)
       ]);
-      
-      // Insert the main record and get the ID
-      const { data: insertedRecord, error } = await supabase
-        .from('fat_registros_de_resgate')
-        .insert({
-          data: dataFormatada,
-          especie_id: especieSelecionada.id,
-          regiao_administrativa_id: regiaoId,
-          origem_id: origemId,
-          estado_saude_id: estadoSaudeId,
-          estagio_vida_id: estagioVidaId,
-          destinacao_id: destinacaoId,
-          desfecho_id: desfechoId,
-          tipo_area_id: data.tipoAreaId || null,
-          latitude_origem: data.latitudeOrigem,
-          longitude_origem: data.longitudeOrigem,
-          numero_tco: data.numeroTCO || null,
-          outro_desfecho: data.outroDesfecho || null,
-          atropelamento: data.atropelamento,
-          quantidade: data.quantidade,
-          quantidade_adulto: data.quantidadeAdulto,
-          quantidade_filhote: data.quantidadeFilhote,
-          numero_termo_entrega: data.numeroTermoEntrega || null,
-          hora_guarda_ceapa: data.horaGuardaCEAPA || null,
-          motivo_entrega_ceapa: data.motivoEntregaCEAPA || null,
-          latitude_soltura: data.latitudeSoltura || null,
-          longitude_soltura: data.longitudeSoltura || null,
-          outro_destinacao: data.outroDestinacao || null
-        })
-        .select('id')
-        .single();
 
-      if (error) {
-        setSubmissionError(`Erro ao salvar registro: ${error.message}`);
-        console.error("Erro ao salvar registro:", error);
-        toast.error("Erro ao salvar registro: " + error.message);
-        return false;
-      }
+      // Criar um registro para cada espécie
+      const registrosInseridos: string[] = [];
 
-      // Save team members if provided
-      if (membrosEquipe && membrosEquipe.length > 0 && insertedRecord) {
-        const equipeRecords = membrosEquipe.map(m => ({
-          registro_id: insertedRecord.id,
-          efetivo_id: m.efetivo_id
-        }));
+      for (const especie of especies) {
+        // Buscar IDs das dimensões específicas da espécie
+        const [estadoSaudeId, estagioVidaId] = await Promise.all([
+          buscarIdPorNome('dim_estado_saude', especie.estadoSaude),
+          buscarIdPorNome('dim_estagio_vida', especie.estagioVida)
+        ]);
 
-        const { error: equipeError } = await supabase
-          .from('fat_equipe_resgate')
-          .insert(equipeRecords);
+        const { data: insertedRecord, error } = await supabase
+          .from('fat_registros_de_resgate')
+          .insert({
+            data: dataFormatada,
+            especie_id: especie.especieId || null,
+            regiao_administrativa_id: regiaoId,
+            origem_id: origemId,
+            estado_saude_id: estadoSaudeId,
+            estagio_vida_id: estagioVidaId,
+            destinacao_id: destinacaoId,
+            desfecho_id: desfechoId,
+            tipo_area_id: data.tipoAreaId || null,
+            latitude_origem: data.latitudeOrigem,
+            longitude_origem: data.longitudeOrigem,
+            numero_tco: data.numeroTCO || null,
+            outro_desfecho: data.outroDesfecho || null,
+            atropelamento: especie.atropelamento,
+            quantidade: especie.quantidadeTotal,
+            quantidade_adulto: especie.quantidadeAdulto,
+            quantidade_filhote: especie.quantidadeFilhote,
+            numero_termo_entrega: data.numeroTermoEntrega || null,
+            hora_guarda_ceapa: data.horaGuardaCEAPA || null,
+            motivo_entrega_ceapa: data.motivoEntregaCEAPA || null,
+            latitude_soltura: data.latitudeSoltura || null,
+            longitude_soltura: data.longitudeSoltura || null,
+            outro_destinacao: data.outroDestinacao || null
+          })
+          .select('id')
+          .single();
 
-        if (equipeError) {
-          console.error("Erro ao salvar equipe:", equipeError);
-          // Don't fail the whole operation, just log the error
-          toast.warning("Registro salvo, mas houve erro ao salvar a equipe");
+        if (error) {
+          console.error("Erro ao salvar registro:", error);
+          toast.error("Erro ao salvar registro: " + error.message);
+          continue;
+        }
+
+        if (insertedRecord) {
+          registrosInseridos.push(insertedRecord.id);
+
+          // Salvar membros da equipe para cada registro
+          if (membrosEquipe && membrosEquipe.length > 0) {
+            const equipeRecords = membrosEquipe.map(m => ({
+              registro_id: insertedRecord.id,
+              efetivo_id: m.efetivo_id
+            }));
+
+            const { error: equipeError } = await supabase
+              .from('fat_equipe_resgate')
+              .insert(equipeRecords);
+
+            if (equipeError) {
+              console.error("Erro ao salvar equipe:", equipeError);
+            }
+          }
         }
       }
 
-      setSubmissionError(null);
-      console.log("Registro salvo com sucesso!");
+      if (registrosInseridos.length === 0) {
+        setSubmissionError("Nenhum registro foi salvo");
+        toast.error("Nenhum registro foi salvo");
+        return false;
+      }
+
+      console.log(`${registrosInseridos.length} registro(s) salvo(s) com sucesso!`);
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
@@ -144,4 +154,5 @@ export const useResgateSubmission = () => {
     salvarRegistroNoBanco
   };
 };
+
 
