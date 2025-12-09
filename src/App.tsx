@@ -32,6 +32,10 @@ const Afastamentos = lazy(() => import(/* webpackChunkName: "afastamentos" */ '@
 const Licencas = lazy(() => import(/* webpackChunkName: "licencas" */ '@/pages/pessoas/Licencas'));
 const Ferias = lazy(() => import(/* webpackChunkName: "ferias" */ '@/pages/pessoas/Ferias'));
 const Abono = lazy(() => import(/* webpackChunkName: "abono" */ '@/pages/pessoas/Abono'));
+const SecaoOperacional = lazy(() => import(/* webpackChunkName: "secao-operacional" */ '@/pages/SecaoOperacional'));
+const SecaoLogistica = lazy(() => import(/* webpackChunkName: "secao-logistica" */ '@/pages/SecaoLogistica'));
+const MaterialApoio = lazy(() => import(/* webpackChunkName: "material-apoio" */ '@/pages/MaterialApoio'));
+const IdentificarEspecie = lazy(() => import(/* webpackChunkName: "identificar-especie" */ '@/pages/apoio/IdentificarEspecie'));
 
 const queryClient = new QueryClient();
 
@@ -58,21 +62,23 @@ function App() {
               <Route path="/resgate-cadastro" element={<SidebarLayout><ResgateCadastro /></SidebarLayout>} />
               <Route path="/crimes-ambientais" element={<SidebarLayout><CrimesAmbientaisCadastro /></SidebarLayout>} />
               
-              <Route path="/dashboard" element={<ProtectedRoute requireAdmin><SidebarLayout><Dashboard /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/hotspots" element={<ProtectedRoute requireAdmin><SidebarLayout><Hotspots /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/registros" element={<ProtectedRoute requireAdmin><SidebarLayout><Registros /></SidebarLayout></ProtectedRoute>} />
               <Route path="/registro-detalhes/:id" element={<ProtectedRoute requireAdmin><SidebarLayout><RegistroDetalhes /></SidebarLayout></ProtectedRoute>} />
               <Route path="/resgate-editar/:id" element={<ProtectedRoute requireAdmin><SidebarLayout><ResgateEditar /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/fauna-cadastrada" element={<ProtectedRoute requireAdmin><SidebarLayout><FaunaCadastrada /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/fauna-cadastro" element={<ProtectedRoute requireAdmin><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/fauna-cadastro/:id" element={<ProtectedRoute requireAdmin><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/relatorios" element={<ProtectedRoute requireAdmin><SidebarLayout><Relatorios /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/bens-apreendidos" element={<ProtectedRoute requireAdmin><SidebarLayout><BensApreendidosCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/flora-cadastro" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/flora-cadastro/:id" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/flora-cadastrada" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/pop" element={<ProtectedRoute requireAdmin><SidebarLayout><POP /></SidebarLayout></ProtectedRoute>} />
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />
+              
+              {/* Seção Operacional */}
+              <Route path="/secao-operacional" element={<ProtectedRoute requireAdmin><SidebarLayout><SecaoOperacional /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/fauna-cadastro" element={<ProtectedRoute requireAdmin><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/fauna-cadastro/:id" element={<ProtectedRoute requireAdmin><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/fauna-cadastrada" element={<ProtectedRoute requireAdmin><SidebarLayout><FaunaCadastrada /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/dashboard" element={<ProtectedRoute requireAdmin><SidebarLayout><Dashboard /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/hotspots" element={<ProtectedRoute requireAdmin><SidebarLayout><Hotspots /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/registros" element={<ProtectedRoute requireAdmin><SidebarLayout><Registros /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/relatorios" element={<ProtectedRoute requireAdmin><SidebarLayout><Relatorios /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/bens-apreendidos" element={<ProtectedRoute requireAdmin><SidebarLayout><BensApreendidosCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/flora-cadastro" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/flora-cadastro/:id" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/flora-cadastrada" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
               
               {/* Seção Pessoas */}
               <Route path="/secao-pessoas" element={<ProtectedRoute requireAdmin><SidebarLayout><SecaoPessoas /></SidebarLayout></ProtectedRoute>} />
@@ -82,6 +88,14 @@ function App() {
               <Route path="/secao-pessoas/licencas" element={<ProtectedRoute requireAdmin><SidebarLayout><Licencas /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/ferias" element={<ProtectedRoute requireAdmin><SidebarLayout><Ferias /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/abono" element={<ProtectedRoute requireAdmin><SidebarLayout><Abono /></SidebarLayout></ProtectedRoute>} />
+              
+              {/* Seção Logística */}
+              <Route path="/secao-logistica" element={<ProtectedRoute requireAdmin><SidebarLayout><SecaoLogistica /></SidebarLayout></ProtectedRoute>} />
+              
+              {/* Material de Apoio */}
+              <Route path="/material-apoio" element={<ProtectedRoute requireAdmin><SidebarLayout><MaterialApoio /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/material-apoio/pop" element={<ProtectedRoute requireAdmin><SidebarLayout><POP /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/material-apoio/identificar-especie" element={<ProtectedRoute requireAdmin><SidebarLayout><IdentificarEspecie /></SidebarLayout></ProtectedRoute>} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
