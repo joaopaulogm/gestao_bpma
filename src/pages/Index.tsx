@@ -18,7 +18,7 @@ import {
   Lock
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import logoBpma from '@/assets/logo-bpma.png';
+import logoBpma from '@/assets/logo-bpma.svg';
 
 const CheckeredDivider = () => (
   <div className="flex gap-[3px]">
