@@ -25,7 +25,7 @@ const FloraCadastrada = lazy(() => import(/* webpackChunkName: "flora-cadastrada
 const EfetivoBPMA = lazy(() => import(/* webpackChunkName: "efetivo" */ '@/pages/EfetivoBPMA'));
 const POP = lazy(() => import(/* webpackChunkName: "pop" */ '@/pages/POP'));
 const CrimesAmbientaisCadastro = lazy(() => import(/* webpackChunkName: "crimes" */ '@/pages/CrimesAmbientaisCadastro'));
-
+const GerenciarPermissoes = lazy(() => import(/* webpackChunkName: "gerenciar-permissoes" */ '@/pages/GerenciarPermissoes'));
 const queryClient = new QueryClient();
 
 // Loading component for Suspense fallback
@@ -66,6 +66,7 @@ function App() {
               <Route path="/flora-cadastrada" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
               <Route path="/efetivo" element={<ProtectedRoute requireAdmin><SidebarLayout><EfetivoBPMA /></SidebarLayout></ProtectedRoute>} />
               <Route path="/pop" element={<ProtectedRoute requireAdmin><SidebarLayout><POP /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
