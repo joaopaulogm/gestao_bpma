@@ -31,7 +31,8 @@ const HomeCard: React.FC<HomeCardProps> = ({ title, icon: Icon, to }) => {
       to={to}
       className="flex flex-col items-center justify-center gap-3 p-4 aspect-square rounded-xl 
         bg-[#071d49] backdrop-blur-md border-2 border-[#ffcc00]/40
-        hover:scale-105 hover:border-[#ffcc00] transition-all duration-300 shadow-lg"
+        hover:scale-105 hover:border-[#ffcc00] hover:shadow-[0_0_25px_rgba(255,204,0,0.5)] 
+        transition-all duration-300 shadow-lg"
     >
       <Icon className="h-8 w-8 text-[#ffcc00]" />
       <span className="text-xs font-medium text-center text-white leading-tight">{title}</span>
