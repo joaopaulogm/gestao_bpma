@@ -65,8 +65,8 @@ const Sidebar = () => {
       <div className="flex items-center justify-between p-4">
         {isOpen && (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#ffcc00] flex items-center justify-center flex-shrink-0 transition-all duration-300 hover:shadow-[0_0_15px_rgba(255,204,0,0.8)] cursor-pointer animate-[pulse_3s_ease-in-out_infinite]">
-              <img src={logoSidebar} alt="Logo BPMA" className="w-10 h-10" />
+            <div className="w-11 h-11 rounded-full bg-[#071d49] flex items-center justify-center flex-shrink-0 transition-all duration-300 hover:shadow-[0_0_15px_rgba(255,204,0,0.8)] cursor-pointer">
+              <img src={logoSidebar} alt="Logo BPMA" className="w-9 h-9" />
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-semibold text-sm truncate">Gestão - BPMA</span>
@@ -74,8 +74,8 @@ const Sidebar = () => {
           </div>
         )}
         {!isOpen && (
-          <div className="w-10 h-10 rounded-full bg-[#ffcc00] flex items-center justify-center flex-shrink-0 transition-all duration-300 hover:shadow-[0_0_15px_rgba(255,204,0,0.8)] cursor-pointer animate-[pulse_3s_ease-in-out_infinite]">
-            <img src={logoSidebar} alt="Logo BPMA" className="w-10 h-10" />
+          <div className="w-11 h-11 rounded-full bg-[#071d49] flex items-center justify-center flex-shrink-0 transition-all duration-300 hover:shadow-[0_0_15px_rgba(255,204,0,0.8)] cursor-pointer">
+            <img src={logoSidebar} alt="Logo BPMA" className="w-9 h-9" />
           </div>
         )}
         <button 
