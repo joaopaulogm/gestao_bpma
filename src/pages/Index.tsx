@@ -51,13 +51,16 @@ const Index = () => {
       {/* Header */}
       <div className="text-center mb-8">
         <img src={logoBpma} alt="Logo BPMA" className="h-24 mx-auto mb-4" />
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-          Gestão - BPMA
-        </h1>
+        <div className="flex items-center justify-center gap-4 mb-3">
+          <img src={dividerCheckered} alt="" className="h-6" />
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground whitespace-nowrap">
+            Gestão - BPMA
+          </h1>
+          <img src={dividerCheckered} alt="" className="h-6" />
+        </div>
         <p className="text-muted-foreground text-base">
           Sistema de gestão de ocorrências e dados ambientais
         </p>
-        <img src={dividerCheckered} alt="" className="mx-auto mt-4" />
       </div>
       
       <div className="max-w-3xl mx-auto space-y-8">
