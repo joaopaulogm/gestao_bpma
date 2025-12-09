@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      allowed_users: {
+        Row: {
+          created_at: string | null
+          efetivo_id: string | null
+          email: string
+          id: string
+          nome: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          efetivo_id?: string | null
+          email: string
+          id?: string
+          nome?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          efetivo_id?: string | null
+          email?: string
+          id?: string
+          nome?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allowed_users_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dim_area_protegida: {
         Row: {
           created_at: string | null
@@ -906,6 +941,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_allowed_user: { Args: { check_email: string }; Returns: boolean }
     }
     Enums: {
       app_role:
