@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Trash2, UserPlus, Shield } from 'lucide-react';
+import { Trash2, UserPlus, Shield, Users, Mail } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 
 type AppRole = Database['public']['Enums']['app_role'];
@@ -16,7 +17,14 @@ interface UserRole {
   user_id: string;
   role: AppRole;
   created_at: string | null;
-  email?: string;
+}
+
+interface AllowedUser {
+  id: string;
+  email: string;
+  nome: string | null;
+  efetivo_id: string | null;
+  created_at: string | null;
 }
 
 const ROLE_LABELS: Record<AppRole, string> = {
@@ -31,10 +39,19 @@ const ROLE_LABELS: Record<AppRole, string> = {
 
 const GerenciarPermissoes: React.FC = () => {
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
+  const [allowedUsers, setAllowedUsers] = useState<AllowedUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingAllowed, setLoadingAllowed] = useState(true);
+  
+  // Form states for permissions
   const [newUserId, setNewUserId] = useState('');
-  const [newRole, setNewRole] = useState<AppRole>('user');
+  const [newRole, setNewRole] = useState<AppRole>('operador');
   const [adding, setAdding] = useState(false);
+  
+  // Form states for allowed users
+  const [newEmail, setNewEmail] = useState('');
+  const [newNome, setNewNome] = useState('');
+  const [addingAllowed, setAddingAllowed] = useState(false);
 
   const fetchUserRoles = async () => {
     try {
@@ -53,8 +70,26 @@ const GerenciarPermissoes: React.FC = () => {
     }
   };
 
+  const fetchAllowedUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('allowed_users')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAllowedUsers(data || []);
+    } catch (error: any) {
+      console.error('Error fetching allowed users:', error);
+      toast.error('Erro ao carregar usuários permitidos');
+    } finally {
+      setLoadingAllowed(false);
+    }
+  };
+
   useEffect(() => {
     fetchUserRoles();
+    fetchAllowedUsers();
   }, []);
 
   const handleAddRole = async () => {
@@ -76,7 +111,7 @@ const GerenciarPermissoes: React.FC = () => {
 
       toast.success('Permissão adicionada com sucesso');
       setNewUserId('');
-      setNewRole('user');
+      setNewRole('operador');
       fetchUserRoles();
     } catch (error: any) {
       console.error('Error adding role:', error);
@@ -124,6 +159,63 @@ const GerenciarPermissoes: React.FC = () => {
     }
   };
 
+  const handleAddAllowedUser = async () => {
+    if (!newEmail.trim()) {
+      toast.error('Informe o e-mail');
+      return;
+    }
+
+    // Simple email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      toast.error('E-mail inválido');
+      return;
+    }
+
+    setAddingAllowed(true);
+    try {
+      const { error } = await supabase
+        .from('allowed_users')
+        .insert({
+          email: newEmail.trim().toLowerCase(),
+          nome: newNome.trim() || null,
+        });
+
+      if (error) throw error;
+
+      toast.success('Usuário adicionado à lista de permitidos');
+      setNewEmail('');
+      setNewNome('');
+      fetchAllowedUsers();
+    } catch (error: any) {
+      console.error('Error adding allowed user:', error);
+      if (error.code === '23505') {
+        toast.error('Este e-mail já está na lista de permitidos');
+      } else {
+        toast.error('Erro ao adicionar usuário');
+      }
+    } finally {
+      setAddingAllowed(false);
+    }
+  };
+
+  const handleDeleteAllowedUser = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('allowed_users')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Usuário removido da lista de permitidos');
+      fetchAllowedUsers();
+    } catch (error: any) {
+      console.error('Error deleting allowed user:', error);
+      toast.error('Erro ao remover usuário');
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
@@ -131,121 +223,239 @@ const GerenciarPermissoes: React.FC = () => {
         <h1 className="text-2xl font-bold text-foreground">Gerenciar Permissões</h1>
       </div>
 
-      {/* Add new permission */}
-      <Card className="bg-card/80 backdrop-blur-sm border-border/50">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Adicionar Permissão
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <Input
-                placeholder="ID do Usuário (UUID)"
-                value={newUserId}
-                onChange={(e) => setNewUserId(e.target.value)}
-                className="bg-background/50"
-              />
-            </div>
-            <div className="w-full sm:w-64">
-              <Select value={newRole} onValueChange={(value: AppRole) => setNewRole(value)}>
-                <SelectTrigger className="bg-background/50">
-                  <SelectValue placeholder="Selecione a permissão" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button 
-              onClick={handleAddRole} 
-              disabled={adding}
-              className="bg-primary hover:bg-primary/90"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Adicionar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="allowed" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="allowed" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Usuários Permitidos
+          </TabsTrigger>
+          <TabsTrigger value="roles" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Níveis de Acesso
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Permissions list */}
-      <Card className="bg-card/80 backdrop-blur-sm border-border/50">
-        <CardHeader>
-          <CardTitle className="text-lg">Permissões Cadastradas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-            </div>
-          ) : userRoles.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              Nenhuma permissão cadastrada
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID do Usuário</TableHead>
-                    <TableHead>Permissão</TableHead>
-                    <TableHead>Data de Criação</TableHead>
-                    <TableHead className="w-20">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {userRoles.map((userRole) => (
-                    <TableRow key={userRole.id}>
-                      <TableCell className="font-mono text-sm">
-                        {userRole.user_id}
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={userRole.role} 
-                          onValueChange={(value: AppRole) => handleUpdateRole(userRole.id, value)}
-                        >
-                          <SelectTrigger className="w-56 bg-background/50">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                              <SelectItem key={value} value={value}>
-                                {label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {userRole.created_at 
-                          ? new Date(userRole.created_at).toLocaleDateString('pt-BR')
-                          : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteRole(userRole.id)}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {/* Tab: Allowed Users */}
+        <TabsContent value="allowed" className="space-y-6">
+          <Card className="bg-card/80 backdrop-blur-sm border-border/50">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <UserPlus className="h-5 w-5" />
+                Adicionar Usuário Permitido
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Adicione e-mails de policiais autorizados a criar conta no sistema (incluindo contas Google)
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="E-mail do policial"
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    className="bg-background/50"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Input
+                    placeholder="Nome (opcional)"
+                    value={newNome}
+                    onChange={(e) => setNewNome(e.target.value)}
+                    className="bg-background/50"
+                  />
+                </div>
+                <Button 
+                  onClick={handleAddAllowedUser} 
+                  disabled={addingAllowed}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Adicionar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/80 backdrop-blur-sm border-border/50">
+            <CardHeader>
+              <CardTitle className="text-lg">Lista de Usuários Permitidos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingAllowed ? (
+                <div className="flex justify-center py-8">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+                </div>
+              ) : allowedUsers.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  Nenhum usuário permitido cadastrado
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>E-mail</TableHead>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Data de Cadastro</TableHead>
+                        <TableHead className="w-20">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {allowedUsers.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">
+                            {user.email}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {user.nome || '-'}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {user.created_at 
+                              ? new Date(user.created_at).toLocaleDateString('pt-BR')
+                              : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteAllowedUser(user.id)}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab: User Roles */}
+        <TabsContent value="roles" className="space-y-6">
+          <Card className="bg-card/80 backdrop-blur-sm border-border/50">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <UserPlus className="h-5 w-5" />
+                Alterar Nível de Acesso
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Novos usuários recebem automaticamente o nível "Operador". Altere aqui para conceder níveis especiais.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="ID do Usuário (UUID)"
+                    value={newUserId}
+                    onChange={(e) => setNewUserId(e.target.value)}
+                    className="bg-background/50"
+                  />
+                </div>
+                <div className="w-full sm:w-64">
+                  <Select value={newRole} onValueChange={(value: AppRole) => setNewRole(value)}>
+                    <SelectTrigger className="bg-background/50">
+                      <SelectValue placeholder="Selecione o nível" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button 
+                  onClick={handleAddRole} 
+                  disabled={adding}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Adicionar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/80 backdrop-blur-sm border-border/50">
+            <CardHeader>
+              <CardTitle className="text-lg">Níveis de Acesso Cadastrados</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+                </div>
+              ) : userRoles.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  Nenhum nível de acesso cadastrado
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID do Usuário</TableHead>
+                        <TableHead>Nível de Acesso</TableHead>
+                        <TableHead>Data de Criação</TableHead>
+                        <TableHead className="w-20">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {userRoles.map((userRole) => (
+                        <TableRow key={userRole.id}>
+                          <TableCell className="font-mono text-sm">
+                            {userRole.user_id}
+                          </TableCell>
+                          <TableCell>
+                            <Select 
+                              value={userRole.role} 
+                              onValueChange={(value: AppRole) => handleUpdateRole(userRole.id, value)}
+                            >
+                              <SelectTrigger className="w-56 bg-background/50">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                                  <SelectItem key={value} value={value}>
+                                    {label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {userRole.created_at 
+                              ? new Date(userRole.created_at).toLocaleDateString('pt-BR')
+                              : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteRole(userRole.id)}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
