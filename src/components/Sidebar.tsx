@@ -64,10 +64,8 @@ const Sidebar = () => {
       {/* Header */}
       <div className="flex items-center justify-between p-4">
         {isOpen && (
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-sm truncate">Gestão - BPMA</span>
-            </div>
+          <div className="flex-1 text-center">
+            <span className="font-bold text-lg">Gestão - BPMA</span>
           </div>
         )}
         <button 
