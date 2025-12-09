@@ -30,10 +30,10 @@ const HomeCard: React.FC<HomeCardProps> = ({ title, icon: Icon, to }) => {
     <Link 
       to={to}
       className="flex flex-col items-center justify-center gap-3 p-4 aspect-square rounded-xl 
-        bg-sidebar-primary/90 backdrop-blur-md border border-sidebar-accent/30
-        hover:scale-105 hover:border-sidebar-accent transition-all duration-300 shadow-lg"
+        bg-[#071d49] backdrop-blur-md border-2 border-[#ffcc00]/40
+        hover:scale-105 hover:border-[#ffcc00] transition-all duration-300 shadow-lg"
     >
-      <Icon className="h-8 w-8 text-sidebar-accent" />
+      <Icon className="h-8 w-8 text-[#ffcc00]" />
       <span className="text-xs font-medium text-center text-white leading-tight">{title}</span>
     </Link>
   );
