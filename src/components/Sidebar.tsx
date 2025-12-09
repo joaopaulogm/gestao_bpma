@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import logoSidebar from '@/assets/logo-sidebar.png';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -64,14 +65,14 @@ const Sidebar = () => {
       <div className="flex items-center justify-between p-4">
         {isOpen && (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-sidebar-primary flex items-center justify-center flex-shrink-0">
-              <span className="text-sidebar-primary-foreground font-bold text-sm">SOI</span>
-            </div>
+            <img src={logoSidebar} alt="Logo BPMA" className="w-10 h-10 rounded-full flex-shrink-0" />
             <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-sm truncate">BPMA</span>
-              <span className="text-xs text-sidebar-foreground/70 truncate">Gestão de Dados</span>
+              <span className="font-semibold text-sm truncate">Gestão - BPMA</span>
             </div>
           </div>
+        )}
+        {!isOpen && (
+          <img src={logoSidebar} alt="Logo BPMA" className="w-10 h-10 rounded-full flex-shrink-0" />
         )}
         <button 
           onClick={toggleSidebar} 
