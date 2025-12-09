@@ -19,7 +19,17 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import logoBpma from '@/assets/logo-bpma.png';
-import dividerCheckered from '@/assets/divider-checkered.png';
+
+const CheckeredDivider = () => (
+  <div className="flex gap-[3px]">
+    {Array.from({ length: 12 }).map((_, i) => (
+      <div key={i} className="flex flex-col gap-[3px]">
+        <div className={`w-3 h-3 ${i % 2 === 0 ? 'bg-[#071d49]' : 'bg-transparent'}`} />
+        <div className={`w-3 h-3 ${i % 2 === 1 ? 'bg-[#071d49]' : 'bg-transparent'}`} />
+      </div>
+    ))}
+  </div>
+);
 
 interface HomeCardProps {
   title: string;
@@ -52,11 +62,11 @@ const Index = () => {
       <div className="text-center mb-8">
         <img src={logoBpma} alt="Logo BPMA" className="h-24 mx-auto mb-4" />
         <div className="flex items-center justify-center gap-4 mb-3">
-          <img src={dividerCheckered} alt="" className="h-6" />
+          <CheckeredDivider />
           <h1 className="text-2xl md:text-3xl font-bold text-foreground whitespace-nowrap">
             Gestão - BPMA
           </h1>
-          <img src={dividerCheckered} alt="" className="h-6" />
+          <CheckeredDivider />
         </div>
         <p className="text-muted-foreground text-base">
           Sistema de gestão de ocorrências e dados ambientais
