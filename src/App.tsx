@@ -26,6 +26,13 @@ const EfetivoBPMA = lazy(() => import(/* webpackChunkName: "efetivo" */ '@/pages
 const POP = lazy(() => import(/* webpackChunkName: "pop" */ '@/pages/POP'));
 const CrimesAmbientaisCadastro = lazy(() => import(/* webpackChunkName: "crimes" */ '@/pages/CrimesAmbientaisCadastro'));
 const GerenciarPermissoes = lazy(() => import(/* webpackChunkName: "gerenciar-permissoes" */ '@/pages/GerenciarPermissoes'));
+const SecaoPessoas = lazy(() => import(/* webpackChunkName: "secao-pessoas" */ '@/pages/SecaoPessoas'));
+const Escalas = lazy(() => import(/* webpackChunkName: "escalas" */ '@/pages/pessoas/Escalas'));
+const Afastamentos = lazy(() => import(/* webpackChunkName: "afastamentos" */ '@/pages/pessoas/Afastamentos'));
+const Licencas = lazy(() => import(/* webpackChunkName: "licencas" */ '@/pages/pessoas/Licencas'));
+const Ferias = lazy(() => import(/* webpackChunkName: "ferias" */ '@/pages/pessoas/Ferias'));
+const Abono = lazy(() => import(/* webpackChunkName: "abono" */ '@/pages/pessoas/Abono'));
+
 const queryClient = new QueryClient();
 
 // Loading component for Suspense fallback
@@ -64,9 +71,18 @@ function App() {
               <Route path="/flora-cadastro" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/flora-cadastro/:id" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/flora-cadastrada" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/efetivo" element={<ProtectedRoute requireAdmin><SidebarLayout><EfetivoBPMA /></SidebarLayout></ProtectedRoute>} />
               <Route path="/pop" element={<ProtectedRoute requireAdmin><SidebarLayout><POP /></SidebarLayout></ProtectedRoute>} />
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />
+              
+              {/* Seção Pessoas */}
+              <Route path="/secao-pessoas" element={<ProtectedRoute requireAdmin><SidebarLayout><SecaoPessoas /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-pessoas/efetivo" element={<ProtectedRoute requireAdmin><SidebarLayout><EfetivoBPMA /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-pessoas/escalas" element={<ProtectedRoute requireAdmin><SidebarLayout><Escalas /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-pessoas/afastamentos" element={<ProtectedRoute requireAdmin><SidebarLayout><Afastamentos /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-pessoas/licencas" element={<ProtectedRoute requireAdmin><SidebarLayout><Licencas /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-pessoas/ferias" element={<ProtectedRoute requireAdmin><SidebarLayout><Ferias /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-pessoas/abono" element={<ProtectedRoute requireAdmin><SidebarLayout><Abono /></SidebarLayout></ProtectedRoute>} />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
