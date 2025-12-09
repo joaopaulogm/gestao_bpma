@@ -19,7 +19,8 @@ import {
   Users,
   Package,
   Leaf,
-  BookOpen
+  BookOpen,
+  Settings
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -201,6 +202,13 @@ const Sidebar = () => {
                   <Link to="/pop" className={linkClasses('/pop', true)}>
                     <BookOpen className="h-5 w-5 flex-shrink-0" />
                     {isOpen && <span className="truncate">POP Ambiental</span>}
+                  </Link>
+                </li>
+                
+                <li>
+                  <Link to="/gerenciar-permissoes" className={linkClasses('/gerenciar-permissoes', true)}>
+                    <Settings className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Gerenciar Permissões</span>}
                   </Link>
                 </li>
               </>
