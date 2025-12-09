@@ -18,6 +18,8 @@ import {
   Lock
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import logoBpma from '@/assets/logo-bpma.png';
+import dividerCheckered from '@/assets/divider-checkered.png';
 
 interface HomeCardProps {
   title: string;
@@ -48,12 +50,14 @@ const Index = () => {
     <div className="p-6 md:p-10">
       {/* Header */}
       <div className="text-center mb-8">
+        <img src={logoBpma} alt="Logo BPMA" className="h-24 mx-auto mb-4" />
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-          Gestão de Dados do BPMA
+          Gestão - BPMA
         </h1>
         <p className="text-muted-foreground text-base">
           Sistema de gestão de ocorrências e dados ambientais
         </p>
+        <img src={dividerCheckered} alt="" className="mx-auto mt-4" />
       </div>
       
       <div className="max-w-3xl mx-auto space-y-8">
