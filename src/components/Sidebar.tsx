@@ -192,9 +192,9 @@ const Sidebar = () => {
                 </li>
                 
                 <li>
-                  <Link to="/efetivo" className={linkClasses('/efetivo', true)}>
+                  <Link to="/secao-pessoas" className={linkClasses('/secao-pessoas', true)}>
                     <Users className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Efetivo BPMA</span>}
+                    {isOpen && <span className="truncate">Seção de Pessoas</span>}
                   </Link>
                 </li>
                 
