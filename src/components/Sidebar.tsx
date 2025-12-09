@@ -65,14 +65,18 @@ const Sidebar = () => {
       <div className="flex items-center justify-between p-4">
         {isOpen && (
           <div className="flex items-center gap-3">
-            <img src={logoSidebar} alt="Logo BPMA" className="w-10 h-10 rounded-full flex-shrink-0" />
+            <div className="w-10 h-10 rounded-full bg-[#ffcc00] flex items-center justify-center flex-shrink-0">
+              <img src={logoSidebar} alt="Logo BPMA" className="w-7 h-7" />
+            </div>
             <div className="flex flex-col min-w-0">
               <span className="font-semibold text-sm truncate">Gestão - BPMA</span>
             </div>
           </div>
         )}
         {!isOpen && (
-          <img src={logoSidebar} alt="Logo BPMA" className="w-10 h-10 rounded-full flex-shrink-0" />
+          <div className="w-10 h-10 rounded-full bg-[#ffcc00] flex items-center justify-center flex-shrink-0">
+            <img src={logoSidebar} alt="Logo BPMA" className="w-7 h-7" />
+          </div>
         )}
         <button 
           onClick={toggleSidebar} 
