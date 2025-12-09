@@ -18,7 +18,6 @@ import {
   Lock
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
 
 interface HomeCardProps {
   title: string;
@@ -30,10 +29,10 @@ const HomeCard: React.FC<HomeCardProps> = ({ title, icon: Icon, to }) => {
   return (
     <Link 
       to={to}
-      className="flex items-center gap-3 py-3 px-4 rounded-lg bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 border border-sidebar-border"
+      className="glass-card flex flex-col items-center justify-center gap-3 p-4 aspect-square rounded-xl hover:scale-105 transition-all duration-300"
     >
-      <Icon className="h-5 w-5 flex-shrink-0" />
-      <span className="text-sm font-medium truncate">{title}</span>
+      <Icon className="h-8 w-8 text-sidebar-primary" />
+      <span className="text-xs font-medium text-center text-sidebar-foreground leading-tight">{title}</span>
     </Link>
   );
 };
@@ -54,10 +53,10 @@ const Index = () => {
         </p>
       </div>
       
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-3xl mx-auto space-y-8">
         {/* Public Section */}
-        <div className="space-y-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             <HomeCard 
               title="Resgate de Fauna" 
               icon={Clipboard} 
@@ -72,20 +71,22 @@ const Index = () => {
         </div>
         
         {/* Restricted Area */}
-        <div className="space-y-2">
+        <div className="space-y-4">
           <div className="flex items-center gap-2 text-sidebar-primary font-medium px-1">
             <Lock className="h-4 w-4" />
             <span className="text-sm">Área Restrita</span>
           </div>
           
           {!isAuthenticated ? (
-            <HomeCard 
-              title="Fazer Login" 
-              icon={LogIn} 
-              to="/login"
-            />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <HomeCard 
+                title="Fazer Login" 
+                icon={LogIn} 
+                to="/login"
+              />
+            </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               <HomeCard title="Cadastrar Fauna" icon={PlusCircle} to="/fauna-cadastro" />
               <HomeCard title="Fauna Cadastrada" icon={List} to="/fauna-cadastrada" />
               <HomeCard title="Dashboard" icon={BarChart} to="/dashboard" />
