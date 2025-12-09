@@ -3,12 +3,6 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Clipboard, 
-  PlusCircle, 
-  List, 
-  BarChart, 
-  MapPin, 
-  Table, 
-  FileText, 
   LogOut,
   Home,
   Lock,
@@ -17,10 +11,10 @@ import {
   LogIn,
   Shield,
   Users,
-  Package,
-  Leaf,
   BookOpen,
-  Settings
+  Settings,
+  Briefcase,
+  Wrench
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -129,65 +123,9 @@ const Sidebar = () => {
             ) : isAdmin ? (
               <>
                 <li>
-                  <Link to="/fauna-cadastro" className={linkClasses('/fauna-cadastro', true)}>
-                    <PlusCircle className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Cadastrar Fauna</span>}
-                  </Link>
-                </li>
-                
-                <li>
-                  <Link to="/fauna-cadastrada" className={linkClasses('/fauna-cadastrada', true)}>
-                    <List className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Fauna Cadastrada</span>}
-                  </Link>
-                </li>
-                
-                <li>
-                  <Link to="/dashboard" className={linkClasses('/dashboard', true)}>
-                    <BarChart className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Dashboard</span>}
-                  </Link>
-                </li>
-                
-                <li>
-                  <Link to="/hotspots" className={linkClasses('/hotspots', true)}>
-                    <MapPin className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Hotspots</span>}
-                  </Link>
-                </li>
-                
-                <li>
-                  <Link to="/registros" className={linkClasses('/registros', true)}>
-                    <Table className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Lista de Registros</span>}
-                  </Link>
-                </li>
-                
-                <li>
-                  <Link to="/relatorios" className={linkClasses('/relatorios', true)}>
-                    <FileText className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Relatórios</span>}
-                  </Link>
-                </li>
-                
-                <li>
-                  <Link to="/bens-apreendidos" className={linkClasses('/bens-apreendidos', true)}>
-                    <Package className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Bens Apreendidos</span>}
-                  </Link>
-                </li>
-                
-                <li>
-                  <Link to="/flora-cadastro" className={linkClasses('/flora-cadastro', true)}>
-                    <Leaf className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Cadastrar Flora</span>}
-                  </Link>
-                </li>
-                
-                <li>
-                  <Link to="/flora-cadastrada" className={linkClasses('/flora-cadastrada', true)}>
-                    <List className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Flora Cadastrada</span>}
+                  <Link to="/secao-operacional" className={linkClasses('/secao-operacional', true)}>
+                    <Briefcase className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Seção Operacional</span>}
                   </Link>
                 </li>
                 
@@ -199,9 +137,16 @@ const Sidebar = () => {
                 </li>
                 
                 <li>
-                  <Link to="/pop" className={linkClasses('/pop', true)}>
+                  <Link to="/secao-logistica" className={linkClasses('/secao-logistica', true)}>
+                    <Wrench className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Seção de Logística</span>}
+                  </Link>
+                </li>
+                
+                <li>
+                  <Link to="/material-apoio" className={linkClasses('/material-apoio', true)}>
                     <BookOpen className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">POP Ambiental</span>}
+                    {isOpen && <span className="truncate">Material de Apoio</span>}
                   </Link>
                 </li>
                 
