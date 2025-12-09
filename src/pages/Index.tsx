@@ -29,10 +29,12 @@ const HomeCard: React.FC<HomeCardProps> = ({ title, icon: Icon, to }) => {
   return (
     <Link 
       to={to}
-      className="glass-card flex flex-col items-center justify-center gap-3 p-4 aspect-square rounded-xl hover:scale-105 transition-all duration-300"
+      className="flex flex-col items-center justify-center gap-3 p-4 aspect-square rounded-xl 
+        bg-sidebar-primary/90 backdrop-blur-md border border-sidebar-accent/30
+        hover:scale-105 hover:border-sidebar-accent transition-all duration-300 shadow-lg"
     >
-      <Icon className="h-8 w-8 text-sidebar-primary" />
-      <span className="text-xs font-medium text-center text-sidebar-foreground leading-tight">{title}</span>
+      <Icon className="h-8 w-8 text-sidebar-accent" />
+      <span className="text-xs font-medium text-center text-white leading-tight">{title}</span>
     </Link>
   );
 };
