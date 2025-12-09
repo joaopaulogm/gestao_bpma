@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -14,17 +13,17 @@ import {
   BookOpen,
   Settings,
   Briefcase,
-  Wrench
+  Wrench,
+  Trophy
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
-
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
-  const { isAuthenticated, isAdmin, user, logout } = useAuth();
+  const { isAuthenticated, isAdmin, userRole, hasAccess, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -38,7 +37,7 @@ const Sidebar = () => {
   };
 
   const isActive = (path: string) => {
-    return location.pathname === path;
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   const linkClasses = (path: string, indented = false) => cn(
@@ -87,20 +86,6 @@ const Sidebar = () => {
               {isOpen && <span className="truncate">Página Inicial</span>}
             </Link>
           </li>
-          
-          <li>
-            <Link to="/resgate-cadastro" className={linkClasses('/resgate-cadastro')}>
-              <Clipboard className="h-5 w-5 flex-shrink-0" />
-              {isOpen && <span className="truncate">Resgate de Fauna</span>}
-            </Link>
-          </li>
-          
-          <li>
-            <Link to="/crimes-ambientais" className={linkClasses('/crimes-ambientais')}>
-              <Shield className="h-5 w-5 flex-shrink-0" />
-              {isOpen && <span className="truncate">Crimes Ambientais</span>}
-            </Link>
-          </li>
         </ul>
         
         <Separator className="my-4 bg-sidebar-border" />
@@ -120,26 +105,20 @@ const Sidebar = () => {
                   {isOpen && <span className="truncate">Fazer Login</span>}
                 </Link>
               </li>
-            ) : isAdmin ? (
+            ) : (
               <>
+                {/* Operador level - all authenticated users */}
                 <li>
-                  <Link to="/secao-operacional" className={linkClasses('/secao-operacional', true)}>
-                    <Briefcase className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Seção Operacional</span>}
+                  <Link to="/resgate-cadastro" className={linkClasses('/resgate-cadastro', true)}>
+                    <Clipboard className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Resgate de Fauna</span>}
                   </Link>
                 </li>
                 
                 <li>
-                  <Link to="/secao-pessoas" className={linkClasses('/secao-pessoas', true)}>
-                    <Users className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Seção de Pessoas</span>}
-                  </Link>
-                </li>
-                
-                <li>
-                  <Link to="/secao-logistica" className={linkClasses('/secao-logistica', true)}>
-                    <Wrench className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Seção de Logística</span>}
+                  <Link to="/crimes-ambientais" className={linkClasses('/crimes-ambientais', true)}>
+                    <Shield className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Crimes Ambientais</span>}
                   </Link>
                 </li>
                 
@@ -151,16 +130,52 @@ const Sidebar = () => {
                 </li>
                 
                 <li>
-                  <Link to="/gerenciar-permissoes" className={linkClasses('/gerenciar-permissoes', true)}>
-                    <Settings className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Gerenciar Permissões</span>}
+                  <Link to="/ranking" className={linkClasses('/ranking', true)}>
+                    <Trophy className="h-5 w-5 flex-shrink-0" />
+                    {isOpen && <span className="truncate">Ranking de Ocorrências</span>}
                   </Link>
                 </li>
+                
+                {/* Seção Operacional */}
+                {hasAccess(['secao_operacional']) && (
+                  <li>
+                    <Link to="/secao-operacional" className={linkClasses('/secao-operacional', true)}>
+                      <Briefcase className="h-5 w-5 flex-shrink-0" />
+                      {isOpen && <span className="truncate">Seção Operacional</span>}
+                    </Link>
+                  </li>
+                )}
+                
+                {/* Seção de Pessoas */}
+                {hasAccess(['secao_pessoas']) && (
+                  <li>
+                    <Link to="/secao-pessoas" className={linkClasses('/secao-pessoas', true)}>
+                      <Users className="h-5 w-5 flex-shrink-0" />
+                      {isOpen && <span className="truncate">Seção de Pessoas</span>}
+                    </Link>
+                  </li>
+                )}
+                
+                {/* Seção de Logística */}
+                {hasAccess(['secao_logistica']) && (
+                  <li>
+                    <Link to="/secao-logistica" className={linkClasses('/secao-logistica', true)}>
+                      <Wrench className="h-5 w-5 flex-shrink-0" />
+                      {isOpen && <span className="truncate">Seção de Logística</span>}
+                    </Link>
+                  </li>
+                )}
+                
+                {/* Admin only */}
+                {isAdmin && (
+                  <li>
+                    <Link to="/gerenciar-permissoes" className={linkClasses('/gerenciar-permissoes', true)}>
+                      <Settings className="h-5 w-5 flex-shrink-0" />
+                      {isOpen && <span className="truncate">Gerenciar Permissões</span>}
+                    </Link>
+                  </li>
+                )}
               </>
-            ) : (
-              <li className="px-3 py-2 text-sm text-muted-foreground">
-                {isOpen && "Sem permissão de acesso"}
-              </li>
             )}
           </ul>
         </div>
