@@ -25,7 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import logoSidebar from '@/assets/logo-bpma.svg';
+import logoSidebar from '@/assets/logo-sidebar.svg';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
