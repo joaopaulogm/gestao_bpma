@@ -60,8 +60,8 @@ const Index = () => {
     <div className="p-6 md:p-10">
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="w-28 h-28 rounded-full bg-[#071d49] flex items-center justify-center mx-auto mb-4">
-          <img src={logoBpma} alt="Logo BPMA" className="h-20" />
+        <div className="w-28 h-28 rounded-full bg-[#071d49] flex items-center justify-center mx-auto mb-4 p-2">
+          <img src={logoBpma} alt="Logo BPMA" className="h-24" />
         </div>
         <div className="flex items-center justify-center gap-4 mb-3">
           <CheckeredDivider />
