@@ -51,21 +51,21 @@ function App() {
               <Route path="/resgate-cadastro" element={<SidebarLayout><ResgateCadastro /></SidebarLayout>} />
               <Route path="/crimes-ambientais" element={<SidebarLayout><CrimesAmbientaisCadastro /></SidebarLayout>} />
               
-              <Route path="/dashboard" element={<ProtectedRoute><SidebarLayout><Dashboard /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/hotspots" element={<ProtectedRoute><SidebarLayout><Hotspots /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/registros" element={<ProtectedRoute><SidebarLayout><Registros /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/registro-detalhes/:id" element={<ProtectedRoute><SidebarLayout><RegistroDetalhes /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/resgate-editar/:id" element={<ProtectedRoute><SidebarLayout><ResgateEditar /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/fauna-cadastrada" element={<ProtectedRoute><SidebarLayout><FaunaCadastrada /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/fauna-cadastro" element={<ProtectedRoute><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/fauna-cadastro/:id" element={<ProtectedRoute><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/relatorios" element={<ProtectedRoute><SidebarLayout><Relatorios /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/bens-apreendidos" element={<ProtectedRoute><SidebarLayout><BensApreendidosCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/flora-cadastro" element={<ProtectedRoute><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/flora-cadastro/:id" element={<ProtectedRoute><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/flora-cadastrada" element={<ProtectedRoute><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/efetivo" element={<ProtectedRoute><SidebarLayout><EfetivoBPMA /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/pop" element={<ProtectedRoute><SidebarLayout><POP /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute requireAdmin><SidebarLayout><Dashboard /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/hotspots" element={<ProtectedRoute requireAdmin><SidebarLayout><Hotspots /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/registros" element={<ProtectedRoute requireAdmin><SidebarLayout><Registros /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/registro-detalhes/:id" element={<ProtectedRoute requireAdmin><SidebarLayout><RegistroDetalhes /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/resgate-editar/:id" element={<ProtectedRoute requireAdmin><SidebarLayout><ResgateEditar /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/fauna-cadastrada" element={<ProtectedRoute requireAdmin><SidebarLayout><FaunaCadastrada /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/fauna-cadastro" element={<ProtectedRoute requireAdmin><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/fauna-cadastro/:id" element={<ProtectedRoute requireAdmin><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/relatorios" element={<ProtectedRoute requireAdmin><SidebarLayout><Relatorios /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/bens-apreendidos" element={<ProtectedRoute requireAdmin><SidebarLayout><BensApreendidosCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/flora-cadastro" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/flora-cadastro/:id" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/flora-cadastrada" element={<ProtectedRoute requireAdmin><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/efetivo" element={<ProtectedRoute requireAdmin><SidebarLayout><EfetivoBPMA /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/pop" element={<ProtectedRoute requireAdmin><SidebarLayout><POP /></SidebarLayout></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

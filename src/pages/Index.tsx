@@ -53,7 +53,7 @@ const HomeCard: React.FC<HomeCardProps> = ({ title, icon: Icon, to }) => {
 };
 
 const Index = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
   
   return (
@@ -107,13 +107,13 @@ const Index = () => {
                 to="/login"
               />
             </div>
-          ) : (
+          ) : isAdmin ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               <HomeCard title="Cadastrar Fauna" icon={PlusCircle} to="/fauna-cadastro" />
               <HomeCard title="Fauna Cadastrada" icon={List} to="/fauna-cadastrada" />
               <HomeCard title="Dashboard" icon={BarChart} to="/dashboard" />
               <HomeCard title="Hotspots" icon={MapPin} to="/hotspots" />
-              <HomeCard title="Lista de Registros" icon={Table} to="/registros" />
+              <HomeCard title="Lista de Registros" icon={Table} to="/lista-registros" />
               <HomeCard title="Relatórios" icon={FileText} to="/relatorios" />
               <HomeCard title="Bens Apreendidos" icon={Package} to="/bens-apreendidos" />
               <HomeCard title="Cadastrar Flora" icon={Leaf} to="/flora-cadastro" />
@@ -121,6 +121,8 @@ const Index = () => {
               <HomeCard title="Efetivo BPMA" icon={Users} to="/efetivo" />
               <HomeCard title="POP Ambiental" icon={BookOpen} to="/pop" />
             </div>
+          ) : (
+            <p className="text-muted-foreground text-sm px-1">Você não tem permissão de acesso às funcionalidades restritas.</p>
           )}
         </div>
       </div>

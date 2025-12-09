@@ -29,7 +29,7 @@ import { cn } from '@/lib/utils';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, isAdmin, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -125,7 +125,7 @@ const Sidebar = () => {
                   {isOpen && <span className="truncate">Fazer Login</span>}
                 </Link>
               </li>
-            ) : (
+            ) : isAdmin ? (
               <>
                 <li>
                   <Link to="/fauna-cadastro" className={linkClasses('/fauna-cadastro', true)}>
@@ -204,6 +204,10 @@ const Sidebar = () => {
                   </Link>
                 </li>
               </>
+            ) : (
+              <li className="px-3 py-2 text-sm text-muted-foreground">
+                {isOpen && "Sem permissão de acesso"}
+              </li>
             )}
           </ul>
         </div>
