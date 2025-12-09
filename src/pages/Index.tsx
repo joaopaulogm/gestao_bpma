@@ -22,10 +22,10 @@ import logoBpma from '@/assets/logo-bpma.png';
 
 const CheckeredDivider = () => (
   <div className="flex gap-[3px]">
-    {Array.from({ length: 12 }).map((_, i) => (
+    {Array.from({ length: 20 }).map((_, i) => (
       <div key={i} className="flex flex-col gap-[3px]">
-        <div className={`w-3 h-3 ${i % 2 === 0 ? 'bg-[#071d49]' : 'bg-transparent'}`} />
-        <div className={`w-3 h-3 ${i % 2 === 1 ? 'bg-[#071d49]' : 'bg-transparent'}`} />
+        <div className={`w-2.5 h-2.5 md:w-3 md:h-3 ${i % 2 === 0 ? 'bg-[#071d49]' : 'bg-transparent'}`} />
+        <div className={`w-2.5 h-2.5 md:w-3 md:h-3 ${i % 2 === 1 ? 'bg-[#071d49]' : 'bg-transparent'}`} />
       </div>
     ))}
   </div>
