@@ -60,7 +60,7 @@ const Index = () => {
     <div className="p-6 md:p-10">
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="w-28 h-28 rounded-full bg-[#071d49] flex items-center justify-center mx-auto mb-4 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,204,0,0.6)] cursor-pointer animate-[pulse_3s_ease-in-out_infinite]">
+        <div className="w-28 h-28 rounded-full bg-[#071d49] flex items-center justify-center mx-auto mb-4 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,204,0,0.6)] cursor-pointer">
           <img src={logoBpma} alt="Logo BPMA" className="h-28" />
         </div>
         <div className="flex items-center justify-center gap-4 mb-3">
