@@ -30,12 +30,6 @@ interface EspecieFlora {
   "Imune ao Corte": string | null;
 }
 
-interface DriveFile {
-  id: string;
-  name: string;
-  mimeType: string;
-  thumbnailLink?: string;
-}
 
 const FAUNA_GROUPS = [
   { key: 'Aves', label: 'Aves', icon: Bird, folderKey: 'aves' },
@@ -94,31 +88,57 @@ const IdentificarEspecie: React.FC = () => {
     setLoadingImages(prev => ({ ...prev, [cacheKey]: true }));
 
     try {
-      console.log(`Buscando imagem para: ${speciesName} na pasta: ${folderKey}`);
-      
-      // Tentar buscar do Google Drive via edge function
-      const { data, error } = await supabase.functions.invoke('get-drive-image', {
-        body: { 
-          action: 'search',
-          folderKey: folderKey,
-          fileName: speciesName
+      // Buscar do bucket fotos_especies no Supabase Storage
+      // Primeiro tentar na pasta específica
+      const { data: files, error: listError } = await supabase.storage
+        .from('fotos_especies')
+        .list(folderKey, { limit: 200 });
+
+      if (!listError && files && files.length > 0) {
+        const normalizedSearch = speciesName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        
+        const matchingFile = files.find(file => {
+          const fileName = file.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const fileNameWithoutExt = fileName.replace(/\.(jpg|jpeg|png|webp|gif)$/i, '');
+          return fileNameWithoutExt.includes(normalizedSearch) || normalizedSearch.includes(fileNameWithoutExt);
+        });
+
+        if (matchingFile) {
+          const { data: urlData } = supabase.storage
+            .from('fotos_especies')
+            .getPublicUrl(`${folderKey}/${matchingFile.name}`);
+          
+          if (urlData?.publicUrl) {
+            setImageCache(prev => ({ ...prev, [cacheKey]: urlData.publicUrl }));
+            setLoadingImages(prev => ({ ...prev, [cacheKey]: false }));
+            return;
+          }
         }
-      });
-
-      console.log('Resposta da edge function:', data, error);
-
-      if (error) {
-        console.error('Erro na edge function:', error);
-        throw error;
       }
-      
-      if (data?.files && data.files.length > 0) {
-        const fileId = data.files[0].id;
-        const imageUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
-        console.log(`Imagem encontrada: ${imageUrl}`);
-        setImageCache(prev => ({ ...prev, [cacheKey]: imageUrl }));
-      } else {
-        console.log(`Nenhuma imagem encontrada para: ${speciesName}`);
+
+      // Se não encontrou na pasta específica, tentar na raiz do bucket
+      const { data: rootFiles, error: rootError } = await supabase.storage
+        .from('fotos_especies')
+        .list('', { limit: 500 });
+
+      if (!rootError && rootFiles && rootFiles.length > 0) {
+        const normalizedSearch = speciesName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        
+        const matchingFile = rootFiles.find(file => {
+          const fileName = file.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const fileNameWithoutExt = fileName.replace(/\.(jpg|jpeg|png|webp|gif)$/i, '');
+          return fileNameWithoutExt.includes(normalizedSearch) || normalizedSearch.includes(fileNameWithoutExt);
+        });
+
+        if (matchingFile) {
+          const { data: urlData } = supabase.storage
+            .from('fotos_especies')
+            .getPublicUrl(matchingFile.name);
+          
+          if (urlData?.publicUrl) {
+            setImageCache(prev => ({ ...prev, [cacheKey]: urlData.publicUrl }));
+          }
+        }
       }
     } catch (error) {
       console.error('Erro ao buscar imagem:', error);
