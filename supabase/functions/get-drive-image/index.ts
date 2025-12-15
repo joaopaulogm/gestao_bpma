@@ -103,13 +103,26 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const action = url.searchParams.get('action');
-    const folderId = url.searchParams.get('folderId');
-    const folderKey = url.searchParams.get('folderKey');
-    const fileId = url.searchParams.get('fileId');
-    const fileName = url.searchParams.get('fileName');
+    
+    // Suportar tanto query params (GET) quanto body (POST)
+    let action, folderId, folderKey, fileId, fileName;
+    
+    if (req.method === 'POST') {
+      const body = await req.json();
+      action = body.action;
+      folderId = body.folderId;
+      folderKey = body.folderKey;
+      fileId = body.fileId;
+      fileName = body.fileName;
+    } else {
+      action = url.searchParams.get('action');
+      folderId = url.searchParams.get('folderId');
+      folderKey = url.searchParams.get('folderKey');
+      fileId = url.searchParams.get('fileId');
+      fileName = url.searchParams.get('fileName');
+    }
 
-    console.log('Request received:', { action, folderId, folderKey, fileId, fileName });
+    console.log('Request received:', { method: req.method, action, folderId, folderKey, fileId, fileName });
 
     const accessToken = await getAccessToken();
 

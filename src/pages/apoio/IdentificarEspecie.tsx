@@ -94,27 +94,31 @@ const IdentificarEspecie: React.FC = () => {
     setLoadingImages(prev => ({ ...prev, [cacheKey]: true }));
 
     try {
+      console.log(`Buscando imagem para: ${speciesName} na pasta: ${folderKey}`);
+      
+      // Tentar buscar do Google Drive via edge function
       const { data, error } = await supabase.functions.invoke('get-drive-image', {
-        body: {},
-        headers: {},
+        body: { 
+          action: 'search',
+          folderKey: folderKey,
+          fileName: speciesName
+        }
       });
 
-      // Use query params approach
-      const response = await fetch(
-        `https://oiwwptnqaunsyhpkwbrz.supabase.co/functions/v1/get-drive-image?action=search&folderKey=${folderKey}&fileName=${encodeURIComponent(speciesName)}`
-      );
+      console.log('Resposta da edge function:', data, error);
 
-      if (!response.ok) {
-        throw new Error('Failed to search for image');
+      if (error) {
+        console.error('Erro na edge function:', error);
+        throw error;
       }
-
-      const result = await response.json();
       
-      if (result.files && result.files.length > 0) {
-        const fileId = result.files[0].id;
-        // Use direct Google Drive link
+      if (data?.files && data.files.length > 0) {
+        const fileId = data.files[0].id;
         const imageUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+        console.log(`Imagem encontrada: ${imageUrl}`);
         setImageCache(prev => ({ ...prev, [cacheKey]: imageUrl }));
+      } else {
+        console.log(`Nenhuma imagem encontrada para: ${speciesName}`);
       }
     } catch (error) {
       console.error('Erro ao buscar imagem:', error);
