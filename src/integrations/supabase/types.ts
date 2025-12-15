@@ -14,41 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      allowed_users: {
-        Row: {
-          created_at: string | null
-          efetivo_id: string | null
-          email: string
-          id: string
-          nome: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          efetivo_id?: string | null
-          email: string
-          id?: string
-          nome?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          efetivo_id?: string | null
-          email?: string
-          id?: string
-          nome?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "allowed_users_efetivo_id_fkey"
-            columns: ["efetivo_id"]
-            isOneToOne: false
-            referencedRelation: "dim_efetivo"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       dim_area_protegida: {
         Row: {
           created_at: string | null
@@ -929,6 +894,63 @@ export type Database = {
         }
         Relationships: []
       }
+      usuarios_permitidos: {
+        Row: {
+          CPF: number | null
+          criado_em: string | null
+          "Data Nascimento": string | null
+          "Email 1": string | null
+          "Email 2": string | null
+          id: string
+          "Lota��o": string | null
+          "Matr�cula": string | null
+          Nome: string | null
+          "Nome Guerra": string | null
+          Post_Grad: string | null
+          Quadro: string | null
+          Sexo: string | null
+          "Telefone 1": string | null
+          "Telefone 2": string | null
+          user_id: string
+        }
+        Insert: {
+          CPF?: number | null
+          criado_em?: string | null
+          "Data Nascimento"?: string | null
+          "Email 1"?: string | null
+          "Email 2"?: string | null
+          id?: string
+          "Lota��o"?: string | null
+          "Matr�cula"?: string | null
+          Nome?: string | null
+          "Nome Guerra"?: string | null
+          Post_Grad?: string | null
+          Quadro?: string | null
+          Sexo?: string | null
+          "Telefone 1"?: string | null
+          "Telefone 2"?: string | null
+          user_id?: string
+        }
+        Update: {
+          CPF?: number | null
+          criado_em?: string | null
+          "Data Nascimento"?: string | null
+          "Email 1"?: string | null
+          "Email 2"?: string | null
+          id?: string
+          "Lota��o"?: string | null
+          "Matr�cula"?: string | null
+          Nome?: string | null
+          "Nome Guerra"?: string | null
+          Post_Grad?: string | null
+          Quadro?: string | null
+          Sexo?: string | null
+          "Telefone 1"?: string | null
+          "Telefone 2"?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -952,6 +974,7 @@ export type Database = {
         | "secao_pessoas"
         | "secao_logistica"
         | "publico"
+      data: "01" | "10" | "1990"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1088,6 +1111,7 @@ export const Constants = {
         "secao_logistica",
         "publico",
       ],
+      data: ["01", "10", "1990"],
     },
   },
 } as const
