@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ArrowLeft, Bird, PawPrint, Leaf, TreeDeciduous, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, ArrowLeft, Bird, PawPrint, Leaf, TreeDeciduous, ChevronDown, ChevronUp, ImageOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,11 +30,18 @@ interface EspecieFlora {
   "Imune ao Corte": string | null;
 }
 
+interface DriveFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  thumbnailLink?: string;
+}
+
 const FAUNA_GROUPS = [
-  { key: 'Aves', label: 'Aves', icon: Bird },
-  { key: 'Mammalia', label: 'Mamíferos', icon: PawPrint },
-  { key: 'Reptilia', label: 'Répteis', icon: PawPrint },
-  { key: 'Actinopterygii', label: 'Peixes', icon: PawPrint },
+  { key: 'Aves', label: 'Aves', icon: Bird, folderKey: 'aves' },
+  { key: 'Mammalia', label: 'Mamíferos', icon: PawPrint, folderKey: 'mamiferos' },
+  { key: 'Reptilia', label: 'Répteis', icon: PawPrint, folderKey: 'repteis' },
+  { key: 'Actinopterygii', label: 'Peixes', icon: PawPrint, folderKey: 'peixes' },
 ];
 
 const FLORA_GROUPS = [
@@ -51,6 +58,8 @@ const IdentificarEspecie: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'fauna' | 'flora'>('fauna');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [imageCache, setImageCache] = useState<Record<string, string>>({});
+  const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,6 +83,45 @@ const IdentificarEspecie: React.FC = () => {
 
     fetchData();
   }, []);
+
+  const fetchImageForSpecies = async (speciesName: string, folderKey: string) => {
+    const cacheKey = `${folderKey}-${speciesName}`;
+    
+    if (imageCache[cacheKey] || loadingImages[cacheKey]) {
+      return;
+    }
+
+    setLoadingImages(prev => ({ ...prev, [cacheKey]: true }));
+
+    try {
+      const { data, error } = await supabase.functions.invoke('get-drive-image', {
+        body: {},
+        headers: {},
+      });
+
+      // Use query params approach
+      const response = await fetch(
+        `https://oiwwptnqaunsyhpkwbrz.supabase.co/functions/v1/get-drive-image?action=search&folderKey=${folderKey}&fileName=${encodeURIComponent(speciesName)}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to search for image');
+      }
+
+      const result = await response.json();
+      
+      if (result.files && result.files.length > 0) {
+        const fileId = result.files[0].id;
+        // Use direct Google Drive link
+        const imageUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+        setImageCache(prev => ({ ...prev, [cacheKey]: imageUrl }));
+      }
+    } catch (error) {
+      console.error('Erro ao buscar imagem:', error);
+    } finally {
+      setLoadingImages(prev => ({ ...prev, [cacheKey]: false }));
+    }
+  };
 
   const toggleGroup = (key: string) => {
     setExpandedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -101,9 +149,51 @@ const IdentificarEspecie: React.FC = () => {
     });
   };
 
-  const renderFaunaCard = (especie: EspecieFauna) => (
-    <Card key={especie.id} className="bg-card/80 backdrop-blur-sm border-border/50">
+  const SpeciesImage: React.FC<{ speciesName: string; folderKey: string }> = ({ speciesName, folderKey }) => {
+    const cacheKey = `${folderKey}-${speciesName}`;
+    const imageUrl = imageCache[cacheKey];
+    const isLoading = loadingImages[cacheKey];
+
+    useEffect(() => {
+      if (!imageUrl && !isLoading) {
+        fetchImageForSpecies(speciesName, folderKey);
+      }
+    }, [speciesName, folderKey, imageUrl, isLoading]);
+
+    if (isLoading) {
+      return (
+        <div className="w-full h-40 bg-muted/50 rounded-lg flex items-center justify-center animate-pulse">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+        </div>
+      );
+    }
+
+    if (imageUrl) {
+      return (
+        <div className="w-full h-40 rounded-lg overflow-hidden mb-3">
+          <img
+            src={imageUrl}
+            alt={speciesName}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="w-full h-40 bg-muted/30 rounded-lg flex items-center justify-center mb-3">
+        <ImageOff className="h-8 w-8 text-muted-foreground/50" />
+      </div>
+    );
+  };
+
+  const renderFaunaCard = (especie: EspecieFauna, folderKey: string) => (
+    <Card key={especie.id} className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
       <CardContent className="p-4">
+        <SpeciesImage speciesName={especie.nome_popular} folderKey={folderKey} />
         <h3 className="text-lg font-semibold text-foreground mb-1">
           {especie.nome_popular}
         </h3>
@@ -133,8 +223,9 @@ const IdentificarEspecie: React.FC = () => {
   );
 
   const renderFloraCard = (especie: EspecieFlora) => (
-    <Card key={especie.id} className="bg-card/80 backdrop-blur-sm border-border/50">
+    <Card key={especie.id} className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
       <CardContent className="p-4">
+        <SpeciesImage speciesName={especie["Nome Popular"] || ''} folderKey="flora" />
         <h3 className="text-lg font-semibold text-foreground mb-1">
           {especie["Nome Popular"] || 'Nome não disponível'}
         </h3>
@@ -264,7 +355,7 @@ const IdentificarEspecie: React.FC = () => {
                             </p>
                           ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {species.map(renderFaunaCard)}
+                              {species.map((s) => renderFaunaCard(s, group.folderKey))}
                             </div>
                           )}
                         </CardContent>
