@@ -21,10 +21,9 @@ interface UserRole {
 
 interface AllowedUser {
   id: string;
-  email: string;
-  nome: string | null;
-  efetivo_id: string | null;
-  created_at: string | null;
+  "Email 1": string | null;
+  Nome: string | null;
+  criado_em: string | null;
 }
 
 const ROLE_LABELS: Record<AppRole, string> = {
@@ -73,9 +72,9 @@ const GerenciarPermissoes: React.FC = () => {
   const fetchAllowedUsers = async () => {
     try {
       const { data, error } = await supabase
-        .from('allowed_users')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from('usuarios_permitidos')
+        .select('id, "Email 1", Nome, criado_em')
+        .order('criado_em', { ascending: false });
 
       if (error) throw error;
       setAllowedUsers(data || []);
@@ -175,10 +174,10 @@ const GerenciarPermissoes: React.FC = () => {
     setAddingAllowed(true);
     try {
       const { error } = await supabase
-        .from('allowed_users')
+        .from('usuarios_permitidos')
         .insert({
-          email: newEmail.trim().toLowerCase(),
-          nome: newNome.trim() || null,
+          "Email 1": newEmail.trim().toLowerCase(),
+          Nome: newNome.trim() || null,
         });
 
       if (error) throw error;
@@ -202,7 +201,7 @@ const GerenciarPermissoes: React.FC = () => {
   const handleDeleteAllowedUser = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('allowed_users')
+        .from('usuarios_permitidos')
         .delete()
         .eq('id', id);
 
@@ -306,14 +305,14 @@ const GerenciarPermissoes: React.FC = () => {
                       {allowedUsers.map((user) => (
                         <TableRow key={user.id}>
                           <TableCell className="font-medium">
-                            {user.email}
+                            {user["Email 1"] || '-'}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
-                            {user.nome || '-'}
+                            {user.Nome || '-'}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
-                            {user.created_at 
-                              ? new Date(user.created_at).toLocaleDateString('pt-BR')
+                            {user.criado_em 
+                              ? new Date(user.criado_em).toLocaleDateString('pt-BR')
                               : '-'}
                           </TableCell>
                           <TableCell>
