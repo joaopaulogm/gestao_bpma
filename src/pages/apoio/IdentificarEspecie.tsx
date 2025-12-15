@@ -8,41 +8,39 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { supabase } from '@/integrations/supabase/client';
 
 interface EspecieFauna {
-  id: string;
+  classe_taxonomica: string;
   nome_popular: string;
   nome_cientifico: string;
-  classe_taxonomica: string;
   ordem_taxonomica: string;
   estado_de_conservacao: string;
   tipo_de_fauna: string;
 }
 
 interface EspecieFlora {
-  id: string;
-  "Nome Popular": string | null;
-  "Nome Científico": string | null;
-  Classe: string | null;
-  Ordem: string | null;
-  Família: string | null;
-  "Estado de Conservação": string | null;
-  "Tipo de Planta": string | null;
-  "Madeira de Lei": string | null;
-  "Imune ao Corte": string | null;
+  nome_popular: string;
+  nome_cientifico: string;
+  classe: string;
+  ordem: string;
+  familia: string;
+  estado_de_conservacao: string;
+  tipo_de_planta: string;
+  madeira_de_lei: string;
+  imune_ao_corte: string;
 }
 
-
 const FAUNA_GROUPS = [
-  { key: 'Aves', label: 'Aves', icon: Bird, folderKey: 'aves' },
-  { key: 'Mammalia', label: 'Mamíferos', icon: PawPrint, folderKey: 'mamiferos' },
-  { key: 'Reptilia', label: 'Répteis', icon: PawPrint, folderKey: 'repteis' },
-  { key: 'Actinopterygii', label: 'Peixes', icon: PawPrint, folderKey: 'peixes' },
+  { key: 'AVES', label: 'Aves', icon: Bird, folderKey: 'aves' },
+  { key: 'MAMMALIA', label: 'Mamíferos', icon: PawPrint, folderKey: 'mamiferos' },
+  { key: 'REPTILIA', label: 'Répteis', icon: PawPrint, folderKey: 'repteis' },
+  { key: 'ACTINOPTERYGII', label: 'Peixes', icon: PawPrint, folderKey: 'peixes' },
 ];
 
 const FLORA_GROUPS = [
-  { key: 'madeira_lei', label: 'Madeira de Lei', filter: (e: EspecieFlora) => e["Madeira de Lei"] === 'Sim' },
-  { key: 'ornamental', label: 'Ornamental', filter: (e: EspecieFlora) => e["Tipo de Planta"] === 'Ornamental' },
-  { key: 'frutifera', label: 'Frutífera / Exótica', filter: (e: EspecieFlora) => e["Tipo de Planta"] === 'Frutífera' || e["Tipo de Planta"] === 'Exótica' },
-  { key: 'imune_corte', label: 'Espécies Imune ao Corte', filter: (e: EspecieFlora) => e["Imune ao Corte"] === 'Sim' },
+  { key: 'madeira_lei', label: 'Madeira de Lei', filter: (e: EspecieFlora) => e.madeira_de_lei === 'Sim' },
+  { key: 'ornamental', label: 'Ornamental', filter: (e: EspecieFlora) => e.tipo_de_planta === 'Ornamental' },
+  { key: 'frutifera', label: 'Frutífera / Exótica', filter: (e: EspecieFlora) => e.tipo_de_planta === 'Frutífera' || e.tipo_de_planta === 'Exótica' },
+  { key: 'imune_corte', label: 'Espécies Imune ao Corte', filter: (e: EspecieFlora) => e.imune_ao_corte === 'Sim' },
+  { key: 'silvestre', label: 'Silvestre', filter: (e: EspecieFlora) => e.tipo_de_planta === 'Silvestre' },
 ];
 
 const IdentificarEspecie: React.FC = () => {
@@ -55,21 +53,62 @@ const IdentificarEspecie: React.FC = () => {
   const [imageCache, setImageCache] = useState<Record<string, string>>({});
   const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
 
+  const parseTSV = (content: string, type: 'fauna' | 'flora') => {
+    const lines = content.split('\n').filter(line => line.trim());
+    const header = lines[0];
+    const dataLines = lines.slice(1);
+
+    if (type === 'fauna') {
+      return dataLines.map(line => {
+        const cols = line.split('\t');
+        return {
+          classe_taxonomica: cols[0]?.trim() || '',
+          nome_popular: cols[1]?.trim() || '',
+          nome_cientifico: cols[2]?.trim().replace(/[()]/g, '') || '',
+          ordem_taxonomica: cols[3]?.trim() || '',
+          estado_de_conservacao: cols[4]?.trim() || '',
+          tipo_de_fauna: cols[5]?.trim() || '',
+        };
+      }).filter(e => e.nome_popular);
+    } else {
+      return dataLines.map(line => {
+        const cols = line.split('\t');
+        return {
+          nome_popular: cols[0]?.trim() || '',
+          nome_cientifico: cols[1]?.trim() || '',
+          classe: cols[2]?.trim() || '',
+          ordem: cols[3]?.trim() || '',
+          familia: cols[4]?.trim() || '',
+          estado_de_conservacao: cols[5]?.trim() || '',
+          tipo_de_planta: cols[6]?.trim() || '',
+          madeira_de_lei: cols[7]?.trim() || '',
+          imune_ao_corte: cols[8]?.trim() || '',
+        };
+      }).filter(e => e.nome_popular);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [faunaRes, floraRes] = await Promise.all([
-          supabase.from('dim_especies_fauna').select('*').order('nome_popular'),
-          supabase.from('dim_especies_flora').select('*').order('Nome Popular'),
-        ]);
+        // Fetch fauna list
+        const faunaResponse = await fetch(
+          'https://oiwwptnqaunsyhpkwbrz.supabase.co/storage/v1/object/public/fotos_especies/LISTA%20DE%20FAUNA.txt'
+        );
+        const faunaText = await faunaResponse.text();
+        const faunaData = parseTSV(faunaText, 'fauna') as EspecieFauna[];
+        setEspeciesFauna(faunaData);
 
-        if (faunaRes.error) throw faunaRes.error;
-        if (floraRes.error) throw floraRes.error;
+        // Fetch flora list
+        const floraResponse = await fetch(
+          'https://oiwwptnqaunsyhpkwbrz.supabase.co/storage/v1/object/public/fotos_especies/LISTA%20DE%20FLORA.txt'
+        );
+        const floraText = await floraResponse.text();
+        const floraData = parseTSV(floraText, 'flora') as EspecieFlora[];
+        setEspeciesFlora(floraData);
 
-        setEspeciesFauna(faunaRes.data || []);
-        setEspeciesFlora(floraRes.data || []);
       } catch (error) {
-        console.error('Erro ao buscar espécies:', error);
+        console.error('Erro ao buscar listas de espécies:', error);
       } finally {
         setLoading(false);
       }
@@ -88,11 +127,9 @@ const IdentificarEspecie: React.FC = () => {
     setLoadingImages(prev => ({ ...prev, [cacheKey]: true }));
 
     try {
-      // Buscar do bucket fotos_especies no Supabase Storage
-      // Primeiro tentar na pasta específica
       const { data: files, error: listError } = await supabase.storage
         .from('fotos_especies')
-        .list(folderKey, { limit: 200 });
+        .list(folderKey, { limit: 500 });
 
       if (!listError && files && files.length > 0) {
         const normalizedSearch = speciesName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -116,10 +153,10 @@ const IdentificarEspecie: React.FC = () => {
         }
       }
 
-      // Se não encontrou na pasta específica, tentar na raiz do bucket
+      // Try root folder
       const { data: rootFiles, error: rootError } = await supabase.storage
         .from('fotos_especies')
-        .list('', { limit: 500 });
+        .list('', { limit: 1000 });
 
       if (!rootError && rootFiles && rootFiles.length > 0) {
         const normalizedSearch = speciesName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -153,7 +190,7 @@ const IdentificarEspecie: React.FC = () => {
 
   const filterFaunaByGroup = (classe: string) => {
     return especiesFauna.filter((e) => {
-      const matchesClass = e.classe_taxonomica === classe;
+      const matchesClass = e.classe_taxonomica.toUpperCase() === classe.toUpperCase();
       const matchesSearch =
         searchTerm === '' ||
         e.nome_popular.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -167,8 +204,8 @@ const IdentificarEspecie: React.FC = () => {
       const matchesGroup = filterFn(e);
       const matchesSearch =
         searchTerm === '' ||
-        (e["Nome Popular"] || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (e["Nome Científico"] || '').toLowerCase().includes(searchTerm.toLowerCase());
+        e.nome_popular.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        e.nome_cientifico.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesGroup && matchesSearch;
     });
   };
@@ -214,8 +251,8 @@ const IdentificarEspecie: React.FC = () => {
     );
   };
 
-  const renderFaunaCard = (especie: EspecieFauna, folderKey: string) => (
-    <Card key={especie.id} className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
+  const renderFaunaCard = (especie: EspecieFauna, folderKey: string, index: number) => (
+    <Card key={`${especie.nome_popular}-${index}`} className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
       <CardContent className="p-4">
         <SpeciesImage speciesName={especie.nome_popular} folderKey={folderKey} />
         <h3 className="text-lg font-semibold text-foreground mb-1">
@@ -246,40 +283,40 @@ const IdentificarEspecie: React.FC = () => {
     </Card>
   );
 
-  const renderFloraCard = (especie: EspecieFlora) => (
-    <Card key={especie.id} className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
+  const renderFloraCard = (especie: EspecieFlora, index: number) => (
+    <Card key={`${especie.nome_popular}-${index}`} className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
       <CardContent className="p-4">
-        <SpeciesImage speciesName={especie["Nome Popular"] || ''} folderKey="flora" />
+        <SpeciesImage speciesName={especie.nome_popular} folderKey="flora" />
         <h3 className="text-lg font-semibold text-foreground mb-1">
-          {especie["Nome Popular"] || 'Nome não disponível'}
+          {especie.nome_popular}
         </h3>
         <p className="text-sm text-muted-foreground italic mb-3">
-          {especie["Nome Científico"] || '-'}
+          {especie.nome_cientifico || '-'}
         </p>
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
             <span className="text-muted-foreground">Classe: </span>
-            <span className="text-foreground">{especie.Classe || '-'}</span>
+            <span className="text-foreground">{especie.classe || '-'}</span>
           </div>
           <div>
             <span className="text-muted-foreground">Ordem: </span>
-            <span className="text-foreground">{especie.Ordem || '-'}</span>
+            <span className="text-foreground">{especie.ordem || '-'}</span>
           </div>
           <div>
             <span className="text-muted-foreground">Família: </span>
-            <span className="text-foreground">{especie.Família || '-'}</span>
+            <span className="text-foreground">{especie.familia || '-'}</span>
           </div>
           <div>
             <span className="text-muted-foreground">Conservação: </span>
-            <span className="text-foreground">{especie["Estado de Conservação"] || '-'}</span>
+            <span className="text-foreground">{especie.estado_de_conservacao || '-'}</span>
           </div>
           <div>
             <span className="text-muted-foreground">Tipo: </span>
-            <span className="text-foreground">{especie["Tipo de Planta"] || '-'}</span>
+            <span className="text-foreground">{especie.tipo_de_planta || '-'}</span>
           </div>
           <div>
             <span className="text-muted-foreground">Madeira de Lei: </span>
-            <span className="text-foreground">{especie["Madeira de Lei"] || '-'}</span>
+            <span className="text-foreground">{especie.madeira_de_lei || '-'}</span>
           </div>
         </div>
       </CardContent>
@@ -379,7 +416,7 @@ const IdentificarEspecie: React.FC = () => {
                             </p>
                           ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {species.map((s) => renderFaunaCard(s, group.folderKey))}
+                              {species.map((s, idx) => renderFaunaCard(s, group.folderKey, idx))}
                             </div>
                           )}
                         </CardContent>
@@ -426,7 +463,7 @@ const IdentificarEspecie: React.FC = () => {
                             </p>
                           ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {species.map(renderFloraCard)}
+                              {species.map((s, idx) => renderFloraCard(s, idx))}
                             </div>
                           )}
                         </CardContent>
