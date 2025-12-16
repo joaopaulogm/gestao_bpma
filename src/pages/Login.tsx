@@ -116,7 +116,7 @@ const Login = () => {
             <Lock className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold text-foreground">
-            {isSignup ? 'Cadastro SOI/BPMA' : 'Área Restrita SOI/BPMA'}
+            {isSignup ? 'Cadastro SOI/BPMA' : 'Atividade Operacional SOI/BPMA'}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             {isSignup 

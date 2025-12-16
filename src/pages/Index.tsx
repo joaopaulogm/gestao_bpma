@@ -74,7 +74,7 @@ const Index = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-sidebar-primary font-medium px-1">
             <Lock className="h-4 w-4" />
-            <span className="text-sm">Área Restrita</span>
+            <span className="text-sm">Atividade Operacional</span>
           </div>
           
           {!isAuthenticated ? (
