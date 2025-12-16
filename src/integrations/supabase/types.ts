@@ -873,6 +873,108 @@ export type Database = {
           },
         ]
       }
+      fauna: {
+        Row: {
+          bucket: string
+          classe_taxonomica: string | null
+          created_at: string
+          estado_conservacao: string | null
+          grupo: string | null
+          id: string
+          imagens: string[]
+          nome_cientifico: string | null
+          nome_popular: string
+          nome_popular_slug: string
+          ordem_taxonomica: string | null
+          tipo_fauna: string | null
+          updated_at: string
+        }
+        Insert: {
+          bucket?: string
+          classe_taxonomica?: string | null
+          created_at?: string
+          estado_conservacao?: string | null
+          grupo?: string | null
+          id?: string
+          imagens?: string[]
+          nome_cientifico?: string | null
+          nome_popular: string
+          nome_popular_slug: string
+          ordem_taxonomica?: string | null
+          tipo_fauna?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bucket?: string
+          classe_taxonomica?: string | null
+          created_at?: string
+          estado_conservacao?: string | null
+          grupo?: string | null
+          id?: string
+          imagens?: string[]
+          nome_cientifico?: string | null
+          nome_popular?: string
+          nome_popular_slug?: string
+          ordem_taxonomica?: string | null
+          tipo_fauna?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      flora: {
+        Row: {
+          bucket: string
+          classe: string | null
+          created_at: string
+          estado_conservacao: string | null
+          familia: string | null
+          id: string
+          imagens: string[]
+          imune_ao_corte: boolean | null
+          madeira_lei: boolean | null
+          nome_cientifico: string | null
+          nome_popular: string
+          nome_popular_slug: string
+          ordem: string | null
+          tipo_planta: string | null
+          updated_at: string
+        }
+        Insert: {
+          bucket?: string
+          classe?: string | null
+          created_at?: string
+          estado_conservacao?: string | null
+          familia?: string | null
+          id?: string
+          imagens?: string[]
+          imune_ao_corte?: boolean | null
+          madeira_lei?: boolean | null
+          nome_cientifico?: string | null
+          nome_popular: string
+          nome_popular_slug: string
+          ordem?: string | null
+          tipo_planta?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bucket?: string
+          classe?: string | null
+          created_at?: string
+          estado_conservacao?: string | null
+          familia?: string | null
+          id?: string
+          imagens?: string[]
+          imune_ao_corte?: boolean | null
+          madeira_lei?: boolean | null
+          nome_cientifico?: string | null
+          nome_popular?: string
+          nome_popular_slug?: string
+          ordem?: string | null
+          tipo_planta?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
