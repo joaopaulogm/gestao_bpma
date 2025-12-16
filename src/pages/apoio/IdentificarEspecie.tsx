@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
-import { Search, ArrowLeft, PawPrint, TreeDeciduous, ImageOff, X, ZoomIn, Filter, ChevronDown } from 'lucide-react';
+import { Search, ArrowLeft, PawPrint, TreeDeciduous, ImageOff, X, ZoomIn, ChevronDown, Bird, Fish, Leaf, TreePine } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,22 +12,20 @@ import { supabase } from '@/integrations/supabase/client';
 const SUPABASE_URL = "https://oiwwptnqaunsyhpkwbrz.supabase.co";
 const ITEMS_PER_PAGE = 20;
 
-// Fauna categories based on classe_taxonomica
+// Fauna categories
 const FAUNA_CATEGORIES = [
-  { value: 'all', label: 'Todas as Classes' },
-  { value: 'Aves', label: 'Aves' },
-  { value: 'Mammalia', label: 'Mamíferos' },
-  { value: 'Reptilia', label: 'Répteis' },
-  { value: 'Actinopterygii', label: 'Peixes' },
+  { value: 'Aves', label: 'Aves', icon: Bird, color: 'bg-sky-500/10 text-sky-600 border-sky-500/30 hover:bg-sky-500/20' },
+  { value: 'Mammalia', label: 'Mamíferos', icon: PawPrint, color: 'bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20' },
+  { value: 'Reptilia', label: 'Répteis', icon: Leaf, color: 'bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/20' },
+  { value: 'Actinopterygii', label: 'Peixes', icon: Fish, color: 'bg-blue-500/10 text-blue-600 border-blue-500/30 hover:bg-blue-500/20' },
 ];
 
 // Flora categories
 const FLORA_CATEGORIES = [
-  { value: 'all', label: 'Todas as Categorias' },
-  { value: 'ornamental', label: 'Ornamental' },
-  { value: 'madeira_lei', label: 'Madeira de Lei' },
-  { value: 'imune_corte', label: 'Imune ao Corte' },
-  { value: 'frutifera_exotica', label: 'Frutífera Exótica' },
+  { value: 'ornamental', label: 'Ornamental', icon: Leaf, color: 'bg-pink-500/10 text-pink-600 border-pink-500/30 hover:bg-pink-500/20' },
+  { value: 'madeira_lei', label: 'Madeira de Lei', icon: TreePine, color: 'bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20' },
+  { value: 'imune_corte', label: 'Imune ao Corte', icon: TreeDeciduous, color: 'bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/20' },
+  { value: 'frutifera_exotica', label: 'Frutífera Exótica', icon: Leaf, color: 'bg-purple-500/10 text-purple-600 border-purple-500/30 hover:bg-purple-500/20' },
 ];
 
 interface FaunaRecord {
@@ -229,6 +227,46 @@ const FloraCard = memo(({
 
 FloraCard.displayName = 'FloraCard';
 
+// Category Card Component
+const CategoryCard = memo(({ 
+  label, 
+  icon: Icon, 
+  color, 
+  count, 
+  isSelected,
+  onClick 
+}: { 
+  label: string;
+  icon: React.ElementType;
+  color: string;
+  count: number;
+  isSelected: boolean;
+  onClick: () => void;
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200
+        ${isSelected 
+          ? 'ring-2 ring-primary ring-offset-2 border-primary shadow-lg scale-105' 
+          : `${color} border`
+        }
+        ${color}
+        min-h-[120px] w-full
+      `}
+    >
+      <Icon className="h-8 w-8 mb-2" />
+      <span className="font-semibold text-sm">{label}</span>
+      <Badge variant="secondary" className="mt-2 text-xs">
+        {count} espécies
+      </Badge>
+    </button>
+  );
+});
+
+CategoryCard.displayName = 'CategoryCard';
+
 const IdentificarEspecie: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'fauna' | 'flora'>('fauna');
@@ -238,8 +276,8 @@ const IdentificarEspecie: React.FC = () => {
   const [zoomImage, setZoomImage] = useState<{ url: string; name: string } | null>(null);
   
   // Filters
-  const [faunaCategory, setFaunaCategory] = useState('all');
-  const [floraCategory, setFloraCategory] = useState('all');
+  const [faunaCategory, setFaunaCategory] = useState<string | null>(null);
+  const [floraCategory, setFloraCategory] = useState<string | null>(null);
   const [faunaConservation, setFaunaConservation] = useState('all');
   const [floraConservation, setFloraConservation] = useState('all');
   
@@ -307,6 +345,29 @@ const IdentificarEspecie: React.FC = () => {
     return ['all', ...Array.from(statuses)] as string[];
   }, [floraData]);
 
+  // Count fauna by category
+  const faunaCounts = useMemo(() => {
+    return FAUNA_CATEGORIES.reduce((acc, cat) => {
+      acc[cat.value] = faunaData.filter(item => item.classe_taxonomica === cat.value).length;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [faunaData]);
+
+  // Count flora by category
+  const floraCounts = useMemo(() => {
+    return {
+      ornamental: floraData.filter(item => item.tipo_planta?.toLowerCase().includes('ornamental')).length,
+      madeira_lei: floraData.filter(item => item.madeira_lei === true).length,
+      imune_corte: floraData.filter(item => item.imune_ao_corte === true).length,
+      frutifera_exotica: floraData.filter(item => 
+        item.tipo_planta?.toLowerCase().includes('frutífera') || 
+        item.tipo_planta?.toLowerCase().includes('frutifera') ||
+        item.tipo_planta?.toLowerCase().includes('exótica') ||
+        item.tipo_planta?.toLowerCase().includes('exotica')
+      ).length,
+    };
+  }, [floraData]);
+
   // Filter fauna
   const filteredFauna = useMemo(() => {
     let result = faunaData;
@@ -322,7 +383,7 @@ const IdentificarEspecie: React.FC = () => {
     }
 
     // Category filter (classe_taxonomica)
-    if (faunaCategory !== 'all') {
+    if (faunaCategory) {
       result = result.filter(item => item.classe_taxonomica === faunaCategory);
     }
 
@@ -349,7 +410,7 @@ const IdentificarEspecie: React.FC = () => {
     }
 
     // Category filter
-    if (floraCategory !== 'all') {
+    if (floraCategory) {
       switch (floraCategory) {
         case 'ornamental':
           result = result.filter(item => item.tipo_planta?.toLowerCase().includes('ornamental'));
@@ -393,17 +454,25 @@ const IdentificarEspecie: React.FC = () => {
 
   const clearFilters = () => {
     setSearchTerm('');
-    setFaunaCategory('all');
-    setFloraCategory('all');
+    setFaunaCategory(null);
+    setFloraCategory(null);
     setFaunaConservation('all');
     setFloraConservation('all');
   };
 
   const hasActiveFilters = searchTerm || 
-    faunaCategory !== 'all' || 
-    floraCategory !== 'all' || 
+    faunaCategory || 
+    floraCategory || 
     faunaConservation !== 'all' || 
     floraConservation !== 'all';
+
+  const handleFaunaCategoryClick = (value: string) => {
+    setFaunaCategory(faunaCategory === value ? null : value);
+  };
+
+  const handleFloraCategoryClick = (value: string) => {
+    setFloraCategory(floraCategory === value ? null : value);
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -418,6 +487,57 @@ const IdentificarEspecie: React.FC = () => {
           <h1 className="text-2xl font-bold text-foreground">Identificar Espécie</h1>
         </div>
       </div>
+
+      {/* Tab Buttons */}
+      <div className="flex gap-4 mb-6">
+        <Button
+          variant={activeTab === 'fauna' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('fauna')}
+          className="flex-1 h-16 text-lg gap-3"
+        >
+          <PawPrint className="h-6 w-6" />
+          Fauna ({faunaData.length})
+        </Button>
+        <Button
+          variant={activeTab === 'flora' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('flora')}
+          className="flex-1 h-16 text-lg gap-3"
+        >
+          <TreeDeciduous className="h-6 w-6" />
+          Flora ({floraData.length})
+        </Button>
+      </div>
+
+      {/* Category Cards */}
+      {!loading && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {activeTab === 'fauna' ? (
+            FAUNA_CATEGORIES.map(cat => (
+              <CategoryCard
+                key={cat.value}
+                label={cat.label}
+                icon={cat.icon}
+                color={cat.color}
+                count={faunaCounts[cat.value] || 0}
+                isSelected={faunaCategory === cat.value}
+                onClick={() => handleFaunaCategoryClick(cat.value)}
+              />
+            ))
+          ) : (
+            FLORA_CATEGORIES.map(cat => (
+              <CategoryCard
+                key={cat.value}
+                label={cat.label}
+                icon={cat.icon}
+                color={cat.color}
+                count={floraCounts[cat.value] || 0}
+                isSelected={floraCategory === cat.value}
+                onClick={() => handleFloraCategoryClick(cat.value)}
+              />
+            ))
+          )}
+        </div>
+      )}
 
       {/* Search and Filters */}
       <Card className="bg-card/80 backdrop-blur-sm border-border/50 mb-6">
@@ -435,67 +555,38 @@ const IdentificarEspecie: React.FC = () => {
 
           {/* Filters Row */}
           <div className="flex flex-wrap gap-3 items-center">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Filtros:</span>
-            </div>
+            <span className="text-sm font-medium text-muted-foreground">Estado de Conservação:</span>
 
             {activeTab === 'fauna' ? (
-              <>
-                <Select value={faunaCategory} onValueChange={setFaunaCategory}>
-                  <SelectTrigger className="w-[180px] bg-background/50">
-                    <SelectValue placeholder="Classe" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FAUNA_CATEGORIES.map(cat => (
-                      <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={faunaConservation} onValueChange={setFaunaConservation}>
-                  <SelectTrigger className="w-[200px] bg-background/50">
-                    <SelectValue placeholder="Estado de Conservação" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Estados</SelectItem>
-                    {faunaConservationOptions.filter(s => s !== 'all').map(status => (
-                      <SelectItem key={status} value={status}>{status}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </>
+              <Select value={faunaConservation} onValueChange={setFaunaConservation}>
+                <SelectTrigger className="w-[200px] bg-background/50">
+                  <SelectValue placeholder="Estado de Conservação" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {faunaConservationOptions.filter(s => s !== 'all').map(status => (
+                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             ) : (
-              <>
-                <Select value={floraCategory} onValueChange={setFloraCategory}>
-                  <SelectTrigger className="w-[180px] bg-background/50">
-                    <SelectValue placeholder="Categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FLORA_CATEGORIES.map(cat => (
-                      <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={floraConservation} onValueChange={setFloraConservation}>
-                  <SelectTrigger className="w-[200px] bg-background/50">
-                    <SelectValue placeholder="Estado de Conservação" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Estados</SelectItem>
-                    {floraConservationOptions.filter(s => s !== 'all').map(status => (
-                      <SelectItem key={status} value={status}>{status}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </>
+              <Select value={floraConservation} onValueChange={setFloraConservation}>
+                <SelectTrigger className="w-[200px] bg-background/50">
+                  <SelectValue placeholder="Estado de Conservação" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {floraConservationOptions.filter(s => s !== 'all').map(status => (
+                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
 
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
                 <X className="h-4 w-4 mr-1" />
-                Limpar
+                Limpar filtros
               </Button>
             )}
           </div>
@@ -509,10 +600,10 @@ const IdentificarEspecie: React.FC = () => {
                   <X className="h-3 w-3 cursor-pointer" onClick={() => setSearchTerm('')} />
                 </Badge>
               )}
-              {activeTab === 'fauna' && faunaCategory !== 'all' && (
+              {activeTab === 'fauna' && faunaCategory && (
                 <Badge variant="secondary" className="gap-1">
                   {FAUNA_CATEGORIES.find(c => c.value === faunaCategory)?.label}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => setFaunaCategory('all')} />
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setFaunaCategory(null)} />
                 </Badge>
               )}
               {activeTab === 'fauna' && faunaConservation !== 'all' && (
@@ -521,10 +612,10 @@ const IdentificarEspecie: React.FC = () => {
                   <X className="h-3 w-3 cursor-pointer" onClick={() => setFaunaConservation('all')} />
                 </Badge>
               )}
-              {activeTab === 'flora' && floraCategory !== 'all' && (
+              {activeTab === 'flora' && floraCategory && (
                 <Badge variant="secondary" className="gap-1">
                   {FLORA_CATEGORIES.find(c => c.value === floraCategory)?.label}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => setFloraCategory('all')} />
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => setFloraCategory(null)} />
                 </Badge>
               )}
               {activeTab === 'flora' && floraConservation !== 'all' && (
@@ -538,25 +629,12 @@ const IdentificarEspecie: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Tab Buttons */}
-      <div className="flex gap-4 mb-6">
-        <Button
-          variant={activeTab === 'fauna' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('fauna')}
-          className="flex-1 h-16 text-lg gap-3"
-        >
-          <PawPrint className="h-6 w-6" />
-          Fauna ({filteredFauna.length})
-        </Button>
-        <Button
-          variant={activeTab === 'flora' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('flora')}
-          className="flex-1 h-16 text-lg gap-3"
-        >
-          <TreeDeciduous className="h-6 w-6" />
-          Flora ({filteredFlora.length})
-        </Button>
-      </div>
+      {/* Results Count */}
+      {!loading && (
+        <p className="text-sm text-muted-foreground mb-4">
+          Exibindo {activeTab === 'fauna' ? paginatedFauna.length : paginatedFlora.length} de {activeTab === 'fauna' ? filteredFauna.length : filteredFlora.length} espécies
+        </p>
+      )}
 
       {/* Loading State */}
       {loading && (
@@ -575,7 +653,7 @@ const IdentificarEspecie: React.FC = () => {
               ))
             ) : (
               <div className="col-span-full text-center py-12 text-muted-foreground">
-                {searchTerm || faunaCategory !== 'all' || faunaConservation !== 'all' 
+                {hasActiveFilters 
                   ? 'Nenhuma espécie encontrada para os filtros selecionados.' 
                   : 'Nenhuma espécie de fauna cadastrada.'}
               </div>
@@ -608,7 +686,7 @@ const IdentificarEspecie: React.FC = () => {
               ))
             ) : (
               <div className="col-span-full text-center py-12 text-muted-foreground">
-                {searchTerm || floraCategory !== 'all' || floraConservation !== 'all'
+                {hasActiveFilters
                   ? 'Nenhuma espécie encontrada para os filtros selecionados.' 
                   : 'Nenhuma espécie de flora cadastrada.'}
               </div>
