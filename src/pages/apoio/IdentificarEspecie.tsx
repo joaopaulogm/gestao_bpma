@@ -6,116 +6,31 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
-
-interface EspecieFauna {
-  classe_taxonomica: string;
-  nome_popular: string;
-  nome_cientifico: string;
-  ordem_taxonomica: string;
-  estado_de_conservacao: string;
-  tipo_de_fauna: string;
-}
-
-interface EspecieFlora {
-  nome_popular: string;
-  nome_cientifico: string;
-  classe: string;
-  ordem: string;
-  familia: string;
-  estado_de_conservacao: string;
-  tipo_de_planta: string;
-  madeira_de_lei: string;
-  imune_ao_corte: string;
-}
+import { especiesFaunaData, type EspecieFauna } from '@/data/especiesFaunaData';
+import { especiesFloraData, type EspecieFlora } from '@/data/especiesFloraData';
 
 const FAUNA_GROUPS = [
   { key: 'AVES', label: 'Aves', icon: Bird, folderKey: 'aves' },
-  { key: 'MAMMALIA', label: 'Mamíferos', icon: PawPrint, folderKey: 'mamiferos' },
-  { key: 'REPTILIA', label: 'Répteis', icon: PawPrint, folderKey: 'repteis' },
-  { key: 'ACTINOPTERYGII', label: 'Peixes', icon: PawPrint, folderKey: 'peixes' },
+  { key: 'MAMÍFEROS', label: 'Mamíferos', icon: PawPrint, folderKey: 'mamiferos' },
+  { key: 'RÉPTEIS', label: 'Répteis', icon: PawPrint, folderKey: 'repteis' },
+  { key: 'PEIXES', label: 'Peixes', icon: PawPrint, folderKey: 'peixes' },
 ];
 
 const FLORA_GROUPS = [
   { key: 'madeira_lei', label: 'Madeira de Lei', filter: (e: EspecieFlora) => e.madeira_de_lei === 'Sim' },
   { key: 'ornamental', label: 'Ornamental', filter: (e: EspecieFlora) => e.tipo_de_planta === 'Ornamental' },
-  { key: 'frutifera', label: 'Frutífera / Exótica', filter: (e: EspecieFlora) => e.tipo_de_planta === 'Frutífera' || e.tipo_de_planta === 'Exótica' },
+  { key: 'frutifera', label: 'Frutífera / Exótica', filter: (e: EspecieFlora) => e.tipo_de_planta === 'Exótico' },
   { key: 'imune_corte', label: 'Espécies Imune ao Corte', filter: (e: EspecieFlora) => e.imune_ao_corte === 'Sim' },
   { key: 'silvestre', label: 'Silvestre', filter: (e: EspecieFlora) => e.tipo_de_planta === 'Silvestre' },
 ];
 
 const IdentificarEspecie: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [especiesFauna, setEspeciesFauna] = useState<EspecieFauna[]>([]);
-  const [especiesFlora, setEspeciesFlora] = useState<EspecieFlora[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'fauna' | 'flora'>('fauna');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [imageCache, setImageCache] = useState<Record<string, string>>({});
   const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
-
-  const parseTSV = (content: string, type: 'fauna' | 'flora') => {
-    const lines = content.split('\n').filter(line => line.trim());
-    const header = lines[0];
-    const dataLines = lines.slice(1);
-
-    if (type === 'fauna') {
-      return dataLines.map(line => {
-        const cols = line.split('\t');
-        return {
-          classe_taxonomica: cols[0]?.trim() || '',
-          nome_popular: cols[1]?.trim() || '',
-          nome_cientifico: cols[2]?.trim().replace(/[()]/g, '') || '',
-          ordem_taxonomica: cols[3]?.trim() || '',
-          estado_de_conservacao: cols[4]?.trim() || '',
-          tipo_de_fauna: cols[5]?.trim() || '',
-        };
-      }).filter(e => e.nome_popular);
-    } else {
-      return dataLines.map(line => {
-        const cols = line.split('\t');
-        return {
-          nome_popular: cols[0]?.trim() || '',
-          nome_cientifico: cols[1]?.trim() || '',
-          classe: cols[2]?.trim() || '',
-          ordem: cols[3]?.trim() || '',
-          familia: cols[4]?.trim() || '',
-          estado_de_conservacao: cols[5]?.trim() || '',
-          tipo_de_planta: cols[6]?.trim() || '',
-          madeira_de_lei: cols[7]?.trim() || '',
-          imune_ao_corte: cols[8]?.trim() || '',
-        };
-      }).filter(e => e.nome_popular);
-    }
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch fauna list
-        const faunaResponse = await fetch(
-          'https://oiwwptnqaunsyhpkwbrz.supabase.co/storage/v1/object/public/fotos_especies/LISTA%20DE%20FAUNA.txt'
-        );
-        const faunaText = await faunaResponse.text();
-        const faunaData = parseTSV(faunaText, 'fauna') as EspecieFauna[];
-        setEspeciesFauna(faunaData);
-
-        // Fetch flora list
-        const floraResponse = await fetch(
-          'https://oiwwptnqaunsyhpkwbrz.supabase.co/storage/v1/object/public/fotos_especies/LISTA%20DE%20FLORA.txt'
-        );
-        const floraText = await floraResponse.text();
-        const floraData = parseTSV(floraText, 'flora') as EspecieFlora[];
-        setEspeciesFlora(floraData);
-
-      } catch (error) {
-        console.error('Erro ao buscar listas de espécies:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   const fetchImageForSpecies = async (speciesName: string, folderKey: string) => {
     const cacheKey = `${folderKey}-${speciesName}`;
@@ -189,7 +104,7 @@ const IdentificarEspecie: React.FC = () => {
   };
 
   const filterFaunaByGroup = (classe: string) => {
-    return especiesFauna.filter((e) => {
+    return especiesFaunaData.filter((e) => {
       const matchesClass = e.classe_taxonomica.toUpperCase() === classe.toUpperCase();
       const matchesSearch =
         searchTerm === '' ||
@@ -200,7 +115,7 @@ const IdentificarEspecie: React.FC = () => {
   };
 
   const filterFloraByGroup = (filterFn: (e: EspecieFlora) => boolean) => {
-    return especiesFlora.filter((e) => {
+    return especiesFloraData.filter((e) => {
       const matchesGroup = filterFn(e);
       const matchesSearch =
         searchTerm === '' ||
