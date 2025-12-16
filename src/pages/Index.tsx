@@ -72,7 +72,7 @@ const Index = () => {
       <div className="max-w-3xl mx-auto space-y-8">
         {/* Restricted Area */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sidebar-primary font-medium px-1">
+          <div className="flex items-center gap-2 text-primary font-semibold px-1">
             <Lock className="h-4 w-4" />
             <span className="text-sm">Atividade Operacional</span>
           </div>
@@ -98,7 +98,7 @@ const Index = () => {
               {/* Section-based access */}
               {(hasAccess(['secao_operacional']) || hasAccess(['secao_pessoas']) || hasAccess(['secao_logistica']) || isAdmin) && (
                 <div className="pt-4">
-                  <div className="flex items-center gap-2 text-sidebar-primary font-medium px-1 mb-4">
+                  <div className="flex items-center gap-2 text-primary font-semibold px-1 mb-4">
                     <Settings className="h-4 w-4" />
                     <span className="text-sm">Seções Administrativas</span>
                   </div>
