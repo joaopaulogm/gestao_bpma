@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useMemo, memo } from 'react';
-import { Search, ArrowLeft, Bird, PawPrint, Leaf, TreeDeciduous, ChevronDown, ChevronUp, ImageOff } from 'lucide-react';
+import React, { useState, useCallback, memo } from 'react';
+import { Search, ArrowLeft, Bird, PawPrint, Leaf, TreeDeciduous, ChevronDown, ChevronUp, ImageOff, X, ZoomIn } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { especiesFaunaData, type EspecieFauna } from '@/data/especiesFaunaData';
 import { especiesFloraData, type EspecieFlora } from '@/data/especiesFloraData';
@@ -103,8 +104,8 @@ const getImageUrl = async (speciesName: string, folderKey: string): Promise<stri
   }
 };
 
-// Memoized species image component
-const SpeciesImage = memo(({ speciesName, folderKey }: { speciesName: string; folderKey: string }) => {
+// Memoized species image component with zoom
+const SpeciesImage = memo(({ speciesName, folderKey, onZoom }: { speciesName: string; folderKey: string; onZoom: (url: string, name: string) => void }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -141,14 +142,20 @@ const SpeciesImage = memo(({ speciesName, folderKey }: { speciesName: string; fo
   }
 
   return (
-    <div className="w-full h-40 rounded-lg overflow-hidden mb-3">
+    <div 
+      className="w-full h-40 rounded-lg overflow-hidden mb-3 relative group cursor-pointer"
+      onClick={() => onZoom(imageUrl, speciesName)}
+    >
       <img
         src={imageUrl}
         alt={speciesName}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover transition-transform group-hover:scale-105"
         loading="lazy"
         onError={() => setError(true)}
       />
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+        <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+      </div>
     </div>
   );
 });
@@ -156,10 +163,10 @@ const SpeciesImage = memo(({ speciesName, folderKey }: { speciesName: string; fo
 SpeciesImage.displayName = 'SpeciesImage';
 
 // Memoized fauna card
-const FaunaCard = memo(({ especie, folderKey, index }: { especie: EspecieFauna; folderKey: string; index: number }) => (
+const FaunaCard = memo(({ especie, folderKey, index, onZoom }: { especie: EspecieFauna; folderKey: string; index: number; onZoom: (url: string, name: string) => void }) => (
   <Card className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
     <CardContent className="p-4">
-      <SpeciesImage speciesName={especie.nome_popular} folderKey={folderKey} />
+      <SpeciesImage speciesName={especie.nome_popular} folderKey={folderKey} onZoom={onZoom} />
       <h3 className="text-lg font-semibold text-foreground mb-1">{especie.nome_popular}</h3>
       <p className="text-sm text-muted-foreground italic mb-3">{especie.nome_cientifico}</p>
       <div className="grid grid-cols-2 gap-2 text-sm">
@@ -175,10 +182,10 @@ const FaunaCard = memo(({ especie, folderKey, index }: { especie: EspecieFauna; 
 FaunaCard.displayName = 'FaunaCard';
 
 // Memoized flora card
-const FloraCard = memo(({ especie, index }: { especie: EspecieFlora; index: number }) => (
+const FloraCard = memo(({ especie, index, onZoom }: { especie: EspecieFlora; index: number; onZoom: (url: string, name: string) => void }) => (
   <Card className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
     <CardContent className="p-4">
-      <SpeciesImage speciesName={especie.nome_popular} folderKey="flora" />
+      <SpeciesImage speciesName={especie.nome_popular} folderKey="flora" onZoom={onZoom} />
       <h3 className="text-lg font-semibold text-foreground mb-1">{especie.nome_popular}</h3>
       <p className="text-sm text-muted-foreground italic mb-3">{especie.nome_cientifico || '-'}</p>
       <div className="grid grid-cols-2 gap-2 text-sm">
@@ -199,6 +206,11 @@ const IdentificarEspecie: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'fauna' | 'flora'>('fauna');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [zoomImage, setZoomImage] = useState<{ url: string; name: string } | null>(null);
+
+  const handleZoom = useCallback((url: string, name: string) => {
+    setZoomImage({ url, name });
+  }, []);
 
   const toggleGroup = useCallback((key: string) => {
     setExpandedGroups(prev => ({ ...prev, [key]: !prev[key] }));
@@ -304,7 +316,7 @@ const IdentificarEspecie: React.FC = () => {
                         ) : (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {species.map((s, idx) => (
-                              <FaunaCard key={`${s.nome_popular}-${idx}`} especie={s} folderKey={group.folderKey} index={idx} />
+                              <FaunaCard key={`${s.nome_popular}-${idx}`} especie={s} folderKey={group.folderKey} index={idx} onZoom={handleZoom} />
                             ))}
                           </div>
                         )}
@@ -346,7 +358,7 @@ const IdentificarEspecie: React.FC = () => {
                         ) : (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {species.map((s, idx) => (
-                              <FloraCard key={`${s.nome_popular}-${idx}`} especie={s} index={idx} />
+                              <FloraCard key={`${s.nome_popular}-${idx}`} especie={s} index={idx} onZoom={handleZoom} />
                             ))}
                           </div>
                         )}
@@ -359,6 +371,32 @@ const IdentificarEspecie: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Zoom Modal */}
+      <Dialog open={!!zoomImage} onOpenChange={() => setZoomImage(null)}>
+        <DialogContent className="max-w-4xl p-0 bg-background/95 backdrop-blur-sm border-border">
+          <div className="relative">
+            <button
+              onClick={() => setZoomImage(null)}
+              className="absolute top-2 right-2 z-10 bg-background/80 hover:bg-background rounded-full p-2 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            {zoomImage && (
+              <div className="flex flex-col">
+                <img
+                  src={zoomImage.url}
+                  alt={zoomImage.name}
+                  className="w-full max-h-[70vh] object-contain"
+                />
+                <div className="p-4 text-center">
+                  <h3 className="text-lg font-semibold text-foreground">{zoomImage.name}</h3>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
