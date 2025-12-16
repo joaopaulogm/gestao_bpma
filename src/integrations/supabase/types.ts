@@ -1066,6 +1066,7 @@ export type Database = {
         Returns: boolean
       }
       is_allowed_user: { Args: { check_email: string }; Returns: boolean }
+      slugify_pt: { Args: { input: string }; Returns: string }
     }
     Enums: {
       app_role:
