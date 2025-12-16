@@ -94,7 +94,7 @@ const Sidebar = () => {
         <div className="mb-2">
           <div className="flex items-center gap-3 py-2 px-3 text-sidebar-primary font-medium">
             <Lock className="h-5 w-5 flex-shrink-0" />
-            {isOpen && <span className="text-sm truncate">Área Restrita</span>}
+            {isOpen && <span className="text-sm truncate">Atividade Operacional</span>}
           </div>
           
           <ul className="space-y-1 mt-1">
