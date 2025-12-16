@@ -1,4 +1,4 @@
-name: Deploy Supabase Edge Function auto-imagens
+name: Deploy Supabase Edge Function auto-images
 
 on:
   workflow_dispatch:
@@ -6,36 +6,17 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
-        with:
-          version: latest
 
-      - name: Link project
+      - name: Deploy Edge Function
+        run: |
+          supabase functions deploy auto-images
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
-        run: |
-          supabase link --project-ref "$SUPABASE_PROJECT_REF"
-
-      - name: Set Edge secrets
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          supabase secrets set \
-            SUPABASE_URL="$SUPABASE_URL" \
-            SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"
-
-      - name: Deploy function
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
-        run: |
-          supabase functions deploy auto-imagens --no-verify-jwt
