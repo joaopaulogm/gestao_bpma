@@ -29,7 +29,7 @@ const FloraCadastrada = () => {
   const especieToDelete = especies.find(especie => especie.id === confirmDeleteId);
 
   const handleEditClick = (id: string) => {
-    navigate(`/flora-cadastro/${id}`);
+    navigate(`/secao-operacional/flora-cadastro/${id}`);
   };
 
   return (
@@ -67,7 +67,7 @@ const FloraCadastrada = () => {
           
           <Button 
             className="bg-primary hover:bg-primary/90"
-            onClick={() => navigate('/flora-cadastro')}
+            onClick={() => navigate('/secao-operacional/flora-cadastro')}
           >
             Cadastrar Nova Espécie
           </Button>
