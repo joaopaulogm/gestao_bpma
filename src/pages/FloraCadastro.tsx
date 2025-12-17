@@ -234,15 +234,44 @@ export default function FloraCadastro() {
     }
   };
 
+  const checkDuplicateScientificName = async (nomeCientifico: string, currentId?: string): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from("dim_especies_flora")
+      .select("id")
+      .ilike("Nome Científico", nomeCientifico.trim());
+
+    if (error) {
+      console.error("Erro ao verificar duplicidade:", error);
+      return false;
+    }
+
+    // If editing, exclude current record from check
+    if (currentId && data) {
+      return data.some(item => item.id !== currentId);
+    }
+
+    return (data?.length || 0) > 0;
+  };
+
   const onSubmit = async (data: FloraFormData) => {
     setIsSubmitting(true);
     try {
+      // Check for duplicate scientific name
+      if (data.nomeCientifico) {
+        const isDuplicate = await checkDuplicateScientificName(data.nomeCientifico, id);
+        if (isDuplicate) {
+          toast.error(`Já existe uma espécie cadastrada com o nome científico "${data.nomeCientifico}"`);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       const floraData = {
-        "Nome Popular": data.nomePopular,
-        "Nome Científico": data.nomeCientifico,
+        "Nome Popular": data.nomePopular.trim(),
+        "Nome Científico": data.nomeCientifico.trim(),
         "Classe": data.classe,
-        "Ordem": data.ordem || null,
-        "Família": data.familia || null,
+        "Ordem": data.ordem?.trim() || null,
+        "Família": data.familia?.trim() || null,
         "Estado de Conservação": data.estadoConservacao,
         "Tipo de Planta": data.tipoPlanta,
         "Madeira de Lei": data.madeiraLei || null,
