@@ -25,46 +25,40 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-// Validate species via Wikipedia API
-async function validateSpeciesWithWikipedia(nomeCientifico: string): Promise<{ valid: boolean; source: string; imageUrl?: string }> {
+// Simple validation - just check if Wikipedia page exists (no image comparison)
+async function validateSpeciesWithWikipedia(nomeCientifico: string): Promise<{ valid: boolean; source: string }> {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+    
     const searchUrl = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(nomeCientifico)}`;
-    const response = await fetch(searchUrl);
+    const response = await fetch(searchUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
     
     if (response.ok) {
-      const data = await response.json();
-      if (data.title && data.thumbnail?.source) {
-        return {
-          valid: true,
-          source: `Wikipedia PT: ${data.title}`,
-          imageUrl: data.thumbnail.source
-        };
-      }
+      return { valid: true, source: `Wikipedia PT` };
     }
     
-    // Try English Wikipedia
+    // Try English Wikipedia with timeout
+    const controller2 = new AbortController();
+    const timeoutId2 = setTimeout(() => controller2.abort(), 3000);
+    
     const searchUrlEn = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(nomeCientifico)}`;
-    const responseEn = await fetch(searchUrlEn);
+    const responseEn = await fetch(searchUrlEn, { signal: controller2.signal });
+    clearTimeout(timeoutId2);
     
     if (responseEn.ok) {
-      const dataEn = await responseEn.json();
-      if (dataEn.title && dataEn.thumbnail?.source) {
-        return {
-          valid: true,
-          source: `Wikipedia EN: ${dataEn.title}`,
-          imageUrl: dataEn.thumbnail.source
-        };
-      }
+      return { valid: true, source: `Wikipedia EN` };
     }
     
-    return { valid: false, source: 'Não encontrado na Wikipedia' };
+    return { valid: false, source: 'Não encontrado' };
   } catch (error) {
-    console.error('Wikipedia validation error:', error);
-    return { valid: false, source: `Erro: ${error.message}` };
+    console.log('Wikipedia validation skipped:', error.message);
+    return { valid: false, source: 'Timeout/Erro' };
   }
 }
 
-// Find matching images in bucket
+// Find matching images in bucket - optimized
 async function findImagesInBucket(
   supabase: any,
   bucket: string,
@@ -73,14 +67,9 @@ async function findImagesInBucket(
   try {
     const { data: files, error } = await supabase.storage
       .from(bucket)
-      .list('', { limit: 1000 });
+      .list('', { limit: 500, search: slug });
     
-    if (error) {
-      console.error(`Error listing bucket ${bucket}:`, error);
-      return [];
-    }
-    
-    if (!files || files.length === 0) return [];
+    if (error || !files || files.length === 0) return [];
     
     // Find files matching the slug pattern
     const matchingFiles = files
@@ -92,26 +81,16 @@ async function findImagesInBucket(
                fileName.includes(`${normalizedSlug}-`);
       })
       .map((file: any) => file.name)
-      .sort();
+      .slice(0, 3); // Max 3 images
     
-    // Prioritize foto0001, foto0002, foto0003
-    const prioritized = matchingFiles.sort((a: string, b: string) => {
-      const aHasFoto = a.includes('foto0001') || a.includes('foto0002') || a.includes('foto0003');
-      const bHasFoto = b.includes('foto0001') || b.includes('foto0002') || b.includes('foto0003');
-      if (aHasFoto && !bHasFoto) return -1;
-      if (!aHasFoto && bHasFoto) return 1;
-      return a.localeCompare(b);
-    });
-    
-    // Return up to 3 images
-    return prioritized.slice(0, 3);
+    return matchingFiles;
   } catch (error) {
     console.error('Error finding images:', error);
     return [];
   }
 }
 
-// Sync fauna records
+// Sync fauna records - optimized with batch processing
 async function syncFauna(supabase: any, dryRun: boolean): Promise<SyncResult> {
   const result: SyncResult = {
     success: true,
@@ -123,30 +102,33 @@ async function syncFauna(supabase: any, dryRun: boolean): Promise<SyncResult> {
   };
 
   try {
-    // Get all fauna records
+    // Get fauna records that need processing (limit to 50 per run)
     const { data: faunaRecords, error: faunaError } = await supabase
       .from('fauna')
-      .select('*');
+      .select('*')
+      .limit(50);
     
     if (faunaError) throw faunaError;
-    
-    for (const record of faunaRecords || []) {
+    if (!faunaRecords || faunaRecords.length === 0) {
+      return result;
+    }
+
+    console.log(`Processing ${faunaRecords.length} fauna records`);
+
+    for (const record of faunaRecords) {
       result.processed++;
       const detail: any = {
         id: record.id,
         nome_popular: record.nome_popular,
-        nome_cientifico: record.nome_cientifico,
         action: 'none'
       };
       
       try {
         const slug = slugify(record.nome_popular || '');
-        
-        // Check if dimension exists
         let dimId = record.id_dim_especie_fauna;
         
+        // Link or create dimension if not exists
         if (!dimId) {
-          // Find or create dimension record
           const { data: existingDim } = await supabase
             .from('dim_especies_fauna')
             .select('id')
@@ -157,12 +139,11 @@ async function syncFauna(supabase: any, dryRun: boolean): Promise<SyncResult> {
             dimId = existingDim.id;
             detail.action = 'linked';
           } else {
-            // Create new dimension record
             const { data: newDim, error: createError } = await supabase
               .from('dim_especies_fauna')
               .insert({
                 nome_popular: record.nome_popular,
-                nome_cientifico: record.nome_cientifico,
+                nome_cientifico: record.nome_cientifico || 'Não identificado',
                 classe_taxonomica: record.classe_taxonomica || 'Não classificado',
                 ordem_taxonomica: record.ordem_taxonomica || 'Não classificado',
                 estado_de_conservacao: record.estado_conservacao || 'Não avaliado',
@@ -171,12 +152,16 @@ async function syncFauna(supabase: any, dryRun: boolean): Promise<SyncResult> {
               .select('id')
               .single();
             
-            if (createError) throw createError;
+            if (createError) {
+              detail.error = createError.message;
+              result.errors.push(`${record.nome_popular}: ${createError.message}`);
+              result.details.push(detail);
+              continue;
+            }
             dimId = newDim.id;
             detail.action = 'created';
           }
           
-          // Update fauna with FK
           if (!dryRun) {
             await supabase
               .from('fauna')
@@ -189,48 +174,29 @@ async function syncFauna(supabase: any, dryRun: boolean): Promise<SyncResult> {
         const images = await findImagesInBucket(supabase, 'imagens-fauna', slug);
         detail.images_found = images.length;
         
-        if (images.length > 0) {
-          // Validate with Wikipedia
+        if (images.length > 0 && !dryRun) {
+          // Only validate with Wikipedia if we have images
           const validation = await validateSpeciesWithWikipedia(record.nome_cientifico || record.nome_popular);
-          detail.validation = validation;
+          const fotoStatus = validation.valid ? 'validada' : 'pendente';
           
-          if (!dryRun) {
-            const fotoStatus = validation.valid ? 'validada' : 'pendente';
-            
-            await supabase
-              .from('dim_especies_fauna')
-              .update({
-                foto_principal_path: images[0],
-                fotos_paths: images,
-                foto_status: fotoStatus,
-                foto_fonte_validacao: validation.source,
-                foto_validada_em: validation.valid ? new Date().toISOString() : null
-              })
-              .eq('id', dimId);
-            
-            // Also update imagens array in fauna table
-            await supabase
-              .from('fauna')
-              .update({ imagens: images })
-              .eq('id', record.id);
-            
-            detail.action = detail.action === 'none' ? 'photos_updated' : detail.action + '_photos_updated';
-          }
+          await supabase
+            .from('dim_especies_fauna')
+            .update({
+              foto_principal_path: images[0],
+              fotos_paths: images,
+              foto_status: fotoStatus,
+              foto_fonte_validacao: validation.source,
+              foto_validada_em: validation.valid ? new Date().toISOString() : null
+            })
+            .eq('id', dimId);
           
+          await supabase
+            .from('fauna')
+            .update({ imagens: images })
+            .eq('id', record.id);
+          
+          detail.action = detail.action === 'none' ? 'photos_updated' : detail.action + '+photos';
           result.updated++;
-        }
-        
-        // Log sync
-        if (!dryRun) {
-          await supabase.from('sync_logs').insert({
-            tipo: 'fauna',
-            especie_nome: record.nome_popular,
-            especie_id: dimId,
-            acao: detail.action,
-            fotos_encontradas: images.length,
-            status_final: detail.action,
-            detalhes: detail
-          });
         }
         
       } catch (recordError: any) {
@@ -240,6 +206,19 @@ async function syncFauna(supabase: any, dryRun: boolean): Promise<SyncResult> {
       
       result.details.push(detail);
     }
+
+    // Log summary (not individual records to save resources)
+    if (!dryRun && result.updated > 0) {
+      await supabase.from('sync_logs').insert({
+        tipo: 'fauna',
+        especie_nome: `Batch: ${result.processed} processados`,
+        acao: 'sync_batch',
+        fotos_encontradas: result.updated,
+        status_final: result.success ? 'success' : 'partial',
+        detalhes: { processed: result.processed, updated: result.updated, errors: result.errors.length }
+      });
+    }
+
   } catch (error: any) {
     result.success = false;
     result.errors.push(error.message);
@@ -248,7 +227,7 @@ async function syncFauna(supabase: any, dryRun: boolean): Promise<SyncResult> {
   return result;
 }
 
-// Sync flora records
+// Sync flora records - optimized
 async function syncFlora(supabase: any, dryRun: boolean): Promise<SyncResult> {
   const result: SyncResult = {
     success: true,
@@ -260,30 +239,31 @@ async function syncFlora(supabase: any, dryRun: boolean): Promise<SyncResult> {
   };
 
   try {
-    // Get all flora records
     const { data: floraRecords, error: floraError } = await supabase
       .from('flora')
-      .select('*');
+      .select('*')
+      .limit(50);
     
     if (floraError) throw floraError;
-    
-    for (const record of floraRecords || []) {
+    if (!floraRecords || floraRecords.length === 0) {
+      return result;
+    }
+
+    console.log(`Processing ${floraRecords.length} flora records`);
+
+    for (const record of floraRecords) {
       result.processed++;
       const detail: any = {
         id: record.id,
         nome_popular: record.nome_popular,
-        nome_cientifico: record.nome_cientifico,
         action: 'none'
       };
       
       try {
         const slug = slugify(record.nome_popular || '');
-        
-        // Check if dimension exists
         let dimId = record.id_dim_especie_flora;
         
         if (!dimId) {
-          // Find or create dimension record
           const { data: existingDim } = await supabase
             .from('dim_especies_flora')
             .select('id')
@@ -294,12 +274,11 @@ async function syncFlora(supabase: any, dryRun: boolean): Promise<SyncResult> {
             dimId = existingDim.id;
             detail.action = 'linked';
           } else {
-            // Create new dimension record
             const { data: newDim, error: createError } = await supabase
               .from('dim_especies_flora')
               .insert({
                 'Nome Popular': record.nome_popular,
-                'Nome Científico': record.nome_cientifico,
+                'Nome Científico': record.nome_cientifico || 'Não identificado',
                 'Classe': record.classe,
                 'Ordem': record.ordem,
                 'Família': record.familia,
@@ -311,12 +290,16 @@ async function syncFlora(supabase: any, dryRun: boolean): Promise<SyncResult> {
               .select('id')
               .single();
             
-            if (createError) throw createError;
+            if (createError) {
+              detail.error = createError.message;
+              result.errors.push(`${record.nome_popular}: ${createError.message}`);
+              result.details.push(detail);
+              continue;
+            }
             dimId = newDim.id;
             detail.action = 'created';
           }
           
-          // Update flora with FK
           if (!dryRun) {
             await supabase
               .from('flora')
@@ -325,52 +308,32 @@ async function syncFlora(supabase: any, dryRun: boolean): Promise<SyncResult> {
           }
         }
         
-        // Find images in bucket
+        // Find images
         const images = await findImagesInBucket(supabase, 'imagens-flora', slug);
         detail.images_found = images.length;
         
-        if (images.length > 0) {
-          // Validate with Wikipedia
+        if (images.length > 0 && !dryRun) {
           const validation = await validateSpeciesWithWikipedia(record.nome_cientifico || record.nome_popular);
-          detail.validation = validation;
+          const fotoStatus = validation.valid ? 'validada' : 'pendente';
           
-          if (!dryRun) {
-            const fotoStatus = validation.valid ? 'validada' : 'pendente';
-            
-            await supabase
-              .from('dim_especies_flora')
-              .update({
-                foto_principal_path: images[0],
-                fotos_paths: images,
-                foto_status: fotoStatus,
-                foto_fonte_validacao: validation.source,
-                foto_validada_em: validation.valid ? new Date().toISOString() : null
-              })
-              .eq('id', dimId);
-            
-            // Also update imagens array in flora table
-            await supabase
-              .from('flora')
-              .update({ imagens: images })
-              .eq('id', record.id);
-            
-            detail.action = detail.action === 'none' ? 'photos_updated' : detail.action + '_photos_updated';
-          }
+          await supabase
+            .from('dim_especies_flora')
+            .update({
+              foto_principal_path: images[0],
+              fotos_paths: images,
+              foto_status: fotoStatus,
+              foto_fonte_validacao: validation.source,
+              foto_validada_em: validation.valid ? new Date().toISOString() : null
+            })
+            .eq('id', dimId);
           
+          await supabase
+            .from('flora')
+            .update({ imagens: images })
+            .eq('id', record.id);
+          
+          detail.action = detail.action === 'none' ? 'photos_updated' : detail.action + '+photos';
           result.updated++;
-        }
-        
-        // Log sync
-        if (!dryRun) {
-          await supabase.from('sync_logs').insert({
-            tipo: 'flora',
-            especie_nome: record.nome_popular,
-            especie_id: dimId,
-            acao: detail.action,
-            fotos_encontradas: images.length,
-            status_final: detail.action,
-            detalhes: detail
-          });
         }
         
       } catch (recordError: any) {
@@ -380,6 +343,18 @@ async function syncFlora(supabase: any, dryRun: boolean): Promise<SyncResult> {
       
       result.details.push(detail);
     }
+
+    if (!dryRun && result.updated > 0) {
+      await supabase.from('sync_logs').insert({
+        tipo: 'flora',
+        especie_nome: `Batch: ${result.processed} processados`,
+        acao: 'sync_batch',
+        fotos_encontradas: result.updated,
+        status_final: result.success ? 'success' : 'partial',
+        detalhes: { processed: result.processed, updated: result.updated, errors: result.errors.length }
+      });
+    }
+
   } catch (error: any) {
     result.success = false;
     result.errors.push(error.message);
@@ -389,7 +364,6 @@ async function syncFlora(supabase: any, dryRun: boolean): Promise<SyncResult> {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -408,13 +382,13 @@ serve(async (req) => {
     if (!tipo || tipo === 'fauna') {
       const faunaResult = await syncFauna(supabase, dryRun);
       results.push(faunaResult);
-      console.log(`Fauna sync complete: ${faunaResult.processed} processed, ${faunaResult.updated} updated`);
+      console.log(`Fauna: ${faunaResult.processed} processed, ${faunaResult.updated} updated`);
     }
 
     if (!tipo || tipo === 'flora') {
       const floraResult = await syncFlora(supabase, dryRun);
       results.push(floraResult);
-      console.log(`Flora sync complete: ${floraResult.processed} processed, ${floraResult.updated} updated`);
+      console.log(`Flora: ${floraResult.processed} processed, ${floraResult.updated} updated`);
     }
 
     return new Response(
