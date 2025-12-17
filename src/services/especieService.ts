@@ -287,18 +287,60 @@ export const buscarEspeciePorNomeCientifico = async (nomeCientifico: string): Pr
 
 export const cadastrarEspecie = async (especie: Omit<Especie, 'id'>): Promise<Especie | null> => {
   try {
-    const { data, error } = await supabase
+    // Insert into dimension table first
+    const { data: dimData, error: dimError } = await supabase
       .from("dim_especies_fauna")
       .insert([especie])
       .select()
       .maybeSingle();
     
-    if (error) {
-      console.error("Erro ao cadastrar espécie:", error);
+    if (dimError) {
+      console.error("Erro ao cadastrar espécie na dimensão:", dimError);
       return null;
     }
+
+    if (!dimData) return null;
+
+    // Create slug from nome_popular
+    const slug = especie.nome_popular
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    // Determine grupo based on classe_taxonomica
+    const grupoMap: Record<string, string> = {
+      'AVE': 'aves',
+      'MAMIFERO': 'mamiferos',
+      'REPTIL': 'repteis',
+      'PEIXE': 'peixes'
+    };
+    const grupo = grupoMap[especie.classe_taxonomica] || 'outros';
+
+    // Also insert into operational fauna table
+    const { error: faunaError } = await supabase
+      .from("fauna")
+      .insert([{
+        nome_popular: especie.nome_popular,
+        nome_popular_slug: slug,
+        nome_cientifico: especie.nome_cientifico,
+        classe_taxonomica: especie.classe_taxonomica,
+        ordem_taxonomica: especie.ordem_taxonomica,
+        estado_conservacao: especie.estado_de_conservacao,
+        tipo_fauna: especie.tipo_de_fauna,
+        grupo: grupo,
+        id_dim_especie_fauna: dimData.id,
+        bucket: 'imagens-fauna',
+        imagens: []
+      }]);
     
-    return data;
+    if (faunaError) {
+      console.error("Erro ao cadastrar espécie na tabela fauna:", faunaError);
+      // Still return dimData since main record was created
+    }
+    
+    return dimData;
   } catch (error) {
     console.error("Erro ao cadastrar espécie:", error);
     return null;
