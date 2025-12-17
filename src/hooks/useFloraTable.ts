@@ -15,13 +15,20 @@ export interface FloraEspecie {
   imuneCorte: string | null;
 }
 
+export type SortField = 'nomePopular' | 'nomeCientifico' | 'classe' | 'tipoPlanta' | 'estadoConservacao';
+export type SortDirection = 'asc' | 'desc';
+
 export const useFloraTable = () => {
   const [especies, setEspecies] = useState<FloraEspecie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterClasse, setFilterClasse] = useState<string>('all');
+  const [filterTipoPlanta, setFilterTipoPlanta] = useState<string>('all');
+  const [filterEstadoConservacao, setFilterEstadoConservacao] = useState<string>('all');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField>('nomePopular');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const fetchEspecies = async () => {
     setLoading(true);
@@ -61,25 +68,64 @@ export const useFloraTable = () => {
     fetchEspecies();
   }, []);
 
-  const filteredEspecies = useMemo(() => {
-    return especies.filter((especie) => {
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const filteredAndSortedEspecies = useMemo(() => {
+    const filtered = especies.filter((especie) => {
       const matchesSearch =
         !searchTerm ||
         especie.nomePopular?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        especie.nomeCientifico?.toLowerCase().includes(searchTerm.toLowerCase());
+        especie.nomeCientifico?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        especie.familia?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesClasse =
         filterClasse === 'all' || especie.classe === filterClasse;
 
-      return matchesSearch && matchesClasse;
+      const matchesTipoPlanta =
+        filterTipoPlanta === 'all' || especie.tipoPlanta === filterTipoPlanta;
+
+      const matchesEstadoConservacao =
+        filterEstadoConservacao === 'all' || especie.estadoConservacao === filterEstadoConservacao;
+
+      return matchesSearch && matchesClasse && matchesTipoPlanta && matchesEstadoConservacao;
     });
-  }, [especies, searchTerm, filterClasse]);
+
+    // Sort the filtered results
+    return filtered.sort((a, b) => {
+      const aValue = a[sortField] || '';
+      const bValue = b[sortField] || '';
+      
+      const comparison = aValue.localeCompare(bValue, 'pt-BR', { sensitivity: 'base' });
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [especies, searchTerm, filterClasse, filterTipoPlanta, filterEstadoConservacao, sortField, sortDirection]);
 
   const uniqueClasses = useMemo(() => {
     const classes = especies
       .map((e) => e.classe)
       .filter((c): c is string => !!c);
     return [...new Set(classes)].sort();
+  }, [especies]);
+
+  const uniqueTiposPlanta = useMemo(() => {
+    const tipos = especies
+      .map((e) => e.tipoPlanta)
+      .filter((t): t is string => !!t);
+    return [...new Set(tipos)].sort();
+  }, [especies]);
+
+  const uniqueEstadosConservacao = useMemo(() => {
+    const estados = especies
+      .map((e) => e.estadoConservacao)
+      .filter((e): e is string => !!e);
+    return [...new Set(estados)].sort();
   }, [especies]);
 
   const handleDelete = async (id: string) => {
@@ -100,17 +146,38 @@ export const useFloraTable = () => {
     }
   };
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterClasse('all');
+    setFilterTipoPlanta('all');
+    setFilterEstadoConservacao('all');
+  };
+
+  const hasActiveFilters = searchTerm || filterClasse !== 'all' || filterTipoPlanta !== 'all' || filterEstadoConservacao !== 'all';
+
   return {
-    especies: filteredEspecies,
+    especies: filteredAndSortedEspecies,
+    totalCount: especies.length,
     loading,
     error,
     searchTerm,
     setSearchTerm,
     filterClasse,
     setFilterClasse,
+    filterTipoPlanta,
+    setFilterTipoPlanta,
+    filterEstadoConservacao,
+    setFilterEstadoConservacao,
     confirmDeleteId,
     setConfirmDeleteId,
     handleDelete,
     uniqueClasses,
+    uniqueTiposPlanta,
+    uniqueEstadosConservacao,
+    sortField,
+    sortDirection,
+    handleSort,
+    clearFilters,
+    hasActiveFilters,
   };
 };
