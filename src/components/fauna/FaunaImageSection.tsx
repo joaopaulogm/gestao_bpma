@@ -1,7 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, Loader2, Upload } from 'lucide-react';
 import { getFaunaImageUrl } from '@/services/especieService';
 
 interface FaunaImageSectionProps {
@@ -22,10 +22,11 @@ const FaunaImageSection: React.FC<FaunaImageSectionProps> = ({
   disabled = false
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (file && file.type.startsWith('image/')) {
       await onAddImage(file);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -35,6 +36,35 @@ const FaunaImageSection: React.FC<FaunaImageSectionProps> = ({
 
   const handleAddClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!disabled && !isUploading && images.length < maxImages) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (disabled || isUploading || images.length >= maxImages) return;
+
+    const files = Array.from(e.dataTransfer.files);
+    const imageFile = files.find(file => file.type.startsWith('image/'));
+    
+    if (imageFile) {
+      await onAddImage(imageFile);
+    }
   };
 
   return (
@@ -82,15 +112,28 @@ const FaunaImageSection: React.FC<FaunaImageSectionProps> = ({
             <button
               type="button"
               onClick={handleAddClick}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
               disabled={isUploading}
-              className="aspect-square rounded-lg border-2 border-dashed border-fauna-border hover:border-fauna-blue hover:bg-fauna-blue/5 transition-colors flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-fauna-blue disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`aspect-square rounded-lg border-2 border-dashed transition-colors flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                isDragging 
+                  ? 'border-fauna-blue bg-fauna-blue/10 text-fauna-blue scale-105' 
+                  : 'border-fauna-border hover:border-fauna-blue hover:bg-fauna-blue/5 text-muted-foreground hover:text-fauna-blue'
+              }`}
             >
               {isUploading ? (
                 <Loader2 className="h-8 w-8 animate-spin" />
+              ) : isDragging ? (
+                <>
+                  <Upload className="h-8 w-8" />
+                  <span className="text-sm font-medium">Soltar aqui</span>
+                </>
               ) : (
                 <>
                   <Plus className="h-8 w-8" />
                   <span className="text-sm">Adicionar</span>
+                  <span className="text-xs opacity-70">ou arraste</span>
                 </>
               )}
             </button>
