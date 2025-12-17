@@ -12,6 +12,7 @@ export interface Especie {
 }
 
 const FAUNA_BUCKET = 'imagens-fauna';
+const FLORA_BUCKET = 'imagens-flora';
 
 // Helper to normalize filename (remove accents and spaces)
 const normalizeFilename = (name: string): string => {
@@ -21,6 +22,8 @@ const normalizeFilename = (name: string): string => {
     .replace(/[^a-zA-Z0-9]/g, '-')
     .toLowerCase();
 };
+
+// ==================== FAUNA ====================
 
 export const uploadFaunaImage = async (
   especieId: string,
@@ -95,6 +98,85 @@ export const atualizarImagensEspecie = async (
     return true;
   } catch (error) {
     console.error('Erro ao atualizar imagens:', error);
+    return false;
+  }
+};
+
+// ==================== FLORA ====================
+
+export const uploadFloraImage = async (
+  especieId: string,
+  nomePopular: string,
+  file: File
+): Promise<string | null> => {
+  try {
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'webp';
+    const normalizedName = normalizeFilename(nomePopular);
+    const timestamp = Date.now();
+    const filename = `${normalizedName}-${timestamp}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(FLORA_BUCKET)
+      .upload(filename, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Erro ao fazer upload da imagem flora:', uploadError);
+      return null;
+    }
+
+    return filename;
+  } catch (error) {
+    console.error('Erro ao fazer upload da imagem flora:', error);
+    return null;
+  }
+};
+
+export const deleteFloraImage = async (filename: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase.storage
+      .from(FLORA_BUCKET)
+      .remove([filename]);
+
+    if (error) {
+      console.error('Erro ao excluir imagem flora:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Erro ao excluir imagem flora:', error);
+    return false;
+  }
+};
+
+export const getFloraImageUrl = (filename: string): string => {
+  const { data } = supabase.storage
+    .from(FLORA_BUCKET)
+    .getPublicUrl(filename);
+  return data.publicUrl;
+};
+
+export const atualizarImagensFlora = async (
+  id: string,
+  imagens: string[]
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('dim_especies_flora')
+      .update({ imagens })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao atualizar imagens flora:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Erro ao atualizar imagens flora:', error);
     return false;
   }
 };

@@ -29,6 +29,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import SpeciesImageSection from "@/components/species/SpeciesImageSection";
+import {
+  uploadFloraImage,
+  deleteFloraImage,
+  getFloraImageUrl,
+  atualizarImagensFlora,
+} from "@/services/especieService";
 
 const CLASSES_FLORA = [
   "Magnoliopsida",
@@ -89,12 +96,15 @@ export default function FloraCadastro() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    getValues,
     formState: { errors },
     reset,
   } = useForm<FloraFormData>({
@@ -141,12 +151,86 @@ export default function FloraCadastro() {
           madeiraLei: data["Madeira de Lei"] || "",
           imuneCorte: data["Imune ao Corte"] || "",
         });
+        setImages(data.imagens || []);
       }
     } catch (error) {
       console.error("Erro ao carregar espécie:", error);
       toast.error("Erro ao carregar espécie de flora");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAddImages = async (files: File[]) => {
+    const availableSlots = 6 - images.length;
+    if (availableSlots <= 0) {
+      toast.error('Máximo de 6 fotos por espécie');
+      return;
+    }
+
+    const nomePopular = getValues('nomePopular');
+    if (!nomePopular) {
+      toast.error('Preencha o nome popular antes de adicionar fotos');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const targetId = id || 'new';
+      const filesToUpload = files.slice(0, availableSlots);
+      const uploadedFilenames: string[] = [];
+
+      for (const file of filesToUpload) {
+        const filename = await uploadFloraImage(targetId, nomePopular, file);
+        if (filename) {
+          uploadedFilenames.push(filename);
+        }
+      }
+
+      if (uploadedFilenames.length > 0) {
+        const newImages = [...images, ...uploadedFilenames];
+        setImages(newImages);
+        
+        if (id) {
+          await atualizarImagensFlora(id, newImages);
+        }
+        
+        toast.success(`${uploadedFilenames.length} foto(s) adicionada(s) com sucesso`);
+      } else {
+        toast.error('Erro ao fazer upload das fotos');
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar fotos:', error);
+      toast.error('Erro ao adicionar fotos');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveImage = async (index: number) => {
+    const filename = images[index];
+    
+    setIsUploading(true);
+    try {
+      const deleted = await deleteFloraImage(filename);
+      
+      if (deleted) {
+        const newImages = images.filter((_, i) => i !== index);
+        setImages(newImages);
+        
+        if (id) {
+          await atualizarImagensFlora(id, newImages);
+        }
+        
+        toast.success('Foto removida com sucesso');
+      } else {
+        toast.error('Erro ao remover foto');
+      }
+    } catch (error) {
+      console.error('Erro ao remover foto:', error);
+      toast.error('Erro ao remover foto');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -163,6 +247,7 @@ export default function FloraCadastro() {
         "Tipo de Planta": data.tipoPlanta,
         "Madeira de Lei": data.madeiraLei || null,
         "Imune ao Corte": data.imuneCorte || null,
+        imagens: images,
       };
 
       if (isEditing && id) {
@@ -182,7 +267,7 @@ export default function FloraCadastro() {
         toast.success("Espécie de flora cadastrada com sucesso!");
       }
 
-      navigate("/flora-cadastro");
+      navigate("/secao-operacional/flora-cadastrada");
       reset();
     } catch (error) {
       console.error("Erro ao salvar espécie:", error);
@@ -204,7 +289,7 @@ export default function FloraCadastro() {
 
       if (error) throw error;
       toast.success("Espécie de flora excluída com sucesso!");
-      navigate("/flora-cadastro");
+      navigate("/secao-operacional/flora-cadastrada");
     } catch (error) {
       console.error("Erro ao excluir espécie:", error);
       toast.error("Erro ao excluir espécie de flora");
@@ -400,6 +485,18 @@ export default function FloraCadastro() {
                 </div>
               </div>
 
+              {/* Fotos da Espécie */}
+              <SpeciesImageSection
+                images={images}
+                onAddImages={handleAddImages}
+                onRemoveImage={handleRemoveImage}
+                getImageUrl={getFloraImageUrl}
+                isUploading={isUploading}
+                maxImages={6}
+                disabled={isSubmitting}
+                title="Fotos da Espécie"
+              />
+
               {/* Botões */}
               <div className="flex justify-between pt-4 border-t border-secondary/20">
                 <div>
@@ -440,7 +537,7 @@ export default function FloraCadastro() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => navigate("/flora-cadastro")}
+                    onClick={() => navigate("/secao-operacional/flora-cadastrada")}
                   >
                     Cancelar
                   </Button>
