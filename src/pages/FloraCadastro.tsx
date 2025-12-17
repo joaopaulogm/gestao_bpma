@@ -309,11 +309,11 @@ export default function FloraCadastro() {
   }
 
   return (
-    <Layout title={isEditing ? "Editar Espécie de Flora" : "Cadastrar Espécie de Flora"}>
+    <Layout title={isEditing ? "Editar Espécie de Flora" : "Cadastrar Espécie de Flora"} showBackButton>
       <div className="max-w-4xl mx-auto">
-        <Card className="bg-white/70 backdrop-blur-md border border-secondary/20">
+        <Card className="bg-card/80 backdrop-blur-md border border-border shadow-lg">
           <CardHeader>
-            <CardTitle className="text-secondary">
+            <CardTitle className="text-foreground">
               {isEditing ? "Editar Espécie de Flora" : "Nova Espécie de Flora"}
             </CardTitle>
           </CardHeader>
@@ -321,27 +321,27 @@ export default function FloraCadastro() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Identificação */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-secondary border-b border-secondary/20 pb-2">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
                   Identificação
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="nomePopular">Nome Popular *</Label>
+                    <Label htmlFor="nomePopular" className="text-foreground font-medium">Nome Popular *</Label>
                     <Input
                       id="nomePopular"
                       {...register("nomePopular")}
-                      className="bg-white/50"
+                      className="bg-background border-input"
                     />
                     {errors.nomePopular && (
                       <p className="text-sm text-destructive">{errors.nomePopular.message}</p>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="nomeCientifico">Nome Científico *</Label>
+                    <Label htmlFor="nomeCientifico" className="text-foreground font-medium">Nome Científico *</Label>
                     <Input
                       id="nomeCientifico"
                       {...register("nomeCientifico")}
-                      className="bg-white/50"
+                      className="bg-background border-input"
                     />
                     {errors.nomeCientifico && (
                       <p className="text-sm text-destructive">{errors.nomeCientifico.message}</p>
@@ -352,17 +352,17 @@ export default function FloraCadastro() {
 
               {/* Taxonomia */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-secondary border-b border-secondary/20 pb-2">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
                   Taxonomia
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>Classe *</Label>
+                    <Label className="text-foreground font-medium">Classe *</Label>
                     <Select
                       value={watch("classe")}
                       onValueChange={(value) => setValue("classe", value)}
                     >
-                      <SelectTrigger className="bg-white/50">
+                      <SelectTrigger className="bg-background border-input">
                         <SelectValue placeholder="Selecione a classe" />
                       </SelectTrigger>
                       <SelectContent>
@@ -378,19 +378,19 @@ export default function FloraCadastro() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="ordem">Ordem</Label>
+                    <Label htmlFor="ordem" className="text-foreground font-medium">Ordem</Label>
                     <Input
                       id="ordem"
                       {...register("ordem")}
-                      className="bg-white/50"
+                      className="bg-background border-input"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="familia">Família</Label>
+                    <Label htmlFor="familia" className="text-foreground font-medium">Família</Label>
                     <Input
                       id="familia"
                       {...register("familia")}
-                      className="bg-white/50"
+                      className="bg-background border-input"
                     />
                   </div>
                 </div>
@@ -398,17 +398,17 @@ export default function FloraCadastro() {
 
               {/* Classificação */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-secondary border-b border-secondary/20 pb-2">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
                   Classificação e Status
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Tipo de Planta *</Label>
+                    <Label className="text-foreground font-medium">Tipo de Planta *</Label>
                     <Select
                       value={watch("tipoPlanta")}
                       onValueChange={(value) => setValue("tipoPlanta", value)}
                     >
-                      <SelectTrigger className="bg-white/50">
+                      <SelectTrigger className="bg-background border-input">
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
@@ -424,12 +424,12 @@ export default function FloraCadastro() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Estado de Conservação *</Label>
+                    <Label className="text-foreground font-medium">Estado de Conservação *</Label>
                     <Select
                       value={watch("estadoConservacao")}
                       onValueChange={(value) => setValue("estadoConservacao", value)}
                     >
-                      <SelectTrigger className="bg-white/50">
+                      <SelectTrigger className="bg-background border-input">
                         <SelectValue placeholder="Selecione o estado" />
                       </SelectTrigger>
                       <SelectContent>
@@ -447,12 +447,12 @@ export default function FloraCadastro() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Madeira de Lei</Label>
+                    <Label className="text-foreground font-medium">Madeira de Lei</Label>
                     <Select
                       value={watch("madeiraLei")}
                       onValueChange={(value) => setValue("madeiraLei", value)}
                     >
-                      <SelectTrigger className="bg-white/50">
+                      <SelectTrigger className="bg-background border-input">
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
@@ -465,12 +465,12 @@ export default function FloraCadastro() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Imune ao Corte</Label>
+                    <Label className="text-foreground font-medium">Imune ao Corte</Label>
                     <Select
                       value={watch("imuneCorte")}
                       onValueChange={(value) => setValue("imuneCorte", value)}
                     >
-                      <SelectTrigger className="bg-white/50">
+                      <SelectTrigger className="bg-background border-input">
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
@@ -498,7 +498,7 @@ export default function FloraCadastro() {
               />
 
               {/* Botões */}
-              <div className="flex justify-between pt-4 border-t border-secondary/20">
+              <div className="flex justify-between pt-4 border-t border-border">
                 <div>
                   {isEditing && (
                     <AlertDialog>
