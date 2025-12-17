@@ -8,7 +8,96 @@ export interface Especie {
   ordem_taxonomica: string;
   estado_de_conservacao: string;
   tipo_de_fauna: string;
+  imagens?: string[];
 }
+
+const FAUNA_BUCKET = 'imagens-fauna';
+
+// Helper to normalize filename (remove accents and spaces)
+const normalizeFilename = (name: string): string => {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]/g, '-')
+    .toLowerCase();
+};
+
+export const uploadFaunaImage = async (
+  especieId: string,
+  nomePopular: string,
+  file: File
+): Promise<string | null> => {
+  try {
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'webp';
+    const normalizedName = normalizeFilename(nomePopular);
+    const timestamp = Date.now();
+    const filename = `${normalizedName}-${timestamp}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(FAUNA_BUCKET)
+      .upload(filename, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Erro ao fazer upload da imagem:', uploadError);
+      return null;
+    }
+
+    return filename;
+  } catch (error) {
+    console.error('Erro ao fazer upload da imagem:', error);
+    return null;
+  }
+};
+
+export const deleteFaunaImage = async (filename: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase.storage
+      .from(FAUNA_BUCKET)
+      .remove([filename]);
+
+    if (error) {
+      console.error('Erro ao excluir imagem:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Erro ao excluir imagem:', error);
+    return false;
+  }
+};
+
+export const getFaunaImageUrl = (filename: string): string => {
+  const { data } = supabase.storage
+    .from(FAUNA_BUCKET)
+    .getPublicUrl(filename);
+  return data.publicUrl;
+};
+
+export const atualizarImagensEspecie = async (
+  id: string,
+  imagens: string[]
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('dim_especies_fauna')
+      .update({ imagens })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao atualizar imagens:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Erro ao atualizar imagens:', error);
+    return false;
+  }
+};
 
 export const buscarTodasEspecies = async (): Promise<Especie[]> => {
   try {

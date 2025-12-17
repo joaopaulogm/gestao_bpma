@@ -147,6 +147,7 @@ export type Database = {
           classe_taxonomica: string
           estado_de_conservacao: string
           id: string
+          imagens: string[] | null
           nome_cientifico: string
           nome_popular: string
           ordem_taxonomica: string
@@ -156,6 +157,7 @@ export type Database = {
           classe_taxonomica: string
           estado_de_conservacao: string
           id?: string
+          imagens?: string[] | null
           nome_cientifico: string
           nome_popular: string
           ordem_taxonomica: string
@@ -165,6 +167,7 @@ export type Database = {
           classe_taxonomica?: string
           estado_de_conservacao?: string
           id?: string
+          imagens?: string[] | null
           nome_cientifico?: string
           nome_popular?: string
           ordem_taxonomica?: string

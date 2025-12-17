@@ -1,14 +1,27 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm, FormProvider } from 'react-hook-form';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import FormField from '@/components/resgate/FormField';
 import FormSection from '@/components/resgate/FormSection';
-import { useFormFaunaData } from '@/hooks/useFormFaunaData';
-import { FormProvider } from 'react-hook-form';
+import FaunaImageSection from '@/components/fauna/FaunaImageSection';
 import { Loader2 } from 'lucide-react';
+import { faunaSchema, type FaunaFormData } from '@/schemas/faunaSchema';
+import { 
+  cadastrarEspecie, 
+  atualizarEspecie, 
+  buscarEspeciePorId,
+  uploadFaunaImage,
+  deleteFaunaImage,
+  atualizarImagensEspecie
+} from '@/services/especieService';
 
 const CLASSES_TAXONOMICAS = ['AVE', 'MAMIFERO', 'REPTIL', 'PEIXE'];
 const ESTADOS_CONSERVACAO = [
@@ -22,7 +35,179 @@ const ESTADOS_CONSERVACAO = [
 const TIPOS_FAUNA = ['Silvestre', 'Exótico'];
 
 const FaunaCadastro = () => {
-  const { form, errors, isSubmitting, isLoading, isEditing, handleSubmit } = useFormFaunaData();
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const [especieId, setEspecieId] = useState<string | null>(null);
+  
+  const isEditing = !!id;
+  
+  const form = useForm<FaunaFormData>({
+    resolver: zodResolver(faunaSchema),
+    defaultValues: {
+      classe_taxonomica: '',
+      nome_popular: '',
+      nome_cientifico: '',
+      ordem_taxonomica: '',
+      estado_de_conservacao: '',
+      tipo_de_fauna: '',
+    }
+  });
+
+  const { handleSubmit, formState: { errors }, reset } = form;
+
+  useEffect(() => {
+    const fetchEspecie = async () => {
+      if (!id) return;
+      
+      setIsLoading(true);
+      try {
+        const especie = await buscarEspeciePorId(id);
+        if (especie) {
+          reset({
+            classe_taxonomica: especie.classe_taxonomica,
+            nome_popular: especie.nome_popular,
+            nome_cientifico: especie.nome_cientifico,
+            ordem_taxonomica: especie.ordem_taxonomica,
+            estado_de_conservacao: especie.estado_de_conservacao,
+            tipo_de_fauna: especie.tipo_de_fauna,
+          });
+          setImages(especie.imagens || []);
+          setEspecieId(especie.id);
+        } else {
+          toast.error('Espécie não encontrada');
+          navigate('/secao-operacional/fauna-cadastrada');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar espécie:', error);
+        toast.error('Erro ao buscar dados da espécie');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEspecie();
+  }, [id, reset, navigate]);
+
+  const onSubmit = async (data: FaunaFormData) => {
+    setIsSubmitting(true);
+    try {
+      const especieData = {
+        classe_taxonomica: data.classe_taxonomica,
+        nome_popular: data.nome_popular,
+        nome_cientifico: data.nome_cientifico,
+        ordem_taxonomica: data.ordem_taxonomica,
+        estado_de_conservacao: data.estado_de_conservacao,
+        tipo_de_fauna: data.tipo_de_fauna
+      };
+      
+      let result;
+      
+      if (id) {
+        result = await atualizarEspecie(id, especieData);
+        if (result) {
+          // Update images if they changed
+          await atualizarImagensEspecie(id, images);
+          toast.success('Espécie atualizada com sucesso!');
+          queryClient.invalidateQueries({ queryKey: ['especies'] });
+        } else {
+          toast.error('Erro ao atualizar espécie');
+        }
+      } else {
+        result = await cadastrarEspecie(especieData);
+        if (result) {
+          // Update images for new species
+          if (images.length > 0) {
+            await atualizarImagensEspecie(result.id, images);
+          }
+          toast.success('Espécie cadastrada com sucesso!');
+          queryClient.invalidateQueries({ queryKey: ['especies'] });
+        } else {
+          toast.error('Erro ao cadastrar espécie');
+        }
+      }
+      
+      if (result) {
+        navigate('/secao-operacional/fauna-cadastrada');
+      }
+    } catch (error) {
+      console.error('Erro ao processar espécie:', error);
+      toast.error(id ? 'Erro ao atualizar espécie' : 'Erro ao cadastrar espécie');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAddImage = async (file: File) => {
+    if (images.length >= 6) {
+      toast.error('Máximo de 6 fotos por espécie');
+      return;
+    }
+
+    const nomePopular = form.getValues('nome_popular');
+    if (!nomePopular) {
+      toast.error('Preencha o nome popular antes de adicionar fotos');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const targetId = especieId || id || 'new';
+      const filename = await uploadFaunaImage(targetId, nomePopular, file);
+      
+      if (filename) {
+        const newImages = [...images, filename];
+        setImages(newImages);
+        
+        // If editing, update images in database immediately
+        if (id) {
+          await atualizarImagensEspecie(id, newImages);
+        }
+        
+        toast.success('Foto adicionada com sucesso');
+      } else {
+        toast.error('Erro ao fazer upload da foto');
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar foto:', error);
+      toast.error('Erro ao adicionar foto');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveImage = async (index: number) => {
+    const filename = images[index];
+    
+    setIsUploading(true);
+    try {
+      const deleted = await deleteFaunaImage(filename);
+      
+      if (deleted) {
+        const newImages = images.filter((_, i) => i !== index);
+        setImages(newImages);
+        
+        // If editing, update images in database immediately
+        if (id) {
+          await atualizarImagensEspecie(id, newImages);
+        }
+        
+        toast.success('Foto removida com sucesso');
+      } else {
+        toast.error('Erro ao remover foto');
+      }
+    } catch (error) {
+      console.error('Erro ao remover foto:', error);
+      toast.error('Erro ao remover foto');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <Layout title={isEditing ? "Editar Espécie" : "Cadastrar Nova Espécie"} showBackButton>
@@ -33,7 +218,7 @@ const FaunaCadastro = () => {
           </div>
         ) : (
           <FormProvider {...form}>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <FormSection title="Informações Taxonômicas">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
@@ -147,11 +332,20 @@ const FaunaCadastro = () => {
                 </div>
               </FormSection>
 
+              <FaunaImageSection
+                images={images}
+                onAddImage={handleAddImage}
+                onRemoveImage={handleRemoveImage}
+                isUploading={isUploading}
+                maxImages={6}
+                disabled={isSubmitting}
+              />
+
               <div className="pt-4">
                 <Button 
                   type="submit"
                   className="w-full bg-fauna-blue hover:bg-opacity-90 text-white"
-                  disabled={isSubmitting || isLoading}
+                  disabled={isSubmitting || isLoading || isUploading}
                 >
                   {isSubmitting ? (
                     <>
