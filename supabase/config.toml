@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.get-drive-image]
 verify_jwt = false
+
+[functions.sync-species]
+verify_jwt = true

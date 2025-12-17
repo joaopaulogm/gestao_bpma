@@ -13,9 +13,16 @@ export interface FloraEspecie {
   tipoPlanta: string | null;
   madeiraLei: string | null;
   imuneCorte: string | null;
+  imagens: string[];
+  // Photo validation fields
+  fotoPrincipalPath: string | null;
+  fotosPaths: string[];
+  fotoStatus: 'validada' | 'pendente' | 'rejeitada' | null;
+  fotoFonteValidacao: string | null;
+  fotoValidadaEm: string | null;
 }
 
-export type SortField = 'nomePopular' | 'nomeCientifico' | 'classe' | 'tipoPlanta' | 'estadoConservacao';
+export type SortField = 'nomePopular' | 'nomeCientifico' | 'classe' | 'tipoPlanta' | 'estadoConservacao' | 'fotoStatus';
 export type SortDirection = 'asc' | 'desc';
 
 export const useFloraTable = () => {
@@ -26,6 +33,7 @@ export const useFloraTable = () => {
   const [filterClasse, setFilterClasse] = useState<string>('all');
   const [filterTipoPlanta, setFilterTipoPlanta] = useState<string>('all');
   const [filterEstadoConservacao, setFilterEstadoConservacao] = useState<string>('all');
+  const [filterFotoStatus, setFilterFotoStatus] = useState<string>('all');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>('nomePopular');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -53,6 +61,12 @@ export const useFloraTable = () => {
         tipoPlanta: item['Tipo de Planta'],
         madeiraLei: item['Madeira de Lei'],
         imuneCorte: item['Imune ao Corte'],
+        imagens: item.imagens || [],
+        fotoPrincipalPath: item.foto_principal_path || null,
+        fotosPaths: Array.isArray(item.fotos_paths) ? item.fotos_paths as string[] : [],
+        fotoStatus: item.foto_status as 'validada' | 'pendente' | 'rejeitada' | null,
+        fotoFonteValidacao: item.foto_fonte_validacao || null,
+        fotoValidadaEm: item.foto_validada_em || null,
       }));
 
       setEspecies(mapped);
@@ -85,46 +99,34 @@ export const useFloraTable = () => {
         especie.nomeCientifico?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         especie.familia?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesClasse =
-        filterClasse === 'all' || especie.classe === filterClasse;
+      const matchesClasse = filterClasse === 'all' || especie.classe === filterClasse;
+      const matchesTipoPlanta = filterTipoPlanta === 'all' || especie.tipoPlanta === filterTipoPlanta;
+      const matchesEstadoConservacao = filterEstadoConservacao === 'all' || especie.estadoConservacao === filterEstadoConservacao;
+      const matchesFotoStatus = filterFotoStatus === 'all' || especie.fotoStatus === filterFotoStatus;
 
-      const matchesTipoPlanta =
-        filterTipoPlanta === 'all' || especie.tipoPlanta === filterTipoPlanta;
-
-      const matchesEstadoConservacao =
-        filterEstadoConservacao === 'all' || especie.estadoConservacao === filterEstadoConservacao;
-
-      return matchesSearch && matchesClasse && matchesTipoPlanta && matchesEstadoConservacao;
+      return matchesSearch && matchesClasse && matchesTipoPlanta && matchesEstadoConservacao && matchesFotoStatus;
     });
 
-    // Sort the filtered results
     return filtered.sort((a, b) => {
       const aValue = a[sortField] || '';
       const bValue = b[sortField] || '';
-      
-      const comparison = aValue.localeCompare(bValue, 'pt-BR', { sensitivity: 'base' });
+      const comparison = String(aValue).localeCompare(String(bValue), 'pt-BR', { sensitivity: 'base' });
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [especies, searchTerm, filterClasse, filterTipoPlanta, filterEstadoConservacao, sortField, sortDirection]);
+  }, [especies, searchTerm, filterClasse, filterTipoPlanta, filterEstadoConservacao, filterFotoStatus, sortField, sortDirection]);
 
   const uniqueClasses = useMemo(() => {
-    const classes = especies
-      .map((e) => e.classe)
-      .filter((c): c is string => !!c);
+    const classes = especies.map((e) => e.classe).filter((c): c is string => !!c);
     return [...new Set(classes)].sort();
   }, [especies]);
 
   const uniqueTiposPlanta = useMemo(() => {
-    const tipos = especies
-      .map((e) => e.tipoPlanta)
-      .filter((t): t is string => !!t);
+    const tipos = especies.map((e) => e.tipoPlanta).filter((t): t is string => !!t);
     return [...new Set(tipos)].sort();
   }, [especies]);
 
   const uniqueEstadosConservacao = useMemo(() => {
-    const estados = especies
-      .map((e) => e.estadoConservacao)
-      .filter((e): e is string => !!e);
+    const estados = especies.map((e) => e.estadoConservacao).filter((e): e is string => !!e);
     return [...new Set(estados)].sort();
   }, [especies]);
 
@@ -151,9 +153,10 @@ export const useFloraTable = () => {
     setFilterClasse('all');
     setFilterTipoPlanta('all');
     setFilterEstadoConservacao('all');
+    setFilterFotoStatus('all');
   };
 
-  const hasActiveFilters = searchTerm || filterClasse !== 'all' || filterTipoPlanta !== 'all' || filterEstadoConservacao !== 'all';
+  const hasActiveFilters = searchTerm || filterClasse !== 'all' || filterTipoPlanta !== 'all' || filterEstadoConservacao !== 'all' || filterFotoStatus !== 'all';
 
   return {
     especies: filteredAndSortedEspecies,
@@ -168,9 +171,12 @@ export const useFloraTable = () => {
     setFilterTipoPlanta,
     filterEstadoConservacao,
     setFilterEstadoConservacao,
+    filterFotoStatus,
+    setFilterFotoStatus,
     confirmDeleteId,
     setConfirmDeleteId,
     handleDelete,
+    refreshEspecies: fetchEspecies,
     uniqueClasses,
     uniqueTiposPlanta,
     uniqueEstadosConservacao,

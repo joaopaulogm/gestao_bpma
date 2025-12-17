@@ -146,6 +146,11 @@ export type Database = {
         Row: {
           classe_taxonomica: string
           estado_de_conservacao: string
+          foto_fonte_validacao: string | null
+          foto_principal_path: string | null
+          foto_status: string | null
+          foto_validada_em: string | null
+          fotos_paths: Json | null
           id: string
           imagens: string[] | null
           nome_cientifico: string
@@ -156,6 +161,11 @@ export type Database = {
         Insert: {
           classe_taxonomica: string
           estado_de_conservacao: string
+          foto_fonte_validacao?: string | null
+          foto_principal_path?: string | null
+          foto_status?: string | null
+          foto_validada_em?: string | null
+          fotos_paths?: Json | null
           id?: string
           imagens?: string[] | null
           nome_cientifico: string
@@ -166,6 +176,11 @@ export type Database = {
         Update: {
           classe_taxonomica?: string
           estado_de_conservacao?: string
+          foto_fonte_validacao?: string | null
+          foto_principal_path?: string | null
+          foto_status?: string | null
+          foto_validada_em?: string | null
+          fotos_paths?: Json | null
           id?: string
           imagens?: string[] | null
           nome_cientifico?: string
@@ -180,6 +195,11 @@ export type Database = {
           Classe: string | null
           "Estado de Conservação": string | null
           Família: string | null
+          foto_fonte_validacao: string | null
+          foto_principal_path: string | null
+          foto_status: string | null
+          foto_validada_em: string | null
+          fotos_paths: Json | null
           id: string
           imagens: string[] | null
           "Imune ao Corte": string | null
@@ -193,6 +213,11 @@ export type Database = {
           Classe?: string | null
           "Estado de Conservação"?: string | null
           Família?: string | null
+          foto_fonte_validacao?: string | null
+          foto_principal_path?: string | null
+          foto_status?: string | null
+          foto_validada_em?: string | null
+          fotos_paths?: Json | null
           id?: string
           imagens?: string[] | null
           "Imune ao Corte"?: string | null
@@ -206,6 +231,11 @@ export type Database = {
           Classe?: string | null
           "Estado de Conservação"?: string | null
           Família?: string | null
+          foto_fonte_validacao?: string | null
+          foto_principal_path?: string | null
+          foto_status?: string | null
+          foto_validada_em?: string | null
+          fotos_paths?: Json | null
           id?: string
           imagens?: string[] | null
           "Imune ao Corte"?: string | null
@@ -887,6 +917,7 @@ export type Database = {
           estado_conservacao: string | null
           grupo: string | null
           id: string
+          id_dim_especie_fauna: string | null
           imagens: string[]
           nome_cientifico: string | null
           nome_popular: string
@@ -902,6 +933,7 @@ export type Database = {
           estado_conservacao?: string | null
           grupo?: string | null
           id?: string
+          id_dim_especie_fauna?: string | null
           imagens?: string[]
           nome_cientifico?: string | null
           nome_popular: string
@@ -917,6 +949,7 @@ export type Database = {
           estado_conservacao?: string | null
           grupo?: string | null
           id?: string
+          id_dim_especie_fauna?: string | null
           imagens?: string[]
           nome_cientifico?: string | null
           nome_popular?: string
@@ -925,7 +958,15 @@ export type Database = {
           tipo_fauna?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fauna_id_dim_especie_fauna_fkey"
+            columns: ["id_dim_especie_fauna"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       flora: {
         Row: {
@@ -935,6 +976,7 @@ export type Database = {
           estado_conservacao: string | null
           familia: string | null
           id: string
+          id_dim_especie_flora: string | null
           imagens: string[]
           imune_ao_corte: boolean | null
           madeira_lei: boolean | null
@@ -952,6 +994,7 @@ export type Database = {
           estado_conservacao?: string | null
           familia?: string | null
           id?: string
+          id_dim_especie_flora?: string | null
           imagens?: string[]
           imune_ao_corte?: boolean | null
           madeira_lei?: boolean | null
@@ -969,6 +1012,7 @@ export type Database = {
           estado_conservacao?: string | null
           familia?: string | null
           id?: string
+          id_dim_especie_flora?: string | null
           imagens?: string[]
           imune_ao_corte?: boolean | null
           madeira_lei?: boolean | null
@@ -978,6 +1022,53 @@ export type Database = {
           ordem?: string | null
           tipo_planta?: string | null
           updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flora_id_dim_especie_flora_fkey"
+            columns: ["id_dim_especie_flora"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_flora"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sync_logs: {
+        Row: {
+          acao: string
+          created_at: string | null
+          detalhes: Json | null
+          erro: string | null
+          especie_id: string | null
+          especie_nome: string
+          fotos_encontradas: number | null
+          id: string
+          status_final: string | null
+          tipo: string
+        }
+        Insert: {
+          acao: string
+          created_at?: string | null
+          detalhes?: Json | null
+          erro?: string | null
+          especie_id?: string | null
+          especie_nome: string
+          fotos_encontradas?: number | null
+          id?: string
+          status_final?: string | null
+          tipo: string
+        }
+        Update: {
+          acao?: string
+          created_at?: string | null
+          detalhes?: Json | null
+          erro?: string | null
+          especie_id?: string | null
+          especie_nome?: string
+          fotos_encontradas?: number | null
+          id?: string
+          status_final?: string | null
+          tipo?: string
         }
         Relationships: []
       }
