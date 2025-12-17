@@ -47,7 +47,7 @@ export const useFormFaunaData = () => {
           });
         } else {
           toast.error('Espécie não encontrada');
-          navigate('/fauna-cadastrada');
+          navigate('/secao-operacional/fauna-cadastrada');
         }
       } catch (error) {
         console.error('Erro ao buscar espécie:', error);
@@ -98,7 +98,7 @@ export const useFormFaunaData = () => {
       }
       
       if (result) {
-        navigate('/fauna-cadastrada');
+        navigate('/secao-operacional/fauna-cadastrada');
       }
     } catch (error) {
       console.error('Erro ao processar espécie:', error);

@@ -29,7 +29,7 @@ const FaunaCadastrada = () => {
   const especieToDelete = especies.find(especie => especie.id === confirmDeleteId);
 
   const handleEditClick = (id: string) => {
-    navigate(`/fauna-cadastro/${id}`);
+    navigate(`/secao-operacional/fauna-cadastro/${id}`);
   };
 
   return (
@@ -66,7 +66,7 @@ const FaunaCadastrada = () => {
           
           <Button 
             className="bg-fauna-blue hover:bg-fauna-blue/90"
-            onClick={() => navigate('/fauna-cadastro')}
+            onClick={() => navigate('/secao-operacional/fauna-cadastro')}
           >
             Cadastrar Nova Espécie
           </Button>
