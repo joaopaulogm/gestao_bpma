@@ -143,8 +143,9 @@ const FaunaCadastro = () => {
     }
   };
 
-  const handleAddImage = async (file: File) => {
-    if (images.length >= 6) {
+  const handleAddImages = async (files: File[]) => {
+    const availableSlots = 6 - images.length;
+    if (availableSlots <= 0) {
       toast.error('Máximo de 6 fotos por espécie');
       return;
     }
@@ -158,10 +159,18 @@ const FaunaCadastro = () => {
     setIsUploading(true);
     try {
       const targetId = especieId || id || 'new';
-      const filename = await uploadFaunaImage(targetId, nomePopular, file);
-      
-      if (filename) {
-        const newImages = [...images, filename];
+      const filesToUpload = files.slice(0, availableSlots);
+      const uploadedFilenames: string[] = [];
+
+      for (const file of filesToUpload) {
+        const filename = await uploadFaunaImage(targetId, nomePopular, file);
+        if (filename) {
+          uploadedFilenames.push(filename);
+        }
+      }
+
+      if (uploadedFilenames.length > 0) {
+        const newImages = [...images, ...uploadedFilenames];
         setImages(newImages);
         
         // If editing, update images in database immediately
@@ -169,13 +178,13 @@ const FaunaCadastro = () => {
           await atualizarImagensEspecie(id, newImages);
         }
         
-        toast.success('Foto adicionada com sucesso');
+        toast.success(`${uploadedFilenames.length} foto(s) adicionada(s) com sucesso`);
       } else {
-        toast.error('Erro ao fazer upload da foto');
+        toast.error('Erro ao fazer upload das fotos');
       }
     } catch (error) {
-      console.error('Erro ao adicionar foto:', error);
-      toast.error('Erro ao adicionar foto');
+      console.error('Erro ao adicionar fotos:', error);
+      toast.error('Erro ao adicionar fotos');
     } finally {
       setIsUploading(false);
     }
@@ -334,7 +343,7 @@ const FaunaCadastro = () => {
 
               <FaunaImageSection
                 images={images}
-                onAddImage={handleAddImage}
+                onAddImages={handleAddImages}
                 onRemoveImage={handleRemoveImage}
                 isUploading={isUploading}
                 maxImages={6}

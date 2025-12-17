@@ -181,6 +181,7 @@ export type Database = {
           "Estado de Conservação": string | null
           Família: string | null
           id: string
+          imagens: string[] | null
           "Imune ao Corte": string | null
           "Madeira de Lei": string | null
           "Nome Científico": string | null
@@ -193,6 +194,7 @@ export type Database = {
           "Estado de Conservação"?: string | null
           Família?: string | null
           id?: string
+          imagens?: string[] | null
           "Imune ao Corte"?: string | null
           "Madeira de Lei"?: string | null
           "Nome Científico"?: string | null
@@ -205,6 +207,7 @@ export type Database = {
           "Estado de Conservação"?: string | null
           Família?: string | null
           id?: string
+          imagens?: string[] | null
           "Imune ao Corte"?: string | null
           "Madeira de Lei"?: string | null
           "Nome Científico"?: string | null

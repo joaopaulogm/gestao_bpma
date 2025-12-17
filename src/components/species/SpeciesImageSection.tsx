@@ -2,24 +2,27 @@ import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, Image as ImageIcon, Loader2, Upload } from 'lucide-react';
-import { getFaunaImageUrl } from '@/services/especieService';
 
-interface FaunaImageSectionProps {
+interface SpeciesImageSectionProps {
   images: string[];
   onAddImages: (files: File[]) => Promise<void>;
   onRemoveImage: (index: number) => Promise<void>;
+  getImageUrl: (filename: string) => string;
   isUploading: boolean;
   maxImages?: number;
   disabled?: boolean;
+  title?: string;
 }
 
-const FaunaImageSection: React.FC<FaunaImageSectionProps> = ({
+const SpeciesImageSection: React.FC<SpeciesImageSectionProps> = ({
   images,
   onAddImages,
   onRemoveImage,
+  getImageUrl,
   isUploading,
   maxImages = 6,
-  disabled = false
+  disabled = false,
+  title = "Fotos da Espécie"
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -75,11 +78,11 @@ const FaunaImageSection: React.FC<FaunaImageSectionProps> = ({
   };
 
   return (
-    <Card className="border-fauna-border">
+    <Card className="bg-white/70 backdrop-blur-md border border-secondary/20">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <ImageIcon className="h-5 w-5 text-fauna-blue" />
-          Fotos da Espécie
+        <CardTitle className="text-lg flex items-center gap-2 text-secondary">
+          <ImageIcon className="h-5 w-5" />
+          {title}
           <span className="text-sm font-normal text-muted-foreground">
             ({images.length}/{maxImages})
           </span>
@@ -90,10 +93,10 @@ const FaunaImageSection: React.FC<FaunaImageSectionProps> = ({
           {images.map((filename, index) => (
             <div 
               key={filename} 
-              className="relative group aspect-square rounded-lg overflow-hidden border border-fauna-border bg-muted"
+              className="relative group aspect-square rounded-lg overflow-hidden border border-secondary/20 bg-muted"
             >
               <img
-                src={getFaunaImageUrl(filename)}
+                src={getImageUrl(filename)}
                 alt={`Foto ${index + 1}`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -125,8 +128,8 @@ const FaunaImageSection: React.FC<FaunaImageSectionProps> = ({
               disabled={isUploading}
               className={`aspect-square rounded-lg border-2 border-dashed transition-all flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                 isDragging 
-                  ? 'border-fauna-blue bg-fauna-blue/10 text-fauna-blue scale-105' 
-                  : 'border-fauna-border hover:border-fauna-blue hover:bg-fauna-blue/5 text-muted-foreground hover:text-fauna-blue'
+                  ? 'border-primary bg-primary/10 text-primary scale-105' 
+                  : 'border-secondary/30 hover:border-primary hover:bg-primary/5 text-muted-foreground hover:text-primary'
               }`}
             >
               {isUploading ? (
@@ -166,4 +169,4 @@ const FaunaImageSection: React.FC<FaunaImageSectionProps> = ({
   );
 };
 
-export default FaunaImageSection;
+export default SpeciesImageSection;
