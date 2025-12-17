@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import DeleteConfirmationDialog from '@/components/fauna/DeleteConfirmationDialog';
 import { useFaunaTable } from '@/hooks/useFaunaTable';
 import { syncSpecies, getImageUrl, listBucketImages, updateSpeciesPhoto, revalidateSpeciesPhoto } from '@/services/syncService';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const FaunaCadastrada = () => {
@@ -87,30 +88,49 @@ const FaunaCadastrada = () => {
   };
 
   const handleSelectPhoto = async (filename: string) => {
-    if (!selectedSpecies?.id_dim_especie_fauna) {
-      toast.error('Espécie não vinculada à dimensão');
+    if (!selectedSpecies) {
+      toast.error('Espécie não selecionada');
       return;
     }
     
-    const success = await updateSpeciesPhoto(
-      'dim_especies_fauna',
-      selectedSpecies.id_dim_especie_fauna,
-      filename,
-      [filename, ...bucketImages.filter(img => img !== filename).slice(0, 2)]
-    );
+    // Use dimension ID if linked, otherwise update fauna table directly
+    const dimId = selectedSpecies.id_dim_especie_fauna;
+    
+    if (dimId) {
+      const success = await updateSpeciesPhoto(
+        'dim_especies_fauna',
+        dimId,
+        filename,
+        [filename, ...bucketImages.filter(img => img !== filename).slice(0, 2)]
+      );
 
-    if (success) {
-      toast.success('Foto atualizada com sucesso');
-      setSelectedSpecies(null);
-      refreshEspecies();
+      if (success) {
+        toast.success('Foto atualizada com sucesso');
+        setSelectedSpecies(null);
+        refreshEspecies();
+      } else {
+        toast.error('Erro ao atualizar foto');
+      }
     } else {
-      toast.error('Erro ao atualizar foto');
+      // Update fauna imagens directly
+      const { error } = await supabase
+        .from('fauna')
+        .update({ imagens: [filename, ...bucketImages.filter(img => img !== filename).slice(0, 2)] })
+        .eq('id', selectedSpecies.id);
+      
+      if (!error) {
+        toast.success('Foto atualizada com sucesso');
+        setSelectedSpecies(null);
+        refreshEspecies();
+      } else {
+        toast.error('Erro ao atualizar foto');
+      }
     }
   };
 
   const handleRevalidate = async (especie: any) => {
     if (!especie.id_dim_especie_fauna) {
-      toast.error('Espécie não vinculada à dimensão');
+      toast.info('Execute "Sincronizar" primeiro para vincular à dimensão');
       return;
     }
     
