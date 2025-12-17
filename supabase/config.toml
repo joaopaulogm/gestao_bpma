@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.sync-species]
 verify_jwt = true
+
+[functions.auto-images]
+verify_jwt = true

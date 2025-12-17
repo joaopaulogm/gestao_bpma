@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowUpDown, Check, Clock, ExternalLink, ImageIcon, Pencil, RefreshCw, Search, Trash, X } from 'lucide-react';
+import { ArrowUpDown, Check, Clock, Download, ExternalLink, ImageIcon, Pencil, RefreshCw, Search, Trash, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 const FaunaCadastrada = () => {
   const navigate = useNavigate();
   const [syncing, setSyncing] = useState(false);
+  const [fetchingImages, setFetchingImages] = useState(false);
   const [selectedSpecies, setSelectedSpecies] = useState<any>(null);
   const [bucketImages, setBucketImages] = useState<string[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
@@ -71,6 +72,44 @@ const FaunaCadastrada = () => {
       toast.error(err.message || 'Erro ao sincronizar');
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleFetchGBIFImages = async () => {
+    setFetchingImages(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auto-images', {
+        body: { tipo: 'fauna', limit: 5 }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        const successCount = data.results?.filter((r: any) => r.status === 'success').length || 0;
+        const notFoundCount = data.results?.filter((r: any) => r.status === 'not_found_gbif').length || 0;
+        const noImagesCount = data.results?.filter((r: any) => r.status === 'no_images_gbif').length || 0;
+        
+        if (successCount > 0) {
+          toast.success(`${successCount} espécies atualizadas com imagens do GBIF`);
+          refreshEspecies();
+        }
+        if (notFoundCount > 0) {
+          toast.info(`${notFoundCount} espécies não encontradas no GBIF`);
+        }
+        if (noImagesCount > 0) {
+          toast.info(`${noImagesCount} espécies sem imagens disponíveis no GBIF`);
+        }
+        if (successCount === 0 && notFoundCount === 0 && noImagesCount === 0) {
+          toast.info('Todas as espécies já possuem imagens');
+        }
+      } else {
+        toast.error('Erro ao buscar imagens');
+      }
+    } catch (err: any) {
+      console.error('GBIF fetch error:', err);
+      toast.error(err.message || 'Erro ao buscar imagens do GBIF');
+    } finally {
+      setFetchingImages(false);
     }
   };
 
@@ -215,11 +254,11 @@ const FaunaCadastrada = () => {
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button 
               variant="outline"
               onClick={() => handleSync(true)}
-              disabled={syncing}
+              disabled={syncing || fetchingImages}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
               Dry Run
@@ -227,10 +266,19 @@ const FaunaCadastrada = () => {
             <Button 
               variant="secondary"
               onClick={() => handleSync(false)}
-              disabled={syncing}
+              disabled={syncing || fetchingImages}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
               Sincronizar
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={handleFetchGBIFImages}
+              disabled={fetchingImages || syncing}
+              className="border-green-500/50 text-green-700 hover:bg-green-500/10"
+            >
+              <Download className={`h-4 w-4 mr-2 ${fetchingImages ? 'animate-bounce' : ''}`} />
+              Buscar Imagens GBIF
             </Button>
             <Button 
               className="bg-primary hover:bg-primary/90"
