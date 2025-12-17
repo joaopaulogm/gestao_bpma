@@ -142,6 +142,36 @@ export type Database = {
           },
         ]
       }
+      dim_equipes: {
+        Row: {
+          created_at: string
+          escala: string | null
+          grupamento: string
+          id: string
+          nome: string
+          servico: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          escala?: string | null
+          grupamento: string
+          id?: string
+          nome: string
+          servico?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          escala?: string | null
+          grupamento?: string
+          id?: string
+          nome?: string
+          servico?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dim_especies_fauna: {
         Row: {
           classe_taxonomica: string
@@ -537,6 +567,45 @@ export type Database = {
             columns: ["registro_id"]
             isOneToOne: false
             referencedRelation: "fat_registros_de_crime"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_equipe_membros: {
+        Row: {
+          created_at: string
+          efetivo_id: string
+          equipe_id: string
+          funcao: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          efetivo_id: string
+          equipe_id: string
+          funcao?: string | null
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          efetivo_id?: string
+          equipe_id?: string
+          funcao?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_equipe_membros_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_equipe_membros_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "dim_equipes"
             referencedColumns: ["id"]
           },
         ]

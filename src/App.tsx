@@ -27,6 +27,7 @@ const POP = lazy(() => import(/* webpackChunkName: "pop" */ '@/pages/POP'));
 const CrimesAmbientaisCadastro = lazy(() => import(/* webpackChunkName: "crimes" */ '@/pages/CrimesAmbientaisCadastro'));
 const GerenciarPermissoes = lazy(() => import(/* webpackChunkName: "gerenciar-permissoes" */ '@/pages/GerenciarPermissoes'));
 const SecaoPessoas = lazy(() => import(/* webpackChunkName: "secao-pessoas" */ '@/pages/SecaoPessoas'));
+const Equipes = lazy(() => import(/* webpackChunkName: "equipes" */ '@/pages/pessoas/Equipes'));
 const Escalas = lazy(() => import(/* webpackChunkName: "escalas" */ '@/pages/pessoas/Escalas'));
 const Afastamentos = lazy(() => import(/* webpackChunkName: "afastamentos" */ '@/pages/pessoas/Afastamentos'));
 const Licencas = lazy(() => import(/* webpackChunkName: "licencas" */ '@/pages/pessoas/Licencas'));
@@ -90,6 +91,7 @@ function App() {
               {/* Seção Pessoas */}
               <Route path="/secao-pessoas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><SecaoPessoas /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/efetivo" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><EfetivoBPMA /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-pessoas/equipes" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Equipes /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/escalas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Escalas /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/afastamentos" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Afastamentos /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/licencas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Licencas /></SidebarLayout></ProtectedRoute>} />
