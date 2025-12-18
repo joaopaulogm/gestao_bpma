@@ -166,8 +166,19 @@ const Equipes: React.FC = () => {
   const importFromExcel = async () => {
     setImporting(true);
     try {
-      const response = await fetch('/data/Equipes_BPMA.xlsx');
-      const arrayBuffer = await response.arrayBuffer();
+      // Fetch from Supabase Storage bucket "files"
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from('files')
+        .download('Equipes_BPMA.xlsx');
+      
+      if (downloadError) {
+        console.error('Erro ao baixar arquivo:', downloadError);
+        toast.error('Arquivo não encontrado no bucket. Verifique se Equipes_BPMA.xlsx existe em storage/files');
+        setImporting(false);
+        return;
+      }
+
+      const arrayBuffer = await fileData.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
