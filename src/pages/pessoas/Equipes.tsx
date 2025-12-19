@@ -465,71 +465,91 @@ const Equipes: React.FC = () => {
     </div>
   );
 
-  const EquipeCard = ({ equipe, compact = false }: { equipe: Equipe; compact?: boolean }) => {
-    const [isExpanded, setIsExpanded] = useState(!compact);
+  const EquipeCard = ({ equipe }: { equipe: Equipe }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
     const grupConfig = config(equipe.grupamento);
+    const membrosCount = equipe.membros?.length || 0;
 
     return (
-      <Card className={`bg-gradient-to-br ${grupConfig.color} border-0 shadow-lg hover:shadow-[0_0_30px_rgba(255,204,0,0.2)] transition-all duration-300 overflow-hidden`}>
+      <Card className={`bg-gradient-to-br ${grupConfig.color} border border-white/10 shadow-lg hover:shadow-[0_0_30px_rgba(255,204,0,0.3)] hover:scale-[1.02] transition-all duration-300 overflow-hidden aspect-square flex flex-col`}>
         <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
           <CollapsibleTrigger asChild>
-            <CardHeader className="pb-2 cursor-pointer hover:bg-white/5 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                    {grupConfig.icon}
-                  </div>
-                  <div>
-                    <CardTitle className="text-white text-lg font-bold flex items-center gap-2">
-                      {equipe.nome}
-                      <Badge variant="outline" className="border-white/30 text-white/70 text-[10px]">
-                        {equipe.membros?.length || 0}
-                      </Badge>
-                    </CardTitle>
-                    <div className="flex gap-1.5 mt-1">
-                      {equipe.escala && (
-                        <Badge className="bg-white/10 text-white/80 border-0 text-[10px]">
-                          {equipe.escala}
-                        </Badge>
-                      )}
-                      {equipe.servico && (
-                        <Badge className="bg-[#ffcc00]/20 text-[#ffcc00] border-0 text-[10px]">
-                          {equipe.servico}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
+            <div className="flex-1 p-4 cursor-pointer hover:bg-white/5 transition-colors flex flex-col">
+              {/* Header with icon */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white">
+                  {grupConfig.icon}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={(e) => { e.stopPropagation(); handleEdit(equipe); }}
-                    className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
+                    className="h-7 w-7 text-white/60 hover:text-white hover:bg-white/10"
                   >
-                    <Edit2 className="h-4 w-4" />
+                    <Edit2 className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={(e) => { e.stopPropagation(); handleDelete(equipe.id); }}
-                    className="h-8 w-8 text-white/60 hover:text-red-400 hover:bg-white/10"
+                    className="h-7 w-7 text-white/60 hover:text-red-400 hover:bg-white/10"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
-                  {isExpanded ? <ChevronDown className="h-5 w-5 text-white/50" /> : <ChevronRight className="h-5 w-5 text-white/50" />}
                 </div>
               </div>
-            </CardHeader>
+              
+              {/* Team name */}
+              <h3 className="text-white font-bold text-base leading-tight mb-2 line-clamp-2">
+                {equipe.nome}
+              </h3>
+              
+              {/* Info badges */}
+              <div className="flex flex-wrap gap-1.5 mt-auto">
+                <Badge className="bg-[#ffcc00]/20 text-[#ffcc00] border-0 text-xs font-semibold">
+                  <Users className="h-3 w-3 mr-1" />
+                  {membrosCount} {membrosCount === 1 ? 'membro' : 'membros'}
+                </Badge>
+                {equipe.escala && (
+                  <Badge className="bg-white/10 text-white/90 border-0 text-xs">
+                    {equipe.escala}
+                  </Badge>
+                )}
+              </div>
+              
+              {/* Service type */}
+              {equipe.servico && (
+                <p className="text-white/50 text-xs mt-2 truncate">
+                  {equipe.servico}
+                </p>
+              )}
+              
+              {/* Expand indicator */}
+              <div className="flex items-center justify-center mt-2 pt-2 border-t border-white/10">
+                <span className="text-white/40 text-xs flex items-center gap-1">
+                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  {isExpanded ? 'Ocultar' : 'Ver membros'}
+                </span>
+              </div>
+            </div>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <CardContent className="pt-0">
-              <div className="grid gap-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-                {equipe.membros?.map((membro) => (
-                  <MembroCard key={membro.id} membro={membro} />
+            <CardContent className="pt-0 px-3 pb-3 max-h-[200px] overflow-y-auto custom-scrollbar">
+              <div className="grid gap-1.5">
+                {equipe.membros?.slice(0, 6).map((membro) => (
+                  <div key={membro.id} className="flex items-center gap-2 p-1.5 rounded bg-white/10 text-xs">
+                    <span className="text-[#ffcc00] font-bold w-8">{membro.efetivo?.posto_graduacao?.slice(0, 3)}</span>
+                    <span className="text-white truncate flex-1">{membro.efetivo?.nome_guerra}</span>
+                  </div>
                 ))}
+                {(equipe.membros?.length || 0) > 6 && (
+                  <p className="text-white/40 text-xs text-center py-1">
+                    +{(equipe.membros?.length || 0) - 6} mais...
+                  </p>
+                )}
                 {(!equipe.membros || equipe.membros.length === 0) && (
-                  <p className="text-white/40 text-sm italic py-4 text-center">Nenhum membro cadastrado</p>
+                  <p className="text-white/40 text-xs italic py-2 text-center">Sem membros</p>
                 )}
               </div>
             </CardContent>
@@ -545,6 +565,7 @@ const Equipes: React.FC = () => {
 
     // Check if ARMEIRO should be nested under GUARDA
     const armeirosEquipes = grupamento === 'GUARDA' ? (groupedEquipes['ARMEIRO'] || []).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')) : [];
+    const allEquipes = [...equipesGrupo, ...armeirosEquipes];
 
     return (
       <Collapsible open={isExpanded} onOpenChange={() => toggleGroup(grupamento)}>
@@ -555,31 +576,24 @@ const Equipes: React.FC = () => {
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-bold text-white">{grupamento}</h2>
-              <p className="text-white/60 text-sm">{equipesGrupo.length + armeirosEquipes.length} equipe(s)</p>
+              <p className="text-white/60 text-sm">{allEquipes.length} equipe(s)</p>
             </div>
             {isExpanded ? <ChevronDown className="h-6 w-6 text-white/50" /> : <ChevronRight className="h-6 w-6 text-white/50" />}
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="mt-4 space-y-3">
-            {/* Cards com largura total igual ao header */}
-            {equipesGrupo.map((equipe) => (
-              <EquipeCard key={equipe.id} equipe={equipe} />
-            ))}
-            
-            {/* Nested ARMEIRO under GUARDA */}
-            {armeirosEquipes.length > 0 && (
-              <div className="mt-4 p-4 rounded-xl bg-white/5 backdrop-blur-sm">
-                <h3 className="text-lg font-semibold text-[#ffcc00] mb-3 flex items-center gap-2">
-                  <Shield className="h-5 w-5" /> ARMEIROS
-                </h3>
-                <div className="space-y-3">
-                  {armeirosEquipes.map((equipe) => (
-                    <EquipeCard key={equipe.id} equipe={equipe} />
-                  ))}
-                </div>
-              </div>
-            )}
+          <div className="mt-4">
+            {/* Grid 3x3 de cards quadrados */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {equipesGrupo.map((equipe) => (
+                <EquipeCard key={equipe.id} equipe={equipe} />
+              ))}
+              
+              {/* Nested ARMEIRO cards under GUARDA */}
+              {armeirosEquipes.map((equipe) => (
+                <EquipeCard key={equipe.id} equipe={equipe} />
+              ))}
+            </div>
           </div>
         </CollapsibleContent>
       </Collapsible>
