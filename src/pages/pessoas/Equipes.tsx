@@ -50,26 +50,26 @@ interface ExcelRow {
 }
 
 const GRUPAMENTOS_ORDER = [
-  'GOC', 'GTA', 'LACUSTRE', 'GUARDA', 'ARMEIRO', 'PATRULHA AMBIENTAL',
-  'EXPEDIENTE', 'OFICIAIS', 'OFICIAIS OPERACIONAIS', 'MANUTENÇÃO', 
-  'MOTORISTAS', 'INSTRUÇÕES E CURSO', 'COMISSÕES', 'P2'
+  'GOC', 'GTA', 'LACUSTRE', 'RPA AMBIENTAL', 'GUARDA', 'ARMEIRO',
+  'OFICIAIS OPERACIONAIS', 'OFICIAIS', 'EXPEDIENTE', 'COMISSÕES', 
+  'MANUTENÇÃO', 'MOTORISTAS', 'INSTRUÇÕES E CURSO', 'PREALG'
 ];
 
 const GRUPAMENTO_CONFIG: Record<string, { icon: React.ReactNode; color: string; parentGroup?: string }> = {
   'GOC': { icon: <Shield className="h-5 w-5" />, color: 'from-emerald-600 to-emerald-800' },
   'GTA': { icon: <Car className="h-5 w-5" />, color: 'from-blue-600 to-blue-800' },
   'LACUSTRE': { icon: <Anchor className="h-5 w-5" />, color: 'from-cyan-600 to-cyan-800' },
+  'RPA AMBIENTAL': { icon: <Shield className="h-5 w-5" />, color: 'from-green-600 to-green-800' },
   'GUARDA': { icon: <Radio className="h-5 w-5" />, color: 'from-amber-600 to-amber-800' },
   'ARMEIRO': { icon: <Shield className="h-5 w-5" />, color: 'from-red-600 to-red-800', parentGroup: 'GUARDA' },
-  'PATRULHA AMBIENTAL': { icon: <Shield className="h-5 w-5" />, color: 'from-green-600 to-green-800' },
-  'EXPEDIENTE': { icon: <Building className="h-5 w-5" />, color: 'from-slate-600 to-slate-800' },
-  'OFICIAIS': { icon: <UserCog className="h-5 w-5" />, color: 'from-purple-600 to-purple-800' },
   'OFICIAIS OPERACIONAIS': { icon: <UserCog className="h-5 w-5" />, color: 'from-violet-600 to-violet-800' },
+  'OFICIAIS': { icon: <UserCog className="h-5 w-5" />, color: 'from-purple-600 to-purple-800' },
+  'EXPEDIENTE': { icon: <Building className="h-5 w-5" />, color: 'from-slate-600 to-slate-800' },
+  'COMISSÕES': { icon: <Users className="h-5 w-5" />, color: 'from-teal-600 to-teal-800' },
   'MANUTENÇÃO': { icon: <Wrench className="h-5 w-5" />, color: 'from-orange-600 to-orange-800' },
   'MOTORISTAS': { icon: <Car className="h-5 w-5" />, color: 'from-zinc-600 to-zinc-800' },
   'INSTRUÇÕES E CURSO': { icon: <GraduationCap className="h-5 w-5" />, color: 'from-indigo-600 to-indigo-800' },
-  'COMISSÕES': { icon: <Users className="h-5 w-5" />, color: 'from-teal-600 to-teal-800' },
-  'P2': { icon: <Shield className="h-5 w-5" />, color: 'from-rose-600 to-rose-800' },
+  'PREALG': { icon: <Users className="h-5 w-5" />, color: 'from-lime-600 to-lime-800' },
 };
 
 const ESCALAS = ['24 X 72', '12 X 36', '12 X 60', 'EXPEDIENTE'];
@@ -411,22 +411,30 @@ const Equipes: React.FC = () => {
     )
   );
 
-  // Group equipes by grupamento, ordered
+  // Group equipes by grupamento, ordered, and sort teams alphabetically
   const groupedEquipes = GRUPAMENTOS_ORDER.reduce((acc, grupamento) => {
-    const equipesGrupo = filteredEquipes.filter(e => e.grupamento === grupamento);
+    const equipesGrupo = filteredEquipes
+      .filter(e => e.grupamento === grupamento)
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     if (equipesGrupo.length > 0) {
       acc[grupamento] = equipesGrupo;
     }
     return acc;
   }, {} as Record<string, Equipe[]>);
 
-  // Add any remaining grupamentos not in the order
+  // Add any remaining grupamentos not in the order, sorted alphabetically
   filteredEquipes.forEach(e => {
     if (!GRUPAMENTOS_ORDER.includes(e.grupamento)) {
       if (!groupedEquipes[e.grupamento]) groupedEquipes[e.grupamento] = [];
       if (!groupedEquipes[e.grupamento].some(eq => eq.id === e.id)) {
         groupedEquipes[e.grupamento].push(e);
       }
+    }
+  });
+  // Sort teams in remaining groups
+  Object.keys(groupedEquipes).forEach(g => {
+    if (!GRUPAMENTOS_ORDER.includes(g)) {
+      groupedEquipes[g].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     }
   });
 
@@ -536,7 +544,7 @@ const Equipes: React.FC = () => {
     const isExpanded = expandedGroups[grupamento] !== false;
 
     // Check if ARMEIRO should be nested under GUARDA
-    const armeirosEquipes = grupamento === 'GUARDA' ? groupedEquipes['ARMEIRO'] || [] : [];
+    const armeirosEquipes = grupamento === 'GUARDA' ? (groupedEquipes['ARMEIRO'] || []).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')) : [];
 
     return (
       <Collapsible open={isExpanded} onOpenChange={() => toggleGroup(grupamento)}>
@@ -554,7 +562,8 @@ const Equipes: React.FC = () => {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="mt-4 pl-4 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {/* Grid modular 3x3 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {equipesGrupo.map((equipe) => (
                 <EquipeCard key={equipe.id} equipe={equipe} />
               ))}
@@ -566,7 +575,7 @@ const Equipes: React.FC = () => {
                 <h3 className="text-lg font-semibold text-[#ffcc00] mb-4 flex items-center gap-2">
                   <Shield className="h-5 w-5" /> ARMEIROS
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {armeirosEquipes.map((equipe) => (
                     <EquipeCard key={equipe.id} equipe={equipe} compact />
                   ))}
