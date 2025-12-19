@@ -561,23 +561,21 @@ const Equipes: React.FC = () => {
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="mt-4 pl-4 space-y-4">
-            {/* Grid modular 3x3 */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {equipesGrupo.map((equipe) => (
-                <EquipeCard key={equipe.id} equipe={equipe} />
-              ))}
-            </div>
+          <div className="mt-4 space-y-3">
+            {/* Cards com largura total igual ao header */}
+            {equipesGrupo.map((equipe) => (
+              <EquipeCard key={equipe.id} equipe={equipe} />
+            ))}
             
             {/* Nested ARMEIRO under GUARDA */}
             {armeirosEquipes.length > 0 && (
-              <div className="mt-6 p-4 rounded-xl bg-white/5 backdrop-blur-sm">
-                <h3 className="text-lg font-semibold text-[#ffcc00] mb-4 flex items-center gap-2">
+              <div className="mt-4 p-4 rounded-xl bg-white/5 backdrop-blur-sm">
+                <h3 className="text-lg font-semibold text-[#ffcc00] mb-3 flex items-center gap-2">
                   <Shield className="h-5 w-5" /> ARMEIROS
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                <div className="space-y-3">
                   {armeirosEquipes.map((equipe) => (
-                    <EquipeCard key={equipe.id} equipe={equipe} compact />
+                    <EquipeCard key={equipe.id} equipe={equipe} />
                   ))}
                 </div>
               </div>
