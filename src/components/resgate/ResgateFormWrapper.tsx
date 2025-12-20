@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
+import { toast } from 'sonner';
 import { ResgateFormData } from '@/schemas/resgateSchema';
 import ResgateFormHeader from './ResgateFormHeader';
 import FormErrorDisplay from './FormErrorDisplay';
@@ -43,20 +44,25 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
 }) => {
   // Check if we have form-level errors
   const formLevelError = errors.root?.message || errors._errors?.join(', ');
-  
+
   // Check if desfecho is Evadido to make fields optional
   const isEvadido = formData.desfechoResgate === "Evadido";
 
   return (
     <div className="space-y-6 animate-fade-in">
       <ResgateFormHeader isEditing={isEditing} isSubmitting={isSubmitting} />
-      
+
       <FormErrorDisplay 
         formLevelError={formLevelError} 
         fetchError={fetchError} 
       />
-      
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+
+      <form
+        onSubmit={form.handleSubmit(handleFormSubmit, () => {
+          toast.error('Não foi possível salvar: revise os campos destacados.');
+        })}
+        className="space-y-6"
+      >
         <InformacoesGeraisSection 
           formData={formData}
           handleChange={handleChange}
@@ -68,14 +74,14 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
           membros={membrosEquipe}
           onMembrosChange={onMembrosEquipeChange}
         />
-        
+
         <EspeciesMultiplasSection 
           especies={especies}
           onEspeciesChange={onEspeciesChange}
           isEvadido={isEvadido}
           errors={errors}
         />
-        
+
         <ResgateFormSubmitButton 
           isSubmitting={isSubmitting} 
           isEditing={isEditing}
@@ -86,3 +92,4 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
 };
 
 export default ResgateFormWrapper;
+
