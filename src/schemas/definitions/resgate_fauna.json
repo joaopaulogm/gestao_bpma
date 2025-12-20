@@ -1,0 +1,320 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Resgate de Fauna - Schema de Dados",
+  "description": "Definição oficial do formulário de Resgate de Fauna para scripts de importação, migração e normalização de dados históricos",
+  "version": "1.0.0",
+  "updated_at": "2025-01-20",
+  "target_table": "fat_registros_de_resgate",
+  "related_tables": {
+    "fat_equipe_resgate": {
+      "description": "Membros da equipe vinculados ao registro",
+      "foreign_key": "registro_id",
+      "fields": ["efetivo_id"]
+    }
+  },
+  "dimension_tables": {
+    "dim_regiao_administrativa": {
+      "field": "regiao_administrativa_id",
+      "lookup_column": "nome"
+    },
+    "dim_origem": {
+      "field": "origem_id",
+      "lookup_column": "nome"
+    },
+    "dim_desfecho": {
+      "field": "desfecho_id",
+      "lookup_column": "nome",
+      "filter": { "tipo": "resgate" }
+    },
+    "dim_estado_saude": {
+      "field": "estado_saude_id",
+      "lookup_column": "nome"
+    },
+    "dim_estagio_vida": {
+      "field": "estagio_vida_id",
+      "lookup_column": "nome"
+    },
+    "dim_especies_fauna": {
+      "field": "especie_id",
+      "lookup_columns": ["nome_popular", "nome_cientifico"]
+    },
+    "dim_destinacao": {
+      "field": "destinacao_id",
+      "lookup_column": "nome"
+    },
+    "dim_tipo_de_area": {
+      "field": "tipo_area_id",
+      "lookup_column": "Tipo de Área"
+    },
+    "dim_efetivo": {
+      "used_in": "fat_equipe_resgate",
+      "lookup_columns": ["nome", "matricula", "nome_guerra"]
+    }
+  },
+  "fields": {
+    "id": {
+      "type": "uuid",
+      "required": true,
+      "auto_generated": true,
+      "default": "gen_random_uuid()",
+      "description": "Identificador único do registro"
+    },
+    "data": {
+      "type": "date",
+      "required": true,
+      "format": "YYYY-MM-DD",
+      "description": "Data da ocorrência do resgate",
+      "legacy_formats": ["DD/MM/YYYY", "DD-MM-YYYY", "YYYY/MM/DD"],
+      "migration_notes": "Converter formatos legados para ISO 8601"
+    },
+    "regiao_administrativa_id": {
+      "type": "uuid",
+      "required": false,
+      "references": "dim_regiao_administrativa.id",
+      "description": "Região administrativa onde ocorreu o resgate",
+      "legacy_field": "regiao_administrativa",
+      "migration_notes": "Buscar ID correspondente pelo nome na tabela de dimensão"
+    },
+    "origem_id": {
+      "type": "uuid",
+      "required": false,
+      "references": "dim_origem.id",
+      "description": "Origem do chamado/ocorrência",
+      "enums_expected": ["Resgate", "Apreensão", "Entrega Voluntária", "CEAPA", "Atropelamento"],
+      "legacy_field": "origem",
+      "migration_notes": "Buscar ID correspondente pelo nome na tabela de dimensão"
+    },
+    "latitude_origem": {
+      "type": "text",
+      "required": true,
+      "format": "decimal",
+      "validation": {
+        "min": -90,
+        "max": 90
+      },
+      "description": "Latitude do local de origem do resgate",
+      "legacy_field": "latitude",
+      "migration_notes": "Garantir formato decimal com ponto como separador"
+    },
+    "longitude_origem": {
+      "type": "text",
+      "required": true,
+      "format": "decimal",
+      "validation": {
+        "min": -180,
+        "max": 180
+      },
+      "description": "Longitude do local de origem do resgate",
+      "legacy_field": "longitude",
+      "migration_notes": "Garantir formato decimal com ponto como separador"
+    },
+    "especie_id": {
+      "type": "uuid",
+      "required": false,
+      "references": "dim_especies_fauna.id",
+      "description": "Espécie do animal resgatado",
+      "legacy_fields": ["especie", "nome_popular", "nome_cientifico"],
+      "migration_notes": "Buscar ID por nome_popular ou nome_cientifico. Se não encontrar, registrar para revisão manual"
+    },
+    "estado_saude_id": {
+      "type": "uuid",
+      "required": false,
+      "references": "dim_estado_saude.id",
+      "description": "Estado de saúde do animal no momento do resgate",
+      "enums_expected": ["Bom", "Regular", "Grave", "Óbito"],
+      "legacy_field": "estado_saude",
+      "migration_notes": "Normalizar variações de escrita antes de buscar ID"
+    },
+    "estagio_vida_id": {
+      "type": "uuid",
+      "required": false,
+      "references": "dim_estagio_vida.id",
+      "description": "Estágio de vida do animal",
+      "enums_expected": ["Adulto", "Filhote", "Jovem", "Indeterminado"],
+      "legacy_field": "estagio_vida"
+    },
+    "atropelamento": {
+      "type": "text",
+      "required": true,
+      "enums": ["Sim", "Não"],
+      "default": "Não",
+      "description": "Indica se o animal foi vítima de atropelamento",
+      "legacy_values": {
+        "true": "Sim",
+        "false": "Não",
+        "1": "Sim",
+        "0": "Não",
+        "S": "Sim",
+        "N": "Não"
+      },
+      "migration_notes": "Converter valores booleanos ou abreviados para texto"
+    },
+    "quantidade_adulto": {
+      "type": "integer",
+      "required": false,
+      "default": 0,
+      "validation": { "min": 0 },
+      "description": "Quantidade de animais adultos",
+      "is_new_field": false
+    },
+    "quantidade_filhote": {
+      "type": "integer",
+      "required": false,
+      "default": 0,
+      "validation": { "min": 0 },
+      "description": "Quantidade de animais filhotes",
+      "is_new_field": false
+    },
+    "quantidade_total": {
+      "type": "integer",
+      "required": false,
+      "computed": true,
+      "formula": "quantidade_adulto + quantidade_filhote",
+      "description": "Quantidade total de animais (calculado automaticamente por trigger)",
+      "migration_notes": "Não preencher diretamente, será calculado pelo banco"
+    },
+    "quantidade": {
+      "type": "integer",
+      "required": false,
+      "deprecated": true,
+      "description": "Campo legado - usar quantidade_total",
+      "migration_notes": "Migrar valor para quantidade_adulto se não houver distinção"
+    },
+    "desfecho_id": {
+      "type": "uuid",
+      "required": false,
+      "references": "dim_desfecho.id",
+      "description": "Desfecho do resgate/apreensão",
+      "conditional": {
+        "when": { "origem": "Apreensão" },
+        "required": true
+      },
+      "enums_expected": ["TCO PMDF", "TCO PCDF", "Liberado", "Outros"],
+      "legacy_field": "desfecho"
+    },
+    "numero_tco": {
+      "type": "text",
+      "required": false,
+      "description": "Número do TCO quando aplicável",
+      "conditional": {
+        "when": { "desfecho": ["TCO PMDF", "TCO PCDF"] },
+        "required": true
+      }
+    },
+    "outro_desfecho": {
+      "type": "text",
+      "required": false,
+      "description": "Descrição do desfecho quando 'Outros' selecionado",
+      "conditional": {
+        "when": { "desfecho": "Outros" },
+        "required": true
+      }
+    },
+    "destinacao_id": {
+      "type": "uuid",
+      "required": false,
+      "references": "dim_destinacao.id",
+      "description": "Destinação do animal após o resgate",
+      "enums_expected": ["Soltura", "CEAPA", "CETAS", "Zoológico", "Óbito", "Outros"],
+      "legacy_field": "destinacao"
+    },
+    "numero_termo_entrega": {
+      "type": "text",
+      "required": false,
+      "description": "Número do termo de entrega quando aplicável",
+      "is_new_field": true
+    },
+    "hora_guarda_ceapa": {
+      "type": "text",
+      "required": false,
+      "format": "HH:MM",
+      "description": "Hora de entrega no CEAPA",
+      "conditional": {
+        "when": { "destinacao": "CEAPA" }
+      }
+    },
+    "motivo_entrega_ceapa": {
+      "type": "text",
+      "required": false,
+      "description": "Motivo da entrega ao CEAPA",
+      "enums_expected": ["Ferido", "Filhote", "Doente", "Sem condições de soltura", "Outro"],
+      "conditional": {
+        "when": { "destinacao": "CEAPA" }
+      }
+    },
+    "latitude_soltura": {
+      "type": "text",
+      "required": false,
+      "format": "decimal",
+      "validation": {
+        "min": -90,
+        "max": 90
+      },
+      "description": "Latitude do local de soltura",
+      "conditional": {
+        "when": { "destinacao": "Soltura" }
+      }
+    },
+    "longitude_soltura": {
+      "type": "text",
+      "required": false,
+      "format": "decimal",
+      "validation": {
+        "min": -180,
+        "max": 180
+      },
+      "description": "Longitude do local de soltura",
+      "conditional": {
+        "when": { "destinacao": "Soltura" }
+      }
+    },
+    "outro_destinacao": {
+      "type": "text",
+      "required": false,
+      "description": "Descrição da destinação quando 'Outros' selecionado",
+      "conditional": {
+        "when": { "destinacao": "Outros" }
+      }
+    },
+    "tipo_area_id": {
+      "type": "uuid",
+      "required": false,
+      "references": "dim_tipo_de_area.id",
+      "description": "Tipo de área onde ocorreu o resgate",
+      "is_new_field": true,
+      "legacy_field": "tipo_area"
+    },
+    "created_at": {
+      "type": "timestamp with time zone",
+      "required": true,
+      "auto_generated": true,
+      "default": "now()",
+      "description": "Data/hora de criação do registro no sistema"
+    }
+  },
+  "control_fields": {
+    "origem_registro": {
+      "type": "text",
+      "required": false,
+      "description": "Indica a origem do registro para auditoria",
+      "enums": ["formulario_web", "importacao_planilha", "migracao_legado", "api"],
+      "is_new_field": true,
+      "migration_notes": "Preencher com 'migracao_legado' para dados importados"
+    },
+    "created_at_original": {
+      "type": "timestamp",
+      "required": false,
+      "description": "Data/hora original do registro em sistemas legados",
+      "is_new_field": true,
+      "migration_notes": "Preservar timestamp original quando disponível"
+    }
+  },
+  "migration_guidelines": {
+    "date_handling": "Converter todos os formatos de data para ISO 8601 (YYYY-MM-DD)",
+    "null_handling": "Campos vazios ou 'N/A' devem ser convertidos para NULL",
+    "enum_normalization": "Normalizar maiúsculas/minúsculas e acentuação antes de buscar IDs",
+    "coordinate_format": "Coordenadas devem usar ponto como separador decimal",
+    "dimension_lookup": "Sempre buscar IDs nas tabelas de dimensão pelo valor textual",
+    "unknown_values": "Registrar valores não mapeados em log separado para revisão manual"
+  }
+}
