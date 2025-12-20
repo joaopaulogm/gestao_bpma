@@ -38,6 +38,7 @@ const SecaoLogistica = lazy(() => import(/* webpackChunkName: "secao-logistica" 
 const MaterialApoio = lazy(() => import(/* webpackChunkName: "material-apoio" */ '@/pages/MaterialApoio'));
 const IdentificarEspecie = lazy(() => import(/* webpackChunkName: "identificar-especie" */ '@/pages/apoio/IdentificarEspecie'));
 const RankingOcorrencias = lazy(() => import(/* webpackChunkName: "ranking" */ '@/pages/RankingOcorrencias'));
+const UploadSchemas = lazy(() => import(/* webpackChunkName: "upload-schemas" */ '@/pages/UploadSchemas'));
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,7 @@ function App() {
               
               {/* Admin only */}
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/upload-schemas" element={<ProtectedRoute requireAdmin><UploadSchemas /></ProtectedRoute>} />
               <Route path="/registro-detalhes/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistroDetalhes /></SidebarLayout></ProtectedRoute>} />
               <Route path="/resgate-editar/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ResgateEditar /></SidebarLayout></ProtectedRoute>} />
               
