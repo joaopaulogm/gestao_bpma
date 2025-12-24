@@ -141,15 +141,15 @@ export default function FloraCadastro() {
 
       if (data) {
         reset({
-          nomePopular: data["Nome Popular"] || "",
-          nomeCientifico: data["Nome Científico"] || "",
-          classe: data["Classe"] || "",
-          ordem: data["Ordem"] || "",
-          familia: data["Família"] || "",
-          estadoConservacao: data["Estado de Conservação"] || "",
-          tipoPlanta: data["Tipo de Planta"] || "",
-          madeiraLei: data["Madeira de Lei"] || "",
-          imuneCorte: data["Imune ao Corte"] || "",
+          nomePopular: data.nome_popular || "",
+          nomeCientifico: data.nome_cientifico || "",
+          classe: data.classe_taxonomica || "",
+          ordem: data.ordem_taxonomica || "",
+          familia: data.familia_taxonomica || "",
+          estadoConservacao: data.estado_de_conservacao || "",
+          tipoPlanta: data.tipo_de_planta || "",
+          madeiraLei: data.madeira_de_lei || "",
+          imuneCorte: data.imune_ao_corte || "",
         });
         setImages(data.imagens || []);
       }
@@ -238,7 +238,7 @@ export default function FloraCadastro() {
     const { data, error } = await supabase
       .from("dim_especies_flora")
       .select("id")
-      .ilike("Nome Científico", nomeCientifico.trim());
+      .ilike("nome_cientifico", nomeCientifico.trim());
 
     if (error) {
       console.error("Erro ao verificar duplicidade:", error);
@@ -266,16 +266,19 @@ export default function FloraCadastro() {
         }
       }
 
+      const newId = crypto.randomUUID();
+      
       const floraData = {
-        "Nome Popular": data.nomePopular.trim(),
-        "Nome Científico": data.nomeCientifico.trim(),
-        "Classe": data.classe,
-        "Ordem": data.ordem?.trim() || null,
-        "Família": data.familia?.trim() || null,
-        "Estado de Conservação": data.estadoConservacao,
-        "Tipo de Planta": data.tipoPlanta,
-        "Madeira de Lei": data.madeiraLei || null,
-        "Imune ao Corte": data.imuneCorte || null,
+        id: isEditing && id ? id : newId,
+        nome_popular: data.nomePopular.trim(),
+        nome_cientifico: data.nomeCientifico.trim(),
+        classe_taxonomica: data.classe,
+        ordem_taxonomica: data.ordem?.trim() || null,
+        familia_taxonomica: data.familia?.trim() || null,
+        estado_de_conservacao: data.estadoConservacao,
+        tipo_de_planta: data.tipoPlanta,
+        madeira_de_lei: data.madeiraLei || null,
+        imune_ao_corte: data.imuneCorte || null,
         imagens: images,
       };
 

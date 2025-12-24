@@ -979,6 +979,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_registros_especie"
+            columns: ["especie_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_registros_estado_saude"
             columns: ["estado_saude_id"]
             isOneToOne: false

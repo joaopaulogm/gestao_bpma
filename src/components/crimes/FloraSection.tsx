@@ -82,15 +82,15 @@ const DESTINACOES_FLORA = [
 
 interface EspecieFlora {
   id: string;
-  "Nome Popular": string | null;
-  "Nome Científico": string | null;
-  Classe: string | null;
-  Ordem: string | null;
-  "Família": string | null;
-  "Estado de Conservação": string | null;
-  "Tipo de Planta": string | null;
-  "Madeira de Lei": string | null;
-  "Imune ao Corte": string | null;
+  nome_popular: string | null;
+  nome_cientifico: string | null;
+  classe_taxonomica: string | null;
+  ordem_taxonomica: string | null;
+  familia_taxonomica: string | null;
+  estado_de_conservacao: string | null;
+  tipo_de_planta: string | null;
+  madeira_de_lei: string | null;
+  imune_ao_corte: string | null;
 }
 
 const FloraSection: React.FC<FloraSectionProps> = ({
@@ -111,7 +111,7 @@ const FloraSection: React.FC<FloraSectionProps> = ({
         const { data, error } = await supabase
           .from('dim_especies_flora')
           .select('*')
-          .order('Nome Popular', { ascending: true });
+          .order('nome_popular', { ascending: true });
         
         if (error) {
           console.error('Erro ao carregar espécies de flora:', error);
@@ -166,15 +166,15 @@ const FloraSection: React.FC<FloraSectionProps> = ({
             return {
               ...item,
               especieId: value as string,
-              nomePopular: especie["Nome Popular"] || '',
-              nomeCientifico: especie["Nome Científico"] || '',
-              classe: especie.Classe || '',
-              ordem: especie.Ordem || '',
-              familia: especie["Família"] || '',
-              estadoConservacao: especie["Estado de Conservação"] || '',
-              tipoPlanta: especie["Tipo de Planta"] || '',
-              madeiraLei: especie["Madeira de Lei"] || '',
-              imuneCote: especie["Imune ao Corte"] || ''
+              nomePopular: especie.nome_popular || '',
+              nomeCientifico: especie.nome_cientifico || '',
+              classe: especie.classe_taxonomica || '',
+              ordem: especie.ordem_taxonomica || '',
+              familia: especie.familia_taxonomica || '',
+              estadoConservacao: especie.estado_de_conservacao || '',
+              tipoPlanta: especie.tipo_de_planta || '',
+              madeiraLei: especie.madeira_de_lei || '',
+              imuneCote: especie.imune_ao_corte || ''
             };
           }
         }
@@ -233,7 +233,7 @@ const FloraSection: React.FC<FloraSectionProps> = ({
                       <SelectContent>
                         {especiesFlora.map((especie) => (
                           <SelectItem key={especie.id} value={especie.id}>
-                            {especie["Nome Popular"] || 'Sem nome popular'}
+                            {especie.nome_popular || 'Sem nome popular'}
                           </SelectItem>
                         ))}
                       </SelectContent>
