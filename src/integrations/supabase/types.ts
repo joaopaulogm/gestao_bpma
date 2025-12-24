@@ -1064,7 +1064,15 @@ export type Database = {
           tipo_fauna?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_fauna_dim_especie_fauna"
+            columns: ["id_dim_especie_fauna"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fila_imagens_especies: {
         Row: {
