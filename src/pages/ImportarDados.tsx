@@ -139,9 +139,12 @@ const ImportarDados = () => {
     
     if (existing) return existing.id;
     
+    const newId = crypto.randomUUID();
+    
     const { data: created, error } = await supabase
       .from('dim_especies_fauna')
       .insert({
+        id: newId,
         nome_popular: record.nome_popular,
         nome_cientifico: record.nome_cientifico,
         classe_taxonomica: record.classe_taxonomica,
