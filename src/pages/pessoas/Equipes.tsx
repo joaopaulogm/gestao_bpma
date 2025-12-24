@@ -1,16 +1,36 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Plus, Edit2, Trash2, Search, Save, X, UsersRound, ChevronDown, ChevronRight, Upload, Shield, Anchor, Car, Building, Wrench, GraduationCap, Radio, UserCog } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import * as XLSX from 'xlsx';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Users,
+  Plus,
+  Edit2,
+  Trash2,
+  Search,
+  Save,
+  X,
+  UsersRound,
+  ChevronDown,
+  ChevronRight,
+  Upload,
+  Shield,
+  Anchor,
+  Car,
+  Building,
+  Wrench,
+  GraduationCap,
+  Radio,
+  UserCog,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import * as XLSX from "xlsx";
 
 interface Efetivo {
   id: string;
@@ -37,48 +57,71 @@ interface Equipe {
 }
 
 interface ExcelRow {
-  'Matrícula': string;
-  'Posto/Graduação': string;
-  'Nome de Guerra': string;
-  'Nome Completo': string;
-  'Circunstância': string;
-  'Serviço': string;
-  'Escala': string;
-  'Grupamento': string;
-  'Equipe': string;
-  'Função': string;
+  Matrícula: string;
+  "Posto/Graduação": string;
+  "Nome de Guerra": string;
+  "Nome Completo": string;
+  Circunstância: string;
+  Serviço: string;
+  Escala: string;
+  Grupamento: string;
+  Equipe: string;
+  Função: string;
 }
 
 const GRUPAMENTOS_ORDER = [
-  'GOC', 'GTA', 'LACUSTRE', 'RPA AMBIENTAL', 'GUARDA', 'ARMEIRO',
-  'OFICIAIS OPERACIONAIS', 'OFICIAIS', 'EXPEDIENTE', 'COMISSÕES', 
-  'MANUTENÇÃO', 'MOTORISTAS', 'INSTRUÇÕES E CURSO', 'PREALG'
+  "GOC",
+  "GTA",
+  "LACUSTRE",
+  "RPA AMBIENTAL",
+  "GUARDA",
+  "ARMEIRO",
+  "OFICIAIS OPERACIONAIS",
+  "OFICIAIS",
+  "EXPEDIENTE",
+  "COMISSÕES",
+  "MANUTENÇÃO",
+  "MOTORISTAS",
+  "INSTRUÇÕES E CURSO",
+  "PREALG",
 ];
 
 const GRUPAMENTO_CONFIG: Record<string, { icon: React.ReactNode; color: string; parentGroup?: string }> = {
-  'GOC': { icon: <Shield className="h-5 w-5" />, color: 'from-emerald-600 to-emerald-800' },
-  'GTA': { icon: <Car className="h-5 w-5" />, color: 'from-blue-600 to-blue-800' },
-  'LACUSTRE': { icon: <Anchor className="h-5 w-5" />, color: 'from-cyan-600 to-cyan-800' },
-  'RPA AMBIENTAL': { icon: <Shield className="h-5 w-5" />, color: 'from-green-600 to-green-800' },
-  'GUARDA': { icon: <Radio className="h-5 w-5" />, color: 'from-amber-600 to-amber-800' },
-  'ARMEIRO': { icon: <Shield className="h-5 w-5" />, color: 'from-red-600 to-red-800', parentGroup: 'GUARDA' },
-  'OFICIAIS OPERACIONAIS': { icon: <UserCog className="h-5 w-5" />, color: 'from-violet-600 to-violet-800' },
-  'OFICIAIS': { icon: <UserCog className="h-5 w-5" />, color: 'from-purple-600 to-purple-800' },
-  'EXPEDIENTE': { icon: <Building className="h-5 w-5" />, color: 'from-slate-600 to-slate-800' },
-  'COMISSÕES': { icon: <Users className="h-5 w-5" />, color: 'from-teal-600 to-teal-800' },
-  'MANUTENÇÃO': { icon: <Wrench className="h-5 w-5" />, color: 'from-orange-600 to-orange-800' },
-  'MOTORISTAS': { icon: <Car className="h-5 w-5" />, color: 'from-zinc-600 to-zinc-800' },
-  'INSTRUÇÕES E CURSO': { icon: <GraduationCap className="h-5 w-5" />, color: 'from-indigo-600 to-indigo-800' },
-  'PREALG': { icon: <Users className="h-5 w-5" />, color: 'from-lime-600 to-lime-800' },
+  GOC: { icon: <Shield className="h-5 w-5" />, color: "from-emerald-600 to-emerald-800" },
+  GTA: { icon: <Car className="h-5 w-5" />, color: "from-blue-600 to-blue-800" },
+  LACUSTRE: { icon: <Anchor className="h-5 w-5" />, color: "from-cyan-600 to-cyan-800" },
+  "RPA AMBIENTAL": { icon: <Shield className="h-5 w-5" />, color: "from-green-600 to-green-800" },
+  GUARDA: { icon: <Radio className="h-5 w-5" />, color: "from-amber-600 to-amber-800" },
+  ARMEIRO: { icon: <Shield className="h-5 w-5" />, color: "from-red-600 to-red-800", parentGroup: "GUARDA" },
+  "OFICIAIS OPERACIONAIS": { icon: <UserCog className="h-5 w-5" />, color: "from-violet-600 to-violet-800" },
+  OFICIAIS: { icon: <UserCog className="h-5 w-5" />, color: "from-purple-600 to-purple-800" },
+  EXPEDIENTE: { icon: <Building className="h-5 w-5" />, color: "from-slate-600 to-slate-800" },
+  COMISSÕES: { icon: <Users className="h-5 w-5" />, color: "from-teal-600 to-teal-800" },
+  MANUTENÇÃO: { icon: <Wrench className="h-5 w-5" />, color: "from-orange-600 to-orange-800" },
+  MOTORISTAS: { icon: <Car className="h-5 w-5" />, color: "from-zinc-600 to-zinc-800" },
+  "INSTRUÇÕES E CURSO": { icon: <GraduationCap className="h-5 w-5" />, color: "from-indigo-600 to-indigo-800" },
+  PREALG: { icon: <Users className="h-5 w-5" />, color: "from-lime-600 to-lime-800" },
 };
 
-const ESCALAS = ['24 X 72', '12 X 36', '12 X 60', 'EXPEDIENTE'];
-const SERVICOS = ['OPERACIONAL', 'APOIO OPERACIONAL', 'ADMINISTRATIVO'];
+const ESCALAS = ["24 X 72", "12 X 36", "12 X 60", "EXPEDIENTE"];
+const SERVICOS = ["OPERACIONAL", "APOIO OPERACIONAL", "ADMINISTRATIVO"];
 const FUNCOES = [
-  'COMANDANTE', 'PATRULHEIRO', 'MOTORISTA', 'TRIPULANTE', 'RÁDIO OPERADOR',
-  'ADJ OFICIAL DE DIA', 'ADJUNTO', 'INSTRUTOR', 'ARMEIRO', 'APOIO GERAL',
-  'AUXILIAR ADMINISTRATIVO', 'COORDENADOR', 'MECÂNICO', 'EXPEDIENTE ADM',
-  'MOTORISTA OFICIAL DE DIA', 'MOTORISTA DO CMT'
+  "COMANDANTE",
+  "PATRULHEIRO",
+  "MOTORISTA",
+  "TRIPULANTE",
+  "RÁDIO OPERADOR",
+  "ADJ OFICIAL DE DIA",
+  "ADJUNTO",
+  "INSTRUTOR",
+  "ARMEIRO",
+  "APOIO GERAL",
+  "AUXILIAR ADMINISTRATIVO",
+  "COORDENADOR",
+  "MECÂNICO",
+  "EXPEDIENTE ADM",
+  "MOTORISTA OFICIAL DE DIA",
+  "MOTORISTA DO CMT",
 ];
 
 const Equipes: React.FC = () => {
@@ -86,37 +129,39 @@ const Equipes: React.FC = () => {
   const [efetivos, setEfetivos] = useState<Efetivo[]>([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
-  const [activeTab, setActiveTab] = useState('cadastradas');
+  const [activeTab, setActiveTab] = useState("cadastradas");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
-  
+
   // Form state
   const [editingEquipe, setEditingEquipe] = useState<Equipe | null>(null);
-  const [formData, setFormData] = useState({ nome: '', grupamento: '', escala: '', servico: '' });
-  const [selectedMembros, setSelectedMembros] = useState<{efetivo_id: string; funcao: string}[]>([]);
-  const [searchEquipe, setSearchEquipe] = useState('');
-  const [matriculaInput, setMatriculaInput] = useState('');
+  const [formData, setFormData] = useState({ nome: "", grupamento: "", escala: "", servico: "" });
+  const [selectedMembros, setSelectedMembros] = useState<{ efetivo_id: string; funcao: string }[]>([]);
+  const [searchEquipe, setSearchEquipe] = useState("");
+  const [matriculaInput, setMatriculaInput] = useState("");
 
   const fetchEquipes = useCallback(async () => {
     setLoading(true);
     try {
       const { data: equipesData, error: equipesError } = await supabase
-        .from('dim_equipes')
-        .select('*')
-        .order('grupamento', { ascending: true });
+        .from("dim_equipes")
+        .select("*")
+        .order("grupamento", { ascending: true });
 
       if (equipesError) throw equipesError;
 
       const equipesWithMembros = await Promise.all(
         (equipesData || []).map(async (equipe) => {
           const { data: membrosData } = await supabase
-            .from('fat_equipe_membros')
-            .select(`
+            .from("fat_equipe_membros")
+            .select(
+              `
               id,
               efetivo_id,
               funcao,
               dim_efetivo!inner(id, matricula, posto_graduacao, nome_guerra, nome)
-            `)
-            .eq('equipe_id', equipe.id);
+            `,
+            )
+            .eq("equipe_id", equipe.id);
 
           return {
             ...equipe,
@@ -124,21 +169,23 @@ const Equipes: React.FC = () => {
               id: m.id,
               efetivo_id: m.efetivo_id,
               funcao: m.funcao,
-              efetivo: m.dim_efetivo
-            }))
+              efetivo: m.dim_efetivo,
+            })),
           };
-        })
+        }),
       );
 
       setEquipes(equipesWithMembros);
-      
+
       // Expand all groups by default
       const expanded: Record<string, boolean> = {};
-      equipesWithMembros.forEach(e => { expanded[e.grupamento] = true; });
+      equipesWithMembros.forEach((e) => {
+        expanded[e.grupamento] = true;
+      });
       setExpandedGroups(expanded);
     } catch (error) {
-      console.error('Erro ao carregar equipes:', error);
-      toast.error('Erro ao carregar equipes');
+      console.error("Erro ao carregar equipes:", error);
+      toast.error("Erro ao carregar equipes");
     } finally {
       setLoading(false);
     }
@@ -147,14 +194,14 @@ const Equipes: React.FC = () => {
   const fetchEfetivos = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('dim_efetivo')
-        .select('id, matricula, posto_graduacao, nome_guerra, nome')
-        .order('nome_guerra', { ascending: true });
+        .from("dim_efetivo")
+        .select("id, matricula, posto_graduacao, nome_guerra, nome")
+        .order("nome_guerra", { ascending: true });
 
       if (error) throw error;
       setEfetivos(data || []);
     } catch (error) {
-      console.error('Erro ao carregar efetivos:', error);
+      console.error("Erro ao carregar efetivos:", error);
     }
   }, []);
 
@@ -168,24 +215,33 @@ const Equipes: React.FC = () => {
     try {
       // Fetch from Supabase Storage bucket "files"
       const { data: fileData, error: downloadError } = await supabase.storage
-        .from('files')
-        .download('Equipes_BPMA.xlsx');
-      
+        .from("files")
+        .download("Equipes_BPMA.xlsx");
+
       if (downloadError) {
-        console.error('Erro ao baixar arquivo:', downloadError);
-        toast.error('Arquivo não encontrado no bucket. Verifique se Equipes_BPMA.xlsx existe em storage/files');
+        console.error("Erro ao baixar arquivo:", downloadError);
+        toast.error("Arquivo não encontrado no bucket. Verifique se Equipes_BPMA.xlsx existe em storage/files");
         setImporting(false);
         return;
       }
 
       const arrayBuffer = await fileData.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const jsonData: ExcelRow[] = XLSX.utils.sheet_to_json(worksheet);
 
       // Group by Grupamento + Equipe
-      const equipesMap = new Map<string, { nome: string; grupamento: string; escala: string; servico: string; membros: { matricula: string; funcao: string }[] }>();
+      const equipesMap = new Map<
+        string,
+        {
+          nome: string;
+          grupamento: string;
+          escala: string;
+          servico: string;
+          membros: { matricula: string; funcao: string }[];
+        }
+      >();
 
       for (const row of jsonData) {
         const key = `${row.Grupamento}-${row.Equipe}`;
@@ -195,13 +251,13 @@ const Equipes: React.FC = () => {
             grupamento: row.Grupamento,
             escala: row.Escala,
             servico: row.Serviço,
-            membros: []
+            membros: [],
           });
         }
         const equipe = equipesMap.get(key)!;
         // Avoid duplicate members
-        if (!equipe.membros.some(m => m.matricula === row['Matrícula'])) {
-          equipe.membros.push({ matricula: row['Matrícula'], funcao: row['Função'] });
+        if (!equipe.membros.some((m) => m.matricula === row["Matrícula"])) {
+          equipe.membros.push({ matricula: row["Matrícula"], funcao: row["Função"] });
         }
       }
 
@@ -211,10 +267,10 @@ const Equipes: React.FC = () => {
       for (const [, equipeData] of equipesMap) {
         // Check if team exists
         const { data: existingEquipe } = await supabase
-          .from('dim_equipes')
-          .select('id')
-          .eq('nome', equipeData.nome)
-          .eq('grupamento', equipeData.grupamento)
+          .from("dim_equipes")
+          .select("id")
+          .eq("nome", equipeData.nome)
+          .eq("grupamento", equipeData.grupamento)
           .single();
 
         let equipeId: string;
@@ -222,22 +278,22 @@ const Equipes: React.FC = () => {
         if (existingEquipe) {
           equipeId = existingEquipe.id;
           // Delete existing members
-          await supabase.from('fat_equipe_membros').delete().eq('equipe_id', equipeId);
+          await supabase.from("fat_equipe_membros").delete().eq("equipe_id", equipeId);
           updatedCount++;
         } else {
           const { data: newEquipe, error } = await supabase
-            .from('dim_equipes')
+            .from("dim_equipes")
             .insert({
               nome: equipeData.nome,
               grupamento: equipeData.grupamento,
               escala: equipeData.escala || null,
-              servico: equipeData.servico || null
+              servico: equipeData.servico || null,
             })
             .select()
             .single();
 
           if (error) {
-            console.error('Erro ao criar equipe:', error);
+            console.error("Erro ao criar equipe:", error);
             continue;
           }
           equipeId = newEquipe.id;
@@ -246,18 +302,19 @@ const Equipes: React.FC = () => {
 
         // Add members
         for (const membro of equipeData.membros) {
-          const matriculaNorm = membro.matricula.replace(/^0+/, '');
-          const efetivo = efetivos.find(e => 
-            e.matricula === membro.matricula || 
-            e.matricula === matriculaNorm ||
-            e.matricula.replace(/^0+/, '') === matriculaNorm
+          const matriculaNorm = membro.matricula.replace(/^0+/, "");
+          const efetivo = efetivos.find(
+            (e) =>
+              e.matricula === membro.matricula ||
+              e.matricula === matriculaNorm ||
+              e.matricula.replace(/^0+/, "") === matriculaNorm,
           );
 
           if (efetivo) {
-            await supabase.from('fat_equipe_membros').insert({
+            await supabase.from("fat_equipe_membros").insert({
               equipe_id: equipeId,
               efetivo_id: efetivo.id,
-              funcao: membro.funcao || 'PATRULHEIRO'
+              funcao: membro.funcao || "PATRULHEIRO",
             });
           }
         }
@@ -266,18 +323,18 @@ const Equipes: React.FC = () => {
       toast.success(`Importação concluída: ${createdCount} equipes criadas, ${updatedCount} atualizadas`);
       fetchEquipes();
     } catch (error) {
-      console.error('Erro na importação:', error);
-      toast.error('Erro ao importar dados');
+      console.error("Erro na importação:", error);
+      toast.error("Erro ao importar dados");
     } finally {
       setImporting(false);
     }
   };
 
   const resetForm = () => {
-    setFormData({ nome: '', grupamento: '', escala: '', servico: '' });
+    setFormData({ nome: "", grupamento: "", escala: "", servico: "" });
     setSelectedMembros([]);
     setEditingEquipe(null);
-    setMatriculaInput('');
+    setMatriculaInput("");
   };
 
   const handleEdit = (equipe: Equipe) => {
@@ -285,32 +342,30 @@ const Equipes: React.FC = () => {
     setFormData({
       nome: equipe.nome,
       grupamento: equipe.grupamento,
-      escala: equipe.escala || '',
-      servico: equipe.servico || ''
+      escala: equipe.escala || "",
+      servico: equipe.servico || "",
     });
-    setSelectedMembros(
-      (equipe.membros || []).map(m => ({ efetivo_id: m.efetivo_id, funcao: m.funcao }))
-    );
-    setActiveTab('cadastrar');
+    setSelectedMembros((equipe.membros || []).map((m) => ({ efetivo_id: m.efetivo_id, funcao: m.funcao })));
+    setActiveTab("cadastrar");
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Deseja realmente excluir esta equipe?')) return;
+    if (!confirm("Deseja realmente excluir esta equipe?")) return;
     try {
-      const { error } = await supabase.from('dim_equipes').delete().eq('id', id);
+      const { error } = await supabase.from("dim_equipes").delete().eq("id", id);
       if (error) throw error;
-      toast.success('Equipe excluída com sucesso');
+      toast.success("Equipe excluída com sucesso");
       fetchEquipes();
     } catch (error) {
-      console.error('Erro ao excluir equipe:', error);
-      toast.error('Erro ao excluir equipe');
+      console.error("Erro ao excluir equipe:", error);
+      toast.error("Erro ao excluir equipe");
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.nome || !formData.grupamento) {
-      toast.error('Preencha os campos obrigatórios');
+      toast.error("Preencha os campos obrigatórios");
       return;
     }
 
@@ -319,25 +374,25 @@ const Equipes: React.FC = () => {
 
       if (editingEquipe) {
         const { error } = await supabase
-          .from('dim_equipes')
+          .from("dim_equipes")
           .update({
             nome: formData.nome,
             grupamento: formData.grupamento,
             escala: formData.escala || null,
-            servico: formData.servico || null
+            servico: formData.servico || null,
           })
-          .eq('id', editingEquipe.id);
+          .eq("id", editingEquipe.id);
 
         if (error) throw error;
-        await supabase.from('fat_equipe_membros').delete().eq('equipe_id', editingEquipe.id);
+        await supabase.from("fat_equipe_membros").delete().eq("equipe_id", editingEquipe.id);
       } else {
         const { data, error } = await supabase
-          .from('dim_equipes')
+          .from("dim_equipes")
           .insert({
             nome: formData.nome,
             grupamento: formData.grupamento,
             escala: formData.escala || null,
-            servico: formData.servico || null
+            servico: formData.servico || null,
           })
           .select()
           .single();
@@ -347,111 +402,114 @@ const Equipes: React.FC = () => {
       }
 
       if (selectedMembros.length > 0 && equipeId) {
-        const { error: membrosError } = await supabase
-          .from('fat_equipe_membros')
-          .insert(selectedMembros.map(m => ({
+        const { error: membrosError } = await supabase.from("fat_equipe_membros").insert(
+          selectedMembros.map((m) => ({
             equipe_id: equipeId,
             efetivo_id: m.efetivo_id,
-            funcao: m.funcao
-          })));
+            funcao: m.funcao,
+          })),
+        );
 
         if (membrosError) throw membrosError;
       }
 
-      toast.success(editingEquipe ? 'Equipe atualizada' : 'Equipe cadastrada');
+      toast.success(editingEquipe ? "Equipe atualizada" : "Equipe cadastrada");
       resetForm();
       fetchEquipes();
-      setActiveTab('cadastradas');
+      setActiveTab("cadastradas");
     } catch (error) {
-      console.error('Erro ao salvar equipe:', error);
-      toast.error('Erro ao salvar equipe');
+      console.error("Erro ao salvar equipe:", error);
+      toast.error("Erro ao salvar equipe");
     }
   };
 
   const addMembroByMatricula = () => {
     if (!matriculaInput.trim()) return;
-    const matriculaSemZeros = matriculaInput.replace(/^0+/, '');
-    const efetivo = efetivos.find(e => 
-      e.matricula === matriculaInput || 
-      e.matricula === matriculaSemZeros ||
-      e.matricula.replace(/^0+/, '') === matriculaSemZeros
+    const matriculaSemZeros = matriculaInput.replace(/^0+/, "");
+    const efetivo = efetivos.find(
+      (e) =>
+        e.matricula === matriculaInput ||
+        e.matricula === matriculaSemZeros ||
+        e.matricula.replace(/^0+/, "") === matriculaSemZeros,
     );
-    
+
     if (!efetivo) {
-      toast.error('Policial não encontrado');
+      toast.error("Policial não encontrado");
       return;
     }
-    
-    if (selectedMembros.some(m => m.efetivo_id === efetivo.id)) {
-      toast.error('Este policial já está na equipe');
+
+    if (selectedMembros.some((m) => m.efetivo_id === efetivo.id)) {
+      toast.error("Este policial já está na equipe");
       return;
     }
-    
-    setSelectedMembros([...selectedMembros, { efetivo_id: efetivo.id, funcao: 'PATRULHEIRO' }]);
-    setMatriculaInput('');
+
+    setSelectedMembros([...selectedMembros, { efetivo_id: efetivo.id, funcao: "PATRULHEIRO" }]);
+    setMatriculaInput("");
     toast.success(`${efetivo.posto_graduacao} ${efetivo.nome_guerra} adicionado`);
   };
 
   const removeMembro = (efetivoId: string) => {
-    setSelectedMembros(selectedMembros.filter(m => m.efetivo_id !== efetivoId));
+    setSelectedMembros(selectedMembros.filter((m) => m.efetivo_id !== efetivoId));
   };
 
   const updateMembroFuncao = (efetivoId: string, funcao: string) => {
-    setSelectedMembros(selectedMembros.map(m => 
-      m.efetivo_id === efetivoId ? { ...m, funcao } : m
-    ));
+    setSelectedMembros(selectedMembros.map((m) => (m.efetivo_id === efetivoId ? { ...m, funcao } : m)));
   };
 
-  const filteredEquipes = equipes.filter(e => 
-    e.nome.toLowerCase().includes(searchEquipe.toLowerCase()) ||
-    e.grupamento.toLowerCase().includes(searchEquipe.toLowerCase()) ||
-    e.membros?.some(m => 
-      m.efetivo?.nome_guerra.toLowerCase().includes(searchEquipe.toLowerCase()) ||
-      m.efetivo?.matricula.includes(searchEquipe)
-    )
+  const filteredEquipes = equipes.filter(
+    (e) =>
+      e.nome.toLowerCase().includes(searchEquipe.toLowerCase()) ||
+      e.grupamento.toLowerCase().includes(searchEquipe.toLowerCase()) ||
+      e.membros?.some(
+        (m) =>
+          m.efetivo?.nome_guerra.toLowerCase().includes(searchEquipe.toLowerCase()) ||
+          m.efetivo?.matricula.includes(searchEquipe),
+      ),
   );
 
   // Group equipes by grupamento, ordered, and sort teams alphabetically
-  const groupedEquipes = GRUPAMENTOS_ORDER.reduce((acc, grupamento) => {
-    const equipesGrupo = filteredEquipes
-      .filter(e => e.grupamento === grupamento)
-      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-    if (equipesGrupo.length > 0) {
-      acc[grupamento] = equipesGrupo;
-    }
-    return acc;
-  }, {} as Record<string, Equipe[]>);
+  const groupedEquipes = GRUPAMENTOS_ORDER.reduce(
+    (acc, grupamento) => {
+      const equipesGrupo = filteredEquipes
+        .filter((e) => e.grupamento === grupamento)
+        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+      if (equipesGrupo.length > 0) {
+        acc[grupamento] = equipesGrupo;
+      }
+      return acc;
+    },
+    {} as Record<string, Equipe[]>,
+  );
 
   // Add any remaining grupamentos not in the order, sorted alphabetically
-  filteredEquipes.forEach(e => {
+  filteredEquipes.forEach((e) => {
     if (!GRUPAMENTOS_ORDER.includes(e.grupamento)) {
       if (!groupedEquipes[e.grupamento]) groupedEquipes[e.grupamento] = [];
-      if (!groupedEquipes[e.grupamento].some(eq => eq.id === e.id)) {
+      if (!groupedEquipes[e.grupamento].some((eq) => eq.id === e.id)) {
         groupedEquipes[e.grupamento].push(e);
       }
     }
   });
   // Sort teams in remaining groups
-  Object.keys(groupedEquipes).forEach(g => {
+  Object.keys(groupedEquipes).forEach((g) => {
     if (!GRUPAMENTOS_ORDER.includes(g)) {
-      groupedEquipes[g].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+      groupedEquipes[g].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
     }
   });
 
   const toggleGroup = (grupamento: string) => {
-    setExpandedGroups(prev => ({ ...prev, [grupamento]: !prev[grupamento] }));
+    setExpandedGroups((prev) => ({ ...prev, [grupamento]: !prev[grupamento] }));
   };
 
-  const getMembroInfo = (efetivoId: string) => efetivos.find(e => e.id === efetivoId);
+  const getMembroInfo = (efetivoId: string) => efetivos.find((e) => e.id === efetivoId);
 
-  const config = (grupamento: string) => GRUPAMENTO_CONFIG[grupamento] || { icon: <Users className="h-5 w-5" />, color: 'from-[#071d49] to-[#0a2a5e]' };
+  const config = (grupamento: string) =>
+    GRUPAMENTO_CONFIG[grupamento] || { icon: <Users className="h-5 w-5" />, color: "from-[#071d49] to-[#0a2a5e]" };
 
   const MembroCard = ({ membro }: { membro: MembroEquipe }) => (
     <div className="flex items-center gap-3 p-2 rounded-lg bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all">
       <div className="w-8 h-8 rounded-full bg-[#ffcc00]/20 flex items-center justify-center flex-shrink-0">
-        <span className="text-[#ffcc00] text-xs font-bold">
-          {membro.efetivo?.posto_graduacao?.slice(0, 2) || '?'}
-        </span>
+        <span className="text-[#ffcc00] text-xs font-bold">{membro.efetivo?.posto_graduacao?.slice(0, 2) || "?"}</span>
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-white font-medium text-sm truncate">
@@ -459,9 +517,7 @@ const Equipes: React.FC = () => {
         </p>
         <p className="text-white/50 text-xs font-mono">{membro.efetivo?.matricula}</p>
       </div>
-      <Badge className="bg-[#ffcc00]/20 text-[#ffcc00] border-0 text-[10px] shrink-0">
-        {membro.funcao}
-      </Badge>
+      <Badge className="bg-[#ffcc00]/20 text-[#ffcc00] border-0 text-[10px] shrink-0">{membro.funcao}</Badge>
     </div>
   );
 
@@ -471,7 +527,9 @@ const Equipes: React.FC = () => {
     const membrosCount = equipe.membros?.length || 0;
 
     return (
-      <Card className={`bg-gradient-to-br ${grupConfig.color} border border-white/10 shadow-lg hover:shadow-[0_0_30px_rgba(255,204,0,0.3)] hover:scale-[1.02] transition-all duration-300 overflow-hidden aspect-square flex flex-col`}>
+      <Card
+        className={`bg-gradient-to-br ${grupConfig.color} border border-white/10 shadow-lg hover:shadow-[0_0_30px_rgba(255,204,0,0.3)] hover:scale-[1.02] transition-all duration-300 overflow-hidden aspect-square flex flex-col`}
+      >
         <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
           <CollapsibleTrigger asChild>
             <div className="flex-1 p-4 cursor-pointer hover:bg-white/5 transition-colors flex flex-col">
@@ -484,7 +542,10 @@ const Equipes: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={(e) => { e.stopPropagation(); handleEdit(equipe); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(equipe);
+                    }}
                     className="h-7 w-7 text-white/60 hover:text-white hover:bg-white/10"
                   >
                     <Edit2 className="h-3.5 w-3.5" />
@@ -492,44 +553,37 @@ const Equipes: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={(e) => { e.stopPropagation(); handleDelete(equipe.id); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(equipe.id);
+                    }}
                     className="h-7 w-7 text-white/60 hover:text-red-400 hover:bg-white/10"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
-              
+
               {/* Team name */}
-              <h3 className="text-white font-bold text-base leading-tight mb-2 line-clamp-2">
-                {equipe.nome}
-              </h3>
-              
+              <h3 className="text-white font-bold text-base leading-tight mb-2 line-clamp-2">{equipe.nome}</h3>
+
               {/* Info badges */}
               <div className="flex flex-wrap gap-1.5 mt-auto">
                 <Badge className="bg-[#ffcc00]/20 text-[#ffcc00] border-0 text-xs font-semibold">
                   <Users className="h-3 w-3 mr-1" />
-                  {membrosCount} {membrosCount === 1 ? 'membro' : 'membros'}
+                  {membrosCount} {membrosCount === 1 ? "membro" : "membros"}
                 </Badge>
-                {equipe.escala && (
-                  <Badge className="bg-white/10 text-white/90 border-0 text-xs">
-                    {equipe.escala}
-                  </Badge>
-                )}
+                {equipe.escala && <Badge className="bg-white/10 text-white/90 border-0 text-xs">{equipe.escala}</Badge>}
               </div>
-              
+
               {/* Service type */}
-              {equipe.servico && (
-                <p className="text-white/50 text-xs mt-2 truncate">
-                  {equipe.servico}
-                </p>
-              )}
-              
+              {equipe.servico && <p className="text-white/50 text-xs mt-2 truncate">{equipe.servico}</p>}
+
               {/* Expand indicator */}
               <div className="flex items-center justify-center mt-2 pt-2 border-t border-white/10">
                 <span className="text-white/40 text-xs flex items-center gap-1">
                   {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  {isExpanded ? 'Ocultar' : 'Ver membros'}
+                  {isExpanded ? "Ocultar" : "Ver membros"}
                 </span>
               </div>
             </div>
@@ -544,9 +598,7 @@ const Equipes: React.FC = () => {
                   </div>
                 ))}
                 {(equipe.membros?.length || 0) > 6 && (
-                  <p className="text-white/40 text-xs text-center py-1">
-                    +{(equipe.membros?.length || 0) - 6} mais...
-                  </p>
+                  <p className="text-white/40 text-xs text-center py-1">+{(equipe.membros?.length || 0) - 6} mais...</p>
                 )}
                 {(!equipe.membros || equipe.membros.length === 0) && (
                   <p className="text-white/40 text-xs italic py-2 text-center">Sem membros</p>
@@ -564,21 +616,30 @@ const Equipes: React.FC = () => {
     const isExpanded = expandedGroups[grupamento] !== false;
 
     // Check if ARMEIRO should be nested under GUARDA
-    const armeirosEquipes = grupamento === 'GUARDA' ? (groupedEquipes['ARMEIRO'] || []).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')) : [];
+    const armeirosEquipes =
+      grupamento === "GUARDA"
+        ? (groupedEquipes["ARMEIRO"] || []).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+        : [];
     const allEquipes = [...equipesGrupo, ...armeirosEquipes];
 
     return (
       <Collapsible open={isExpanded} onOpenChange={() => toggleGroup(grupamento)}>
         <CollapsibleTrigger asChild>
-          <div className={`flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r ${grupConfig.color} cursor-pointer hover:opacity-90 transition-all group`}>
-            <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-white">
+          <div
+            className={`flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r ${grupConfig.color} cursor-pointer hover:opacity-90 transition-all group`}
+          >
+            <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-white">
               {grupConfig.icon}
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-bold text-white">{grupamento}</h2>
               <p className="text-white/60 text-sm">{allEquipes.length} equipe(s)</p>
             </div>
-            {isExpanded ? <ChevronDown className="h-6 w-6 text-white/50" /> : <ChevronRight className="h-6 w-6 text-white/50" />}
+            {isExpanded ? (
+              <ChevronDown className="h-6 w-6 text-white/50" />
+            ) : (
+              <ChevronRight className="h-6 w-6 text-white/50" />
+            )}
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent>
@@ -588,7 +649,7 @@ const Equipes: React.FC = () => {
               {equipesGrupo.map((equipe) => (
                 <EquipeCard key={equipe.id} equipe={equipe} />
               ))}
-              
+
               {/* Nested ARMEIRO cards under GUARDA */}
               {armeirosEquipes.map((equipe) => (
                 <EquipeCard key={equipe.id} equipe={equipe} />
@@ -612,31 +673,27 @@ const Equipes: React.FC = () => {
             <p className="text-muted-foreground text-sm">Gestão de equipes de serviço do BPMA</p>
           </div>
         </div>
-        <Button 
-          onClick={importFromExcel} 
-          disabled={importing}
-          className="bg-[#071d49] hover:bg-[#0a2a5e] text-white"
-        >
+        <Button onClick={importFromExcel} disabled={importing} className="bg-[#071d49] hover:bg-[#0a2a5e] text-white">
           <Upload className="h-4 w-4 mr-2" />
-          {importing ? 'Importando...' : 'Importar do Excel'}
+          {importing ? "Importando..." : "Importar do Excel"}
         </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-[#071d49]/10 p-1 rounded-xl">
-          <TabsTrigger 
-            value="cadastradas" 
+          <TabsTrigger
+            value="cadastradas"
             className="rounded-lg data-[state=active]:bg-[#071d49] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
           >
             <Users className="h-4 w-4 mr-2" />
             Equipes Cadastradas
           </TabsTrigger>
-          <TabsTrigger 
-            value="cadastrar" 
+          <TabsTrigger
+            value="cadastrar"
             className="rounded-lg data-[state=active]:bg-[#071d49] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
           >
             <Plus className="h-4 w-4 mr-2" />
-            {editingEquipe ? 'Editar Equipe' : 'Cadastrar Equipe'}
+            {editingEquipe ? "Editar Equipe" : "Cadastrar Equipe"}
           </TabsTrigger>
         </TabsList>
 
@@ -660,7 +717,7 @@ const Equipes: React.FC = () => {
           ) : (
             <div className="space-y-6">
               {Object.entries(groupedEquipes)
-                .filter(([grupamento]) => grupamento !== 'ARMEIRO') // ARMEIRO is nested under GUARDA
+                .filter(([grupamento]) => grupamento !== "ARMEIRO") // ARMEIRO is nested under GUARDA
                 .map(([grupamento, equipesGrupo]) => (
                   <GrupamentoSection key={grupamento} grupamento={grupamento} equipesGrupo={equipesGrupo} />
                 ))}
@@ -670,7 +727,9 @@ const Equipes: React.FC = () => {
                     <Users className="h-10 w-10 text-[#071d49]/30" />
                   </div>
                   <p className="text-muted-foreground text-lg">Nenhuma equipe encontrada</p>
-                  <p className="text-muted-foreground/60 text-sm mt-1">Clique em "Importar do Excel" para carregar os dados</p>
+                  <p className="text-muted-foreground/60 text-sm mt-1">
+                    Clique em "Importar do Excel" para carregar os dados
+                  </p>
                 </div>
               )}
             </div>
@@ -682,7 +741,7 @@ const Equipes: React.FC = () => {
             <CardHeader className="bg-[#071d49]/5 border-b border-border/30">
               <CardTitle className="flex items-center gap-2 text-[#071d49]">
                 {editingEquipe ? <Edit2 className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-                {editingEquipe ? 'Editar Equipe' : 'Nova Equipe'}
+                {editingEquipe ? "Editar Equipe" : "Nova Equipe"}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
@@ -710,7 +769,9 @@ const Equipes: React.FC = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {GRUPAMENTOS_ORDER.map((g) => (
-                          <SelectItem key={g} value={g}>{g}</SelectItem>
+                          <SelectItem key={g} value={g}>
+                            {g}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -727,7 +788,9 @@ const Equipes: React.FC = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {ESCALAS.map((e) => (
-                          <SelectItem key={e} value={e}>{e}</SelectItem>
+                          <SelectItem key={e} value={e}>
+                            {e}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -744,7 +807,9 @@ const Equipes: React.FC = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {SERVICOS.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -754,16 +819,20 @@ const Equipes: React.FC = () => {
                 {/* Members Section */}
                 <div className="space-y-4 pt-4 border-t border-border/30">
                   <Label className="text-base font-semibold">Membros da Equipe</Label>
-                  
+
                   <div className="flex gap-2">
                     <Input
                       value={matriculaInput}
                       onChange={(e) => setMatriculaInput(e.target.value)}
                       placeholder="Digite a matrícula..."
                       className="bg-background/50 h-11"
-                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addMembroByMatricula())}
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addMembroByMatricula())}
                     />
-                    <Button type="button" onClick={addMembroByMatricula} className="bg-[#071d49] hover:bg-[#0a2a5e] h-11 px-6">
+                    <Button
+                      type="button"
+                      onClick={addMembroByMatricula}
+                      className="bg-[#071d49] hover:bg-[#0a2a5e] h-11 px-6"
+                    >
                       Adicionar
                     </Button>
                   </div>
@@ -773,7 +842,10 @@ const Equipes: React.FC = () => {
                       {selectedMembros.map((membro) => {
                         const info = getMembroInfo(membro.efetivo_id);
                         return (
-                          <div key={membro.efetivo_id} className="flex items-center gap-3 p-3 bg-[#071d49]/5 rounded-lg">
+                          <div
+                            key={membro.efetivo_id}
+                            className="flex items-center gap-3 p-3 bg-[#071d49]/5 rounded-lg"
+                          >
                             <div className="flex-1 min-w-0">
                               <p className="font-medium truncate">
                                 {info?.posto_graduacao} {info?.nome_guerra}
@@ -789,7 +861,9 @@ const Equipes: React.FC = () => {
                               </SelectTrigger>
                               <SelectContent>
                                 {FUNCOES.map((f) => (
-                                  <SelectItem key={f} value={f}>{f}</SelectItem>
+                                  <SelectItem key={f} value={f}>
+                                    {f}
+                                  </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -812,7 +886,7 @@ const Equipes: React.FC = () => {
                 <div className="flex gap-3 pt-4">
                   <Button type="submit" className="bg-[#071d49] hover:bg-[#0a2a5e] h-11 px-8">
                     <Save className="h-4 w-4 mr-2" />
-                    {editingEquipe ? 'Salvar Alterações' : 'Cadastrar Equipe'}
+                    {editingEquipe ? "Salvar Alterações" : "Cadastrar Equipe"}
                   </Button>
                   {editingEquipe && (
                     <Button type="button" variant="outline" onClick={resetForm} className="h-11">
