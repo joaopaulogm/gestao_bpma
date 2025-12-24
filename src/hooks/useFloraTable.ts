@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -14,6 +15,7 @@ export interface FloraEspecie {
   madeiraLei: string | null;
   imuneCorte: string | null;
   imagens: string[];
+  nomesPopulares: string[];
   // Photo validation fields
   fotoPrincipalPath: string | null;
   fotosPaths: string[];
@@ -26,6 +28,7 @@ export type SortField = 'nomePopular' | 'nomeCientifico' | 'classe' | 'tipoPlant
 export type SortDirection = 'asc' | 'desc';
 
 export const useFloraTable = () => {
+  const queryClient = useQueryClient();
   const [especies, setEspecies] = useState<FloraEspecie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +41,7 @@ export const useFloraTable = () => {
   const [sortField, setSortField] = useState<SortField>('nomePopular');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-  const fetchEspecies = async () => {
+  const fetchEspecies = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -46,22 +49,23 @@ export const useFloraTable = () => {
       const { data, error: fetchError } = await supabase
         .from('dim_especies_flora')
         .select('*')
-        .order('Nome Popular');
+        .order('nome_popular');
 
       if (fetchError) throw fetchError;
 
-      const mapped: FloraEspecie[] = (data || []).map((item) => ({
+      const mapped: FloraEspecie[] = (data || []).map((item: any) => ({
         id: item.id,
-        nomePopular: item['Nome Popular'],
-        nomeCientifico: item['Nome Científico'],
-        classe: item['Classe'],
-        ordem: item['Ordem'],
-        familia: item['Família'],
-        estadoConservacao: item['Estado de Conservação'],
-        tipoPlanta: item['Tipo de Planta'],
-        madeiraLei: item['Madeira de Lei'],
-        imuneCorte: item['Imune ao Corte'],
+        nomePopular: item.nome_popular,
+        nomeCientifico: item.nome_cientifico,
+        classe: item.classe_taxonomica,
+        ordem: item.ordem_taxonomica,
+        familia: item.familia_taxonomica,
+        estadoConservacao: item.estado_de_conservacao,
+        tipoPlanta: item.tipo_de_planta,
+        madeiraLei: item.madeira_de_lei,
+        imuneCorte: item.imune_ao_corte,
         imagens: item.imagens || [],
+        nomesPopulares: item.nomes_populares || [],
         fotoPrincipalPath: item.foto_principal_path || null,
         fotosPaths: Array.isArray(item.fotos_paths) ? item.fotos_paths as string[] : [],
         fotoStatus: item.foto_status as 'validada' | 'pendente' | 'rejeitada' | null,
@@ -73,10 +77,32 @@ export const useFloraTable = () => {
     } catch (err) {
       console.error('Erro ao buscar espécies de flora:', err);
       setError('Erro ao carregar espécies de flora');
+      toast.error('Falha ao carregar dados da flora');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchEspecies();
+    
+    // Real-time subscription
+    const channel = supabase
+      .channel('flora-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'dim_especies_flora' },
+        () => {
+          fetchEspecies();
+          queryClient.invalidateQueries({ queryKey: ['flora'] });
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchEspecies, queryClient]);
 
   useEffect(() => {
     fetchEspecies();

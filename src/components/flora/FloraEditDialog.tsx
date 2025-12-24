@@ -5,55 +5,48 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Plus, X } from 'lucide-react';
 
-interface FaunaEspecie {
+interface FloraEspecie {
   id: string;
-  nome_popular: string;
-  nome_cientifico: string | null;
-  classe_taxonomica: string | null;
-  ordem_taxonomica: string | null;
-  tipo_fauna: string | null;
-  estado_conservacao: string | null;
-  grupo: string | null;
-  id_dim_especie_fauna: string | null;
+  nomePopular: string | null;
+  nomeCientifico: string | null;
+  classe: string | null;
+  ordem: string | null;
+  familia: string | null;
+  estadoConservacao: string | null;
+  tipoPlanta: string | null;
+  madeiraLei: string | null;
+  imuneCorte: string | null;
 }
 
-interface FaunaEditDialogProps {
-  especie: FaunaEspecie | null;
+interface FloraEditDialogProps {
+  especie: FloraEspecie | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave?: () => void;
 }
 
 const CLASSES_TAXONOMICAS = [
-  'Mammalia',
-  'Aves',
-  'Reptilia',
-  'Amphibia',
-  'Actinopterygii',
-  'Chondrichthyes',
-  'Insecta',
-  'Arachnida',
-  'Malacostraca',
-  'Gastropoda',
+  'Magnoliopsida',
+  'Liliopsida',
+  'Pinopsida',
+  'Polypodiopsida',
+  'Bryopsida',
 ];
 
-const GRUPOS = [
-  'Mamíferos',
-  'Aves',
-  'Répteis',
-  'Anfíbios',
-  'Peixes',
-  'Invertebrados',
-];
-
-const TIPOS_FAUNA = [
-  'Silvestre',
-  'Exótica',
-  'Doméstica',
+const TIPOS_PLANTA = [
+  'Árvore',
+  'Arbusto',
+  'Herbácea',
+  'Palmeira',
+  'Trepadeira',
+  'Epífita',
+  'Aquática',
+  'Suculenta',
 ];
 
 const ESTADOS_CONSERVACAO = [
@@ -68,8 +61,28 @@ const ESTADOS_CONSERVACAO = [
   'Extinta (EX)',
 ];
 
-export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEditDialogProps) {
-  const [formData, setFormData] = useState<Partial<FaunaEspecie>>({});
+export function FloraEditDialog({ especie, open, onOpenChange, onSave }: FloraEditDialogProps) {
+  const [formData, setFormData] = useState<{
+    nome_popular: string;
+    nome_cientifico: string;
+    classe_taxonomica: string;
+    ordem_taxonomica: string;
+    familia_taxonomica: string;
+    estado_de_conservacao: string;
+    tipo_de_planta: string;
+    madeira_de_lei: string;
+    imune_ao_corte: string;
+  }>({
+    nome_popular: '',
+    nome_cientifico: '',
+    classe_taxonomica: '',
+    ordem_taxonomica: '',
+    familia_taxonomica: '',
+    estado_de_conservacao: '',
+    tipo_de_planta: '',
+    madeira_de_lei: 'Não',
+    imune_ao_corte: 'Não',
+  });
   const [nomesPopulares, setNomesPopulares] = useState<string[]>([]);
   const [novoNome, setNovoNome] = useState('');
   const [saving, setSaving] = useState(false);
@@ -77,29 +90,27 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
   useEffect(() => {
     if (especie) {
       setFormData({
-        nome_popular: especie.nome_popular,
-        nome_cientifico: especie.nome_cientifico,
-        classe_taxonomica: especie.classe_taxonomica,
-        ordem_taxonomica: especie.ordem_taxonomica,
-        tipo_fauna: especie.tipo_fauna,
-        estado_conservacao: especie.estado_conservacao,
-        grupo: especie.grupo,
+        nome_popular: especie.nomePopular || '',
+        nome_cientifico: especie.nomeCientifico || '',
+        classe_taxonomica: especie.classe || '',
+        ordem_taxonomica: especie.ordem || '',
+        familia_taxonomica: especie.familia || '',
+        estado_de_conservacao: especie.estadoConservacao || '',
+        tipo_de_planta: especie.tipoPlanta || '',
+        madeira_de_lei: especie.madeiraLei || 'Não',
+        imune_ao_corte: especie.imuneCorte || 'Não',
       });
       
-      // Load additional names from dim_especies_fauna if linked
-      if (especie.id_dim_especie_fauna) {
-        loadNomesPopulares(especie.id_dim_especie_fauna);
-      } else {
-        setNomesPopulares([]);
-      }
+      // Load additional names
+      loadNomesPopulares(especie.id);
     }
   }, [especie]);
 
-  const loadNomesPopulares = async (dimId: string) => {
+  const loadNomesPopulares = async (id: string) => {
     const { data } = await supabase
-      .from('dim_especies_fauna')
+      .from('dim_especies_flora')
       .select('nomes_populares')
-      .eq('id', dimId)
+      .eq('id', id)
       .maybeSingle();
     
     if (data?.nomes_populares) {
@@ -125,45 +136,24 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
 
     setSaving(true);
     try {
-      // Generate slug from nome_popular
-      const nome_popular_slug = formData.nome_popular
-        ?.toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '') || '';
-
-      // Update fauna table
-      const { error: faunaError } = await supabase
-        .from('fauna')
+      // Update dim_especies_flora directly
+      const { error } = await supabase
+        .from('dim_especies_flora')
         .update({
-          ...formData,
-          nome_popular_slug,
-          updated_at: new Date().toISOString(),
+          nome_popular: formData.nome_popular,
+          nome_cientifico: formData.nome_cientifico,
+          classe_taxonomica: formData.classe_taxonomica,
+          ordem_taxonomica: formData.ordem_taxonomica,
+          familia_taxonomica: formData.familia_taxonomica,
+          estado_de_conservacao: formData.estado_de_conservacao,
+          tipo_de_planta: formData.tipo_de_planta,
+          madeira_de_lei: formData.madeira_de_lei,
+          imune_ao_corte: formData.imune_ao_corte,
+          nomes_populares: nomesPopulares,
         })
         .eq('id', especie.id);
 
-      if (faunaError) throw faunaError;
-
-      // Update dim_especies_fauna if linked
-      if (especie.id_dim_especie_fauna) {
-        const { error: dimError } = await supabase
-          .from('dim_especies_fauna')
-          .update({
-            nome_popular: formData.nome_popular,
-            nome_cientifico: formData.nome_cientifico,
-            classe_taxonomica: formData.classe_taxonomica,
-            ordem_taxonomica: formData.ordem_taxonomica,
-            tipo_de_fauna: formData.tipo_fauna,
-            estado_de_conservacao: formData.estado_conservacao,
-            nomes_populares: nomesPopulares,
-          })
-          .eq('id', especie.id_dim_especie_fauna);
-
-        if (dimError) {
-          console.error('Erro ao atualizar dim_especies_fauna:', dimError);
-        }
-      }
+      if (error) throw error;
 
       toast.success('Espécie atualizada com sucesso');
       onOpenChange(false);
@@ -180,7 +170,7 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar Espécie</DialogTitle>
+          <DialogTitle>Editar Espécie de Flora</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
@@ -188,9 +178,9 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
             <Label htmlFor="nome_popular">Nome Popular Principal *</Label>
             <Input
               id="nome_popular"
-              value={formData.nome_popular || ''}
+              value={formData.nome_popular}
               onChange={(e) => setFormData({ ...formData, nome_popular: e.target.value })}
-              placeholder="Ex: Capivara"
+              placeholder="Ex: Ipê-amarelo"
             />
           </div>
 
@@ -226,9 +216,9 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
             <Label htmlFor="nome_cientifico">Nome Científico</Label>
             <Input
               id="nome_cientifico"
-              value={formData.nome_cientifico || ''}
+              value={formData.nome_cientifico}
               onChange={(e) => setFormData({ ...formData, nome_cientifico: e.target.value })}
-              placeholder="Ex: Hydrochoerus hydrochaeris"
+              placeholder="Ex: Handroanthus albus"
               className="italic"
             />
           </div>
@@ -237,7 +227,7 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
             <div className="space-y-2">
               <Label>Classe Taxonômica</Label>
               <Select
-                value={formData.classe_taxonomica || ''}
+                value={formData.classe_taxonomica}
                 onValueChange={(value) => setFormData({ ...formData, classe_taxonomica: value })}
               >
                 <SelectTrigger>
@@ -252,17 +242,17 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
             </div>
 
             <div className="space-y-2">
-              <Label>Grupo</Label>
+              <Label>Tipo de Planta</Label>
               <Select
-                value={formData.grupo || ''}
-                onValueChange={(value) => setFormData({ ...formData, grupo: value })}
+                value={formData.tipo_de_planta}
+                onValueChange={(value) => setFormData({ ...formData, tipo_de_planta: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {GRUPOS.map((grupo) => (
-                    <SelectItem key={grupo} value={grupo}>{grupo}</SelectItem>
+                  {TIPOS_PLANTA.map((tipo) => (
+                    <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -271,29 +261,22 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Tipo de Fauna</Label>
-              <Select
-                value={formData.tipo_fauna || ''}
-                onValueChange={(value) => setFormData({ ...formData, tipo_fauna: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIPOS_FAUNA.map((tipo) => (
-                    <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="ordem_taxonomica">Ordem Taxonômica</Label>
               <Input
                 id="ordem_taxonomica"
-                value={formData.ordem_taxonomica || ''}
+                value={formData.ordem_taxonomica}
                 onChange={(e) => setFormData({ ...formData, ordem_taxonomica: e.target.value })}
-                placeholder="Ex: Rodentia"
+                placeholder="Ex: Lamiales"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="familia_taxonomica">Família</Label>
+              <Input
+                id="familia_taxonomica"
+                value={formData.familia_taxonomica}
+                onChange={(e) => setFormData({ ...formData, familia_taxonomica: e.target.value })}
+                placeholder="Ex: Bignoniaceae"
               />
             </div>
           </div>
@@ -301,8 +284,8 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
           <div className="space-y-2">
             <Label>Estado de Conservação</Label>
             <Select
-              value={formData.estado_conservacao || ''}
-              onValueChange={(value) => setFormData({ ...formData, estado_conservacao: value })}
+              value={formData.estado_de_conservacao}
+              onValueChange={(value) => setFormData({ ...formData, estado_de_conservacao: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione" />
@@ -315,11 +298,25 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
             </Select>
           </div>
 
-          {!especie?.id_dim_especie_fauna && (
-            <p className="text-xs text-muted-foreground bg-muted p-2 rounded">
-              Esta espécie ainda não está vinculada à tabela de dimensão. Execute "Sincronizar" na página principal para criar o vínculo.
-            </p>
-          )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label htmlFor="madeira_lei" className="cursor-pointer">Madeira de Lei</Label>
+              <Switch
+                id="madeira_lei"
+                checked={formData.madeira_de_lei === 'Sim'}
+                onCheckedChange={(checked) => setFormData({ ...formData, madeira_de_lei: checked ? 'Sim' : 'Não' })}
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <Label htmlFor="imune_corte" className="cursor-pointer">Imune ao Corte</Label>
+              <Switch
+                id="imune_corte"
+                checked={formData.imune_ao_corte === 'Sim'}
+                onCheckedChange={(checked) => setFormData({ ...formData, imune_ao_corte: checked ? 'Sim' : 'Não' })}
+              />
+            </div>
+          </div>
         </div>
 
         <DialogFooter>
