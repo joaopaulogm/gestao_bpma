@@ -287,10 +287,13 @@ export const buscarEspeciePorNomeCientifico = async (nomeCientifico: string): Pr
 
 export const cadastrarEspecie = async (especie: Omit<Especie, 'id'>): Promise<Especie | null> => {
   try {
-    // Insert into dimension table first
+    // Generate UUID for the new species
+    const newId = crypto.randomUUID();
+    
+    // Insert into dimension table first with explicit ID
     const { data: dimData, error: dimError } = await supabase
       .from("dim_especies_fauna")
-      .insert([especie])
+      .insert([{ id: newId, ...especie }])
       .select()
       .maybeSingle();
     

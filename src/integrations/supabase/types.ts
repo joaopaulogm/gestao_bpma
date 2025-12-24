@@ -174,8 +174,9 @@ export type Database = {
       }
       dim_especies_fauna: {
         Row: {
-          classe_taxonomica: string
-          estado_de_conservacao: string
+          classe_taxonomica: string | null
+          estado_de_conservacao: string | null
+          familia_taxonomica: string | null
           foto_fonte_validacao: string | null
           foto_principal_path: string | null
           foto_status: string | null
@@ -183,29 +184,47 @@ export type Database = {
           fotos_paths: Json | null
           id: string
           imagens: string[] | null
-          nome_cientifico: string
-          nome_popular: string
-          ordem_taxonomica: string
-          tipo_de_fauna: string
+          imagens_atualizado_em: string | null
+          imagens_erro: string | null
+          imagens_fontes: Json | null
+          imagens_paths: string[] | null
+          imagens_qtd: number | null
+          imagens_status: string | null
+          imagens_updated_at: string | null
+          nome_cientifico: string | null
+          nome_cientifico_slug: string | null
+          nome_popular: string | null
+          ordem_taxonomica: string | null
+          tipo_de_fauna: string | null
         }
         Insert: {
-          classe_taxonomica: string
-          estado_de_conservacao: string
+          classe_taxonomica?: string | null
+          estado_de_conservacao?: string | null
+          familia_taxonomica?: string | null
           foto_fonte_validacao?: string | null
           foto_principal_path?: string | null
           foto_status?: string | null
           foto_validada_em?: string | null
           fotos_paths?: Json | null
-          id?: string
+          id: string
           imagens?: string[] | null
-          nome_cientifico: string
-          nome_popular: string
-          ordem_taxonomica: string
-          tipo_de_fauna: string
+          imagens_atualizado_em?: string | null
+          imagens_erro?: string | null
+          imagens_fontes?: Json | null
+          imagens_paths?: string[] | null
+          imagens_qtd?: number | null
+          imagens_status?: string | null
+          imagens_updated_at?: string | null
+          nome_cientifico?: string | null
+          nome_cientifico_slug?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          tipo_de_fauna?: string | null
         }
         Update: {
-          classe_taxonomica?: string
-          estado_de_conservacao?: string
+          classe_taxonomica?: string | null
+          estado_de_conservacao?: string | null
+          familia_taxonomica?: string | null
           foto_fonte_validacao?: string | null
           foto_principal_path?: string | null
           foto_status?: string | null
@@ -213,18 +232,26 @@ export type Database = {
           fotos_paths?: Json | null
           id?: string
           imagens?: string[] | null
-          nome_cientifico?: string
-          nome_popular?: string
-          ordem_taxonomica?: string
-          tipo_de_fauna?: string
+          imagens_atualizado_em?: string | null
+          imagens_erro?: string | null
+          imagens_fontes?: Json | null
+          imagens_paths?: string[] | null
+          imagens_qtd?: number | null
+          imagens_status?: string | null
+          imagens_updated_at?: string | null
+          nome_cientifico?: string | null
+          nome_cientifico_slug?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          tipo_de_fauna?: string | null
         }
         Relationships: []
       }
       dim_especies_flora: {
         Row: {
-          Classe: string | null
-          "Estado de Conservação": string | null
-          Família: string | null
+          classe_taxonomica: string | null
+          estado_de_conservacao: string | null
+          familia_taxonomica: string | null
           foto_fonte_validacao: string | null
           foto_principal_path: string | null
           foto_status: string | null
@@ -232,35 +259,51 @@ export type Database = {
           fotos_paths: Json | null
           id: string
           imagens: string[] | null
-          "Imune ao Corte": string | null
-          "Madeira de Lei": string | null
-          "Nome Científico": string | null
-          "Nome Popular": string | null
-          Ordem: string | null
-          "Tipo de Planta": string | null
+          imagens_atualizado_em: string | null
+          imagens_erro: string | null
+          imagens_fontes: Json | null
+          imagens_paths: string[] | null
+          imagens_qtd: number | null
+          imagens_status: string | null
+          imagens_updated_at: string | null
+          imune_ao_corte: string | null
+          madeira_de_lei: string | null
+          nome_cientifico: string | null
+          nome_cientifico_slug: string | null
+          nome_popular: string | null
+          ordem_taxonomica: string | null
+          tipo_de_planta: string | null
         }
         Insert: {
-          Classe?: string | null
-          "Estado de Conservação"?: string | null
-          Família?: string | null
+          classe_taxonomica?: string | null
+          estado_de_conservacao?: string | null
+          familia_taxonomica?: string | null
           foto_fonte_validacao?: string | null
           foto_principal_path?: string | null
           foto_status?: string | null
           foto_validada_em?: string | null
           fotos_paths?: Json | null
-          id?: string
+          id: string
           imagens?: string[] | null
-          "Imune ao Corte"?: string | null
-          "Madeira de Lei"?: string | null
-          "Nome Científico"?: string | null
-          "Nome Popular"?: string | null
-          Ordem?: string | null
-          "Tipo de Planta"?: string | null
+          imagens_atualizado_em?: string | null
+          imagens_erro?: string | null
+          imagens_fontes?: Json | null
+          imagens_paths?: string[] | null
+          imagens_qtd?: number | null
+          imagens_status?: string | null
+          imagens_updated_at?: string | null
+          imune_ao_corte?: string | null
+          madeira_de_lei?: string | null
+          nome_cientifico?: string | null
+          nome_cientifico_slug?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          tipo_de_planta?: string | null
         }
         Update: {
-          Classe?: string | null
-          "Estado de Conservação"?: string | null
-          Família?: string | null
+          classe_taxonomica?: string | null
+          estado_de_conservacao?: string | null
+          familia_taxonomica?: string | null
           foto_fonte_validacao?: string | null
           foto_principal_path?: string | null
           foto_status?: string | null
@@ -268,12 +311,20 @@ export type Database = {
           fotos_paths?: Json | null
           id?: string
           imagens?: string[] | null
-          "Imune ao Corte"?: string | null
-          "Madeira de Lei"?: string | null
-          "Nome Científico"?: string | null
-          "Nome Popular"?: string | null
-          Ordem?: string | null
-          "Tipo de Planta"?: string | null
+          imagens_atualizado_em?: string | null
+          imagens_erro?: string | null
+          imagens_fontes?: Json | null
+          imagens_paths?: string[] | null
+          imagens_qtd?: number | null
+          imagens_status?: string | null
+          imagens_updated_at?: string | null
+          imune_ao_corte?: string | null
+          madeira_de_lei?: string | null
+          nome_cientifico?: string | null
+          nome_cientifico_slug?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          tipo_de_planta?: string | null
         }
         Relationships: []
       }
@@ -461,13 +512,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fat_crime_fauna_especie_id_fkey"
-            columns: ["especie_id"]
-            isOneToOne: false
-            referencedRelation: "dim_especies_fauna"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fat_crime_fauna_estado_saude_id_fkey"
             columns: ["estado_saude_id"]
             isOneToOne: false
@@ -519,13 +563,6 @@ export type Database = {
           quantidade?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fat_crime_flora_especie_id_fkey"
-            columns: ["especie_id"]
-            isOneToOne: false
-            referencedRelation: "dim_especies_flora"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "fat_crime_flora_id_ocorrencia_fkey"
             columns: ["id_ocorrencia"]
@@ -942,13 +979,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_registros_especie"
-            columns: ["especie_id"]
-            isOneToOne: false
-            referencedRelation: "dim_especies_fauna"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_registros_estado_saude"
             columns: ["estado_saude_id"]
             isOneToOne: false
@@ -1027,15 +1057,46 @@ export type Database = {
           tipo_fauna?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fauna_id_dim_especie_fauna_fkey"
-            columns: ["id_dim_especie_fauna"]
-            isOneToOne: false
-            referencedRelation: "dim_especies_fauna"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      fila_imagens_especies: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          erro: string | null
+          especie_id: number
+          id: number
+          nome_cientifico: string
+          slug: string
+          status: string
+          tentativas: number
+          tipo: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          erro?: string | null
+          especie_id: number
+          id?: number
+          nome_cientifico: string
+          slug: string
+          status?: string
+          tentativas?: number
+          tipo: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          erro?: string | null
+          especie_id?: number
+          id?: number
+          nome_cientifico?: string
+          slug?: string
+          status?: string
+          tentativas?: number
+          tipo?: string
+        }
+        Relationships: []
       }
       flora: {
         Row: {
@@ -1092,15 +1153,7 @@ export type Database = {
           tipo_planta?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "flora_id_dim_especie_flora_fkey"
-            columns: ["id_dim_especie_flora"]
-            isOneToOne: false
-            referencedRelation: "dim_especies_flora"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       sync_logs: {
         Row: {
@@ -1170,8 +1223,8 @@ export type Database = {
           "Email 1": string | null
           "Email 2": string | null
           id: string
-          "Lota��o": string | null
-          "Matr�cula": string | null
+          Lotação: string | null
+          Matrícula: string | null
           Nome: string | null
           "Nome Guerra": string | null
           Post_Grad: string | null
@@ -1188,8 +1241,8 @@ export type Database = {
           "Email 1"?: string | null
           "Email 2"?: string | null
           id?: string
-          "Lota��o"?: string | null
-          "Matr�cula"?: string | null
+          Lotação?: string | null
+          Matrícula?: string | null
           Nome?: string | null
           "Nome Guerra"?: string | null
           Post_Grad?: string | null
@@ -1206,8 +1259,8 @@ export type Database = {
           "Email 1"?: string | null
           "Email 2"?: string | null
           id?: string
-          "Lota��o"?: string | null
-          "Matr�cula"?: string | null
+          Lotação?: string | null
+          Matrícula?: string | null
           Nome?: string | null
           "Nome Guerra"?: string | null
           Post_Grad?: string | null
@@ -1232,7 +1285,9 @@ export type Database = {
         Returns: boolean
       }
       is_allowed_user: { Args: { check_email: string }; Returns: boolean }
+      slugify: { Args: { input: string }; Returns: string }
       slugify_pt: { Args: { input: string }; Returns: string }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       app_role:
