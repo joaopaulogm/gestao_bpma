@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import DeleteConfirmationDialog from '@/components/fauna/DeleteConfirmationDialog';
+import { FaunaEditDialog } from '@/components/fauna/FaunaEditDialog';
 import { useFaunaTable } from '@/hooks/useFaunaTable';
 import { syncSpecies, getImageUrl, listBucketImages, updateSpeciesPhoto, revalidateSpeciesPhoto } from '@/services/syncService';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +23,7 @@ const FaunaCadastrada = () => {
   const [selectedSpecies, setSelectedSpecies] = useState<any>(null);
   const [bucketImages, setBucketImages] = useState<string[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
+  const [editingSpecies, setEditingSpecies] = useState<any>(null);
 
   const { 
     especies, 
@@ -51,8 +53,8 @@ const FaunaCadastrada = () => {
 
   const especieToDelete = especies.find(especie => especie.id === confirmDeleteId);
 
-  const handleEditClick = (id: string) => {
-    navigate(`/secao-operacional/fauna-cadastro/${id}`);
+  const handleEditClick = (especie: any) => {
+    setEditingSpecies(especie);
   };
 
   const handleSync = async (dryRun = false) => {
@@ -444,7 +446,7 @@ const FaunaCadastrada = () => {
                             variant="ghost" 
                             size="icon" 
                             title="Editar"
-                            onClick={() => handleEditClick(especie.id)}
+                            onClick={() => handleEditClick(especie)}
                           >
                             <Pencil className="h-4 w-4 text-primary" />
                           </Button>
@@ -481,6 +483,13 @@ const FaunaCadastrada = () => {
           itemName={especieToDelete.nome_popular}
         />
       )}
+
+      <FaunaEditDialog
+        especie={editingSpecies}
+        open={!!editingSpecies}
+        onOpenChange={(open) => !open && setEditingSpecies(null)}
+        onSave={refreshEspecies}
+      />
     </Layout>
   );
 };
