@@ -194,6 +194,7 @@ export type Database = {
           nome_cientifico: string | null
           nome_cientifico_slug: string | null
           nome_popular: string | null
+          nomes_populares: string[] | null
           ordem_taxonomica: string | null
           tipo_de_fauna: string | null
         }
@@ -218,6 +219,7 @@ export type Database = {
           nome_cientifico?: string | null
           nome_cientifico_slug?: string | null
           nome_popular?: string | null
+          nomes_populares?: string[] | null
           ordem_taxonomica?: string | null
           tipo_de_fauna?: string | null
         }
@@ -242,6 +244,7 @@ export type Database = {
           nome_cientifico?: string | null
           nome_cientifico_slug?: string | null
           nome_popular?: string | null
+          nomes_populares?: string[] | null
           ordem_taxonomica?: string | null
           tipo_de_fauna?: string | null
         }
@@ -271,6 +274,7 @@ export type Database = {
           nome_cientifico: string | null
           nome_cientifico_slug: string | null
           nome_popular: string | null
+          nomes_populares: string[] | null
           ordem_taxonomica: string | null
           tipo_de_planta: string | null
         }
@@ -297,6 +301,7 @@ export type Database = {
           nome_cientifico?: string | null
           nome_cientifico_slug?: string | null
           nome_popular?: string | null
+          nomes_populares?: string[] | null
           ordem_taxonomica?: string | null
           tipo_de_planta?: string | null
         }
@@ -323,6 +328,7 @@ export type Database = {
           nome_cientifico?: string | null
           nome_cientifico_slug?: string | null
           nome_popular?: string | null
+          nomes_populares?: string[] | null
           ordem_taxonomica?: string | null
           tipo_de_planta?: string | null
         }
@@ -1168,7 +1174,15 @@ export type Database = {
           tipo_planta?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_flora_dim_especie_flora"
+            columns: ["id_dim_especie_flora"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_flora"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sync_logs: {
         Row: {
