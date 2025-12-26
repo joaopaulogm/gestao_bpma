@@ -12,9 +12,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import DeleteConfirmationDialog from '@/components/fauna/DeleteConfirmationDialog';
 import { FloraEditDialog } from '@/components/flora/FloraEditDialog';
 import { useFloraTable, SortField } from '@/hooks/useFloraTable';
-import { syncSpecies, getImageUrl, listBucketImages, updateSpeciesPhoto, revalidateSpeciesPhoto } from '@/services/syncService';
+import { syncSpecies, listBucketImages, updateSpeciesPhoto, revalidateSpeciesPhoto } from '@/services/syncService';
+import { buscarImagemEspecie, getDirectImageUrl } from '@/services/speciesImageService';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+// Helper to get image URL via service or fallback
+const getImageUrl = (bucket: string, filename: string) => getDirectImageUrl(bucket, filename);
 
 const FloraCadastrada = () => {
   const navigate = useNavigate();
