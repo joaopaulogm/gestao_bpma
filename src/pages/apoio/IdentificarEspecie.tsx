@@ -12,15 +12,15 @@ import { supabase } from '@/integrations/supabase/client';
 const SUPABASE_URL = "https://oiwwptnqaunsyhpkwbrz.supabase.co";
 const ITEMS_PER_PAGE = 20;
 
-// Fauna categories
+// Fauna categories - matching dim_especies_fauna classe_taxonomica values
 const FAUNA_CATEGORIES = [
-  { value: 'Aves', label: 'Aves', icon: Bird, color: 'bg-sky-500/10 text-sky-600 border-sky-500/30 hover:bg-sky-500/20' },
-  { value: 'Mammalia', label: 'Mamíferos', icon: PawPrint, color: 'bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20' },
-  { value: 'Reptilia', label: 'Répteis', icon: Leaf, color: 'bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/20' },
-  { value: 'Actinopterygii', label: 'Peixes', icon: Fish, color: 'bg-blue-500/10 text-blue-600 border-blue-500/30 hover:bg-blue-500/20' },
+  { value: 'AVE', label: 'Aves', icon: Bird, color: 'bg-sky-500/10 text-sky-600 border-sky-500/30 hover:bg-sky-500/20' },
+  { value: 'MAMIFERO', label: 'Mamíferos', icon: PawPrint, color: 'bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20' },
+  { value: 'REPTIL', label: 'Répteis', icon: Leaf, color: 'bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/20' },
+  { value: 'PEIXE', label: 'Peixes', icon: Fish, color: 'bg-blue-500/10 text-blue-600 border-blue-500/30 hover:bg-blue-500/20' },
 ];
 
-// Flora categories
+// Flora categories - matching dim_especies_flora fields
 const FLORA_CATEGORIES = [
   { value: 'ornamental', label: 'Ornamental', icon: Leaf, color: 'bg-pink-500/10 text-pink-600 border-pink-500/30 hover:bg-pink-500/20' },
   { value: 'madeira_lei', label: 'Madeira de Lei', icon: TreePine, color: 'bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20' },
@@ -30,35 +30,37 @@ const FLORA_CATEGORIES = [
 
 interface FaunaRecord {
   id: string;
-  nome_popular: string;
-  nome_popular_slug: string;
+  nome_popular: string | null;
   nome_cientifico: string | null;
-  imagens: string[];
-  bucket: string;
+  nome_cientifico_slug: string | null;
+  imagens: string[] | null;
+  imagens_paths: string[] | null;
   classe_taxonomica: string | null;
   ordem_taxonomica: string | null;
-  estado_conservacao: string | null;
-  tipo_fauna: string | null;
-  grupo: string | null;
+  estado_de_conservacao: string | null;
+  tipo_de_fauna: string | null;
+  nomes_populares: string[] | null;
 }
 
 interface FloraRecord {
   id: string;
-  nome_popular: string;
-  nome_popular_slug: string;
+  nome_popular: string | null;
   nome_cientifico: string | null;
-  imagens: string[];
-  bucket: string;
-  classe: string | null;
-  ordem: string | null;
-  familia: string | null;
-  estado_conservacao: string | null;
-  tipo_planta: string | null;
-  madeira_lei: boolean | null;
-  imune_ao_corte: boolean | null;
+  nome_cientifico_slug: string | null;
+  imagens: string[] | null;
+  imagens_paths: string[] | null;
+  classe_taxonomica: string | null;
+  ordem_taxonomica: string | null;
+  familia_taxonomica: string | null;
+  estado_de_conservacao: string | null;
+  tipo_de_planta: string | null;
+  madeira_de_lei: string | null;
+  imune_ao_corte: string | null;
+  nomes_populares: string[] | null;
 }
 
-const getImageUrl = (bucket: string, filename: string): string => {
+const getImageUrl = (filename: string, type: 'fauna' | 'flora'): string => {
+  const bucket = type === 'fauna' ? 'imagens-fauna' : 'imagens-flora';
   return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${filename}`;
 };
 
@@ -123,7 +125,12 @@ const FaunaCard = memo(({
   item: FaunaRecord; 
   onZoom: (url: string, name: string) => void;
 }) => {
-  const images = item.imagens || [];
+  // Get images from imagens_paths or imagens
+  const images = useMemo(() => {
+    const paths = item.imagens_paths as string[] | null;
+    const imgs = item.imagens as string[] | null;
+    return paths && paths.length > 0 ? paths : (imgs || []);
+  }, [item.imagens_paths, item.imagens]);
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden hover:shadow-lg transition-all">
@@ -133,8 +140,8 @@ const FaunaCard = memo(({
             {images.slice(0, 6).map((filename, idx) => (
               <SpeciesImage
                 key={idx}
-                imageUrl={getImageUrl(item.bucket, filename)}
-                alt={`${item.nome_popular} - ${idx + 1}`}
+                imageUrl={getImageUrl(filename, 'fauna')}
+                alt={`${item.nome_popular || 'Espécie'} - ${idx + 1}`}
                 onZoom={onZoom}
               />
             ))}
@@ -145,7 +152,7 @@ const FaunaCard = memo(({
           </div>
         )}
 
-        <h3 className="text-lg font-semibold text-foreground mb-1">{item.nome_popular}</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-1">{item.nome_popular || 'Sem nome'}</h3>
         {item.nome_cientifico && (
           <p className="text-sm text-muted-foreground italic mb-3">{item.nome_cientifico}</p>
         )}
@@ -154,11 +161,11 @@ const FaunaCard = memo(({
           {item.classe_taxonomica && (
             <span className="px-2 py-1 bg-primary/10 text-primary rounded-full">{item.classe_taxonomica}</span>
           )}
-          {item.estado_conservacao && (
-            <span className="px-2 py-1 bg-amber-500/10 text-amber-600 rounded-full">{item.estado_conservacao}</span>
+          {item.estado_de_conservacao && (
+            <span className="px-2 py-1 bg-amber-500/10 text-amber-600 rounded-full">{item.estado_de_conservacao}</span>
           )}
-          {item.tipo_fauna && (
-            <span className="px-2 py-1 bg-blue-500/10 text-blue-600 rounded-full">{item.tipo_fauna}</span>
+          {item.tipo_de_fauna && (
+            <span className="px-2 py-1 bg-blue-500/10 text-blue-600 rounded-full">{item.tipo_de_fauna}</span>
           )}
         </div>
       </CardContent>
@@ -176,7 +183,15 @@ const FloraCard = memo(({
   item: FloraRecord; 
   onZoom: (url: string, name: string) => void;
 }) => {
-  const images = item.imagens || [];
+  // Get images from imagens_paths or imagens
+  const images = useMemo(() => {
+    const paths = item.imagens_paths as string[] | null;
+    const imgs = item.imagens as string[] | null;
+    return paths && paths.length > 0 ? paths : (imgs || []);
+  }, [item.imagens_paths, item.imagens]);
+
+  const isMadeiraLei = item.madeira_de_lei === 'Sim';
+  const isImuneCorte = item.imune_ao_corte === 'Sim';
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden hover:shadow-lg transition-all">
@@ -186,8 +201,8 @@ const FloraCard = memo(({
             {images.slice(0, 6).map((filename, idx) => (
               <SpeciesImage
                 key={idx}
-                imageUrl={getImageUrl(item.bucket, filename)}
-                alt={`${item.nome_popular} - ${idx + 1}`}
+                imageUrl={getImageUrl(filename, 'flora')}
+                alt={`${item.nome_popular || 'Espécie'} - ${idx + 1}`}
                 onZoom={onZoom}
               />
             ))}
@@ -198,26 +213,26 @@ const FloraCard = memo(({
           </div>
         )}
 
-        <h3 className="text-lg font-semibold text-foreground mb-1">{item.nome_popular}</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-1">{item.nome_popular || 'Sem nome'}</h3>
         {item.nome_cientifico && (
           <p className="text-sm text-muted-foreground italic mb-3">{item.nome_cientifico}</p>
         )}
 
         <div className="flex flex-wrap gap-2 text-xs">
-          {item.classe && (
-            <span className="px-2 py-1 bg-primary/10 text-primary rounded-full">{item.classe}</span>
+          {item.classe_taxonomica && (
+            <span className="px-2 py-1 bg-primary/10 text-primary rounded-full">{item.classe_taxonomica}</span>
           )}
-          {item.madeira_lei && (
+          {isMadeiraLei && (
             <span className="px-2 py-1 bg-amber-500/10 text-amber-600 rounded-full">Madeira de Lei</span>
           )}
-          {item.imune_ao_corte && (
+          {isImuneCorte && (
             <span className="px-2 py-1 bg-green-500/10 text-green-600 rounded-full">Imune ao Corte</span>
           )}
-          {item.estado_conservacao && (
-            <span className="px-2 py-1 bg-red-500/10 text-red-600 rounded-full">{item.estado_conservacao}</span>
+          {item.estado_de_conservacao && (
+            <span className="px-2 py-1 bg-red-500/10 text-red-600 rounded-full">{item.estado_de_conservacao}</span>
           )}
-          {item.tipo_planta && (
-            <span className="px-2 py-1 bg-purple-500/10 text-purple-600 rounded-full">{item.tipo_planta}</span>
+          {item.tipo_de_planta && (
+            <span className="px-2 py-1 bg-purple-500/10 text-purple-600 rounded-full">{item.tipo_de_planta}</span>
           )}
         </div>
       </CardContent>
@@ -285,31 +300,31 @@ const IdentificarEspecie: React.FC = () => {
   const [faunaPage, setFaunaPage] = useState(1);
   const [floraPage, setFloraPage] = useState(1);
 
-  // Fetch data from Supabase
+  // Fetch data from Supabase - using dim_especies tables
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const { data: fauna, error: faunaError } = await supabase
-          .from('fauna')
+          .from('dim_especies_fauna')
           .select('*')
           .order('nome_popular', { ascending: true });
 
         if (faunaError) {
           console.error('Error fetching fauna:', faunaError);
         } else {
-          setFaunaData(fauna || []);
+          setFaunaData((fauna || []) as FaunaRecord[]);
         }
 
         const { data: flora, error: floraError } = await supabase
-          .from('flora')
+          .from('dim_especies_flora')
           .select('*')
           .order('nome_popular', { ascending: true });
 
         if (floraError) {
           console.error('Error fetching flora:', floraError);
         } else {
-          setFloraData(flora || []);
+          setFloraData((flora || []) as FloraRecord[]);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -336,19 +351,21 @@ const IdentificarEspecie: React.FC = () => {
 
   // Get unique conservation statuses
   const faunaConservationOptions = useMemo(() => {
-    const statuses = new Set(faunaData.map(item => item.estado_conservacao).filter(Boolean));
+    const statuses = new Set(faunaData.map(item => item.estado_de_conservacao).filter(Boolean));
     return ['all', ...Array.from(statuses)] as string[];
   }, [faunaData]);
 
   const floraConservationOptions = useMemo(() => {
-    const statuses = new Set(floraData.map(item => item.estado_conservacao).filter(Boolean));
+    const statuses = new Set(floraData.map(item => item.estado_de_conservacao).filter(Boolean));
     return ['all', ...Array.from(statuses)] as string[];
   }, [floraData]);
 
-  // Count fauna by category
+  // Count fauna by category (classe_taxonomica)
   const faunaCounts = useMemo(() => {
     return FAUNA_CATEGORIES.reduce((acc, cat) => {
-      acc[cat.value] = faunaData.filter(item => item.classe_taxonomica === cat.value).length;
+      acc[cat.value] = faunaData.filter(item => 
+        item.classe_taxonomica?.toUpperCase() === cat.value.toUpperCase()
+      ).length;
       return acc;
     }, {} as Record<string, number>);
   }, [faunaData]);
@@ -356,14 +373,16 @@ const IdentificarEspecie: React.FC = () => {
   // Count flora by category
   const floraCounts = useMemo(() => {
     return {
-      ornamental: floraData.filter(item => item.tipo_planta?.toLowerCase().includes('ornamental')).length,
-      madeira_lei: floraData.filter(item => item.madeira_lei === true).length,
-      imune_corte: floraData.filter(item => item.imune_ao_corte === true).length,
+      ornamental: floraData.filter(item => 
+        item.tipo_de_planta?.toLowerCase().includes('ornamental')
+      ).length,
+      madeira_lei: floraData.filter(item => item.madeira_de_lei === 'Sim').length,
+      imune_corte: floraData.filter(item => item.imune_ao_corte === 'Sim').length,
       frutifera_exotica: floraData.filter(item => 
-        item.tipo_planta?.toLowerCase().includes('frutífera') || 
-        item.tipo_planta?.toLowerCase().includes('frutifera') ||
-        item.tipo_planta?.toLowerCase().includes('exótica') ||
-        item.tipo_planta?.toLowerCase().includes('exotica')
+        item.tipo_de_planta?.toLowerCase().includes('frutífera') || 
+        item.tipo_de_planta?.toLowerCase().includes('frutifera') ||
+        item.tipo_de_planta?.toLowerCase().includes('exótica') ||
+        item.tipo_de_planta?.toLowerCase().includes('exotica')
       ).length,
     };
   }, [floraData]);
@@ -372,24 +391,29 @@ const IdentificarEspecie: React.FC = () => {
   const filteredFauna = useMemo(() => {
     let result = faunaData;
 
-    // Search filter
+    // Search filter - also search nomes_populares
     if (searchTerm.trim()) {
       const normalizedSearch = normalizeText(searchTerm);
       result = result.filter(item => {
         const nomePopular = normalizeText(item.nome_popular || '');
         const nomeCientifico = normalizeText(item.nome_cientifico || '');
-        return nomePopular.includes(normalizedSearch) || nomeCientifico.includes(normalizedSearch);
+        const nomesPopulares = (item.nomes_populares || []).map(n => normalizeText(n)).join(' ');
+        return nomePopular.includes(normalizedSearch) || 
+               nomeCientifico.includes(normalizedSearch) ||
+               nomesPopulares.includes(normalizedSearch);
       });
     }
 
     // Category filter (classe_taxonomica)
     if (faunaCategory) {
-      result = result.filter(item => item.classe_taxonomica === faunaCategory);
+      result = result.filter(item => 
+        item.classe_taxonomica?.toUpperCase() === faunaCategory.toUpperCase()
+      );
     }
 
     // Conservation status filter
     if (faunaConservation !== 'all') {
-      result = result.filter(item => item.estado_conservacao === faunaConservation);
+      result = result.filter(item => item.estado_de_conservacao === faunaConservation);
     }
 
     return result;
@@ -399,13 +423,16 @@ const IdentificarEspecie: React.FC = () => {
   const filteredFlora = useMemo(() => {
     let result = floraData;
 
-    // Search filter
+    // Search filter - also search nomes_populares
     if (searchTerm.trim()) {
       const normalizedSearch = normalizeText(searchTerm);
       result = result.filter(item => {
         const nomePopular = normalizeText(item.nome_popular || '');
         const nomeCientifico = normalizeText(item.nome_cientifico || '');
-        return nomePopular.includes(normalizedSearch) || nomeCientifico.includes(normalizedSearch);
+        const nomesPopulares = (item.nomes_populares || []).map(n => normalizeText(n)).join(' ');
+        return nomePopular.includes(normalizedSearch) || 
+               nomeCientifico.includes(normalizedSearch) ||
+               nomesPopulares.includes(normalizedSearch);
       });
     }
 
@@ -413,20 +440,20 @@ const IdentificarEspecie: React.FC = () => {
     if (floraCategory) {
       switch (floraCategory) {
         case 'ornamental':
-          result = result.filter(item => item.tipo_planta?.toLowerCase().includes('ornamental'));
+          result = result.filter(item => item.tipo_de_planta?.toLowerCase().includes('ornamental'));
           break;
         case 'madeira_lei':
-          result = result.filter(item => item.madeira_lei === true);
+          result = result.filter(item => item.madeira_de_lei === 'Sim');
           break;
         case 'imune_corte':
-          result = result.filter(item => item.imune_ao_corte === true);
+          result = result.filter(item => item.imune_ao_corte === 'Sim');
           break;
         case 'frutifera_exotica':
           result = result.filter(item => 
-            item.tipo_planta?.toLowerCase().includes('frutífera') || 
-            item.tipo_planta?.toLowerCase().includes('frutifera') ||
-            item.tipo_planta?.toLowerCase().includes('exótica') ||
-            item.tipo_planta?.toLowerCase().includes('exotica')
+            item.tipo_de_planta?.toLowerCase().includes('frutífera') || 
+            item.tipo_de_planta?.toLowerCase().includes('frutifera') ||
+            item.tipo_de_planta?.toLowerCase().includes('exótica') ||
+            item.tipo_de_planta?.toLowerCase().includes('exotica')
           );
           break;
       }
@@ -434,7 +461,7 @@ const IdentificarEspecie: React.FC = () => {
 
     // Conservation status filter
     if (floraConservation !== 'all') {
-      result = result.filter(item => item.estado_conservacao === floraConservation);
+      result = result.filter(item => item.estado_de_conservacao === floraConservation);
     }
 
     return result;

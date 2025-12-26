@@ -151,7 +151,7 @@ export default function FloraCadastro() {
           madeiraLei: data.madeira_de_lei || "",
           imuneCorte: data.imune_ao_corte || "",
         });
-        setImages(data.imagens || []);
+        setImages(Array.isArray(data.imagens) ? data.imagens as string[] : []);
       }
     } catch (error) {
       console.error("Erro ao carregar espécie:", error);
