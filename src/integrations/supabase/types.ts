@@ -1315,6 +1315,9 @@ export type Database = {
         Returns: boolean
       }
       is_allowed_user: { Args: { check_email: string }; Returns: boolean }
+      make_slug: { Args: { txt: string }; Returns: string }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       slugify: { Args: { input: string }; Returns: string }
       slugify_pt: { Args: { input: string }; Returns: string }
       sync_imagens_fauna: { Args: never; Returns: undefined }

@@ -8,9 +8,12 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { buscarImagemEspecie, getDirectImageUrl } from '@/services/speciesImageService';
 
-const SUPABASE_URL = "https://oiwwptnqaunsyhpkwbrz.supabase.co";
 const ITEMS_PER_PAGE = 20;
+
+// Cache for image URLs
+const imageCache = new Map<string, string[]>();
 
 // Fauna categories - matching dim_especies_fauna classe_taxonomica values
 const FAUNA_CATEGORIES = [
@@ -61,7 +64,7 @@ interface FloraRecord {
 
 const getImageUrl = (filename: string, type: 'fauna' | 'flora'): string => {
   const bucket = type === 'fauna' ? 'imagens-fauna' : 'imagens-flora';
-  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${filename}`;
+  return getDirectImageUrl(bucket, filename);
 };
 
 const normalizeText = (text: string): string => {
@@ -71,20 +74,82 @@ const normalizeText = (text: string): string => {
     .replace(/[\u0300-\u036f]/g, '');
 };
 
-// Species Image Component
+// Species Image Component with edge function lookup
 const SpeciesImage = memo(({ 
-  imageUrl, 
+  nomeCientifico,
+  nomePopular,
+  tipo,
+  fallbackImages,
   alt, 
   onZoom 
 }: { 
-  imageUrl: string; 
+  nomeCientifico: string | null;
+  nomePopular: string | null;
+  tipo: 'fauna' | 'flora';
+  fallbackImages: string[];
   alt: string; 
   onZoom: (url: string, name: string) => void;
 }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (error) {
+  useEffect(() => {
+    const fetchImage = async () => {
+      const cacheKey = `${tipo}-${nomeCientifico || nomePopular}`;
+      
+      // Check cache first
+      if (imageCache.has(cacheKey)) {
+        const cached = imageCache.get(cacheKey)!;
+        if (cached.length > 0) {
+          setImageUrl(cached[0]);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // If we have fallback images, use them directly
+      if (fallbackImages && fallbackImages.length > 0) {
+        const url = getImageUrl(fallbackImages[0], tipo);
+        imageCache.set(cacheKey, [url]);
+        setImageUrl(url);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch from edge function
+      try {
+        const result = await buscarImagemEspecie(
+          nomeCientifico,
+          nomePopular,
+          tipo,
+          null
+        );
+
+        if (result.success && result.urls && result.urls.length > 0) {
+          imageCache.set(cacheKey, result.urls);
+          setImageUrl(result.urls[0]);
+        } else {
+          imageCache.set(cacheKey, []);
+        }
+      } catch (err) {
+        console.error('Error fetching species image:', err);
+        imageCache.set(cacheKey, []);
+      }
+      setLoading(false);
+    };
+
+    fetchImage();
+  }, [nomeCientifico, nomePopular, tipo, fallbackImages]);
+
+  if (loading) {
+    return (
+      <div className="w-full h-32 bg-muted/30 rounded-lg flex items-center justify-center animate-pulse" />
+    );
+  }
+
+  if (error || !imageUrl) {
     return (
       <div className="w-full h-32 bg-muted/30 rounded-lg flex items-center justify-center">
         <ImageOff className="h-6 w-6 text-muted-foreground/50" />
@@ -135,22 +200,16 @@ const FaunaCard = memo(({
   return (
     <Card className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden hover:shadow-lg transition-all">
       <CardContent className="p-4">
-        {images.length > 0 ? (
-          <div className={`grid gap-2 mb-3 ${images.length === 1 ? 'grid-cols-1' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-            {images.slice(0, 6).map((filename, idx) => (
-              <SpeciesImage
-                key={idx}
-                imageUrl={getImageUrl(filename, 'fauna')}
-                alt={`${item.nome_popular || 'Espécie'} - ${idx + 1}`}
-                onZoom={onZoom}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="w-full h-32 bg-muted/30 rounded-lg flex items-center justify-center mb-3">
-            <ImageOff className="h-8 w-8 text-muted-foreground/50" />
-          </div>
-        )}
+        <div className="mb-3">
+          <SpeciesImage
+            nomeCientifico={item.nome_cientifico}
+            nomePopular={item.nome_popular}
+            tipo="fauna"
+            fallbackImages={images}
+            alt={item.nome_popular || 'Espécie'}
+            onZoom={onZoom}
+          />
+        </div>
 
         <h3 className="text-lg font-semibold text-foreground mb-1">{item.nome_popular || 'Sem nome'}</h3>
         {item.nome_cientifico && (
@@ -196,22 +255,16 @@ const FloraCard = memo(({
   return (
     <Card className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden hover:shadow-lg transition-all">
       <CardContent className="p-4">
-        {images.length > 0 ? (
-          <div className={`grid gap-2 mb-3 ${images.length === 1 ? 'grid-cols-1' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-            {images.slice(0, 6).map((filename, idx) => (
-              <SpeciesImage
-                key={idx}
-                imageUrl={getImageUrl(filename, 'flora')}
-                alt={`${item.nome_popular || 'Espécie'} - ${idx + 1}`}
-                onZoom={onZoom}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="w-full h-32 bg-muted/30 rounded-lg flex items-center justify-center mb-3">
-            <ImageOff className="h-8 w-8 text-muted-foreground/50" />
-          </div>
-        )}
+        <div className="mb-3">
+          <SpeciesImage
+            nomeCientifico={item.nome_cientifico}
+            nomePopular={item.nome_popular}
+            tipo="flora"
+            fallbackImages={images}
+            alt={item.nome_popular || 'Espécie'}
+            onZoom={onZoom}
+          />
+        </div>
 
         <h3 className="text-lg font-semibold text-foreground mb-1">{item.nome_popular || 'Sem nome'}</h3>
         {item.nome_cientifico && (

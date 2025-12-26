@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.auto-images]
 verify_jwt = true
+
+[functions.buscar-imagens-especies]
+verify_jwt = false
