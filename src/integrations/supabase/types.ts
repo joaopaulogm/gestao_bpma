@@ -183,18 +183,18 @@ export type Database = {
           foto_validada_em: string | null
           fotos_paths: Json | null
           id: string
-          imagens: string[] | null
+          imagens: Json | null
           imagens_atualizado_em: string | null
           imagens_erro: string | null
           imagens_fontes: Json | null
-          imagens_paths: string[] | null
+          imagens_paths: Json | null
           imagens_qtd: number | null
           imagens_status: string | null
           imagens_updated_at: string | null
           nome_cientifico: string | null
           nome_cientifico_slug: string | null
           nome_popular: string | null
-          nomes_populares: string[] | null
+          nomes_populares: Json | null
           ordem_taxonomica: string | null
           tipo_de_fauna: string | null
         }
@@ -208,18 +208,18 @@ export type Database = {
           foto_validada_em?: string | null
           fotos_paths?: Json | null
           id: string
-          imagens?: string[] | null
+          imagens?: Json | null
           imagens_atualizado_em?: string | null
           imagens_erro?: string | null
           imagens_fontes?: Json | null
-          imagens_paths?: string[] | null
+          imagens_paths?: Json | null
           imagens_qtd?: number | null
           imagens_status?: string | null
           imagens_updated_at?: string | null
           nome_cientifico?: string | null
           nome_cientifico_slug?: string | null
           nome_popular?: string | null
-          nomes_populares?: string[] | null
+          nomes_populares?: Json | null
           ordem_taxonomica?: string | null
           tipo_de_fauna?: string | null
         }
@@ -233,18 +233,18 @@ export type Database = {
           foto_validada_em?: string | null
           fotos_paths?: Json | null
           id?: string
-          imagens?: string[] | null
+          imagens?: Json | null
           imagens_atualizado_em?: string | null
           imagens_erro?: string | null
           imagens_fontes?: Json | null
-          imagens_paths?: string[] | null
+          imagens_paths?: Json | null
           imagens_qtd?: number | null
           imagens_status?: string | null
           imagens_updated_at?: string | null
           nome_cientifico?: string | null
           nome_cientifico_slug?: string | null
           nome_popular?: string | null
-          nomes_populares?: string[] | null
+          nomes_populares?: Json | null
           ordem_taxonomica?: string | null
           tipo_de_fauna?: string | null
         }
@@ -261,11 +261,11 @@ export type Database = {
           foto_validada_em: string | null
           fotos_paths: Json | null
           id: string
-          imagens: string[] | null
+          imagens: Json | null
           imagens_atualizado_em: string | null
           imagens_erro: string | null
           imagens_fontes: Json | null
-          imagens_paths: string[] | null
+          imagens_paths: Json | null
           imagens_qtd: number | null
           imagens_status: string | null
           imagens_updated_at: string | null
@@ -274,7 +274,7 @@ export type Database = {
           nome_cientifico: string | null
           nome_cientifico_slug: string | null
           nome_popular: string | null
-          nomes_populares: string[] | null
+          nomes_populares: Json | null
           ordem_taxonomica: string | null
           tipo_de_planta: string | null
         }
@@ -288,11 +288,11 @@ export type Database = {
           foto_validada_em?: string | null
           fotos_paths?: Json | null
           id: string
-          imagens?: string[] | null
+          imagens?: Json | null
           imagens_atualizado_em?: string | null
           imagens_erro?: string | null
           imagens_fontes?: Json | null
-          imagens_paths?: string[] | null
+          imagens_paths?: Json | null
           imagens_qtd?: number | null
           imagens_status?: string | null
           imagens_updated_at?: string | null
@@ -301,7 +301,7 @@ export type Database = {
           nome_cientifico?: string | null
           nome_cientifico_slug?: string | null
           nome_popular?: string | null
-          nomes_populares?: string[] | null
+          nomes_populares?: Json | null
           ordem_taxonomica?: string | null
           tipo_de_planta?: string | null
         }
@@ -315,11 +315,11 @@ export type Database = {
           foto_validada_em?: string | null
           fotos_paths?: Json | null
           id?: string
-          imagens?: string[] | null
+          imagens?: Json | null
           imagens_atualizado_em?: string | null
           imagens_erro?: string | null
           imagens_fontes?: Json | null
-          imagens_paths?: string[] | null
+          imagens_paths?: Json | null
           imagens_qtd?: number | null
           imagens_status?: string | null
           imagens_updated_at?: string | null
@@ -328,7 +328,7 @@ export type Database = {
           nome_cientifico?: string | null
           nome_cientifico_slug?: string | null
           nome_popular?: string | null
-          nomes_populares?: string[] | null
+          nomes_populares?: Json | null
           ordem_taxonomica?: string | null
           tipo_de_planta?: string | null
         }
@@ -1306,6 +1306,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fn_nome_cientifico_prefix: { Args: { nome: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1316,6 +1317,8 @@ export type Database = {
       is_allowed_user: { Args: { check_email: string }; Returns: boolean }
       slugify: { Args: { input: string }; Returns: string }
       slugify_pt: { Args: { input: string }; Returns: string }
+      sync_imagens_fauna: { Args: never; Returns: undefined }
+      sync_imagens_flora: { Args: never; Returns: undefined }
       unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {

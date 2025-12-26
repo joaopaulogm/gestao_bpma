@@ -193,7 +193,10 @@ export const buscarTodasEspecies = async (): Promise<Especie[]> => {
       return [];
     }
     
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      imagens: Array.isArray(item.imagens) ? item.imagens as string[] : []
+    })) as Especie[];
   } catch (error) {
     console.error("Erro ao buscar espécies:", error);
     return [];
@@ -217,7 +220,10 @@ export const buscarEspeciesPorClasse = async (
       return [];
     }
     
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      imagens: Array.isArray(item.imagens) ? item.imagens as string[] : []
+    })) as Especie[];
   } catch (error) {
     console.error("Erro ao buscar espécies:", error);
     return [];
@@ -258,7 +264,12 @@ export const buscarEspeciePorId = async (id: string): Promise<Especie | null> =>
       return null;
     }
     
-    return data;
+    if (!data) return null;
+    
+    return {
+      ...data,
+      imagens: Array.isArray(data.imagens) ? data.imagens as string[] : []
+    } as Especie;
   } catch (error) {
     console.error("Erro ao buscar espécie por ID:", error);
     return null;
@@ -278,7 +289,12 @@ export const buscarEspeciePorNomeCientifico = async (nomeCientifico: string): Pr
       return null;
     }
     
-    return data;
+    if (!data) return null;
+    
+    return {
+      ...data,
+      imagens: Array.isArray(data.imagens) ? data.imagens as string[] : []
+    } as Especie;
   } catch (error) {
     console.error("Erro ao buscar espécie por nome científico:", error);
     return null;
@@ -343,7 +359,10 @@ export const cadastrarEspecie = async (especie: Omit<Especie, 'id'>): Promise<Es
       // Still return dimData since main record was created
     }
     
-    return dimData;
+    return {
+      ...dimData,
+      imagens: Array.isArray(dimData.imagens) ? dimData.imagens as string[] : []
+    } as Especie;
   } catch (error) {
     console.error("Erro ao cadastrar espécie:", error);
     return null;
@@ -364,7 +383,12 @@ export const atualizarEspecie = async (id: string, especie: Omit<Especie, 'id'>)
       return null;
     }
     
-    return data;
+    if (!data) return null;
+    
+    return {
+      ...data,
+      imagens: Array.isArray(data.imagens) ? data.imagens as string[] : []
+    } as Especie;
   } catch (error) {
     console.error("Erro ao atualizar espécie:", error);
     return null;
