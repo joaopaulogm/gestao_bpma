@@ -48,19 +48,19 @@ const MESES = [
 
 const MESES_ABREV = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
-const mesConfig: Record<number, { bg: string; icon: string; color: string }> = {
-  1: { bg: 'from-blue-500 to-blue-600', icon: '❄️', color: 'blue' },
-  2: { bg: 'from-purple-500 to-purple-600', icon: '💜', color: 'purple' },
-  3: { bg: 'from-green-500 to-green-600', icon: '🌿', color: 'green' },
-  4: { bg: 'from-pink-500 to-pink-600', icon: '🌸', color: 'pink' },
-  5: { bg: 'from-amber-500 to-amber-600', icon: '🌻', color: 'amber' },
-  6: { bg: 'from-cyan-500 to-cyan-600', icon: '🌊', color: 'cyan' },
-  7: { bg: 'from-orange-500 to-orange-600', icon: '☀️', color: 'orange' },
-  8: { bg: 'from-indigo-500 to-indigo-600', icon: '🌴', color: 'indigo' },
-  9: { bg: 'from-teal-500 to-teal-600', icon: '🍂', color: 'teal' },
-  10: { bg: 'from-rose-500 to-rose-600', icon: '🎃', color: 'rose' },
-  11: { bg: 'from-violet-500 to-violet-600', icon: '🦃', color: 'violet' },
-  12: { bg: 'from-emerald-500 to-emerald-600', icon: '🎄', color: 'emerald' },
+const mesConfig: Record<number, { bg: string; icon: React.ReactNode; color: string }> = {
+  1: { bg: 'from-slate-500 to-slate-600', icon: <CalendarDays className="h-5 w-5" />, color: 'slate' },
+  2: { bg: 'from-violet-500 to-violet-600', icon: <CalendarDays className="h-5 w-5" />, color: 'violet' },
+  3: { bg: 'from-emerald-500 to-emerald-600', icon: <CalendarDays className="h-5 w-5" />, color: 'emerald' },
+  4: { bg: 'from-rose-500 to-rose-600', icon: <CalendarDays className="h-5 w-5" />, color: 'rose' },
+  5: { bg: 'from-amber-500 to-amber-600', icon: <CalendarDays className="h-5 w-5" />, color: 'amber' },
+  6: { bg: 'from-cyan-500 to-cyan-600', icon: <CalendarDays className="h-5 w-5" />, color: 'cyan' },
+  7: { bg: 'from-orange-500 to-orange-600', icon: <Sun className="h-5 w-5" />, color: 'orange' },
+  8: { bg: 'from-indigo-500 to-indigo-600', icon: <Palmtree className="h-5 w-5" />, color: 'indigo' },
+  9: { bg: 'from-teal-500 to-teal-600', icon: <CalendarDays className="h-5 w-5" />, color: 'teal' },
+  10: { bg: 'from-pink-500 to-pink-600', icon: <CalendarDays className="h-5 w-5" />, color: 'pink' },
+  11: { bg: 'from-purple-500 to-purple-600', icon: <CalendarDays className="h-5 w-5" />, color: 'purple' },
+  12: { bg: 'from-green-500 to-green-600', icon: <Plane className="h-5 w-5" />, color: 'green' },
 };
 
 const postoOrdem: Record<string, number> = {
@@ -73,7 +73,7 @@ const Ferias: React.FC = () => {
   const [mesSelecionado, setMesSelecionado] = useState<number | null>(null);
   const [ferias, setFerias] = useState<FeriasData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [ano, setAno] = useState(2026);
+  const [ano, setAno] = useState(2025);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPolicial, setEditingPolicial] = useState<FeriasData | null>(null);
   const [parcelas, setParcelas] = useState<Parcela[]>([{ mes: 1, dias: 30 }]);
@@ -369,7 +369,7 @@ const Ferias: React.FC = () => {
                       `}
                     >
                       <div className="flex flex-col items-center gap-1">
-                        <span className="text-2xl">{config.icon}</span>
+                        <span className={`${isSelected ? 'text-white' : 'text-primary'}`}>{config.icon}</span>
                         <span className={`font-semibold text-sm ${isSelected ? 'text-white' : 'text-foreground'}`}>
                           {mes}
                         </span>
