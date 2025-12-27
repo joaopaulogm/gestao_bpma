@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -57,6 +57,25 @@ const FloraCadastrada = () => {
     clearFilters,
     hasActiveFilters,
   } = useFloraTable();
+
+  // Realtime listener for flora table changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('realtime-flora-list')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'dim_especies_flora' },
+        (payload) => {
+          console.log('Flora table changed:', payload);
+          refreshEspecies();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refreshEspecies]);
 
   const especieToDelete = especies.find(especie => especie.id === confirmDeleteId);
 

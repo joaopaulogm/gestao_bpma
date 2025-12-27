@@ -354,40 +354,78 @@ const IdentificarEspecie: React.FC = () => {
   const [floraPage, setFloraPage] = useState(1);
 
   // Fetch data from Supabase - using dim_especies tables
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const { data: fauna, error: faunaError } = await supabase
-          .from('dim_especies_fauna')
-          .select('*')
-          .order('nome_popular', { ascending: true });
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: fauna, error: faunaError } = await supabase
+        .from('dim_especies_fauna')
+        .select('*')
+        .order('nome_popular', { ascending: true });
 
-        if (faunaError) {
-          console.error('Error fetching fauna:', faunaError);
-        } else {
-          setFaunaData((fauna || []) as FaunaRecord[]);
-        }
-
-        const { data: flora, error: floraError } = await supabase
-          .from('dim_especies_flora')
-          .select('*')
-          .order('nome_popular', { ascending: true });
-
-        if (floraError) {
-          console.error('Error fetching flora:', floraError);
-        } else {
-          setFloraData((flora || []) as FloraRecord[]);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
+      if (faunaError) {
+        console.error('Error fetching fauna:', faunaError);
+      } else {
+        setFaunaData((fauna || []) as FaunaRecord[]);
       }
-    };
 
-    fetchData();
+      const { data: flora, error: floraError } = await supabase
+        .from('dim_especies_flora')
+        .select('*')
+        .order('nome_popular', { ascending: true });
+
+      if (floraError) {
+        console.error('Error fetching flora:', floraError);
+      } else {
+        setFloraData((flora || []) as FloraRecord[]);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Realtime listeners for fauna and flora table changes
+  useEffect(() => {
+    // Channel for FAUNA
+    const channelFauna = supabase
+      .channel('identificacao-fauna')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'dim_especies_fauna' },
+        () => {
+          console.log('Fauna data changed, refreshing...');
+          // Clear image cache for updated data
+          imageCache.clear();
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    // Channel for FLORA
+    const channelFlora = supabase
+      .channel('identificacao-flora')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'dim_especies_flora' },
+        () => {
+          console.log('Flora data changed, refreshing...');
+          // Clear image cache for updated data
+          imageCache.clear();
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channelFauna);
+      supabase.removeChannel(channelFlora);
+    };
+  }, [fetchData]);
 
   // Reset pagination when filters change
   useEffect(() => {
