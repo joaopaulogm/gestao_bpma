@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   UserMinus, ArrowLeft, Search, Calendar, Users, Activity, AlertTriangle,
   Loader2, Palmtree, ChevronLeft, ChevronRight, Filter,
-  Clock, CalendarDays, UserX, Shield
+  Clock, CalendarDays, UserX, Shield, Trash2, Edit3
 } from 'lucide-react';
 import { NovoAfastamentoDialog } from '@/components/afastamentos/NovoAfastamentoDialog';
 import { Link } from 'react-router-dom';
@@ -16,11 +16,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, isWithinInterval, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 interface Ferias {
   id: string;
   efetivo_id: string;
@@ -130,6 +130,11 @@ const Afastamentos: React.FC = () => {
   const [licencas, setLicencas] = useState<LicencaMedica[]>([]);
   const [restricoes, setRestricoes] = useState<Restricao[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Delete state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; tipo: 'ferias' | 'licenca' | 'restricao'; nome: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -274,6 +279,48 @@ const Afastamentos: React.FC = () => {
       return a.data_inicio <= hoje && a.data_fim >= hoje;
     }).length,
   }), [ferias, licencas, restricoes, afastamentosConsolidados]);
+
+  // Handle delete
+  const handleDeleteClick = (item: AfastamentoConsolidado) => {
+    setItemToDelete({
+      id: item.id,
+      tipo: item.tipo,
+      nome: item.policial?.nome_guerra || 'Desconhecido'
+    });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+    
+    setDeleting(true);
+    try {
+      let error;
+      
+      if (itemToDelete.tipo === 'ferias') {
+        const result = await supabase.from('fat_ferias').delete().eq('id', itemToDelete.id);
+        error = result.error;
+      } else if (itemToDelete.tipo === 'licenca') {
+        const result = await supabase.from('fat_licencas_medicas').delete().eq('id', itemToDelete.id);
+        error = result.error;
+      } else {
+        const result = await supabase.from('fat_restricoes').delete().eq('id', itemToDelete.id);
+        error = result.error;
+      }
+      
+      if (error) throw error;
+      
+      toast.success('Afastamento excluído com sucesso');
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+      fetchData();
+    } catch (error) {
+      console.error('Erro ao excluir:', error);
+      toast.error('Erro ao excluir afastamento');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Dias do mês para calendário
   const diasDoMes = useMemo(() => {
@@ -585,7 +632,7 @@ const Afastamentos: React.FC = () => {
                             key={afastamento.id}
                             className={`
                               flex items-center justify-between p-4 rounded-xl border
-                              ${config.bgColor} transition-all hover:shadow-sm
+                              ${config.bgColor} transition-all hover:shadow-sm group
                             `}
                           >
                             <div className="flex items-center gap-3">
@@ -631,6 +678,16 @@ const Afastamentos: React.FC = () => {
                                   </p>
                                 )}
                               </div>
+                              
+                              {/* Delete button */}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDeleteClick(afastamento)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
                         );
@@ -642,6 +699,36 @@ const Afastamentos: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir Afastamento</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o afastamento de <strong>{itemToDelete?.nome}</strong>?
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  'Excluir'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
