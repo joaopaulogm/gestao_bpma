@@ -87,7 +87,7 @@ export const atualizarImagensEspecie = async (
   try {
     const { error } = await supabase
       .from('dim_especies_fauna')
-      .update({ imagens })
+      .update({ imagens_paths: imagens })
       .eq('id', id);
 
     if (error) {
@@ -166,7 +166,7 @@ export const atualizarImagensFlora = async (
   try {
     const { error } = await supabase
       .from('dim_especies_flora')
-      .update({ imagens })
+      .update({ imagens_paths: imagens })
       .eq('id', id);
 
     if (error) {
@@ -194,8 +194,14 @@ export const buscarTodasEspecies = async (): Promise<Especie[]> => {
     }
     
     return (data || []).map(item => ({
-      ...item,
-      imagens: Array.isArray(item.imagens) ? item.imagens as string[] : []
+      id: item.id,
+      classe_taxonomica: item.classe_taxonomica || '',
+      nome_popular: item.nome_popular || '',
+      nome_cientifico: item.nome_cientifico || '',
+      ordem_taxonomica: item.ordem_taxonomica || '',
+      estado_de_conservacao: item.estado_de_conservacao || '',
+      tipo_de_fauna: item.tipo_de_fauna || '',
+      imagens: Array.isArray(item.imagens_paths) ? item.imagens_paths as string[] : []
     })) as Especie[];
   } catch (error) {
     console.error("Erro ao buscar espécies:", error);
@@ -221,8 +227,14 @@ export const buscarEspeciesPorClasse = async (
     }
     
     return (data || []).map(item => ({
-      ...item,
-      imagens: Array.isArray(item.imagens) ? item.imagens as string[] : []
+      id: item.id,
+      classe_taxonomica: item.classe_taxonomica || '',
+      nome_popular: item.nome_popular || '',
+      nome_cientifico: item.nome_cientifico || '',
+      ordem_taxonomica: item.ordem_taxonomica || '',
+      estado_de_conservacao: item.estado_de_conservacao || '',
+      tipo_de_fauna: item.tipo_de_fauna || '',
+      imagens: Array.isArray(item.imagens_paths) ? item.imagens_paths as string[] : []
     })) as Especie[];
   } catch (error) {
     console.error("Erro ao buscar espécies:", error);
@@ -242,8 +254,8 @@ export const buscarClassesTaxonomicas = async (): Promise<string[]> => {
       return [];
     }
     
-    // Remover duplicatas
-    const classes = [...new Set(data.map(item => item.classe_taxonomica))];
+    // Remover duplicatas e nulls
+    const classes = [...new Set(data.map(item => item.classe_taxonomica).filter(Boolean))] as string[];
     return classes;
   } catch (error) {
     console.error("Erro ao buscar classes taxonômicas:", error);
@@ -267,8 +279,14 @@ export const buscarEspeciePorId = async (id: string): Promise<Especie | null> =>
     if (!data) return null;
     
     return {
-      ...data,
-      imagens: Array.isArray(data.imagens) ? data.imagens as string[] : []
+      id: data.id,
+      classe_taxonomica: data.classe_taxonomica || '',
+      nome_popular: data.nome_popular || '',
+      nome_cientifico: data.nome_cientifico || '',
+      ordem_taxonomica: data.ordem_taxonomica || '',
+      estado_de_conservacao: data.estado_de_conservacao || '',
+      tipo_de_fauna: data.tipo_de_fauna || '',
+      imagens: Array.isArray(data.imagens_paths) ? data.imagens_paths as string[] : []
     } as Especie;
   } catch (error) {
     console.error("Erro ao buscar espécie por ID:", error);
@@ -292,8 +310,14 @@ export const buscarEspeciePorNomeCientifico = async (nomeCientifico: string): Pr
     if (!data) return null;
     
     return {
-      ...data,
-      imagens: Array.isArray(data.imagens) ? data.imagens as string[] : []
+      id: data.id,
+      classe_taxonomica: data.classe_taxonomica || '',
+      nome_popular: data.nome_popular || '',
+      nome_cientifico: data.nome_cientifico || '',
+      ordem_taxonomica: data.ordem_taxonomica || '',
+      estado_de_conservacao: data.estado_de_conservacao || '',
+      tipo_de_fauna: data.tipo_de_fauna || '',
+      imagens: Array.isArray(data.imagens_paths) ? data.imagens_paths as string[] : []
     } as Especie;
   } catch (error) {
     console.error("Erro ao buscar espécie por nome científico:", error);
@@ -306,10 +330,19 @@ export const cadastrarEspecie = async (especie: Omit<Especie, 'id'>): Promise<Es
     // Generate UUID for the new species
     const newId = crypto.randomUUID();
     
-    // Insert into dimension table first with explicit ID
+    // Insert into dimension table with explicit ID
     const { data: dimData, error: dimError } = await supabase
       .from("dim_especies_fauna")
-      .insert([{ id: newId, ...especie }])
+      .insert([{ 
+        id: newId, 
+        nome_popular: especie.nome_popular,
+        nome_cientifico: especie.nome_cientifico,
+        classe_taxonomica: especie.classe_taxonomica,
+        ordem_taxonomica: especie.ordem_taxonomica,
+        estado_de_conservacao: especie.estado_de_conservacao,
+        tipo_de_fauna: especie.tipo_de_fauna,
+        imagens_paths: especie.imagens || [],
+      }])
       .select()
       .maybeSingle();
     
@@ -319,49 +352,16 @@ export const cadastrarEspecie = async (especie: Omit<Especie, 'id'>): Promise<Es
     }
 
     if (!dimData) return null;
-
-    // Create slug from nome_popular
-    const slug = especie.nome_popular
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-
-    // Determine grupo based on classe_taxonomica
-    const grupoMap: Record<string, string> = {
-      'AVE': 'aves',
-      'MAMIFERO': 'mamiferos',
-      'REPTIL': 'repteis',
-      'PEIXE': 'peixes'
-    };
-    const grupo = grupoMap[especie.classe_taxonomica] || 'outros';
-
-    // Also insert into operational fauna table
-    const { error: faunaError } = await supabase
-      .from("fauna")
-      .insert([{
-        nome_popular: especie.nome_popular,
-        nome_popular_slug: slug,
-        nome_cientifico: especie.nome_cientifico,
-        classe_taxonomica: especie.classe_taxonomica,
-        ordem_taxonomica: especie.ordem_taxonomica,
-        estado_conservacao: especie.estado_de_conservacao,
-        tipo_fauna: especie.tipo_de_fauna,
-        grupo: grupo,
-        id_dim_especie_fauna: dimData.id,
-        bucket: 'imagens-fauna',
-        imagens: []
-      }]);
-    
-    if (faunaError) {
-      console.error("Erro ao cadastrar espécie na tabela fauna:", faunaError);
-      // Still return dimData since main record was created
-    }
     
     return {
-      ...dimData,
-      imagens: Array.isArray(dimData.imagens) ? dimData.imagens as string[] : []
+      id: dimData.id,
+      classe_taxonomica: dimData.classe_taxonomica || '',
+      nome_popular: dimData.nome_popular || '',
+      nome_cientifico: dimData.nome_cientifico || '',
+      ordem_taxonomica: dimData.ordem_taxonomica || '',
+      estado_de_conservacao: dimData.estado_de_conservacao || '',
+      tipo_de_fauna: dimData.tipo_de_fauna || '',
+      imagens: Array.isArray(dimData.imagens_paths) ? dimData.imagens_paths as string[] : []
     } as Especie;
   } catch (error) {
     console.error("Erro ao cadastrar espécie:", error);
@@ -373,7 +373,14 @@ export const atualizarEspecie = async (id: string, especie: Omit<Especie, 'id'>)
   try {
     const { data, error } = await supabase
       .from("dim_especies_fauna")
-      .update(especie)
+      .update({
+        nome_popular: especie.nome_popular,
+        nome_cientifico: especie.nome_cientifico,
+        classe_taxonomica: especie.classe_taxonomica,
+        ordem_taxonomica: especie.ordem_taxonomica,
+        estado_de_conservacao: especie.estado_de_conservacao,
+        tipo_de_fauna: especie.tipo_de_fauna,
+      })
       .eq("id", id)
       .select()
       .maybeSingle();
@@ -386,8 +393,14 @@ export const atualizarEspecie = async (id: string, especie: Omit<Especie, 'id'>)
     if (!data) return null;
     
     return {
-      ...data,
-      imagens: Array.isArray(data.imagens) ? data.imagens as string[] : []
+      id: data.id,
+      classe_taxonomica: data.classe_taxonomica || '',
+      nome_popular: data.nome_popular || '',
+      nome_cientifico: data.nome_cientifico || '',
+      ordem_taxonomica: data.ordem_taxonomica || '',
+      estado_de_conservacao: data.estado_de_conservacao || '',
+      tipo_de_fauna: data.tipo_de_fauna || '',
+      imagens: Array.isArray(data.imagens_paths) ? data.imagens_paths as string[] : []
     } as Especie;
   } catch (error) {
     console.error("Erro ao atualizar espécie:", error);

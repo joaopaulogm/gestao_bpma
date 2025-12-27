@@ -15,10 +15,9 @@ interface FaunaEspecie {
   nome_cientifico: string | null;
   classe_taxonomica: string | null;
   ordem_taxonomica: string | null;
-  tipo_fauna: string | null;
-  estado_conservacao: string | null;
-  grupo: string | null;
-  id_dim_especie_fauna: string | null;
+  tipo_de_fauna: string | null;
+  estado_de_conservacao: string | null;
+  nomes_populares?: string[];
 }
 
 interface FaunaEditDialogProps {
@@ -29,25 +28,12 @@ interface FaunaEditDialogProps {
 }
 
 const CLASSES_TAXONOMICAS = [
-  'Mammalia',
-  'Aves',
-  'Reptilia',
-  'Amphibia',
-  'Actinopterygii',
-  'Chondrichthyes',
-  'Insecta',
-  'Arachnida',
-  'Malacostraca',
-  'Gastropoda',
-];
-
-const GRUPOS = [
-  'Mamíferos',
-  'Aves',
-  'Répteis',
-  'Anfíbios',
-  'Peixes',
-  'Invertebrados',
+  'AVE',
+  'MAMIFERO',
+  'REPTIL',
+  'PEIXE',
+  'ANFIBIO',
+  'INVERTEBRADO',
 ];
 
 const TIPOS_FAUNA = [
@@ -81,25 +67,24 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
         nome_cientifico: especie.nome_cientifico,
         classe_taxonomica: especie.classe_taxonomica,
         ordem_taxonomica: especie.ordem_taxonomica,
-        tipo_fauna: especie.tipo_fauna,
-        estado_conservacao: especie.estado_conservacao,
-        grupo: especie.grupo,
+        tipo_de_fauna: especie.tipo_de_fauna,
+        estado_de_conservacao: especie.estado_de_conservacao,
       });
       
-      // Load additional names from dim_especies_fauna if linked
-      if (especie.id_dim_especie_fauna) {
-        loadNomesPopulares(especie.id_dim_especie_fauna);
+      // Load nomes_populares from the species
+      if (especie.nomes_populares) {
+        setNomesPopulares(especie.nomes_populares);
       } else {
-        setNomesPopulares([]);
+        loadNomesPopulares(especie.id);
       }
     }
   }, [especie]);
 
-  const loadNomesPopulares = async (dimId: string) => {
+  const loadNomesPopulares = async (id: string) => {
     const { data } = await supabase
       .from('dim_especies_fauna')
       .select('nomes_populares')
-      .eq('id', dimId)
+      .eq('id', id)
       .maybeSingle();
     
     if (data?.nomes_populares) {
@@ -125,45 +110,21 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
 
     setSaving(true);
     try {
-      // Generate slug from nome_popular
-      const nome_popular_slug = formData.nome_popular
-        ?.toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '') || '';
-
-      // Update fauna table
-      const { error: faunaError } = await supabase
-        .from('fauna')
+      // Update dim_especies_fauna table
+      const { error: updateError } = await supabase
+        .from('dim_especies_fauna')
         .update({
-          ...formData,
-          nome_popular_slug,
-          updated_at: new Date().toISOString(),
+          nome_popular: formData.nome_popular,
+          nome_cientifico: formData.nome_cientifico,
+          classe_taxonomica: formData.classe_taxonomica,
+          ordem_taxonomica: formData.ordem_taxonomica,
+          tipo_de_fauna: formData.tipo_de_fauna,
+          estado_de_conservacao: formData.estado_de_conservacao,
+          nomes_populares: nomesPopulares,
         })
         .eq('id', especie.id);
 
-      if (faunaError) throw faunaError;
-
-      // Update dim_especies_fauna if linked
-      if (especie.id_dim_especie_fauna) {
-        const { error: dimError } = await supabase
-          .from('dim_especies_fauna')
-          .update({
-            nome_popular: formData.nome_popular,
-            nome_cientifico: formData.nome_cientifico,
-            classe_taxonomica: formData.classe_taxonomica,
-            ordem_taxonomica: formData.ordem_taxonomica,
-            tipo_de_fauna: formData.tipo_fauna,
-            estado_de_conservacao: formData.estado_conservacao,
-            nomes_populares: nomesPopulares,
-          })
-          .eq('id', especie.id_dim_especie_fauna);
-
-        if (dimError) {
-          console.error('Erro ao atualizar dim_especies_fauna:', dimError);
-        }
-      }
+      if (updateError) throw updateError;
 
       toast.success('Espécie atualizada com sucesso');
       onOpenChange(false);
@@ -252,29 +213,10 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
             </div>
 
             <div className="space-y-2">
-              <Label>Grupo</Label>
-              <Select
-                value={formData.grupo || ''}
-                onValueChange={(value) => setFormData({ ...formData, grupo: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {GRUPOS.map((grupo) => (
-                    <SelectItem key={grupo} value={grupo}>{grupo}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
               <Label>Tipo de Fauna</Label>
               <Select
-                value={formData.tipo_fauna || ''}
-                onValueChange={(value) => setFormData({ ...formData, tipo_fauna: value })}
+                value={formData.tipo_de_fauna || ''}
+                onValueChange={(value) => setFormData({ ...formData, tipo_de_fauna: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
@@ -286,23 +228,23 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="ordem_taxonomica">Ordem Taxonômica</Label>
-              <Input
-                id="ordem_taxonomica"
-                value={formData.ordem_taxonomica || ''}
-                onChange={(e) => setFormData({ ...formData, ordem_taxonomica: e.target.value })}
-                placeholder="Ex: Rodentia"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="ordem_taxonomica">Ordem Taxonômica</Label>
+            <Input
+              id="ordem_taxonomica"
+              value={formData.ordem_taxonomica || ''}
+              onChange={(e) => setFormData({ ...formData, ordem_taxonomica: e.target.value })}
+              placeholder="Ex: Rodentia"
+            />
           </div>
 
           <div className="space-y-2">
             <Label>Estado de Conservação</Label>
             <Select
-              value={formData.estado_conservacao || ''}
-              onValueChange={(value) => setFormData({ ...formData, estado_conservacao: value })}
+              value={formData.estado_de_conservacao || ''}
+              onValueChange={(value) => setFormData({ ...formData, estado_de_conservacao: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione" />
@@ -314,12 +256,6 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
               </SelectContent>
             </Select>
           </div>
-
-          {!especie?.id_dim_especie_fauna && (
-            <p className="text-xs text-muted-foreground bg-muted p-2 rounded">
-              Esta espécie ainda não está vinculada à tabela de dimensão. Execute "Sincronizar" na página principal para criar o vínculo.
-            </p>
-          )}
         </div>
 
         <DialogFooter>

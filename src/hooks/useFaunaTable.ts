@@ -7,24 +7,23 @@ export interface FaunaEspecie {
   id: string;
   nome_popular: string;
   nome_cientifico: string | null;
-  nome_popular_slug: string;
+  nome_cientifico_slug: string | null;
   classe_taxonomica: string | null;
   ordem_taxonomica: string | null;
-  tipo_fauna: string | null;
-  estado_conservacao: string | null;
-  grupo: string | null;
+  familia_taxonomica: string | null;
+  tipo_de_fauna: string | null;
+  estado_de_conservacao: string | null;
   imagens: string[];
-  bucket: string;
-  id_dim_especie_fauna: string | null;
-  // Photo validation fields from dimension
+  // Photo validation fields
   foto_principal_path: string | null;
   fotos_paths: string[];
   foto_status: 'validada' | 'pendente' | 'rejeitada' | null;
   foto_fonte_validacao: string | null;
   foto_validada_em: string | null;
+  nomes_populares: string[];
 }
 
-export type SortField = 'nome_popular' | 'nome_cientifico' | 'classe_taxonomica' | 'grupo' | 'foto_status';
+export type SortField = 'nome_popular' | 'nome_cientifico' | 'classe_taxonomica' | 'tipo_de_fauna' | 'foto_status';
 export type SortDirection = 'asc' | 'desc';
 
 export const useFaunaTable = () => {
@@ -43,41 +42,30 @@ export const useFaunaTable = () => {
   const fetchEspecies = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch fauna with joined dimension data
       const { data, error: fetchError } = await supabase
-        .from('fauna')
-        .select(`
-          *,
-          dim_especies_fauna:id_dim_especie_fauna (
-            foto_principal_path,
-            fotos_paths,
-            foto_status,
-            foto_fonte_validacao,
-            foto_validada_em
-          )
-        `)
+        .from('dim_especies_fauna')
+        .select('*')
         .order('nome_popular');
 
       if (fetchError) throw fetchError;
 
       const mapped: FaunaEspecie[] = (data || []).map((item: any) => ({
         id: item.id,
-        nome_popular: item.nome_popular,
+        nome_popular: item.nome_popular || '',
         nome_cientifico: item.nome_cientifico,
-        nome_popular_slug: item.nome_popular_slug,
+        nome_cientifico_slug: item.nome_cientifico_slug,
         classe_taxonomica: item.classe_taxonomica,
         ordem_taxonomica: item.ordem_taxonomica,
-        tipo_fauna: item.tipo_fauna,
-        estado_conservacao: item.estado_conservacao,
-        grupo: item.grupo,
-        imagens: item.imagens || [],
-        bucket: item.bucket || 'imagens-fauna',
-        id_dim_especie_fauna: item.id_dim_especie_fauna,
-        foto_principal_path: item.dim_especies_fauna?.foto_principal_path || null,
-        fotos_paths: item.dim_especies_fauna?.fotos_paths || [],
-        foto_status: item.dim_especies_fauna?.foto_status || null,
-        foto_fonte_validacao: item.dim_especies_fauna?.foto_fonte_validacao || null,
-        foto_validada_em: item.dim_especies_fauna?.foto_validada_em || null,
+        familia_taxonomica: item.familia_taxonomica,
+        tipo_de_fauna: item.tipo_de_fauna,
+        estado_de_conservacao: item.estado_de_conservacao,
+        imagens: Array.isArray(item.imagens_paths) ? item.imagens_paths : [],
+        foto_principal_path: item.foto_principal_path || null,
+        fotos_paths: Array.isArray(item.fotos_paths) ? item.fotos_paths : [],
+        foto_status: item.foto_status || null,
+        foto_fonte_validacao: item.foto_fonte_validacao || null,
+        foto_validada_em: item.foto_validada_em || null,
+        nomes_populares: Array.isArray(item.nomes_populares) ? item.nomes_populares : [],
       }));
 
       setEspecies(mapped);
@@ -98,7 +86,7 @@ export const useFaunaTable = () => {
       .channel('fauna-changes')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'fauna' },
+        { event: '*', schema: 'public', table: 'dim_especies_fauna' },
         () => {
           fetchEspecies();
           queryClient.invalidateQueries({ queryKey: ['fauna'] });
@@ -123,7 +111,7 @@ export const useFaunaTable = () => {
   const handleDelete = async (id: string) => {
     try {
       const { error: deleteError } = await supabase
-        .from('fauna')
+        .from('dim_especies_fauna')
         .delete()
         .eq('id', id);
 
@@ -143,10 +131,11 @@ export const useFaunaTable = () => {
     const filtered = especies.filter(especie => {
       const matchesSearch = !searchTerm || 
         especie.nome_popular?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        especie.nome_cientifico?.toLowerCase().includes(searchTerm.toLowerCase());
+        especie.nome_cientifico?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        especie.nomes_populares?.some(n => n.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesClasse = filterClasse === 'all' || especie.classe_taxonomica === filterClasse;
-      const matchesGrupo = filterGrupo === 'all' || especie.grupo === filterGrupo;
+      const matchesGrupo = filterGrupo === 'all' || especie.tipo_de_fauna === filterGrupo;
       const matchesFotoStatus = filterFotoStatus === 'all' || especie.foto_status === filterFotoStatus;
       
       return matchesSearch && matchesClasse && matchesGrupo && matchesFotoStatus;
@@ -166,7 +155,7 @@ export const useFaunaTable = () => {
   }, [especies]);
 
   const uniqueGrupos = useMemo(() => {
-    const grupos = especies.map(e => e.grupo).filter((g): g is string => !!g);
+    const grupos = especies.map(e => e.tipo_de_fauna).filter((g): g is string => !!g);
     return [...new Set(grupos)].sort();
   }, [especies]);
 
