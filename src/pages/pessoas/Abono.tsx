@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Gift, ArrowLeft, Search, Calendar, Users, Filter, ChevronDown, Info, Building2, CalendarDays, Edit2, ArrowRightLeft, X, Check, Plus } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Gift, ArrowLeft, Search, Calendar, Users, Filter, ChevronDown, CalendarDays, Edit2, ArrowRightLeft, X, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,11 +27,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Militar {
+  id: string;
   matricula: string;
   posto: string;
   nome: string;
+  nome_guerra: string;
 }
 
 interface MesAbono {
@@ -40,252 +43,7 @@ interface MesAbono {
   militares: Militar[];
 }
 
-// Dados do calendário de abono 2026
-const dadosAbonoInicial: MesAbono[] = [
-  {
-    mes: 'Janeiro',
-    numero: 1,
-    militares: [
-      { matricula: '235989', posto: '1º SGT', nome: 'GILBERTO SILVANO RODRIGUES' },
-      { matricula: '241334', posto: '1º SGT', nome: 'JESSE CLEITON SANTANA DE OLIVEIRA' },
-      { matricula: '728632', posto: '1º SGT', nome: 'CASSIO BARBOSA NASCIMENTO' },
-      { matricula: '73909X', posto: '2º SGT', nome: 'MARCUS VINICIUS RODRIGUES BARREIRA' },
-      { matricula: '7315910', posto: '2º SGT', nome: 'RODRIGO MARTINS DO NASCIMENTO BARBOSA' },
-      { matricula: '7315139', posto: '2º SGT', nome: 'ROGERIO XIMENES PORTELA' },
-      { matricula: '7319126', posto: '2º SGT', nome: 'SAULO ELEUTERIO COSTA' },
-      { matricula: '7325967', posto: '3º SGT', nome: 'LEANDRO MONTEIRO ZEIN SAMMOUR ESTEVES' },
-      { matricula: '7361580', posto: 'CB', nome: 'RAFAEL FERNANDES PAZ' },
-      { matricula: '7368968', posto: 'SD', nome: 'WILLIAN MOUTINHO TAVARES' },
-      { matricula: '7383746', posto: 'SD', nome: 'CAMYLA TAVARES ALVES SOUZA' },
-      { matricula: '7389612', posto: 'SD', nome: 'JOÃO VICTOR RODRIGUES SANTOS' },
-      { matricula: '34278516', posto: 'SD', nome: 'EDUARDO FERREIRA NEVES RODRIGUES' },
-    ],
-  },
-  {
-    mes: 'Fevereiro',
-    numero: 2,
-    militares: [
-      { matricula: '219487', posto: '1º SGT', nome: 'CLÁUDIO NERO FERNANDES DA NÓBREGA' },
-      { matricula: '222925', posto: '1º SGT', nome: 'ROBERVAL PAULO DE CASTRO' },
-      { matricula: '228915', posto: '1º SGT', nome: 'ISMAEL MOTTA' },
-      { matricula: '73876X', posto: '2º SGT', nome: 'MAENDLI TENIS DA HORA JUNIOR' },
-      { matricula: '739820', posto: '2º SGT', nome: 'AUCEMI DA SILVA LIMA' },
-      { matricula: '73943X', posto: '2º SGT', nome: 'PAULO CELIO VIEIRA' },
-      { matricula: '2149419', posto: '2º SGT', nome: 'GIL N HENRIQUE LOPES DOS SANTOS' },
-      { matricula: '7316518', posto: '2º SGT', nome: 'RAFAEL TOLEDO RAMOS' },
-      { matricula: '7329539', posto: '3º SGT', nome: 'JOAO PAULO GONCALVES MACIEL' },
-      { matricula: '7360940', posto: 'CB', nome: 'VITOR SOUZA BARBOZA' },
-      { matricula: '7381204', posto: 'SD', nome: 'GUSTAVO DE OLIVEIRA LEMOS' },
-      { matricula: '7396082', posto: 'SD', nome: 'JOÃO FELIPE FERREIRA ZEIDAN' },
-      { matricula: '34279741', posto: 'SD', nome: 'ROBSON SILVA FURTADO' },
-      { matricula: '34284753', posto: 'SD', nome: 'GABRIEL RODRIGUES MARQUES DOS SANTOS' },
-    ],
-  },
-  {
-    mes: 'Março',
-    numero: 3,
-    militares: [
-      { matricula: '21759X', posto: '1º SGT', nome: 'WELINGTON JEAN RICARDO CAMELO SOUSA' },
-      { matricula: '232475', posto: '1º SGT', nome: 'ANDRE LUIZ BARBOSA CEZAR' },
-      { matricula: '730289', posto: '1º SGT', nome: 'EVANIMAR JOSE MARQUES CARVALHO' },
-      { matricula: '237388', posto: '2º SGT', nome: 'LEONARDO DE SALLES' },
-      { matricula: '7322631', posto: '2º SGT', nome: 'BRICIO HERBERT ALVES TEIXEIRA' },
-      { matricula: '7313993', posto: '2º SGT', nome: 'IGOR SANTOS NUNES' },
-      { matricula: '7318553', posto: '2º SGT', nome: 'RAFAEL MARANHÃO COSTA E SILVA' },
-      { matricula: '731812X', posto: '3º SGT', nome: 'NATAN MANOEL BARBOSA E SILVA DAS CHAGAS' },
-      { matricula: '7356410', posto: 'CB', nome: 'RAFAEL ALVES COELHO' },
-      { matricula: '7386486', posto: 'SD', nome: 'VINICIUS DE FREITAS BEZERRA' },
-      { matricula: '34287507', posto: 'SD', nome: 'GABRIEL LARA DE ARAUJO' },
-      { matricula: '34278729', posto: 'SD', nome: 'LUCAS DURAN DA SILVA' },
-      { matricula: '34286756', posto: 'SD', nome: 'BRAYON PABLO DA SILVA BIANGULO' },
-    ],
-  },
-  {
-    mes: 'Abril',
-    numero: 4,
-    militares: [
-      { matricula: '236411', posto: 'ST', nome: 'ISRAEL VITORINO SOARES VIEIRA' },
-      { matricula: '237132', posto: '1º SGT', nome: 'LEONARDO CUNHA VILELA DIAS' },
-      { matricula: '231975', posto: '1º SGT', nome: 'ALLAN BERNARDO DE PAIVA SOUZA LIMA' },
-      { matricula: '730629', posto: '1º SGT', nome: 'RONALD DA SILVA TEIXEIRA' },
-      { matricula: '740934', posto: '1º SGT', nome: 'CARLOS EDUARDO MEDEIROS' },
-      { matricula: '741566', posto: '1º SGT', nome: 'PAULO EDUARDO DE PAIVA BRAGA' },
-      { matricula: '1959573', posto: '1º SGT', nome: 'ALLAN ROGERIO FARIAS LOPES' },
-      { matricula: '1955306', posto: '1º SGT', nome: 'CARLOS MASSAMI DE MACEDO ENDO' },
-      { matricula: '731471X', posto: '2º SGT', nome: 'LUCAS ALVES MIRANDA' },
-      { matricula: '732040X', posto: '2º SGT', nome: 'CARLOS HENRIQUE CRUZ DE QUEIROZ' },
-      { matricula: '7358555', posto: 'CB', nome: 'PAULO HENRIQUE DA SILVA RIBEIRO' },
-      { matricula: '7381735', posto: 'SD', nome: 'TIAGO RODRIGUES FERREIRA' },
-      { matricula: '34291271', posto: 'SD', nome: 'MIKAEL PEREIRA DOS SANTOS' },
-      { matricula: '34287655', posto: 'SD', nome: 'GUILHERME DILAN PEREIRA DA SILVA' },
-      { matricula: '34281861', posto: 'SD', nome: 'MAIKY BARBOSA LOBO CANTUARIO' },
-    ],
-  },
-  {
-    mes: 'Maio',
-    numero: 5,
-    militares: [
-      { matricula: '23267X', posto: '1º SGT', nome: 'ANTONIO DENIS MOURA DOS SANTOS' },
-      { matricula: '240257', posto: '1º SGT', nome: 'UZIEL DE SA FERNANDES' },
-      { matricula: '240613', posto: '1º SGT', nome: 'WALLACE VIDAL DE SOUZA' },
-      { matricula: '738956', posto: '2º SGT', nome: 'MARCIO DA SILVA AVELAR' },
-      { matricula: '738549', posto: '2º SGT', nome: 'MARCEL LARA FERNANDES' },
-      { matricula: '2154250', posto: '2º SGT', nome: 'FERNANDO MIKHAIL DE ALBUQUERQUE PINHEIRO' },
-      { matricula: '7318960', posto: '2º SGT', nome: 'DANIEL ANTONIO SIRQUEIRA DIAS' },
-      { matricula: '7316771', posto: '2º SGT', nome: 'VITOR GABRIEL LIMA DANTAS' },
-      { matricula: '7325770', posto: '3º SGT', nome: 'GUILHERME MILAGRE NETO GUIMARAES' },
-      { matricula: '7359233', posto: 'CB', nome: 'LEONARDO BISPO LEMES' },
-      { matricula: '7379536', posto: 'SD', nome: 'THIAGO QUEIROZ SANTOS' },
-      { matricula: '7391994', posto: 'SD', nome: 'FELIPE NUNES SOARES' },
-      { matricula: '34279091', posto: 'SD', nome: 'PAULO EDUARDO DUARTE MATEUS' },
-      { matricula: '34280464', posto: 'SD', nome: 'JAIR CARVALHO FERNANDES PAIVA' },
-    ],
-  },
-  {
-    mes: 'Junho',
-    numero: 6,
-    militares: [
-      { matricula: '213985', posto: 'ST', nome: 'ROBERTO PEREIRA GONCALVES' },
-      { matricula: '217999', posto: 'ST', nome: 'ELTON NERI DA CONCEICAO' },
-      { matricula: '221074', posto: '1º SGT', nome: 'MARCIO ALEXANDRE FONSECA ARAUJO' },
-      { matricula: '736538', posto: '2º SGT', nome: 'DANIEL BORGES DAMASCENO' },
-      { matricula: '731549X', posto: '2º SGT', nome: 'GREICY ERNESTINA DA SILVA' },
-      { matricula: '7320582', posto: '2º SGT', nome: 'RODOLFO MEDEIROS DE PAULO PINHEIRO' },
-      { matricula: '7315090', posto: '2º SGT', nome: 'THIAGO ALVES DA SILVA' },
-      { matricula: '7313217', posto: '2º SGT', nome: 'THIAGO TEIXEIRA DE OLIVEIRA' },
-      { matricula: '7323980', posto: '3º SGT', nome: 'KAYO HENRIQUE LASMAR BARBOSA VIEIRA' },
-      { matricula: '735892X', posto: 'CB', nome: 'HIGOR GOMES PALHA BESSA' },
-      { matricula: '7371209', posto: 'CB', nome: 'DANILO DA SILVA NASCIMENTO' },
-      { matricula: '7387385', posto: 'SD', nome: 'BRUNO FERREIRA NUNES' },
-      { matricula: '7389728', posto: 'SD', nome: 'SANDERSON MELO BRITO' },
-      { matricula: '7387369', posto: 'SD', nome: 'LUCAS DE SOUSA SENA' },
-      { matricula: '34283544', posto: 'SD', nome: 'JEFERSON FABRÍCIO SOUZA' },
-    ],
-  },
-  {
-    mes: 'Julho',
-    numero: 7,
-    militares: [
-      { matricula: '237221', posto: '1º SGT', nome: 'LEONARDO MELO LEAL' },
-      { matricula: '242624', posto: '1º SGT', nome: 'LEOMAR PEDRO DA SILVA' },
-      { matricula: '229113', posto: '1º SGT', nome: 'EMERSON FRANCISCO DA SILVA' },
-      { matricula: '737402', posto: '2º SGT', nome: 'FERNANDO APARECIDO DO NASCIMENTO' },
-      { matricula: '1954695', posto: '2º SGT', nome: 'BRUNO LIMA DA CUNHA' },
-      { matricula: '1963074', posto: '2º SGT', nome: 'GIULLIANO DE SOUZA CAMPOS' },
-      { matricula: '1999176', posto: '2º SGT', nome: 'FÁBIO FRANCISCO LAGO PEREIRA' },
-      { matricula: '215093X', posto: '2º SGT', nome: 'WESLEN COSTA DA SILVA' },
-      { matricula: '7315902', posto: '2º SGT', nome: 'FERNANDA DOS SANTOS ECHAMENDE' },
-      { matricula: '7313012', posto: '2º SGT', nome: 'MARCIA HINGREDY ATAIDES DE SOUZA' },
-      { matricula: '7327013', posto: '3º SGT', nome: 'EVELIZE DE BRITO MACHADO' },
-      { matricula: '7359969', posto: 'CB', nome: 'LUCAS PEIXOTO ARAÚJO' },
-      { matricula: '7368844', posto: 'SD', nome: 'WANDERLEY FIDELIS DA SILVA JUNIOR' },
-      { matricula: '34288481', posto: 'SD', nome: 'LEONARDO NASCIMENTO FREITAS' },
-      { matricula: '32579527', posto: 'SD', nome: 'MAICON BARROZO DO NASCIMENTO' },
-      { matricula: '34284788', posto: 'SD', nome: 'LUCAS GONÇALVES DE JESUS' },
-      { matricula: '19294654', posto: 'SD', nome: 'CAIO ANDRÉ PACHECO PALHARES' },
-    ],
-  },
-  {
-    mes: 'Agosto',
-    numero: 8,
-    militares: [
-      { matricula: '230790', posto: '1º SGT', nome: 'EDMILSON SILVA DOS SANTOS' },
-      { matricula: '732397', posto: '1º SGT', nome: 'ANA PAULA ALVES RIBEIRO' },
-      { matricula: '7314051', posto: '2º SGT', nome: 'FLÁVIO PEREIRA MACEDO' },
-      { matricula: '7318561', posto: '2º SGT', nome: 'EDIMILSON MEIRA DOS SANTOS' },
-      { matricula: '1955411', posto: '2º SGT', nome: 'PAULO ROBERTO BATISTA MACHADO' },
-      { matricula: '1966774', posto: '2º SGT', nome: 'JORGE PEREIRA DE MELO' },
-      { matricula: '2149621', posto: '2º SGT', nome: 'RAPHAEL VINICIUS DE OLIVEIRA FERREIRA' },
-      { matricula: '7320604', posto: '2º SGT', nome: 'PAULO HENRIQUE DE MOURA CAMPOS' },
-      { matricula: '7318545', posto: '3º SGT', nome: 'THIAGO DE OLIVEIRA CARVALHO' },
-      { matricula: '7361173', posto: 'CB', nome: 'PEDRO HENRIQUE DA CRUZ SILVA' },
-      { matricula: '7384637', posto: 'SD', nome: 'CIBELE CARMO DA SILVA' },
-      { matricula: '34289437', posto: 'SD', nome: 'SUSAN HELLEN LIMA DOS SANTOS' },
-      { matricula: '34281991', posto: 'SD', nome: 'EDERSON MESSIAS DE OLIVEIRA SILVA' },
-      { matricula: '34280227', posto: 'SD', nome: 'GABRIEL JAYME AMANCIO DONINI' },
-      { matricula: '34282653', posto: 'SD', nome: 'GUILHERME MALVEIRA DE MENEZES' },
-    ],
-  },
-  {
-    mes: 'Setembro',
-    numero: 9,
-    militares: [
-      { matricula: '727660', posto: 'ST', nome: 'ADALBERTO ARAUJO' },
-      { matricula: '229180', posto: '1º SGT', nome: 'WELLINGTON LUCAS DA MOTA' },
-      { matricula: '242942', posto: '1º SGT', nome: 'MAURO FERNANDO CORREIA' },
-      { matricula: '2153866', posto: '1º SGT', nome: 'RENATO PEREIRA RIBEIRO' },
-      { matricula: '7322569', posto: '2º SGT', nome: 'WELITON WAGNER DOS SANTOS' },
-      { matricula: '7317921', posto: '2º SGT', nome: 'WELYSSON ERICK MACHADO NUNES' },
-      { matricula: '7318138', posto: '2º SGT', nome: 'FABRÍCIO BUENO MAGALHÃES' },
-      { matricula: '7316054', posto: '2º SGT', nome: 'YURY RIBEIRO DE AQUINO' },
-      { matricula: '195976X', posto: '2º SGT', nome: 'FLAVIO ALVES DE HOLANDA' },
-      { matricula: '7314876', posto: '2º SGT', nome: 'JULIO CEZAR GABRIEL OGAWA' },
-      { matricula: '7320213', posto: '3º SGT', nome: 'PEDRO HELIO CAETANO RIBAS' },
-      { matricula: '7321422', posto: '3º SGT', nome: 'FILIPE XAVIER DE LIRA SILVA' },
-      { matricula: '7355459', posto: 'CB', nome: 'ANA GABRIELA DE ARAUJO BARRETO' },
-      { matricula: '7392834', posto: 'SD', nome: 'LUIS FERNANDO MOREIRA DE PAIVA' },
-      { matricula: '739621X', posto: 'SD', nome: 'ARIADNE DE LIMA LUCAS' },
-      { matricula: '34284672', posto: 'SD', nome: 'AMANDA FERREIRA MENDONÇA' },
-      { matricula: '21071993', posto: 'SD', nome: 'VIVIANE LOPES ALBANIZA REBOUÇAS' },
-      { matricula: '34280367', posto: 'SD', nome: 'PEDRO HENRIQUE ALVES DE SOUZA' },
-    ],
-  },
-  {
-    mes: 'Outubro',
-    numero: 10,
-    militares: [
-      { matricula: '237485', posto: 'ST', nome: 'LUICIANO LUIZ DE ANDRADE' },
-      { matricula: '221430', posto: '1º SGT', nome: 'GILMAR ALVES DOS SANTOS' },
-      { matricula: '730858', posto: '1º SGT', nome: 'MARCELO FERREIRA DE MELO' },
-      { matricula: '729396', posto: '1º SGT', nome: 'SÉRGIO FÁBIO DE ARAÚJO ANDRADE' },
-      { matricula: '728039', posto: '1º SGT', nome: 'HERMANO ARAUJO DOS SANTOS' },
-      { matricula: '7316844', posto: '2º SGT', nome: 'WESLEY COUTINHO DE LIMA' },
-      { matricula: '7321317', posto: '2º SGT', nome: 'MARCILIO CARNEIRO ALVES VIEIRA' },
-      { matricula: '7320191', posto: '2º SGT', nome: 'DENISSON DE SOUZA BRAGA' },
-      { matricula: '7323859', posto: '2º SGT', nome: 'RENATO MARQUES ROSA' },
-      { matricula: '2184583', posto: '2º SGT', nome: 'RONIE VON FONSECA DE SOUSA' },
-      { matricula: '7316100', posto: '2º SGT', nome: 'DEIVID RODRIGUES FALCÃO DE BRITO' },
-      { matricula: '7329350', posto: '3º SGT', nome: 'LEONARDO TEIXEIRA VIEIRA' },
-      { matricula: '7330677', posto: '3º SGT', nome: 'BRUNO CABRAL DOS SANTOS' },
-      { matricula: '734578X', posto: 'CB', nome: 'EDUARDO VICTOR DE MORAES FREITAS' },
-      { matricula: '7383371', posto: 'SD', nome: 'LEANDRO RODRIGUES DE CASTRO' },
-      { matricula: '7381956', posto: 'SD', nome: 'CARLOS ALBERTO HOTE MACHADO FILHO' },
-      { matricula: '7384033', posto: 'SD', nome: 'RAMON LIRA DOS ANJOS' },
-      { matricula: '7381565', posto: 'SD', nome: 'DEBORAH CRISTINA AZEVEDO GOMES' },
-      { matricula: '7379544', posto: 'SD', nome: 'DIAN FRANCHESCO DE MOURA LUCCA' },
-    ],
-  },
-  {
-    mes: 'Novembro',
-    numero: 11,
-    militares: [
-      { matricula: '239453', posto: 'ST', nome: 'RODNEI TAVARES BARBOSA' },
-      { matricula: '244082', posto: '1º SGT', nome: 'LUIZ GERALDO REZENDE' },
-      { matricula: '244007', posto: '1º SGT', nome: 'FABIO GONZAGA DE BRITO' },
-      { matricula: '237442', posto: '1º SGT', nome: 'LIVIO ALESSANDRO GOMES ALVES' },
-      { matricula: '728012', posto: '1º SGT', nome: 'PAULO ROBERTO FERREIRA BOMFIM' },
-      { matricula: '740365', posto: '2º SGT', nome: 'WESLEY DE GODOY CADETE' },
-      { matricula: '2149397', posto: '2º SGT', nome: 'LUIS EDUARDO SHIKASHO' },
-      { matricula: '2151189', posto: '2º SGT', nome: 'EULER TAVARES DA COSTA' },
-      { matricula: '2155990', posto: '2º SGT', nome: 'THIAGO ROBERTO CASTRO NUNES' },
-      { matricula: '1998560', posto: '2º SGT', nome: 'BRENO DOS SANTOS SILVA' },
-      { matricula: '1962477', posto: '2º SGT', nome: 'LUCAS ALVES COSTA DA SILVA' },
-      { matricula: '7322143', posto: '3º SGT', nome: 'EDUARDO RIBEIRO PIMENTEL' },
-      { matricula: '7329393', posto: '3º SGT', nome: 'DENIS DE SOUZA BONFIM' },
-      { matricula: '7355297', posto: 'CB', nome: 'RENAN DE MELLO SANTOS SPAVIER' },
-      { matricula: '7369964', posto: 'SD', nome: 'GUSTAVO RODRIGUES BARROSO VIDAL' },
-      { matricula: '7371977', posto: 'SD', nome: 'MARÍLIA COSTA RIBEIRO' },
-      { matricula: '7381905', posto: 'SD', nome: 'BRUNO VILELA DA SILVA' },
-      { matricula: '7382677', posto: 'SD', nome: 'CRISTIANO RODRIGUES DA ROCHA' },
-      { matricula: '7383738', posto: 'SD', nome: 'JOAO GUSMAO MELITO' },
-    ],
-  },
-  {
-    mes: 'Dezembro',
-    numero: 12,
-    militares: [],
-  },
-];
+const mesesNome = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 const postoColors: Record<string, string> = {
   'ST': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
@@ -312,11 +70,13 @@ const mesColors = [
 ];
 
 const Abono: React.FC = () => {
-  const [dadosAbono, setDadosAbono] = useState<MesAbono[]>(dadosAbonoInicial);
+  const [dadosAbono, setDadosAbono] = useState<MesAbono[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMes, setSelectedMes] = useState<string>('todos');
   const [selectedPosto, setSelectedPosto] = useState<string>('todos');
   const [expandedMeses, setExpandedMeses] = useState<number[]>([]);
+  const [selectedYear] = useState(2026);
   
   // Estado para edição/remanejamento
   const [editMode, setEditMode] = useState(false);
@@ -325,6 +85,71 @@ const Abono: React.FC = () => {
   const [fromMonth, setFromMonth] = useState<number | null>(null);
   const [toMonth, setToMonth] = useState<string>('');
 
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('fat_abono')
+        .select(`
+          id,
+          mes,
+          ano,
+          efetivo:dim_efetivo(id, matricula, nome, nome_guerra, posto_graduacao)
+        `)
+        .eq('ano', selectedYear)
+        .order('mes');
+      
+      if (error) throw error;
+
+      // Group by month
+      const grouped: Record<number, Militar[]> = {};
+      for (let i = 1; i <= 12; i++) {
+        grouped[i] = [];
+      }
+
+      data?.forEach((item: any) => {
+        if (item.efetivo) {
+          grouped[item.mes].push({
+            id: item.efetivo.id,
+            matricula: item.efetivo.matricula,
+            posto: item.efetivo.posto_graduacao,
+            nome: item.efetivo.nome,
+            nome_guerra: item.efetivo.nome_guerra,
+          });
+        }
+      });
+
+      const mesesData: MesAbono[] = mesesNome.map((nome, idx) => ({
+        mes: nome,
+        numero: idx + 1,
+        militares: grouped[idx + 1] || [],
+      }));
+
+      setDadosAbono(mesesData);
+    } catch (error) {
+      console.error('Erro ao carregar dados de abono:', error);
+      toast.error('Erro ao carregar dados');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedYear]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('abono-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_abono' }, () => fetchData())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData]);
+
   const postos = useMemo(() => {
     const all = dadosAbono.flatMap(m => m.militares.map(mil => mil.posto));
     return ['todos', ...Array.from(new Set(all))];
@@ -332,23 +157,27 @@ const Abono: React.FC = () => {
 
   const filteredData = useMemo(() => {
     return dadosAbono
-      .filter(mes => selectedMes === 'todos' || mes.numero.toString() === selectedMes)
-      .map(mes => ({
-        ...mes,
-        militares: mes.militares.filter(mil => {
-          const matchesSearch = 
+      .filter(m => selectedMes === 'todos' || m.numero.toString() === selectedMes)
+      .map(m => ({
+        ...m,
+        militares: m.militares.filter(mil => {
+          const matchSearch = searchTerm === '' || 
             mil.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
             mil.matricula.includes(searchTerm);
-          const matchesPosto = selectedPosto === 'todos' || mil.posto === selectedPosto;
-          return matchesSearch && matchesPosto;
+          const matchPosto = selectedPosto === 'todos' || mil.posto === selectedPosto;
+          return matchSearch && matchPosto;
         }),
-      }))
-      .filter(mes => mes.militares.length > 0 || (selectedMes !== 'todos' && mes.numero.toString() === selectedMes));
-  }, [searchTerm, selectedMes, selectedPosto, dadosAbono]);
+      }));
+  }, [dadosAbono, searchTerm, selectedMes, selectedPosto]);
 
   const totalMilitares = useMemo(() => {
-    return filteredData.reduce((acc, mes) => acc + mes.militares.length, 0);
-  }, [filteredData]);
+    const unique = new Set(dadosAbono.flatMap(m => m.militares.map(mil => mil.matricula)));
+    return unique.size;
+  }, [dadosAbono]);
+
+  const totalDiasAbono = useMemo(() => {
+    return dadosAbono.reduce((acc, m) => acc + m.militares.length * 5, 0);
+  }, [dadosAbono]);
 
   const toggleMes = (numero: number) => {
     setExpandedMeses(prev => 
@@ -372,50 +201,71 @@ const Abono: React.FC = () => {
     setTransferDialogOpen(true);
   };
 
-  const handleRemoveMilitar = (militar: Militar, mesNumero: number) => {
-    setDadosAbono(prev => prev.map(mes => {
-      if (mes.numero === mesNumero) {
-        return {
-          ...mes,
-          militares: mes.militares.filter(m => m.matricula !== militar.matricula)
-        };
-      }
-      return mes;
-    }));
-    toast.success(`${militar.nome} removido do mês`);
+  const handleRemoveMilitar = async (militar: Militar, mesNumero: number) => {
+    try {
+      const { error } = await supabase
+        .from('fat_abono')
+        .delete()
+        .eq('efetivo_id', militar.id)
+        .eq('mes', mesNumero)
+        .eq('ano', selectedYear);
+
+      if (error) throw error;
+      
+      toast.success(`${militar.nome_guerra || militar.nome} removido do mês ${mesesNome[mesNumero - 1]}`);
+      fetchData();
+    } catch (error) {
+      console.error('Erro ao remover:', error);
+      toast.error('Erro ao remover militar');
+    }
   };
 
-  const handleConfirmTransfer = () => {
+  const handleConfirmTransfer = async () => {
     if (!selectedMilitar || !fromMonth || !toMonth) return;
-
+    
     const toMonthNum = parseInt(toMonth);
     
-    setDadosAbono(prev => prev.map(mes => {
-      if (mes.numero === fromMonth) {
-        return {
-          ...mes,
-          militares: mes.militares.filter(m => m.matricula !== selectedMilitar.matricula)
-        };
-      }
-      if (mes.numero === toMonthNum) {
-        return {
-          ...mes,
-          militares: [...mes.militares, selectedMilitar]
-        };
-      }
-      return mes;
-    }));
+    try {
+      // Remove from old month
+      await supabase
+        .from('fat_abono')
+        .delete()
+        .eq('efetivo_id', selectedMilitar.id)
+        .eq('mes', fromMonth)
+        .eq('ano', selectedYear);
 
-    const fromMesNome = dadosAbono.find(m => m.numero === fromMonth)?.mes;
-    const toMesNome = dadosAbono.find(m => m.numero === toMonthNum)?.mes;
-    
-    toast.success(`${selectedMilitar.nome} transferido de ${fromMesNome} para ${toMesNome}`);
-    
-    setTransferDialogOpen(false);
-    setSelectedMilitar(null);
-    setFromMonth(null);
-    setToMonth('');
+      // Add to new month
+      const { error } = await supabase
+        .from('fat_abono')
+        .insert({
+          efetivo_id: selectedMilitar.id,
+          mes: toMonthNum,
+          ano: selectedYear,
+        });
+
+      if (error) throw error;
+      
+      toast.success(`${selectedMilitar.nome_guerra || selectedMilitar.nome} transferido para ${mesesNome[toMonthNum - 1]}`);
+      setTransferDialogOpen(false);
+      setSelectedMilitar(null);
+      setFromMonth(null);
+      setToMonth('');
+      fetchData();
+    } catch (error) {
+      console.error('Erro ao transferir:', error);
+      toast.error('Erro ao transferir militar');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-4 md:p-6 max-w-7xl">
+        <div className="flex items-center justify-center h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 md:p-6 max-w-7xl">
@@ -432,32 +282,23 @@ const Abono: React.FC = () => {
               <Gift className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Abono de Ponto Anual</h1>
-              <p className="text-sm text-muted-foreground">Calendário 2026 - BPMA</p>
+              <h1 className="text-2xl font-bold text-foreground">Calendário de Abono</h1>
+              <p className="text-sm text-muted-foreground">{selectedYear} - Gestão de dias de abono</p>
             </div>
           </div>
         </div>
-        
-        <Button 
-          variant={editMode ? "default" : "outline"}
+
+        <Button
+          variant={editMode ? 'default' : 'outline'}
           onClick={() => setEditMode(!editMode)}
           className="gap-2"
         >
-          {editMode ? (
-            <>
-              <Check className="h-4 w-4" />
-              Finalizar Edição
-            </>
-          ) : (
-            <>
-              <Edit2 className="h-4 w-4" />
-              Editar Calendário
-            </>
-          )}
+          <Edit2 className="h-4 w-4" />
+          {editMode ? 'Finalizar Edição' : 'Editar Calendário'}
         </Button>
       </div>
 
-      {/* Edit Mode Alert */}
+      {/* Edit mode alert */}
       {editMode && (
         <Card className="mb-6 border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-amber-500/5">
           <CardContent className="p-4">
@@ -468,7 +309,7 @@ const Abono: React.FC = () => {
               <div>
                 <p className="font-medium text-foreground">Modo de Edição Ativo</p>
                 <p className="text-sm text-muted-foreground">
-                  Clique nos ícones de transferência <ArrowRightLeft className="inline h-4 w-4 mx-1" /> para remanejar policiais ou <X className="inline h-4 w-4 mx-1" /> para remover do mês.
+                  Clique nos botões de transferir ou remover para remaNejar militares entre os meses.
                 </p>
               </div>
             </div>
@@ -476,146 +317,96 @@ const Abono: React.FC = () => {
         </Card>
       )}
 
-      {/* Regras de Abono */}
+      {/* Regras */}
       <Card className="mb-6 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Info className="h-5 w-5 text-primary" />
-            Regras do Abono de Ponto
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
-            <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <Gift className="h-5 w-5 text-emerald-500" />
-            </div>
-            <div>
-              <p className="font-medium text-foreground">Direito a 5 dias</p>
-              <p className="text-sm text-muted-foreground">Cada policial tem direito a 5 dias de abono de ponto anual.</p>
-            </div>
-          </div>
-          
-          <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
-            <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
-              <Building2 className="h-5 w-5 text-blue-500" />
-            </div>
-            <div>
-              <p className="font-medium text-foreground">Seções Administrativas (Expediente)</p>
-              <p className="text-sm text-muted-foreground">Podem tirar os dias de forma avulsa, sem necessidade de dias consecutivos.</p>
-            </div>
-          </div>
-          
-          <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
-            <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <CalendarDays className="h-5 w-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="font-medium text-foreground">Policiais em Escala</p>
-              <p className="text-sm text-muted-foreground">Devem tirar os 5 dias consecutivos ou dividir em blocos de <span className="font-semibold text-amber-500">3 + 2 dias</span>.</p>
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <CalendarDays className="h-5 w-5 text-primary mt-0.5" />
+            <div className="text-sm text-muted-foreground">
+              <p className="font-medium text-foreground mb-1">Regras do Abono</p>
+              <p>• Cada militar tem direito a 5 dias de abono por ano</p>
+              <p>• O período deve ser comunicado com 30 dias de antecedência</p>
+              <p>• A distribuição segue o interesse do serviço</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Stats Cards */}
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Calendar className="h-8 w-8 text-primary" />
-              <div>
-                <p className="text-2xl font-bold text-foreground">2026</p>
-                <p className="text-xs text-muted-foreground">Ano Vigente</p>
-              </div>
-            </div>
+          <CardContent className="p-4 text-center">
+            <CalendarDays className="h-5 w-5 text-primary mx-auto mb-2" />
+            <p className="text-2xl font-bold text-foreground">{selectedYear}</p>
+            <p className="text-xs text-muted-foreground">Ano</p>
           </CardContent>
         </Card>
-        
-        <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Users className="h-8 w-8 text-emerald-500" />
-              <div>
-                <p className="text-2xl font-bold text-foreground">{totalMilitares}</p>
-                <p className="text-xs text-muted-foreground">Militares</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Filter className="h-8 w-8 text-amber-500" />
-              <div>
-                <p className="text-2xl font-bold text-foreground">{filteredData.length}</p>
-                <p className="text-xs text-muted-foreground">Meses</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Gift className="h-8 w-8 text-blue-500" />
-              <div>
-                <p className="text-2xl font-bold text-foreground">5</p>
-                <p className="text-xs text-muted-foreground">Dias de Abono</p>
-              </div>
-            </div>
+          <CardContent className="p-4 text-center">
+            <Users className="h-5 w-5 text-blue-500 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-foreground">{totalMilitares}</p>
+            <p className="text-xs text-muted-foreground">Militares</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+          <CardContent className="p-4 text-center">
+            <Filter className="h-5 w-5 text-green-500 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-foreground">{filteredData.filter(m => m.militares.length > 0).length}</p>
+            <p className="text-xs text-muted-foreground">Meses Filtrados</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
+          <CardContent className="p-4 text-center">
+            <Gift className="h-5 w-5 text-amber-500 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-foreground">{totalDiasAbono}</p>
+            <p className="text-xs text-muted-foreground">Dias de Abono</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="mb-6 bg-card/80 backdrop-blur-sm border-border/50">
+      <Card className="mb-6">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
+            <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por nome ou matrícula..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-background/50"
+                className="pl-9"
               />
             </div>
-            
             <Select value={selectedMes} onValueChange={setSelectedMes}>
-              <SelectTrigger className="w-full md:w-[180px] bg-background/50">
+              <SelectTrigger className="w-full md:w-[180px]">
                 <Calendar className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Mês" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos os meses</SelectItem>
-                {dadosAbono.map(mes => (
-                  <SelectItem key={mes.numero} value={mes.numero.toString()}>
-                    {mes.mes}
-                  </SelectItem>
+                {mesesNome.map((mes, idx) => (
+                  <SelectItem key={idx} value={(idx + 1).toString()}>{mes}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-
             <Select value={selectedPosto} onValueChange={setSelectedPosto}>
-              <SelectTrigger className="w-full md:w-[160px] bg-background/50">
+              <SelectTrigger className="w-full md:w-[180px]">
                 <Users className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Graduação" />
+                <SelectValue placeholder="Posto" />
               </SelectTrigger>
               <SelectContent>
                 {postos.map(posto => (
                   <SelectItem key={posto} value={posto}>
-                    {posto === 'todos' ? 'Todas' : posto}
+                    {posto === 'todos' ? 'Todos os postos' : posto}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={expandAll} className="text-xs">
+              <Button variant="outline" size="sm" onClick={expandAll}>
                 Expandir
               </Button>
-              <Button variant="outline" size="sm" onClick={collapseAll} className="text-xs">
+              <Button variant="outline" size="sm" onClick={collapseAll}>
                 Recolher
               </Button>
             </div>
@@ -625,187 +416,130 @@ const Abono: React.FC = () => {
 
       {/* Calendar Grid */}
       <div className="space-y-4">
-        {filteredData.length === 0 ? (
-          <Card className="bg-card/80 backdrop-blur-sm border-border/50">
-            <CardContent className="p-12 text-center">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-lg font-medium text-muted-foreground">
-                Nenhum militar encontrado
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Tente ajustar os filtros de busca
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredData.map((mes) => (
-            <Collapsible
-              key={mes.numero}
-              open={expandedMeses.includes(mes.numero)}
-              onOpenChange={() => toggleMes(mes.numero)}
-            >
-              <Card className={`bg-gradient-to-r ${mesColors[mes.numero - 1]} border-border/50 overflow-hidden`}>
-                <CollapsibleTrigger className="w-full">
-                  <CardHeader className="p-4 cursor-pointer hover:bg-white/5 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-background/50 font-bold text-xl">
-                          {String(mes.numero).padStart(2, '0')}
-                        </div>
-                        <div className="text-left">
-                          <CardTitle className="text-lg">{mes.mes}</CardTitle>
-                          <p className="text-sm text-muted-foreground">
-                            {mes.militares.length} militar{mes.militares.length !== 1 ? 'es' : ''}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="hidden md:flex gap-1">
-                          {['ST', '1º SGT', '2º SGT', '3º SGT', 'CB', 'SD'].map(posto => {
-                            const count = mes.militares.filter(m => m.posto === posto).length;
-                            if (count === 0) return null;
-                            return (
-                              <Badge key={posto} variant="outline" className={`${postoColors[posto]} text-xs`}>
-                                {posto}: {count}
-                              </Badge>
-                            );
-                          })}
-                        </div>
-                        <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${expandedMeses.includes(mes.numero) ? 'rotate-180' : ''}`} />
-                      </div>
-                    </div>
-                  </CardHeader>
-                </CollapsibleTrigger>
-
-                <CollapsibleContent>
-                  <CardContent className="p-4 pt-0">
-                    {mes.militares.length === 0 ? (
-                      <p className="text-center text-muted-foreground py-8">
-                        Nenhum abono programado para este mês
-                      </p>
-                    ) : (
-                      <ScrollArea className="max-h-[400px]">
-                        <div className="grid gap-2">
-                          {mes.militares.map((militar, idx) => (
-                            <div
-                              key={militar.matricula}
-                              className="flex items-center gap-4 p-3 rounded-lg bg-background/50 hover:bg-background/80 transition-colors group"
-                            >
-                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-xs font-medium">
-                                {idx + 1}
-                              </div>
-                              <Badge variant="outline" className={`${postoColors[militar.posto]} shrink-0`}>
+        {filteredData.map((mesData, idx) => (
+          <Collapsible
+            key={mesData.numero}
+            open={expandedMeses.includes(mesData.numero)}
+            onOpenChange={() => toggleMes(mesData.numero)}
+          >
+            <Card className={`overflow-hidden border-l-4 ${mesData.militares.length === 0 ? 'border-l-muted' : 'border-l-primary'}`}>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className={`py-3 bg-gradient-to-r ${mesColors[idx]} cursor-pointer hover:opacity-80 transition-opacity`}>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-3 text-lg">
+                      <Badge variant="outline" className="bg-background/50">
+                        {mesData.numero.toString().padStart(2, '0')}
+                      </Badge>
+                      {mesData.mes}
+                      <Badge variant="secondary" className="ml-2">
+                        {mesData.militares.length} militar{mesData.militares.length !== 1 ? 'es' : ''}
+                      </Badge>
+                    </CardTitle>
+                    <ChevronDown className={`h-5 w-5 transition-transform ${expandedMeses.includes(mesData.numero) ? 'rotate-180' : ''}`} />
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent>
+                <CardContent className="p-4">
+                  {mesData.militares.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-4">
+                      Nenhum militar com abono neste mês
+                    </p>
+                  ) : (
+                    <ScrollArea className="max-h-[400px]">
+                      <div className="grid gap-2">
+                        {mesData.militares.map((militar) => (
+                          <div 
+                            key={militar.matricula} 
+                            className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Badge 
+                                variant="outline" 
+                                className={`${postoColors[militar.posto] || 'bg-muted'} min-w-[70px] justify-center`}
+                              >
                                 {militar.posto}
                               </Badge>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-foreground truncate">
-                                  {militar.nome}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  Mat. {militar.matricula}
-                                </p>
+                              <div>
+                                <p className="font-medium text-foreground">{militar.nome}</p>
+                                <p className="text-xs text-muted-foreground">Mat: {militar.matricula}</p>
                               </div>
-                              
-                              {editMode && (
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleTransferClick(militar, mes.numero);
-                                    }}
-                                    title="Transferir para outro mês"
-                                  >
-                                    <ArrowRightLeft className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRemoveMilitar(militar, mes.numero);
-                                    }}
-                                    title="Remover do mês"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              )}
                             </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    )}
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          ))
-        )}
+                            
+                            {editMode && (
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTransferClick(militar, mesData.numero);
+                                  }}
+                                  className="h-8 gap-1 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10"
+                                >
+                                  <ArrowRightLeft className="h-4 w-4" />
+                                  Transferir
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveMilitar(militar, mesData.numero);
+                                  }}
+                                  className="h-8 gap-1 text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                                >
+                                  <X className="h-4 w-4" />
+                                  Remover
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        ))}
       </div>
 
       {/* Transfer Dialog */}
       <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ArrowRightLeft className="h-5 w-5 text-primary" />
-              Transferir Policial
-            </DialogTitle>
+            <DialogTitle>Transferir Militar</DialogTitle>
             <DialogDescription>
-              Selecione o mês de destino para remanejar o policial.
+              Selecione o mês de destino para {selectedMilitar?.nome_guerra || selectedMilitar?.nome}
             </DialogDescription>
           </DialogHeader>
           
-          {selectedMilitar && (
-            <div className="space-y-4">
-              <div className="p-4 rounded-lg bg-muted/50 border">
-                <div className="flex items-center gap-3">
-                  <Badge variant="outline" className={postoColors[selectedMilitar.posto]}>
-                    {selectedMilitar.posto}
-                  </Badge>
-                  <div>
-                    <p className="font-medium">{selectedMilitar.nome}</p>
-                    <p className="text-sm text-muted-foreground">Mat. {selectedMilitar.matricula}</p>
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">De:</span>
-                  <Badge variant="secondary">
-                    {dadosAbono.find(m => m.numero === fromMonth)?.mes}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Mês de destino</label>
-                <Select value={toMonth} onValueChange={setToMonth}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o mês" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {dadosAbono
-                      .filter(m => m.numero !== fromMonth)
-                      .map(mes => (
-                        <SelectItem key={mes.numero} value={mes.numero.toString()}>
-                          {mes.mes} ({mes.militares.length} militares)
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
+          <div className="py-4">
+            <Select value={toMonth} onValueChange={setToMonth}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o mês de destino" />
+              </SelectTrigger>
+              <SelectContent>
+                {mesesNome.map((mes, idx) => {
+                  if (idx + 1 === fromMonth) return null;
+                  return (
+                    <SelectItem key={idx} value={(idx + 1).toString()}>
+                      {mes}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>
               Cancelar
             </Button>
             <Button onClick={handleConfirmTransfer} disabled={!toMonth}>
-              <Check className="h-4 w-4 mr-2" />
               Confirmar Transferência
             </Button>
           </DialogFooter>

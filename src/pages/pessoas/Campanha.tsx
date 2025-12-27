@@ -136,6 +136,14 @@ const Campanha: React.FC = () => {
     setMembersDialogOpen(true);
   };
 
+  // Handle day click from month view
+  const handleDayClick = (day: Date, isCurrentMonth: boolean) => {
+    if (isCurrentMonth) {
+      setCurrentDate(day);
+      setViewMode('day');
+    }
+  };
+
   // Render month calendar
   const renderMonthCalendar = () => {
     const monthStart = startOfMonth(currentDate);
@@ -171,7 +179,7 @@ const Campanha: React.FC = () => {
               return (
                 <div
                   key={dayIndex}
-                  className={`min-h-[100px] p-1 rounded-lg border transition-colors ${
+                  className={`min-h-[100px] p-1 rounded-lg border transition-all ${
                     !isCurrentMonth 
                       ? 'bg-muted/30 border-border/30' 
                       : isHoliday
@@ -179,13 +187,8 @@ const Campanha: React.FC = () => {
                         : isWeekendDay
                           ? 'bg-muted/50 border-border/50'
                           : 'bg-card border-border hover:border-primary/50'
-                  } ${editMode && isCurrentMonth ? 'cursor-pointer' : ''}`}
-                  onClick={() => {
-                    if (editMode && isCurrentMonth) {
-                      setCurrentDate(day);
-                      setViewMode('day');
-                    }
-                  }}
+                  } ${isCurrentMonth ? 'cursor-pointer hover:shadow-md' : ''}`}
+                  onClick={() => handleDayClick(day, isCurrentMonth)}
                 >
                   <div className={`text-sm font-medium mb-1 flex items-center gap-1 ${
                     !isCurrentMonth ? 'text-muted-foreground/50' : 
