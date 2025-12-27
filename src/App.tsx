@@ -38,6 +38,7 @@ const SecaoOperacional = lazy(() => import(/* webpackChunkName: "secao-operacion
 const SecaoLogistica = lazy(() => import(/* webpackChunkName: "secao-logistica" */ '@/pages/SecaoLogistica'));
 const MaterialApoio = lazy(() => import(/* webpackChunkName: "material-apoio" */ '@/pages/MaterialApoio'));
 const IdentificarEspecie = lazy(() => import(/* webpackChunkName: "identificar-especie" */ '@/pages/apoio/IdentificarEspecie'));
+const ManualRAP = lazy(() => import(/* webpackChunkName: "manual-rap" */ '@/pages/apoio/ManualRAP'));
 const RankingOcorrencias = lazy(() => import(/* webpackChunkName: "ranking" */ '@/pages/RankingOcorrencias'));
 const UploadSchemas = lazy(() => import(/* webpackChunkName: "upload-schemas" */ '@/pages/UploadSchemas'));
 
@@ -69,6 +70,7 @@ function App() {
               <Route path="/material-apoio" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><MaterialApoio /></SidebarLayout></ProtectedRoute>} />
               <Route path="/material-apoio/pop" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><POP /></SidebarLayout></ProtectedRoute>} />
               <Route path="/material-apoio/identificar-especie" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><IdentificarEspecie /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/material-apoio/manual-rap" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><ManualRAP /></SidebarLayout></ProtectedRoute>} />
               <Route path="/ranking" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><RankingOcorrencias /></SidebarLayout></ProtectedRoute>} />
               
               {/* Admin only */}
