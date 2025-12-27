@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Target, ArrowLeft, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Users, Building2, Anchor, Plane, Shield } from 'lucide-react';
+import React, { useState } from 'react';
+import { Target, ArrowLeft, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Users, Building2, Anchor, Plane, Shield, Edit2, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,51 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, startOfWeek, endOfWeek, isSameMonth, isWeekend, addDays, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, startOfWeek, endOfWeek, isSameMonth, isWeekend, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
-// Tipos de equipes
-type TeamType = 'Alfa' | 'Bravo' | 'Charlie' | 'Delta';
-type UnitType = 'Guarda' | 'Armeiro' | 'RP Ambiental' | 'GOC' | 'Lacustre' | 'GTA' | 'Administrativo';
-
-interface Escala {
-  unidade: UnitType;
-  equipe: TeamType | null;
-  isAdministrativo: boolean;
-}
-
-// Feriados nacionais 2025 e 2026
-const feriados2025 = [
-  '2025-01-01', // Confraternização Universal
-  '2025-03-03', // Carnaval
-  '2025-03-04', // Carnaval
-  '2025-04-18', // Sexta-feira Santa
-  '2025-04-21', // Tiradentes
-  '2025-05-01', // Dia do Trabalho
-  '2025-06-19', // Corpus Christi
-  '2025-09-07', // Independência
-  '2025-10-12', // Nossa Senhora Aparecida
-  '2025-11-02', // Finados
-  '2025-11-15', // Proclamação da República
-  '2025-11-20', // Consciência Negra
-  '2025-12-25', // Natal
-];
-
-const feriados2026 = [
-  '2026-01-01', // Confraternização Universal
-  '2026-02-16', // Carnaval
-  '2026-02-17', // Carnaval
-  '2026-04-03', // Sexta-feira Santa
-  '2026-04-21', // Tiradentes
-  '2026-05-01', // Dia do Trabalho
-  '2026-06-04', // Corpus Christi
-  '2026-09-07', // Independência
-  '2026-10-12', // Nossa Senhora Aparecida
-  '2026-11-02', // Finados
-  '2026-11-15', // Proclamação da República
-  '2026-11-20', // Consciência Negra
-  '2026-12-25', // Natal
-];
+import { useCampanhaData, TeamType, UnitType } from '@/hooks/useCampanhaData';
+import { EditTeamDialog } from '@/components/campanha/EditTeamDialog';
+import { TeamMembersDialog } from '@/components/campanha/TeamMembersDialog';
 
 const teamColors: Record<TeamType, string> = {
   'Alfa': 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -78,81 +38,42 @@ const unitIcons: Record<UnitType, React.ReactNode> = {
 
 type ViewMode = 'day' | 'week' | 'month' | 'year';
 
-const TEAMS: TeamType[] = ['Alfa', 'Bravo', 'Charlie', 'Delta'];
-
-// Função para calcular a equipe de serviço com base na data inicial
-const getTeamForDate = (date: Date, startTeam: TeamType, startDate: Date): TeamType => {
-  const diffTime = date.getTime() - startDate.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  // Escala de 24h por 72h (1 dia trabalha, 3 folga)
-  const cyclePosition = ((diffDays % 4) + 4) % 4;
-  const startIndex = TEAMS.indexOf(startTeam);
-  const teamIndex = (startIndex + cyclePosition) % 4;
-  return TEAMS[teamIndex];
-};
-
-// Verifica se é feriado
-const isFeriado = (date: Date, year: number): boolean => {
-  const dateStr = format(date, 'yyyy-MM-dd');
-  const feriados = year === 2025 ? feriados2025 : feriados2026;
-  return feriados.includes(dateStr);
-};
-
-// Verifica se administrativo trabalha nesse dia
-const administrativoTrabalha = (date: Date, year: number): boolean => {
-  const dayOfWeek = getDay(date);
-  // Segunda a sexta (1-5)
-  if (dayOfWeek === 0 || dayOfWeek === 6) return false;
-  // Não trabalha em feriados
-  if (isFeriado(date, year)) return false;
-  return true;
-};
-
 const Campanha: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string>('2026');
   const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1));
   const [viewMode, setViewMode] = useState<ViewMode>('month');
+  const [editMode, setEditMode] = useState(false);
+
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingDate, setEditingDate] = useState<Date>(new Date());
+  const [editingUnidade, setEditingUnidade] = useState<UnitType>('Guarda');
+
+  // Team members dialog state
+  const [membersDialogOpen, setMembersDialogOpen] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<TeamType>('Alfa');
+  const [selectedUnidade, setSelectedUnidade] = useState<UnitType>('Guarda');
 
   const year = parseInt(selectedYear);
   
-  // Data de início: 1 de janeiro do ano selecionado
-  const startDate = useMemo(() => new Date(year, 0, 1), [year]);
-  
-  // Equipe inicial para cada unidade em 1 de janeiro de 2026
-  const initialTeams: Record<UnitType, TeamType | null> = {
-    'Guarda': 'Bravo',
-    'Armeiro': 'Bravo',
-    'RP Ambiental': 'Bravo',
-    'GOC': 'Bravo',
-    'Lacustre': 'Bravo',
-    'GTA': 'Alfa',
-    'Administrativo': null,
-  };
-
-  const getEscalaForDate = (date: Date): Escala[] => {
-    const escalas: Escala[] = [];
-    
-    Object.entries(initialTeams).forEach(([unidade, startTeam]) => {
-      const unit = unidade as UnitType;
-      
-      if (unit === 'Administrativo') {
-        escalas.push({
-          unidade: unit,
-          equipe: null,
-          isAdministrativo: true,
-        });
-      } else {
-        const team = getTeamForDate(date, startTeam!, startDate);
-        escalas.push({
-          unidade: unit,
-          equipe: team,
-          isAdministrativo: false,
-        });
-      }
-    });
-    
-    return escalas;
-  };
+  const {
+    equipes,
+    membros,
+    loading,
+    efetivo,
+    TEAMS,
+    UNITS,
+    getTeamForDate,
+    isFeriado,
+    administrativoTrabalha,
+    getMembrosForTeam,
+    saveAlteracao,
+    removeAlteracao,
+    addMembro,
+    removeMembro,
+    updateMembroEquipe,
+    hasAlteracao,
+  } = useCampanhaData(year);
 
   const navigatePrevious = () => {
     switch (viewMode) {
@@ -203,7 +124,19 @@ const Campanha: React.FC = () => {
     }
   };
 
-  // Renderização do calendário mensal
+  const openEditDialog = (date: Date, unidade: UnitType) => {
+    setEditingDate(date);
+    setEditingUnidade(unidade);
+    setEditDialogOpen(true);
+  };
+
+  const openMembersDialog = (team: TeamType, unidade: UnitType) => {
+    setSelectedTeam(team);
+    setSelectedUnidade(unidade);
+    setMembersDialogOpen(true);
+  };
+
+  // Render month calendar
   const renderMonthCalendar = () => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
@@ -219,7 +152,6 @@ const Campanha: React.FC = () => {
 
     return (
       <div className="space-y-2">
-        {/* Header dos dias da semana */}
         <div className="grid grid-cols-7 gap-1">
           {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
             <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
@@ -228,14 +160,13 @@ const Campanha: React.FC = () => {
           ))}
         </div>
         
-        {/* Semanas */}
         {weeks.map((week, weekIndex) => (
           <div key={weekIndex} className="grid grid-cols-7 gap-1">
             {week.map((day, dayIndex) => {
               const isCurrentMonth = isSameMonth(day, currentDate);
-              const isHoliday = isFeriado(day, year);
+              const isHoliday = isFeriado(day);
               const isWeekendDay = isWeekend(day);
-              const escalas = getEscalaForDate(day);
+              const hasAlt = UNITS.some(u => u !== 'Administrativo' && hasAlteracao(day, u));
               
               return (
                 <div
@@ -248,32 +179,38 @@ const Campanha: React.FC = () => {
                         : isWeekendDay
                           ? 'bg-muted/50 border-border/50'
                           : 'bg-card border-border hover:border-primary/50'
-                  }`}
+                  } ${editMode && isCurrentMonth ? 'cursor-pointer' : ''}`}
+                  onClick={() => {
+                    if (editMode && isCurrentMonth) {
+                      setCurrentDate(day);
+                      setViewMode('day');
+                    }
+                  }}
                 >
-                  <div className={`text-sm font-medium mb-1 ${
+                  <div className={`text-sm font-medium mb-1 flex items-center gap-1 ${
                     !isCurrentMonth ? 'text-muted-foreground/50' : 
                     isHoliday ? 'text-red-400' : 'text-foreground'
                   }`}>
                     {format(day, 'd')}
+                    {hasAlt && isCurrentMonth && (
+                      <Edit2 className="h-3 w-3 text-amber-500" />
+                    )}
                   </div>
                   
                   {isCurrentMonth && (
                     <div className="space-y-0.5">
-                      {escalas.slice(0, 4).map((escala, idx) => (
-                        <div key={idx} className="flex items-center gap-1">
-                          {escala.isAdministrativo ? (
-                            administrativoTrabalha(day, year) && (
-                              <Badge variant="outline" className="text-[9px] px-1 py-0 bg-slate-500/20 text-slate-400 border-slate-500/30 truncate">
-                                ADM
-                              </Badge>
-                            )
-                          ) : escala.equipe && (
-                            <Badge variant="outline" className={`text-[9px] px-1 py-0 ${teamColors[escala.equipe]} truncate`}>
-                              {escala.unidade.substring(0, 3)}
-                            </Badge>
-                          )}
-                        </div>
-                      ))}
+                      {UNITS.filter(u => u !== 'Administrativo').slice(0, 4).map((unidade) => {
+                        const team = getTeamForDate(day, unidade);
+                        return team ? (
+                          <Badge 
+                            key={unidade} 
+                            variant="outline" 
+                            className={`text-[9px] px-1 py-0 ${teamColors[team]} truncate block`}
+                          >
+                            {unidade.substring(0, 3)}
+                          </Badge>
+                        ) : null;
+                      })}
                     </div>
                   )}
                 </div>
@@ -285,11 +222,9 @@ const Campanha: React.FC = () => {
     );
   };
 
-  // Renderização da visão diária
+  // Render day view with edit and members
   const renderDayView = () => {
-    const escalas = getEscalaForDate(currentDate);
-    const isHoliday = isFeriado(currentDate, year);
-    const isWeekendDay = isWeekend(currentDate);
+    const isHoliday = isFeriado(currentDate);
     
     return (
       <div className="space-y-4">
@@ -302,47 +237,116 @@ const Campanha: React.FC = () => {
         )}
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {escalas.map((escala, idx) => (
-            <Card key={idx} className={`${
-              escala.isAdministrativo 
-                ? (administrativoTrabalha(currentDate, year) ? 'border-slate-500/30' : 'border-border/30 opacity-50')
-                : escala.equipe ? `border-${escala.equipe === 'Alfa' ? 'red' : escala.equipe === 'Bravo' ? 'blue' : escala.equipe === 'Charlie' ? 'green' : 'purple'}-500/30` : ''
-            }`}>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  {unitIcons[escala.unidade]}
-                  {escala.unidade}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {escala.isAdministrativo ? (
-                  <div className="text-center py-4">
-                    {administrativoTrabalha(currentDate, year) ? (
-                      <Badge className="bg-slate-500/20 text-slate-400 border-slate-500/30">
-                        Expediente Normal
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-muted-foreground">
-                        {isHoliday ? 'Feriado' : 'Fim de Semana'}
-                      </Badge>
+          {UNITS.map((unidade) => {
+            const team = getTeamForDate(currentDate, unidade);
+            const isAdmin = unidade === 'Administrativo';
+            const works = isAdmin ? administrativoTrabalha(currentDate) : true;
+            const teamMembros = team ? getMembrosForTeam(team, unidade) : [];
+            const hasAlt = hasAlteracao(currentDate, unidade);
+            
+            return (
+              <Card 
+                key={unidade} 
+                className={`${
+                  isAdmin 
+                    ? (works ? 'border-slate-500/30' : 'border-border/30 opacity-50')
+                    : team ? `border-${team === 'Alfa' ? 'red' : team === 'Bravo' ? 'blue' : team === 'Charlie' ? 'green' : 'purple'}-500/30` : ''
+                }`}
+              >
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center justify-between text-lg">
+                    <div className="flex items-center gap-2">
+                      {unitIcons[unidade]}
+                      {unidade}
+                      {hasAlt && <Edit2 className="h-4 w-4 text-amber-500" />}
+                    </div>
+                    {!isAdmin && editMode && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditDialog(currentDate, unidade)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
                     )}
-                  </div>
-                ) : escala.equipe && (
-                  <div className="text-center py-4">
-                    <Badge variant="outline" className={`text-lg px-4 py-2 ${teamColors[escala.equipe]}`}>
-                      Equipe {escala.equipe}
-                    </Badge>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {isAdmin ? (
+                    <div className="text-center py-4">
+                      {works ? (
+                        <Badge className="bg-slate-500/20 text-slate-400 border-slate-500/30">
+                          Expediente Normal
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-muted-foreground">
+                          {isHoliday ? 'Feriado' : 'Fim de Semana'}
+                        </Badge>
+                      )}
+                    </div>
+                  ) : team && (
+                    <>
+                      <div className="text-center">
+                        <Badge 
+                          variant="outline" 
+                          className={`text-lg px-4 py-2 ${teamColors[team]} cursor-pointer`}
+                          onClick={() => openMembersDialog(team, unidade)}
+                        >
+                          Equipe {team}
+                        </Badge>
+                      </div>
+                      
+                      {/* Team members */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Membros:</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 text-xs"
+                            onClick={() => openMembersDialog(team, unidade)}
+                          >
+                            <Users className="h-3 w-3 mr-1" />
+                            Gerenciar
+                          </Button>
+                        </div>
+                        {teamMembros.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-2">
+                            Nenhum membro cadastrado
+                          </p>
+                        ) : (
+                          <div className="space-y-1 max-h-[150px] overflow-y-auto">
+                            {teamMembros.slice(0, 5).map((m) => (
+                              <div key={m.id} className="flex items-center gap-2 text-xs p-1 rounded bg-muted/30">
+                                <Badge variant="outline" className="text-[10px] px-1">
+                                  {m.efetivo?.posto_graduacao}
+                                </Badge>
+                                <span className="truncate">{m.efetivo?.nome_guerra}</span>
+                              </div>
+                            ))}
+                            {teamMembros.length > 5 && (
+                              <button 
+                                className="text-xs text-primary hover:underline w-full text-center"
+                                onClick={() => openMembersDialog(team, unidade)}
+                              >
+                                +{teamMembros.length - 5} mais
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     );
   };
 
-  // Renderização da visão semanal
+  // Render week view
   const renderWeekView = () => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
     const days = eachDayOfInterval({
@@ -353,53 +357,71 @@ const Campanha: React.FC = () => {
     return (
       <div className="overflow-x-auto">
         <div className="min-w-[800px]">
-          {/* Header */}
           <div className="grid grid-cols-8 gap-2 mb-2">
             <div className="text-sm font-medium text-muted-foreground p-2">Unidade</div>
             {days.map((day, idx) => (
-              <div key={idx} className={`text-center p-2 rounded-lg ${
-                isFeriado(day, year) ? 'bg-red-500/10' : 
-                isWeekend(day) ? 'bg-muted/50' : ''
-              }`}>
+              <div 
+                key={idx} 
+                className={`text-center p-2 rounded-lg cursor-pointer transition-colors ${
+                  isFeriado(day) ? 'bg-red-500/10 hover:bg-red-500/20' : 
+                  isWeekend(day) ? 'bg-muted/50 hover:bg-muted' : 'hover:bg-muted/30'
+                }`}
+                onClick={() => {
+                  setCurrentDate(day);
+                  setViewMode('day');
+                }}
+              >
                 <div className="text-xs text-muted-foreground">
                   {format(day, 'EEE', { locale: ptBR })}
                 </div>
-                <div className={`text-lg font-bold ${isFeriado(day, year) ? 'text-red-400' : ''}`}>
+                <div className={`text-lg font-bold ${isFeriado(day) ? 'text-red-400' : ''}`}>
                   {format(day, 'd')}
                 </div>
               </div>
             ))}
           </div>
           
-          {/* Linhas por unidade */}
-          {Object.keys(initialTeams).map((unidade) => {
-            const unit = unidade as UnitType;
+          {UNITS.map((unidade) => {
+            const isAdmin = unidade === 'Administrativo';
             
             return (
-              <div key={unit} className="grid grid-cols-8 gap-2 mb-2">
+              <div key={unidade} className="grid grid-cols-8 gap-2 mb-2">
                 <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
-                  {unitIcons[unit]}
-                  <span className="text-sm font-medium truncate">{unit}</span>
+                  {unitIcons[unidade]}
+                  <span className="text-sm font-medium truncate">{unidade}</span>
                 </div>
                 {days.map((day, idx) => {
-                  const escala = getEscalaForDate(day).find(e => e.unidade === unit);
+                  const team = getTeamForDate(day, unidade);
+                  const works = isAdmin ? administrativoTrabalha(day) : true;
+                  const hasAlt = hasAlteracao(day, unidade);
                   
                   return (
-                    <div key={idx} className={`p-2 rounded-lg text-center ${
-                      isFeriado(day, year) ? 'bg-red-500/10' : 
-                      isWeekend(day) ? 'bg-muted/30' : 'bg-card'
-                    }`}>
-                      {escala?.isAdministrativo ? (
-                        administrativoTrabalha(day, year) ? (
+                    <div 
+                      key={idx} 
+                      className={`p-2 rounded-lg text-center relative ${
+                        isFeriado(day) ? 'bg-red-500/10' : 
+                        isWeekend(day) ? 'bg-muted/30' : 'bg-card'
+                      } ${editMode ? 'cursor-pointer hover:ring-2 hover:ring-primary/50' : ''}`}
+                      onClick={() => {
+                        if (editMode && !isAdmin) {
+                          openEditDialog(day, unidade);
+                        }
+                      }}
+                    >
+                      {hasAlt && (
+                        <Edit2 className="absolute top-1 right-1 h-3 w-3 text-amber-500" />
+                      )}
+                      {isAdmin ? (
+                        works ? (
                           <Badge variant="outline" className="text-xs bg-slate-500/20 text-slate-400">
                             ADM
                           </Badge>
                         ) : (
                           <span className="text-xs text-muted-foreground">-</span>
                         )
-                      ) : escala?.equipe && (
-                        <Badge variant="outline" className={`text-xs ${teamColors[escala.equipe]}`}>
-                          {escala.equipe}
+                      ) : team && (
+                        <Badge variant="outline" className={`text-xs ${teamColors[team]}`}>
+                          {team}
                         </Badge>
                       )}
                     </div>
@@ -413,7 +435,7 @@ const Campanha: React.FC = () => {
     );
   };
 
-  // Renderização da visão anual
+  // Render year view
   const renderYearView = () => {
     const months = Array.from({ length: 12 }, (_, i) => new Date(currentDate.getFullYear(), i, 1));
     
@@ -427,7 +449,9 @@ const Campanha: React.FC = () => {
           const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
           
           return (
-            <Card key={idx} className="overflow-hidden cursor-pointer hover:border-primary/50 transition-colors"
+            <Card 
+              key={idx} 
+              className="overflow-hidden cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() => {
                 setCurrentDate(month);
                 setViewMode('month');
@@ -447,7 +471,7 @@ const Campanha: React.FC = () => {
                   ))}
                   {days.map((day, dayIdx) => {
                     const isCurrentMonth = isSameMonth(day, month);
-                    const isHoliday = isFeriado(day, currentDate.getFullYear());
+                    const isHoliday = isFeriado(day);
                     
                     return (
                       <div
@@ -471,6 +495,16 @@ const Campanha: React.FC = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="container mx-auto p-4 md:p-6 max-w-7xl">
+        <div className="flex items-center justify-center h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 md:p-6 max-w-7xl">
       {/* Header */}
@@ -491,9 +525,37 @@ const Campanha: React.FC = () => {
             </div>
           </div>
         </div>
+
+        <Button
+          variant={editMode ? 'default' : 'outline'}
+          onClick={() => setEditMode(!editMode)}
+          className="gap-2"
+        >
+          <Edit2 className="h-4 w-4" />
+          {editMode ? 'Finalizar Edição' : 'Editar Escalas'}
+        </Button>
       </div>
 
-      {/* Tabs para anos */}
+      {/* Edit mode alert */}
+      {editMode && (
+        <Card className="mb-6 border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-amber-500/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/20">
+                <Edit2 className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Modo de Edição Ativo</p>
+                <p className="text-sm text-muted-foreground">
+                  Clique em uma unidade para alterar a equipe de serviço ou gerenciar os membros.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tabs */}
       <Tabs value={selectedYear} onValueChange={(v) => {
         setSelectedYear(v);
         setCurrentDate(new Date(parseInt(v), 0, 1));
@@ -503,14 +565,30 @@ const Campanha: React.FC = () => {
           <TabsTrigger value="2026">2026</TabsTrigger>
         </TabsList>
 
-        {/* Legenda das equipes */}
+        {/* Legend */}
         <Card className="mb-6">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Legenda das Equipes</CardTitle>
+            <CardTitle className="text-sm flex items-center justify-between">
+              <span>Legenda das Equipes</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs"
+                onClick={() => openMembersDialog('Alfa', 'Guarda')}
+              >
+                <Users className="h-4 w-4 mr-1" />
+                Ver Membros
+              </Button>
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
             {TEAMS.map(team => (
-              <Badge key={team} variant="outline" className={`${teamColors[team]} text-sm`}>
+              <Badge 
+                key={team} 
+                variant="outline" 
+                className={`${teamColors[team]} text-sm cursor-pointer`}
+                onClick={() => openMembersDialog(team, 'Guarda')}
+              >
                 Equipe {team}
               </Badge>
             ))}
@@ -520,32 +598,14 @@ const Campanha: React.FC = () => {
             <Badge variant="outline" className="bg-red-500/20 text-red-400 border-red-500/30 text-sm">
               Feriado
             </Badge>
+            <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-sm">
+              <Edit2 className="h-3 w-3 mr-1" />
+              Alteração Manual
+            </Badge>
           </CardContent>
         </Card>
 
-        {/* Configuração inicial */}
-        <Card className="mb-6 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4" />
-              Configuração Inicial - 1º de Janeiro de {selectedYear}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Guarda, Armeiro, RP Ambiental, GOC, Lacustre:</span>
-                <Badge variant="outline" className={teamColors['Bravo']}>Bravo</Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">GTA:</span>
-                <Badge variant="outline" className={teamColors['Alfa']}>Alfa</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Controles de navegação */}
+        {/* Navigation */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={navigatePrevious}>
@@ -598,6 +658,32 @@ const Campanha: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Team Dialog */}
+      <EditTeamDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        date={editingDate}
+        unidade={editingUnidade}
+        currentTeam={getTeamForDate(editingDate, editingUnidade)}
+        hasExistingAlteration={hasAlteracao(editingDate, editingUnidade)}
+        onSave={(team, motivo) => saveAlteracao(editingDate, editingUnidade, team, motivo)}
+        onRemove={() => removeAlteracao(editingDate, editingUnidade)}
+      />
+
+      {/* Team Members Dialog */}
+      <TeamMembersDialog
+        open={membersDialogOpen}
+        onOpenChange={setMembersDialogOpen}
+        team={selectedTeam}
+        unidade={selectedUnidade}
+        membros={getMembrosForTeam(selectedTeam, selectedUnidade)}
+        allEfetivo={efetivo}
+        allMembros={membros}
+        onAddMembro={(efetivoId, funcao) => addMembro(selectedTeam, efetivoId, selectedUnidade, funcao)}
+        onRemoveMembro={removeMembro}
+        onTransferMembro={updateMembroEquipe}
+      />
     </div>
   );
 };

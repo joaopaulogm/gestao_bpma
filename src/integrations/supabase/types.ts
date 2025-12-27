@@ -172,6 +172,24 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_equipes_campanha: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       dim_especies_fauna: {
         Row: {
           classe_taxonomica: string | null
@@ -468,6 +486,137 @@ export type Database = {
           "Tipo de Crime"?: string | null
         }
         Relationships: []
+      }
+      fat_campanha_alteracoes: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          data: string
+          equipe_nova_id: string
+          equipe_original_id: string | null
+          id: string
+          motivo: string | null
+          unidade: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          data: string
+          equipe_nova_id: string
+          equipe_original_id?: string | null
+          id?: string
+          motivo?: string | null
+          unidade: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          data?: string
+          equipe_nova_id?: string
+          equipe_original_id?: string | null
+          id?: string
+          motivo?: string | null
+          unidade?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_campanha_alteracoes_equipe_nova_id_fkey"
+            columns: ["equipe_nova_id"]
+            isOneToOne: false
+            referencedRelation: "dim_equipes_campanha"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_campanha_alteracoes_equipe_original_id_fkey"
+            columns: ["equipe_original_id"]
+            isOneToOne: false
+            referencedRelation: "dim_equipes_campanha"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_campanha_config: {
+        Row: {
+          ano: number
+          created_at: string | null
+          data_inicio: string
+          equipe_inicial_id: string | null
+          id: string
+          unidade: string
+          updated_at: string | null
+        }
+        Insert: {
+          ano?: number
+          created_at?: string | null
+          data_inicio?: string
+          equipe_inicial_id?: string | null
+          id?: string
+          unidade: string
+          updated_at?: string | null
+        }
+        Update: {
+          ano?: number
+          created_at?: string | null
+          data_inicio?: string
+          equipe_inicial_id?: string | null
+          id?: string
+          unidade?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_campanha_config_equipe_inicial_id_fkey"
+            columns: ["equipe_inicial_id"]
+            isOneToOne: false
+            referencedRelation: "dim_equipes_campanha"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_campanha_membros: {
+        Row: {
+          ano: number
+          created_at: string | null
+          efetivo_id: string
+          equipe_id: string
+          funcao: string | null
+          id: string
+          unidade: string
+        }
+        Insert: {
+          ano?: number
+          created_at?: string | null
+          efetivo_id: string
+          equipe_id: string
+          funcao?: string | null
+          id?: string
+          unidade: string
+        }
+        Update: {
+          ano?: number
+          created_at?: string | null
+          efetivo_id?: string
+          equipe_id?: string
+          funcao?: string | null
+          id?: string
+          unidade?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_campanha_membros_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_campanha_membros_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "dim_equipes_campanha"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fat_crime_fauna: {
         Row: {
