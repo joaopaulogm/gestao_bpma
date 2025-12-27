@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   UserMinus, ArrowLeft, Search, Calendar, Users, Activity, AlertTriangle,
-  Loader2, Palmtree, FileWarning, ChevronLeft, ChevronRight, Filter,
+  Loader2, Palmtree, ChevronLeft, ChevronRight, Filter,
   Clock, CalendarDays, UserX, Shield
 } from 'lucide-react';
+import { NovoAfastamentoDialog } from '@/components/afastamentos/NovoAfastamentoDialog';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -319,16 +320,19 @@ const Afastamentos: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => setAno(ano - 1)}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Badge variant="secondary" className="text-lg px-4 py-2 font-bold">
-              {ano}
-            </Badge>
-            <Button variant="outline" size="icon" onClick={() => setAno(ano + 1)}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-3">
+            <NovoAfastamentoDialog ano={ano} onSuccess={fetchData} />
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={() => setAno(ano - 1)}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Badge variant="secondary" className="text-lg px-4 py-2 font-bold">
+                {ano}
+              </Badge>
+              <Button variant="outline" size="icon" onClick={() => setAno(ano + 1)}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
