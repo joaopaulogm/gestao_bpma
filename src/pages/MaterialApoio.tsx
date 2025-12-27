@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Search } from 'lucide-react';
+import { BookOpen, Search, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const menuItems = [
   { title: 'POP Ambiental', description: 'Procedimento Operacional Padrão', icon: BookOpen, path: '/material-apoio/pop' },
   { title: 'Identificar Espécie', description: 'Ferramenta de identificação', icon: Search, path: '/material-apoio/identificar-especie' },
+  { title: 'Manual de RAP', description: 'Manual de Confecção de Relatório', icon: FileText, path: '/material-apoio/manual-rap' },
 ];
 
 const MaterialApoio: React.FC = () => {
