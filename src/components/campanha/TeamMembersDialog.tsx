@@ -18,14 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TeamType, UnitType, CampanhaMembro } from '@/hooks/useCampanhaData';
+import { TeamType, UnitType, CampanhaMembro, EquipeMembro } from '@/hooks/useCampanhaData';
 
 interface TeamMembersDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   team: TeamType;
   unidade: UnitType;
-  membros: CampanhaMembro[];
+  membros: EquipeMembro[];
   allEfetivo: any[];
   allMembros: CampanhaMembro[];
   onAddMembro: (efetivoId: string, funcao?: string) => Promise<boolean>;

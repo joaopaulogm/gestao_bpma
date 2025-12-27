@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Gift, ArrowLeft, Search, Calendar, Users, Filter, ChevronDown, CalendarDays, Edit2, ArrowRightLeft, X, Loader2 } from 'lucide-react';
+import { Gift, ArrowLeft, Search, Calendar, Users, Filter, ChevronDown, CalendarDays, Edit2, ArrowRightLeft, X, Loader2, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { NovoAbonoDialog } from '@/components/abono/NovoAbonoDialog';
 
 interface Militar {
   id: string;
@@ -288,14 +289,17 @@ const Abono: React.FC = () => {
           </div>
         </div>
 
-        <Button
-          variant={editMode ? 'default' : 'outline'}
-          onClick={() => setEditMode(!editMode)}
-          className="gap-2"
-        >
-          <Edit2 className="h-4 w-4" />
-          {editMode ? 'Finalizar Edição' : 'Editar Calendário'}
-        </Button>
+        <div className="flex gap-2">
+          <NovoAbonoDialog selectedYear={selectedYear} onSuccess={fetchData} />
+          <Button
+            variant={editMode ? 'default' : 'outline'}
+            onClick={() => setEditMode(!editMode)}
+            className="gap-2"
+          >
+            <Edit2 className="h-4 w-4" />
+            {editMode ? 'Finalizar Edição' : 'Editar Calendário'}
+          </Button>
+        </div>
       </div>
 
       {/* Edit mode alert */}
