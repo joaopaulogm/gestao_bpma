@@ -1,12 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { Gift, ArrowLeft, Search, Calendar, Users, Filter, ChevronDown, Info, Building2, CalendarDays } from 'lucide-react';
+import { Gift, ArrowLeft, Search, Calendar, Users, Filter, ChevronDown, Info, Building2, CalendarDays, Edit2, ArrowRightLeft, X, Check, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -19,6 +18,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 interface Militar {
   matricula: string;
@@ -33,7 +41,7 @@ interface MesAbono {
 }
 
 // Dados do calendário de abono 2026
-const dadosAbono: MesAbono[] = [
+const dadosAbonoInicial: MesAbono[] = [
   {
     mes: 'Janeiro',
     numero: 1,
@@ -275,7 +283,7 @@ const dadosAbono: MesAbono[] = [
   {
     mes: 'Dezembro',
     numero: 12,
-    militares: [], // Não há dados de dezembro no PDF
+    militares: [],
   },
 ];
 
@@ -304,15 +312,23 @@ const mesColors = [
 ];
 
 const Abono: React.FC = () => {
+  const [dadosAbono, setDadosAbono] = useState<MesAbono[]>(dadosAbonoInicial);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMes, setSelectedMes] = useState<string>('todos');
   const [selectedPosto, setSelectedPosto] = useState<string>('todos');
   const [expandedMeses, setExpandedMeses] = useState<number[]>([]);
+  
+  // Estado para edição/remanejamento
+  const [editMode, setEditMode] = useState(false);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [selectedMilitar, setSelectedMilitar] = useState<Militar | null>(null);
+  const [fromMonth, setFromMonth] = useState<number | null>(null);
+  const [toMonth, setToMonth] = useState<string>('');
 
   const postos = useMemo(() => {
     const all = dadosAbono.flatMap(m => m.militares.map(mil => mil.posto));
     return ['todos', ...Array.from(new Set(all))];
-  }, []);
+  }, [dadosAbono]);
 
   const filteredData = useMemo(() => {
     return dadosAbono
@@ -328,7 +344,7 @@ const Abono: React.FC = () => {
         }),
       }))
       .filter(mes => mes.militares.length > 0 || (selectedMes !== 'todos' && mes.numero.toString() === selectedMes));
-  }, [searchTerm, selectedMes, selectedPosto]);
+  }, [searchTerm, selectedMes, selectedPosto, dadosAbono]);
 
   const totalMilitares = useMemo(() => {
     return filteredData.reduce((acc, mes) => acc + mes.militares.length, 0);
@@ -350,10 +366,61 @@ const Abono: React.FC = () => {
     setExpandedMeses([]);
   };
 
+  const handleTransferClick = (militar: Militar, mesNumero: number) => {
+    setSelectedMilitar(militar);
+    setFromMonth(mesNumero);
+    setTransferDialogOpen(true);
+  };
+
+  const handleRemoveMilitar = (militar: Militar, mesNumero: number) => {
+    setDadosAbono(prev => prev.map(mes => {
+      if (mes.numero === mesNumero) {
+        return {
+          ...mes,
+          militares: mes.militares.filter(m => m.matricula !== militar.matricula)
+        };
+      }
+      return mes;
+    }));
+    toast.success(`${militar.nome} removido do mês`);
+  };
+
+  const handleConfirmTransfer = () => {
+    if (!selectedMilitar || !fromMonth || !toMonth) return;
+
+    const toMonthNum = parseInt(toMonth);
+    
+    setDadosAbono(prev => prev.map(mes => {
+      if (mes.numero === fromMonth) {
+        return {
+          ...mes,
+          militares: mes.militares.filter(m => m.matricula !== selectedMilitar.matricula)
+        };
+      }
+      if (mes.numero === toMonthNum) {
+        return {
+          ...mes,
+          militares: [...mes.militares, selectedMilitar]
+        };
+      }
+      return mes;
+    }));
+
+    const fromMesNome = dadosAbono.find(m => m.numero === fromMonth)?.mes;
+    const toMesNome = dadosAbono.find(m => m.numero === toMonthNum)?.mes;
+    
+    toast.success(`${selectedMilitar.nome} transferido de ${fromMesNome} para ${toMesNome}`);
+    
+    setTransferDialogOpen(false);
+    setSelectedMilitar(null);
+    setFromMonth(null);
+    setToMonth('');
+  };
+
   return (
     <div className="container mx-auto p-4 md:p-6 max-w-7xl">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-4">
           <Link to="/secao-pessoas">
             <Button variant="ghost" size="icon" className="shrink-0">
@@ -370,7 +437,44 @@ const Abono: React.FC = () => {
             </div>
           </div>
         </div>
+        
+        <Button 
+          variant={editMode ? "default" : "outline"}
+          onClick={() => setEditMode(!editMode)}
+          className="gap-2"
+        >
+          {editMode ? (
+            <>
+              <Check className="h-4 w-4" />
+              Finalizar Edição
+            </>
+          ) : (
+            <>
+              <Edit2 className="h-4 w-4" />
+              Editar Calendário
+            </>
+          )}
+        </Button>
       </div>
+
+      {/* Edit Mode Alert */}
+      {editMode && (
+        <Card className="mb-6 border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-amber-500/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/20">
+                <Edit2 className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Modo de Edição Ativo</p>
+                <p className="text-sm text-muted-foreground">
+                  Clique nos ícones de transferência <ArrowRightLeft className="inline h-4 w-4 mx-1" /> para remanejar policiais ou <X className="inline h-4 w-4 mx-1" /> para remover do mês.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Regras de Abono */}
       <Card className="mb-6 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
@@ -585,7 +689,7 @@ const Abono: React.FC = () => {
                           {mes.militares.map((militar, idx) => (
                             <div
                               key={militar.matricula}
-                              className="flex items-center gap-4 p-3 rounded-lg bg-background/50 hover:bg-background/80 transition-colors"
+                              className="flex items-center gap-4 p-3 rounded-lg bg-background/50 hover:bg-background/80 transition-colors group"
                             >
                               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-xs font-medium">
                                 {idx + 1}
@@ -601,6 +705,35 @@ const Abono: React.FC = () => {
                                   Mat. {militar.matricula}
                                 </p>
                               </div>
+                              
+                              {editMode && (
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleTransferClick(militar, mes.numero);
+                                    }}
+                                    title="Transferir para outro mês"
+                                  >
+                                    <ArrowRightLeft className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveMilitar(militar, mes.numero);
+                                    }}
+                                    title="Remover do mês"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -613,6 +746,71 @@ const Abono: React.FC = () => {
           ))
         )}
       </div>
+
+      {/* Transfer Dialog */}
+      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="h-5 w-5 text-primary" />
+              Transferir Policial
+            </DialogTitle>
+            <DialogDescription>
+              Selecione o mês de destino para remanejar o policial.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedMilitar && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-lg bg-muted/50 border">
+                <div className="flex items-center gap-3">
+                  <Badge variant="outline" className={postoColors[selectedMilitar.posto]}>
+                    {selectedMilitar.posto}
+                  </Badge>
+                  <div>
+                    <p className="font-medium">{selectedMilitar.nome}</p>
+                    <p className="text-sm text-muted-foreground">Mat. {selectedMilitar.matricula}</p>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">De:</span>
+                  <Badge variant="secondary">
+                    {dadosAbono.find(m => m.numero === fromMonth)?.mes}
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Mês de destino</label>
+                <Select value={toMonth} onValueChange={setToMonth}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o mês" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dadosAbono
+                      .filter(m => m.numero !== fromMonth)
+                      .map(mes => (
+                        <SelectItem key={mes.numero} value={mes.numero.toString()}>
+                          {mes.mes} ({mes.militares.length} militares)
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirmTransfer} disabled={!toMonth}>
+              <Check className="h-4 w-4 mr-2" />
+              Confirmar Transferência
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
