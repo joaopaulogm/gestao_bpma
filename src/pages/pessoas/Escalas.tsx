@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, ArrowLeft, ChevronLeft, ChevronRight, Users, Building2, Anchor, Plane, Shield, Target, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -59,61 +59,63 @@ const Escalas: React.FC = () => {
   } = useCampanhaData(year);
 
   // Fetch equipes from dim_equipes with membros
+  const fetchEquipes = useCallback(async () => {
+    setLoadingEquipes(true);
+    try {
+      const { data: equipesData, error } = await supabase
+        .from('dim_equipes')
+        .select('*')
+        .order('grupamento');
+
+      if (error) throw error;
+
+      // Fetch membros for each equipe
+      const equipesWithMembros = await Promise.all(
+        (equipesData || []).map(async (equipe) => {
+          const { data: membrosData } = await supabase
+            .from('fat_equipe_membros')
+            .select(`
+              id,
+              funcao,
+              dim_efetivo!inner(id, nome_guerra, posto_graduacao, matricula)
+            `)
+            .eq('equipe_id', equipe.id);
+
+          return {
+            ...equipe,
+            membros: (membrosData || []).map((m: any) => ({
+              id: m.id,
+              funcao: m.funcao,
+              efetivo: m.dim_efetivo,
+            })),
+          };
+        })
+      );
+
+      setEquipes(equipesWithMembros);
+    } catch (error) {
+      console.error('Erro ao carregar equipes:', error);
+    } finally {
+      setLoadingEquipes(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchEquipes = async () => {
-      setLoadingEquipes(true);
-      try {
-        const { data: equipesData, error } = await supabase
-          .from('dim_equipes')
-          .select('*')
-          .order('grupamento');
-
-        if (error) throw error;
-
-        // Fetch membros for each equipe
-        const equipesWithMembros = await Promise.all(
-          (equipesData || []).map(async (equipe) => {
-            const { data: membrosData } = await supabase
-              .from('fat_equipe_membros')
-              .select(`
-                id,
-                funcao,
-                dim_efetivo!inner(id, nome_guerra, posto_graduacao, matricula)
-              `)
-              .eq('equipe_id', equipe.id);
-
-            return {
-              ...equipe,
-              membros: (membrosData || []).map((m: any) => ({
-                id: m.id,
-                funcao: m.funcao,
-                efetivo: m.dim_efetivo,
-              })),
-            };
-          })
-        );
-
-        setEquipes(equipesWithMembros);
-      } catch (error) {
-        console.error('Erro ao carregar equipes:', error);
-      } finally {
-        setLoadingEquipes(false);
-      }
-    };
-
     fetchEquipes();
+  }, [fetchEquipes]);
 
-    // Subscribe to realtime updates
+  // Realtime subscription
+  useEffect(() => {
     const channel = supabase
-      .channel('equipes-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'dim_equipes' }, fetchEquipes)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_equipe_membros' }, fetchEquipes)
+      .channel('escalas-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dim_equipes' }, () => fetchEquipes())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_equipe_membros' }, () => fetchEquipes())
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchEquipes]);
 
   const navigatePrevious = () => setCurrentDate(addDays(currentDate, -1));
   const navigateNext = () => setCurrentDate(addDays(currentDate, 1));

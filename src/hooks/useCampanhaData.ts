@@ -135,6 +135,21 @@ export const useCampanhaData = (year: number) => {
     fetchData();
   }, [fetchData]);
 
+  // Realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('campanha-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dim_equipes_campanha' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_campanha_membros' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_campanha_alteracoes' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_campanha_config' }, () => fetchData())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData]);
+
   // Default initial teams if no config exists
   const defaultInitialTeams: Record<UnitType, TeamType | null> = {
     'Guarda': 'Bravo',
