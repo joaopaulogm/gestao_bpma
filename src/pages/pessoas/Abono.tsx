@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Gift, ArrowLeft, Search, Calendar, Users, Filter, ChevronDown } from 'lucide-react';
+import { Gift, ArrowLeft, Search, Calendar, Users, Filter, ChevronDown, Info, Building2, CalendarDays } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -371,6 +372,47 @@ const Abono: React.FC = () => {
         </div>
       </div>
 
+      {/* Regras de Abono */}
+      <Card className="mb-6 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Info className="h-5 w-5 text-primary" />
+            Regras do Abono de Ponto
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
+            <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+              <Gift className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground">Direito a 5 dias</p>
+              <p className="text-sm text-muted-foreground">Cada policial tem direito a 5 dias de abono de ponto anual.</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
+            <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <Building2 className="h-5 w-5 text-blue-500" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground">Seções Administrativas (Expediente)</p>
+              <p className="text-sm text-muted-foreground">Podem tirar os dias de forma avulsa, sem necessidade de dias consecutivos.</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
+            <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <CalendarDays className="h-5 w-5 text-amber-500" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground">Policiais em Escala</p>
+              <p className="text-sm text-muted-foreground">Devem tirar os 5 dias consecutivos ou dividir em blocos de <span className="font-semibold text-amber-500">3 + 2 dias</span>.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
@@ -414,8 +456,8 @@ const Abono: React.FC = () => {
             <div className="flex items-center gap-3">
               <Gift className="h-8 w-8 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold text-foreground">1</p>
-                <p className="text-xs text-muted-foreground">Dia de Abono</p>
+                <p className="text-2xl font-bold text-foreground">5</p>
+                <p className="text-xs text-muted-foreground">Dias de Abono</p>
               </div>
             </div>
           </CardContent>
