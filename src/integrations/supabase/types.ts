@@ -831,6 +831,103 @@ export type Database = {
           },
         ]
       }
+      fat_ferias: {
+        Row: {
+          ano: number
+          created_at: string | null
+          dias: number | null
+          efetivo_id: string | null
+          id: string
+          mes_fim: number | null
+          mes_inicio: number
+          observacao: string | null
+          tipo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ano?: number
+          created_at?: string | null
+          dias?: number | null
+          efetivo_id?: string | null
+          id?: string
+          mes_fim?: number | null
+          mes_inicio: number
+          observacao?: string | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ano?: number
+          created_at?: string | null
+          dias?: number | null
+          efetivo_id?: string | null
+          id?: string
+          mes_fim?: number | null
+          mes_inicio?: number
+          observacao?: string | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_ferias_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_licencas_medicas: {
+        Row: {
+          ano: number
+          cid: string | null
+          created_at: string | null
+          data_fim: string | null
+          data_inicio: string
+          dias: number | null
+          efetivo_id: string | null
+          id: string
+          observacao: string | null
+          tipo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ano?: number
+          cid?: string | null
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio: string
+          dias?: number | null
+          efetivo_id?: string | null
+          id?: string
+          observacao?: string | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ano?: number
+          cid?: string | null
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          dias?: number | null
+          efetivo_id?: string | null
+          id?: string
+          observacao?: string | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_licencas_medicas_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fat_ocorrencia_apreensao: {
         Row: {
           created_at: string | null
@@ -1166,6 +1263,50 @@ export type Database = {
             columns: ["regiao_administrativa_id"]
             isOneToOne: false
             referencedRelation: "dim_regiao_administrativa"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_restricoes: {
+        Row: {
+          ano: number
+          created_at: string | null
+          data_fim: string | null
+          data_inicio: string
+          efetivo_id: string | null
+          id: string
+          observacao: string | null
+          tipo_restricao: string
+          updated_at: string | null
+        }
+        Insert: {
+          ano?: number
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio: string
+          efetivo_id?: string | null
+          id?: string
+          observacao?: string | null
+          tipo_restricao: string
+          updated_at?: string | null
+        }
+        Update: {
+          ano?: number
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          efetivo_id?: string | null
+          id?: string
+          observacao?: string | null
+          tipo_restricao?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_restricoes_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
           },
         ]

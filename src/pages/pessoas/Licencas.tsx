@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { FileCheck, ArrowLeft, Search, AlertTriangle, Activity, Filter } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { FileCheck, ArrowLeft, Search, AlertTriangle, Activity, Filter, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,30 +10,44 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-// Dados de Dispensa Médica baseados na aba "D. MÉDICA 2025"
-const dispensaMedicaData = [
-  { matricula: '58.973-6', posto: '3º SGT QPPMC', nome: 'ADENALDO', dataInicio: '15/01/2025', dataFim: '30/01/2025', dias: 15, motivo: 'Licença Médica' },
-  { matricula: '70.430-9', posto: 'SD QPPMC', nome: 'ADRIANO', dataInicio: '05/02/2025', dataFim: '12/02/2025', dias: 7, motivo: 'Dispensa Médica' },
-  { matricula: '225.506-3', posto: 'SD QPPMC', nome: 'ALEX', dataInicio: '20/03/2025', dataFim: '27/03/2025', dias: 7, motivo: 'Dispensa Médica' },
-  { matricula: '72.893-5', posto: 'SD QPPMC', nome: 'AMARAL', dataInicio: '01/04/2025', dataFim: '15/04/2025', dias: 14, motivo: 'Licença Médica' },
-  { matricula: '224.899-0', posto: 'SD QPPMC', nome: 'ANA CECÍLIA', dataInicio: '10/05/2025', dataFim: '17/05/2025', dias: 7, motivo: 'Dispensa Médica' },
-  { matricula: '58.847-0', posto: '2º SGT QPPMC', nome: 'ANDERSON', dataInicio: '22/06/2025', dataFim: '07/07/2025', dias: 15, motivo: 'Licença Médica' },
-  { matricula: '72.817-X', posto: 'SD QPPMC', nome: 'ANDRÉ', dataInicio: '14/07/2025', dataFim: '21/07/2025', dias: 7, motivo: 'Dispensa Médica' },
-  { matricula: '225.348-6', posto: 'SD QPPMC', nome: 'AQUILA', dataInicio: '03/08/2025', dataFim: '10/08/2025', dias: 7, motivo: 'Dispensa Médica' },
-];
+interface LicencaMedica {
+  id: string;
+  efetivo_id: string;
+  ano: number;
+  data_inicio: string;
+  data_fim: string | null;
+  dias: number | null;
+  tipo: string;
+  cid: string | null;
+  observacao: string | null;
+  efetivo?: {
+    id: string;
+    matricula: string;
+    posto_graduacao: string;
+    nome_guerra: string;
+  };
+}
 
-// Dados de Restrição baseados na aba "06 | RESTRIÇÃO - 2025"
-// Legenda: PO (Policiamento Ostensivo), PA (Porte de Arma), SN (Serviço Noturno), EF (Educação Física)
-const restricaoData = [
-  { matricula: '58.973-6', posto: '3º SGT QPPMC', nome: 'ADENALDO', restricoes: ['PO', 'PA'], dataInicio: '01/01/2025', dataFim: '30/06/2025', motivo: 'Restrição Médica' },
-  { matricula: '70.694-8', posto: 'CB QPPMC', nome: 'ALVES RODRIGUES', restricoes: ['SN', 'EF'], dataInicio: '15/02/2025', dataFim: '15/08/2025', motivo: 'Restrição Médica' },
-  { matricula: '72.893-5', posto: 'SD QPPMC', nome: 'AMARAL', restricoes: ['PO'], dataInicio: '01/03/2025', dataFim: '01/09/2025', motivo: 'Restrição Médica' },
-  { matricula: '224.899-0', posto: 'SD QPPMC', nome: 'ANA CECÍLIA', restricoes: ['EF'], dataInicio: '01/04/2025', dataFim: '01/10/2025', motivo: 'Gestante' },
-  { matricula: '225.116-5', posto: 'SD QPPMC', nome: 'BRAGA', restricoes: ['PA', 'SN'], dataInicio: '15/05/2025', dataFim: '15/11/2025', motivo: 'Restrição Médica' },
-  { matricula: '72.912-5', posto: 'SD QPPMC', nome: 'BRITO', restricoes: ['PO', 'PA', 'SN'], dataInicio: '01/06/2025', dataFim: '31/12/2025', motivo: 'Restrição Médica' },
-  { matricula: '58.890-X', posto: '3º SGT QPPMC', nome: 'CARLOS HENRIQUE', restricoes: ['EF'], dataInicio: '01/07/2025', dataFim: '31/12/2025', motivo: 'Restrição Médica' },
-];
+interface Restricao {
+  id: string;
+  efetivo_id: string;
+  ano: number;
+  data_inicio: string;
+  data_fim: string | null;
+  tipo_restricao: string;
+  observacao: string | null;
+  efetivo?: {
+    id: string;
+    matricula: string;
+    posto_graduacao: string;
+    nome_guerra: string;
+  };
+}
 
 const restricaoLabels: Record<string, { label: string; color: string; description: string }> = {
   'PO': { label: 'PO', color: 'bg-red-500/20 text-red-400 border-red-500/30', description: 'Policiamento Ostensivo' },
@@ -46,38 +60,104 @@ const Licencas: React.FC = () => {
   const [search, setSearch] = useState('');
   const [restricaoFiltro, setRestricaoFiltro] = useState<string>('todas');
   const [activeTab, setActiveTab] = useState('dispensa');
+  const [licencas, setLicencas] = useState<LicencaMedica[]>([]);
+  const [restricoes, setRestricoes] = useState<Restricao[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [ano] = useState(2025);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Fetch licenças médicas
+      const { data: licencasData, error: licencasError } = await supabase
+        .from('fat_licencas_medicas')
+        .select(`
+          *,
+          efetivo:dim_efetivo(id, matricula, posto_graduacao, nome_guerra)
+        `)
+        .eq('ano', ano)
+        .order('data_inicio', { ascending: false });
+
+      if (licencasError) throw licencasError;
+      setLicencas(licencasData || []);
+
+      // Fetch restrições
+      const { data: restricoesData, error: restricoesError } = await supabase
+        .from('fat_restricoes')
+        .select(`
+          *,
+          efetivo:dim_efetivo(id, matricula, posto_graduacao, nome_guerra)
+        `)
+        .eq('ano', ano)
+        .order('data_inicio', { ascending: false });
+
+      if (restricoesError) throw restricoesError;
+      setRestricoes(restricoesData || []);
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+      toast.error('Erro ao carregar dados');
+    } finally {
+      setLoading(false);
+    }
+  }, [ano]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('licencas-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_licencas_medicas' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_restricoes' }, () => fetchData())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData]);
 
   const filteredDispensa = useMemo(() => {
-    return dispensaMedicaData.filter(item => 
-      item.nome.toLowerCase().includes(search.toLowerCase()) ||
-      item.matricula.includes(search) ||
-      item.posto.toLowerCase().includes(search.toLowerCase())
+    return licencas.filter(item => 
+      item.efetivo?.nome_guerra?.toLowerCase().includes(search.toLowerCase()) ||
+      item.efetivo?.matricula?.includes(search) ||
+      item.efetivo?.posto_graduacao?.toLowerCase().includes(search.toLowerCase())
     );
-  }, [search]);
+  }, [licencas, search]);
 
   const filteredRestricao = useMemo(() => {
-    return restricaoData.filter(item => {
+    return restricoes.filter(item => {
       const matchSearch = 
-        item.nome.toLowerCase().includes(search.toLowerCase()) ||
-        item.matricula.includes(search) ||
-        item.posto.toLowerCase().includes(search.toLowerCase());
+        item.efetivo?.nome_guerra?.toLowerCase().includes(search.toLowerCase()) ||
+        item.efetivo?.matricula?.includes(search) ||
+        item.efetivo?.posto_graduacao?.toLowerCase().includes(search.toLowerCase());
       
       const matchRestricao = restricaoFiltro === 'todas' || 
-        item.restricoes.includes(restricaoFiltro);
+        item.tipo_restricao === restricaoFiltro;
       
       return matchSearch && matchRestricao;
     });
-  }, [search, restricaoFiltro]);
+  }, [restricoes, search, restricaoFiltro]);
 
   // Summary counts
-  const totalDispensas = dispensaMedicaData.length;
-  const totalDiasDispensa = dispensaMedicaData.reduce((acc, item) => acc + item.dias, 0);
-  const totalRestricoes = restricaoData.length;
-  const restricoesAtivas = restricaoData.filter(r => {
+  const totalDispensas = licencas.length;
+  const totalDiasDispensa = licencas.reduce((acc, item) => acc + (item.dias || 0), 0);
+  const totalRestricoes = restricoes.length;
+  const restricoesAtivas = restricoes.filter(r => {
+    if (!r.data_fim) return true;
     const hoje = new Date();
-    const fim = new Date(r.dataFim.split('/').reverse().join('-'));
+    const fim = new Date(r.data_fim);
     return fim >= hoje;
   }).length;
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), 'dd/MM/yyyy', { locale: ptBR });
+    } catch {
+      return dateStr;
+    }
+  };
 
   return (
     <div className="container mx-auto p-4 md:p-6 max-w-7xl">
@@ -93,7 +173,7 @@ const Licencas: React.FC = () => {
             <FileCheck className="h-6 w-6 text-amber-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Licenças e Restrições 2025</h1>
+            <h1 className="text-2xl font-bold text-foreground">Licenças e Restrições {ano}</h1>
             <p className="text-sm text-muted-foreground">Controle de dispensas médicas e restrições</p>
           </div>
         </div>
@@ -108,7 +188,7 @@ const Licencas: React.FC = () => {
                 <Activity className="h-5 w-5 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Dispensas</p>
+                <p className="text-sm text-muted-foreground">Total Dispensas</p>
                 <p className="text-2xl font-bold">{totalDispensas}</p>
               </div>
             </div>
@@ -130,11 +210,11 @@ const Licencas: React.FC = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
+              <div className="p-2 rounded-lg bg-orange-500/10">
+                <AlertTriangle className="h-5 w-5 text-orange-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Restrições</p>
+                <p className="text-sm text-muted-foreground">Total Restrições</p>
                 <p className="text-2xl font-bold">{totalRestricoes}</p>
               </div>
             </div>
@@ -147,7 +227,7 @@ const Licencas: React.FC = () => {
                 <AlertTriangle className="h-5 w-5 text-red-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Ativas</p>
+                <p className="text-sm text-muted-foreground">Restrições Ativas</p>
                 <p className="text-2xl font-bold">{restricoesAtivas}</p>
               </div>
             </div>
@@ -155,47 +235,24 @@ const Licencas: React.FC = () => {
         </Card>
       </div>
 
-      {/* Legenda de Restrições */}
-      <Card className="mb-6">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Legenda das Restrições</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-3">
-          <TooltipProvider>
-            {Object.entries(restricaoLabels).map(([key, val]) => (
-              <Tooltip key={key}>
-                <TooltipTrigger>
-                  <Badge variant="outline" className={`${val.color} cursor-help`}>
-                    {val.label}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{val.description}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </TooltipProvider>
-        </CardContent>
-      </Card>
-
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="dispensa" className="gap-2">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="dispensa" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Dispensas Médicas
           </TabsTrigger>
-          <TabsTrigger value="restricao" className="gap-2">
+          <TabsTrigger value="restricao" className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
             Restrições
           </TabsTrigger>
         </TabsList>
 
-        {/* Filters */}
-        <Card className="mb-4">
+        {/* Search */}
+        <Card className="mb-6">
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
+              <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar por nome, matrícula ou posto..."
@@ -206,14 +263,14 @@ const Licencas: React.FC = () => {
               </div>
               {activeTab === 'restricao' && (
                 <Select value={restricaoFiltro} onValueChange={setRestricaoFiltro}>
-                  <SelectTrigger className="w-[200px]">
+                  <SelectTrigger className="w-full md:w-[200px]">
                     <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Tipo de Restrição" />
+                    <SelectValue placeholder="Tipo de restrição" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todas">Todas as Restrições</SelectItem>
-                    {Object.entries(restricaoLabels).map(([key, val]) => (
-                      <SelectItem key={key} value={key}>{val.description}</SelectItem>
+                    <SelectItem value="todas">Todas</SelectItem>
+                    {Object.entries(restricaoLabels).map(([key, { description }]) => (
+                      <SelectItem key={key} value={key}>{description}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -224,119 +281,121 @@ const Licencas: React.FC = () => {
 
         <TabsContent value="dispensa">
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between">
-                <span>Dispensas Médicas</span>
-                <Badge variant="outline">{filteredDispensa.length} registros</Badge>
-              </CardTitle>
+            <CardHeader>
+              <CardTitle>Dispensas Médicas ({filteredDispensa.length})</CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[calc(100vh-600px)]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Matrícula</TableHead>
-                      <TableHead>Posto/Grad</TableHead>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Início</TableHead>
-                      <TableHead>Fim</TableHead>
-                      <TableHead>Dias</TableHead>
-                      <TableHead>Motivo</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredDispensa.map((item, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-mono text-sm">{item.matricula}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-xs">{item.posto}</Badge>
-                        </TableCell>
-                        <TableCell className="font-medium">{item.nome}</TableCell>
-                        <TableCell>{item.dataInicio}</TableCell>
-                        <TableCell>{item.dataFim}</TableCell>
-                        <TableCell>
-                          <Badge className="bg-blue-500/20 text-blue-400 border-0">{item.dias}</Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{item.motivo}</TableCell>
-                      </TableRow>
-                    ))}
-                    {filteredDispensa.length === 0 && (
+            <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : licencas.length === 0 ? (
+                <div className="text-center py-12">
+                  <Activity className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">Nenhuma dispensa médica cadastrada para {ano}</p>
+                </div>
+              ) : (
+                <ScrollArea className="h-[400px]">
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                          Nenhum registro encontrado
-                        </TableCell>
+                        <TableHead>Matrícula</TableHead>
+                        <TableHead>Posto/Grad</TableHead>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Início</TableHead>
+                        <TableHead>Fim</TableHead>
+                        <TableHead>Dias</TableHead>
+                        <TableHead>Tipo</TableHead>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDispensa.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-mono text-sm">{item.efetivo?.matricula}</TableCell>
+                          <TableCell>{item.efetivo?.posto_graduacao}</TableCell>
+                          <TableCell className="font-medium">{item.efetivo?.nome_guerra}</TableCell>
+                          <TableCell>{formatDate(item.data_inicio)}</TableCell>
+                          <TableCell>{item.data_fim ? formatDate(item.data_fim) : '-'}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{item.dias || '-'} dias</Badge>
+                          </TableCell>
+                          <TableCell>{item.tipo}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="restricao">
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Restrições</span>
-                <Badge variant="outline">{filteredRestricao.length} registros</Badge>
+                <span>Restrições ({filteredRestricao.length})</span>
+                <TooltipProvider>
+                  <div className="flex gap-2">
+                    {Object.entries(restricaoLabels).map(([key, { label, color, description }]) => (
+                      <Tooltip key={key}>
+                        <TooltipTrigger>
+                          <Badge className={color}>{label}</Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>{description}</TooltipContent>
+                      </Tooltip>
+                    ))}
+                  </div>
+                </TooltipProvider>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[calc(100vh-600px)]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Matrícula</TableHead>
-                      <TableHead>Posto/Grad</TableHead>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Restrições</TableHead>
-                      <TableHead>Início</TableHead>
-                      <TableHead>Fim</TableHead>
-                      <TableHead>Motivo</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredRestricao.map((item, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-mono text-sm">{item.matricula}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-xs">{item.posto}</Badge>
-                        </TableCell>
-                        <TableCell className="font-medium">{item.nome}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-1 flex-wrap">
-                            <TooltipProvider>
-                              {item.restricoes.map(r => (
-                                <Tooltip key={r}>
-                                  <TooltipTrigger>
-                                    <Badge variant="outline" className={restricaoLabels[r]?.color || ''}>
-                                      {r}
-                                    </Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{restricaoLabels[r]?.description}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              ))}
-                            </TooltipProvider>
-                          </div>
-                        </TableCell>
-                        <TableCell>{item.dataInicio}</TableCell>
-                        <TableCell>{item.dataFim}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{item.motivo}</TableCell>
-                      </TableRow>
-                    ))}
-                    {filteredRestricao.length === 0 && (
+            <CardContent>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : restricoes.length === 0 ? (
+                <div className="text-center py-12">
+                  <AlertTriangle className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">Nenhuma restrição cadastrada para {ano}</p>
+                </div>
+              ) : (
+                <ScrollArea className="h-[400px]">
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                          Nenhum registro encontrado
-                        </TableCell>
+                        <TableHead>Matrícula</TableHead>
+                        <TableHead>Posto/Grad</TableHead>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Restrição</TableHead>
+                        <TableHead>Início</TableHead>
+                        <TableHead>Fim</TableHead>
+                        <TableHead>Observação</TableHead>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredRestricao.map((item) => {
+                        const restricaoInfo = restricaoLabels[item.tipo_restricao];
+                        return (
+                          <TableRow key={item.id}>
+                            <TableCell className="font-mono text-sm">{item.efetivo?.matricula}</TableCell>
+                            <TableCell>{item.efetivo?.posto_graduacao}</TableCell>
+                            <TableCell className="font-medium">{item.efetivo?.nome_guerra}</TableCell>
+                            <TableCell>
+                              <Badge className={restricaoInfo?.color || ''}>
+                                {restricaoInfo?.label || item.tipo_restricao}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{formatDate(item.data_inicio)}</TableCell>
+                            <TableCell>{item.data_fim ? formatDate(item.data_fim) : '-'}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground">{item.observacao || '-'}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
