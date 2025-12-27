@@ -24,30 +24,32 @@ interface GBIFMedia {
 async function searchGBIF(scientificName: string, kingdom: 'Animalia' | 'Plantae'): Promise<number | null> {
   const kingdomKey = kingdom === 'Animalia' ? 1 : 6
   const url = `https://api.gbif.org/v1/species/search?q=${encodeURIComponent(scientificName)}&rank=SPECIES&highertaxonKey=${kingdomKey}&limit=5`
-  
+
   console.log(`Searching GBIF for: ${scientificName} in kingdom ${kingdom}`)
-  
+
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(10000) })
     if (!response.ok) return null
-    
+
     const data: GBIFSearchResult = await response.json()
-    
+
     // Find exact or close match
     for (const result of data.results) {
-      if (result.canonicalName?.toLowerCase() === scientificName.toLowerCase() ||
-          result.scientificName?.toLowerCase().startsWith(scientificName.toLowerCase())) {
+      if (
+        result.canonicalName?.toLowerCase() === scientificName.toLowerCase() ||
+        result.scientificName?.toLowerCase().startsWith(scientificName.toLowerCase())
+      ) {
         console.log(`Found GBIF key: ${result.key} for ${scientificName}`)
         return result.key
       }
     }
-    
+
     // Return first result if no exact match
     if (data.results.length > 0) {
       console.log(`Using first GBIF result: ${data.results[0].key}`)
       return data.results[0].key
     }
-    
+
     return null
   } catch (error) {
     console.error(`GBIF search error for ${scientificName}:`, error)
@@ -57,19 +59,19 @@ async function searchGBIF(scientificName: string, kingdom: 'Animalia' | 'Plantae
 
 async function getGBIFMedia(speciesKey: number): Promise<string[]> {
   const url = `https://api.gbif.org/v1/species/${speciesKey}/media?limit=10`
-  
+
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(10000) })
     if (!response.ok) return []
-    
+
     const data: GBIFMedia = await response.json()
-    
+
     // Filter for images only
     const imageUrls = data.results
-      .filter(m => m.type === 'StillImage' && m.identifier)
-      .map(m => m.identifier)
+      .filter((m) => m.type === 'StillImage' && m.identifier)
+      .map((m) => m.identifier)
       .slice(0, 5)
-    
+
     console.log(`Found ${imageUrls.length} images for species key ${speciesKey}`)
     return imageUrls
   } catch (error) {
@@ -96,43 +98,41 @@ async function downloadAndUploadImage(
 ): Promise<string | null> {
   try {
     console.log(`Downloading image ${index + 1}: ${imageUrl}`)
-    
-    const response = await fetch(imageUrl, { 
+
+    const response = await fetch(imageUrl, {
       signal: AbortSignal.timeout(15000),
-      headers: { 'User-Agent': 'BPMA-Species-Sync/1.0' }
+      headers: { 'User-Agent': 'BPMA-Species-Sync/1.0' },
     })
-    
+
     if (!response.ok) {
       console.error(`Failed to download: ${response.status}`)
       return null
     }
-    
+
     const contentType = response.headers.get('content-type') || 'image/jpeg'
     const arrayBuffer = await response.arrayBuffer()
     const uint8Array = new Uint8Array(arrayBuffer)
-    
+
     // Determine extension
     let extension = 'jpg'
     if (contentType.includes('png')) extension = 'png'
     else if (contentType.includes('webp')) extension = 'webp'
     else if (contentType.includes('gif')) extension = 'gif'
-    
+
     const filename = `${slug}_foto${String(index + 1).padStart(4, '0')}.${extension}`
-    
+
     console.log(`Uploading to ${bucket}/${filename}`)
-    
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(filename, uint8Array, {
-        contentType,
-        upsert: true
-      })
-    
+
+    const { error: uploadError } = await supabase.storage.from(bucket).upload(filename, uint8Array, {
+      contentType,
+      upsert: true,
+    })
+
     if (uploadError) {
       console.error(`Upload error:`, uploadError)
       return null
     }
-    
+
     console.log(`Successfully uploaded: ${filename}`)
     return filename
   } catch (error) {
@@ -152,162 +152,114 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     const { tipo, limit = 3 } = await req.json().catch(() => ({}))
-    
+
     const results: any[] = []
-    const processLimit = Math.min(limit, 5) // Max 5 species per run to avoid timeout
-    
-    // Process fauna
-    if (!tipo || tipo === 'fauna') {
-      console.log('Processing fauna species without images...')
-      
-      const { data: faunaSpecies, error: faunaError } = await supabase
-        .from('dim_especies_fauna')
+    const processLimit = Math.min(Number(limit) || 3, 10) // safety cap
+
+    // dim_especies_* uses jsonb default '[]', so we must check for [] as well
+    const hasNoImagesFilter = 'imagens.is.null,imagens.eq.[],imagens.eq.{}'
+
+    const processSpecies = async (
+      tipoLocal: 'fauna' | 'flora',
+      table: 'dim_especies_fauna' | 'dim_especies_flora',
+      bucket: 'imagens-fauna' | 'imagens-flora',
+      kingdom: 'Animalia' | 'Plantae'
+    ) => {
+      console.log(`Processing ${tipoLocal} species without images...`)
+
+      const { data: speciesList, error } = await supabase
+        .from(table)
         .select('id, nome_cientifico, nome_popular')
-        .or('imagens.is.null,imagens.eq.{}')
+        .or(hasNoImagesFilter)
         .limit(processLimit)
-      
-      if (faunaError) {
-        console.error('Fauna query error:', faunaError)
-      } else if (faunaSpecies && faunaSpecies.length > 0) {
-        console.log(`Found ${faunaSpecies.length} fauna species without images`)
-        
-        for (const species of faunaSpecies) {
-          if (!species.nome_cientifico) continue
-          
-          const gbifKey = await searchGBIF(species.nome_cientifico, 'Animalia')
-          if (!gbifKey) {
-            results.push({ tipo: 'fauna', nome: species.nome_popular, status: 'not_found_gbif' })
-            continue
-          }
-          
-          const imageUrls = await getGBIFMedia(gbifKey)
-          if (imageUrls.length === 0) {
-            results.push({ tipo: 'fauna', nome: species.nome_popular, status: 'no_images_gbif' })
-            continue
-          }
-          
-          const slug = slugify(species.nome_popular)
-          const uploadedFiles: string[] = []
-          
-          for (let i = 0; i < imageUrls.length && i < 5; i++) {
-            const filename = await downloadAndUploadImage(
-              supabase, imageUrls[i], 'imagens-fauna', slug, i
-            )
-            if (filename) uploadedFiles.push(filename)
-          }
-          
-          if (uploadedFiles.length > 0) {
-            // Update dim_especies_fauna
-            await supabase
-              .from('dim_especies_fauna')
-              .update({ 
-                imagens: uploadedFiles,
-                foto_principal_path: uploadedFiles[0],
-                fotos_paths: uploadedFiles,
-                foto_status: 'pendente'
-              })
-              .eq('id', species.id)
-            
-            // Update fauna table
-            await supabase
-              .from('fauna')
-              .update({ imagens: uploadedFiles })
-              .eq('id_dim_especie_fauna', species.id)
-            
-            results.push({ 
-              tipo: 'fauna', 
-              nome: species.nome_popular, 
-              status: 'success', 
-              images: uploadedFiles.length 
-            })
-          }
+
+      if (error) {
+        console.error(`${tipoLocal} query error:`, error)
+        return
+      }
+
+      if (!speciesList || speciesList.length === 0) {
+        console.log(`No ${tipoLocal} species found without images (limit=${processLimit}).`)
+        return
+      }
+
+      console.log(`Found ${speciesList.length} ${tipoLocal} species without images`)
+
+      for (const species of speciesList as Array<{ id: string; nome_cientifico: string | null; nome_popular: string | null }>) {
+        const scientificName = species.nome_cientifico
+        const popularName = species.nome_popular
+        const displayName = popularName || scientificName || '(sem nome)'
+
+        if (!scientificName) {
+          results.push({ tipo: tipoLocal, nome: displayName, status: 'missing_scientific_name' })
+          continue
         }
+
+        const gbifKey = await searchGBIF(scientificName, kingdom)
+        if (!gbifKey) {
+          results.push({ tipo: tipoLocal, nome: displayName, status: 'not_found_gbif' })
+          continue
+        }
+
+        const imageUrls = await getGBIFMedia(gbifKey)
+        if (imageUrls.length === 0) {
+          results.push({ tipo: tipoLocal, nome: displayName, status: 'no_images_gbif' })
+          continue
+        }
+
+        const slugBase = popularName || scientificName
+        const slug = slugify(slugBase)
+
+        const uploadedFiles: string[] = []
+        for (let i = 0; i < imageUrls.length && i < 5; i++) {
+          const filename = await downloadAndUploadImage(supabase, imageUrls[i], bucket, slug, i)
+          if (filename) uploadedFiles.push(filename)
+        }
+
+        if (uploadedFiles.length === 0) {
+          results.push({ tipo: tipoLocal, nome: displayName, status: 'upload_failed' })
+          continue
+        }
+
+        const { error: updateError } = await supabase
+          .from(table)
+          .update({
+            imagens: uploadedFiles,
+            imagens_paths: uploadedFiles,
+            foto_principal_path: uploadedFiles[0],
+            fotos_paths: uploadedFiles,
+            foto_status: 'pendente',
+          })
+          .eq('id', species.id)
+
+        if (updateError) {
+          console.error(`Update error (${table}):`, updateError)
+          results.push({ tipo: tipoLocal, nome: displayName, status: 'db_update_failed', error: updateError.message })
+          continue
+        }
+
+        results.push({ tipo: tipoLocal, nome: displayName, status: 'success', images: uploadedFiles.length })
       }
     }
-    
-    // Process flora
+
+    if (!tipo || tipo === 'fauna') {
+      await processSpecies('fauna', 'dim_especies_fauna', 'imagens-fauna', 'Animalia')
+    }
+
     if (!tipo || tipo === 'flora') {
-      console.log('Processing flora species without images...')
-      
-      const { data: floraSpecies, error: floraError } = await supabase
-        .from('dim_especies_flora')
-        .select('id, "Nome Científico", "Nome Popular"')
-        .or('imagens.is.null,imagens.eq.{}')
-        .limit(processLimit)
-      
-      if (floraError) {
-        console.error('Flora query error:', floraError)
-      } else if (floraSpecies && floraSpecies.length > 0) {
-        console.log(`Found ${floraSpecies.length} flora species without images`)
-        
-        for (const species of floraSpecies) {
-          const nomeCientifico = species['Nome Científico']
-          const nomePopular = species['Nome Popular']
-          
-          if (!nomeCientifico) continue
-          
-          const gbifKey = await searchGBIF(nomeCientifico, 'Plantae')
-          if (!gbifKey) {
-            results.push({ tipo: 'flora', nome: nomePopular, status: 'not_found_gbif' })
-            continue
-          }
-          
-          const imageUrls = await getGBIFMedia(gbifKey)
-          if (imageUrls.length === 0) {
-            results.push({ tipo: 'flora', nome: nomePopular, status: 'no_images_gbif' })
-            continue
-          }
-          
-          const slug = slugify(nomePopular || nomeCientifico)
-          const uploadedFiles: string[] = []
-          
-          for (let i = 0; i < imageUrls.length && i < 5; i++) {
-            const filename = await downloadAndUploadImage(
-              supabase, imageUrls[i], 'imagens-flora', slug, i
-            )
-            if (filename) uploadedFiles.push(filename)
-          }
-          
-          if (uploadedFiles.length > 0) {
-            // Update dim_especies_flora
-            await supabase
-              .from('dim_especies_flora')
-              .update({ 
-                imagens: uploadedFiles,
-                foto_principal_path: uploadedFiles[0],
-                fotos_paths: uploadedFiles,
-                foto_status: 'pendente'
-              })
-              .eq('id', species.id)
-            
-            // Update flora table
-            await supabase
-              .from('flora')
-              .update({ imagens: uploadedFiles })
-              .eq('id_dim_especie_flora', species.id)
-            
-            results.push({ 
-              tipo: 'flora', 
-              nome: nomePopular, 
-              status: 'success', 
-              images: uploadedFiles.length 
-            })
-          }
-        }
-      }
+      await processSpecies('flora', 'dim_especies_flora', 'imagens-flora', 'Plantae')
     }
-    
+
     console.log('Auto-images completed:', results)
-    
-    return new Response(
-      JSON.stringify({ success: true, results }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+
+    return new Response(JSON.stringify({ success: true, results }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   } catch (error) {
     console.error('Auto-images error:', error)
-    return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return new Response(JSON.stringify({ success: false, error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 })
