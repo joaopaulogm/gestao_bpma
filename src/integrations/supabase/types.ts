@@ -1021,65 +1021,6 @@ export type Database = {
           },
         ]
       }
-      fauna: {
-        Row: {
-          bucket: string
-          classe_taxonomica: string | null
-          created_at: string
-          estado_conservacao: string | null
-          grupo: string | null
-          id: string
-          id_dim_especie_fauna: string | null
-          imagens: string[]
-          nome_cientifico: string | null
-          nome_popular: string
-          nome_popular_slug: string
-          ordem_taxonomica: string | null
-          tipo_fauna: string | null
-          updated_at: string
-        }
-        Insert: {
-          bucket?: string
-          classe_taxonomica?: string | null
-          created_at?: string
-          estado_conservacao?: string | null
-          grupo?: string | null
-          id?: string
-          id_dim_especie_fauna?: string | null
-          imagens?: string[]
-          nome_cientifico?: string | null
-          nome_popular: string
-          nome_popular_slug: string
-          ordem_taxonomica?: string | null
-          tipo_fauna?: string | null
-          updated_at?: string
-        }
-        Update: {
-          bucket?: string
-          classe_taxonomica?: string | null
-          created_at?: string
-          estado_conservacao?: string | null
-          grupo?: string | null
-          id?: string
-          id_dim_especie_fauna?: string | null
-          imagens?: string[]
-          nome_cientifico?: string | null
-          nome_popular?: string
-          nome_popular_slug?: string
-          ordem_taxonomica?: string | null
-          tipo_fauna?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_fauna_dim_especie_fauna"
-            columns: ["id_dim_especie_fauna"]
-            isOneToOne: false
-            referencedRelation: "dim_especies_fauna"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       fila_imagens_especies: {
         Row: {
           atualizado_em: string
@@ -1119,70 +1060,32 @@ export type Database = {
         }
         Relationships: []
       }
-      flora: {
+      log_importacao_imagens: {
         Row: {
-          bucket: string
-          classe: string | null
-          created_at: string
-          estado_conservacao: string | null
-          familia: string | null
+          data_hora: string | null
+          especie: string | null
           id: string
-          id_dim_especie_flora: string | null
-          imagens: string[]
-          imune_ao_corte: boolean | null
-          madeira_lei: boolean | null
-          nome_cientifico: string | null
-          nome_popular: string
-          nome_popular_slug: string
-          ordem: string | null
-          tipo_planta: string | null
-          updated_at: string
+          mensagem: string | null
+          status: string | null
+          tipo: string | null
         }
         Insert: {
-          bucket?: string
-          classe?: string | null
-          created_at?: string
-          estado_conservacao?: string | null
-          familia?: string | null
+          data_hora?: string | null
+          especie?: string | null
           id?: string
-          id_dim_especie_flora?: string | null
-          imagens?: string[]
-          imune_ao_corte?: boolean | null
-          madeira_lei?: boolean | null
-          nome_cientifico?: string | null
-          nome_popular: string
-          nome_popular_slug: string
-          ordem?: string | null
-          tipo_planta?: string | null
-          updated_at?: string
+          mensagem?: string | null
+          status?: string | null
+          tipo?: string | null
         }
         Update: {
-          bucket?: string
-          classe?: string | null
-          created_at?: string
-          estado_conservacao?: string | null
-          familia?: string | null
+          data_hora?: string | null
+          especie?: string | null
           id?: string
-          id_dim_especie_flora?: string | null
-          imagens?: string[]
-          imune_ao_corte?: boolean | null
-          madeira_lei?: boolean | null
-          nome_cientifico?: string | null
-          nome_popular?: string
-          nome_popular_slug?: string
-          ordem?: string | null
-          tipo_planta?: string | null
-          updated_at?: string
+          mensagem?: string | null
+          status?: string | null
+          tipo?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_flora_dim_especie_flora"
-            columns: ["id_dim_especie_flora"]
-            isOneToOne: false
-            referencedRelation: "dim_especies_flora"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       sync_logs: {
         Row: {
