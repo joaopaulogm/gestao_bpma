@@ -176,10 +176,10 @@ const FaunaCadastrada = () => {
         toast.error('Erro ao atualizar foto');
       }
     } else {
-      // Update fauna imagens directly
+      // Update dim_especies_fauna directly
       const { error } = await supabase
-        .from('fauna')
-        .update({ imagens: [filename, ...bucketImages.filter(img => img !== filename).slice(0, 2)] })
+        .from('dim_especies_fauna')
+        .update({ imagens_paths: [filename, ...bucketImages.filter(img => img !== filename).slice(0, 2)] })
         .eq('id', selectedSpecies.id);
       
       if (!error) {
@@ -193,12 +193,7 @@ const FaunaCadastrada = () => {
   };
 
   const handleRevalidate = async (especie: any) => {
-    if (!especie.id_dim_especie_fauna) {
-      toast.info('Execute "Sincronizar" primeiro para vincular à dimensão');
-      return;
-    }
-    
-    const success = await revalidateSpeciesPhoto('dim_especies_fauna', especie.id_dim_especie_fauna);
+    const success = await revalidateSpeciesPhoto('dim_especies_fauna', especie.id);
     if (success) {
       toast.success('Status alterado para pendente');
       refreshEspecies();
@@ -354,9 +349,9 @@ const FaunaCadastrada = () => {
                       <ArrowUpDown className="h-4 w-4" />
                     </div>
                   </TableHead>
-                  <TableHead className="hidden md:table-cell cursor-pointer" onClick={() => handleSort('grupo')}>
+                  <TableHead className="hidden md:table-cell cursor-pointer" onClick={() => handleSort('tipo_de_fauna')}>
                     <div className="flex items-center gap-1">
-                      Grupo
+                      Tipo
                       <ArrowUpDown className="h-4 w-4" />
                     </div>
                   </TableHead>
@@ -397,7 +392,7 @@ const FaunaCadastrada = () => {
                       </TableCell>
                       <TableCell className="font-medium">{especie.nome_popular}</TableCell>
                       <TableCell className="italic text-muted-foreground">{especie.nome_cientifico}</TableCell>
-                      <TableCell className="hidden md:table-cell">{especie.grupo}</TableCell>
+                      <TableCell className="hidden md:table-cell">{especie.tipo_de_fauna}</TableCell>
                       <TableCell className="hidden md:table-cell">{especie.classe_taxonomica}</TableCell>
                       <TableCell className="hidden lg:table-cell">
                         {getFotoStatusBadge(especie.foto_status)}
