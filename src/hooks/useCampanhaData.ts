@@ -6,9 +6,40 @@ import { toast } from 'sonner';
 export type TeamType = 'Alfa' | 'Bravo' | 'Charlie' | 'Delta';
 export type UnitType = 'Guarda' | 'Armeiro' | 'RP Ambiental' | 'GOC' | 'Lacustre' | 'GTA' | 'Administrativo';
 
+// Mapping de nomes de equipes para nomes de grupamentos na página Equipes
+const UNIT_TO_GRUPAMENTO: Record<UnitType, string> = {
+  'Guarda': 'GUARDA',
+  'Armeiro': 'ARMEIRO',
+  'RP Ambiental': 'RPA AMBIENTAL',
+  'GOC': 'GOC',
+  'Lacustre': 'LACUSTRE',
+  'GTA': 'GTA',
+  'Administrativo': 'EXPEDIENTE',
+};
+
 export interface EquipeCampanha {
   id: string;
   nome: string;
+}
+
+// Interface para membros das equipes reais (fat_equipe_membros)
+export interface EquipeMembro {
+  id: string;
+  equipe_id: string;
+  efetivo_id: string;
+  funcao: string | null;
+  efetivo?: {
+    id: string;
+    nome: string;
+    nome_guerra: string;
+    posto_graduacao: string;
+    matricula: string;
+  };
+  equipe?: {
+    id: string;
+    nome: string;
+    grupamento: string;
+  };
 }
 
 export interface CampanhaMembro {
@@ -68,6 +99,10 @@ export const useCampanhaData = (year: number) => {
   const [configs, setConfigs] = useState<CampanhaConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [efetivo, setEfetivo] = useState<any[]>([]);
+  
+  // Membros das equipes reais (da página Equipes)
+  const [equipesReais, setEquipesReais] = useState<any[]>([]);
+  const [membrosReais, setMembrosReais] = useState<EquipeMembro[]>([]);
 
   // Fetch all data
   const fetchData = useCallback(async () => {
@@ -122,6 +157,28 @@ export const useCampanhaData = (year: number) => {
       
       if (efetivoError) throw efetivoError;
       setEfetivo(efetivoData || []);
+
+      // Fetch equipes reais (da página Equipes)
+      const { data: equipesReaisData, error: equipesReaisError } = await supabase
+        .from('dim_equipes')
+        .select('*')
+        .order('grupamento');
+      
+      if (!equipesReaisError) setEquipesReais(equipesReaisData || []);
+
+      // Fetch membros das equipes reais
+      const { data: membrosReaisData, error: membrosReaisError } = await supabase
+        .from('fat_equipe_membros')
+        .select(`
+          id,
+          equipe_id,
+          efetivo_id,
+          funcao,
+          efetivo:dim_efetivo(id, nome, nome_guerra, posto_graduacao, matricula),
+          equipe:dim_equipes(id, nome, grupamento)
+        `);
+      
+      if (!membrosReaisError) setMembrosReais(membrosReaisData as any || []);
 
     } catch (error) {
       console.error('Erro ao carregar dados da campanha:', error);
@@ -220,12 +277,31 @@ export const useCampanhaData = (year: number) => {
     return true;
   }, [isFeriado]);
 
-  // Get members for a specific team and unit
-  const getMembrosForTeam = useCallback((teamName: TeamType, unidade: UnitType): CampanhaMembro[] => {
-    const teamId = getTeamId(teamName);
-    if (!teamId) return [];
-    return membros.filter(m => m.equipe_id === teamId && m.unidade === unidade);
-  }, [membros, getTeamId]);
+  // Get members for a specific team and unit (uses equipes reais from dim_equipes/fat_equipe_membros)
+  const getMembrosForTeam = useCallback((teamName: TeamType, unidade: UnitType): EquipeMembro[] => {
+    // Mapear unidade para grupamento
+    const grupamento = UNIT_TO_GRUPAMENTO[unidade];
+    if (!grupamento) return [];
+
+    // Encontrar equipes do grupamento que tenham o nome da equipe (Alfa, Bravo, etc)
+    const equipesDoGrupamento = equipesReais.filter((e: any) => 
+      e.grupamento?.toUpperCase() === grupamento &&
+      e.nome?.toUpperCase().includes(teamName.toUpperCase())
+    );
+
+    if (equipesDoGrupamento.length === 0) {
+      // Se não encontrou por nome exato, buscar qualquer equipe com nome similar
+      const equipesAlternativas = equipesReais.filter((e: any) => 
+        e.grupamento?.toUpperCase() === grupamento
+      );
+      
+      const equipesIds = equipesAlternativas.map((e: any) => e.id);
+      return membrosReais.filter(m => equipesIds.includes(m.equipe_id));
+    }
+
+    const equipesIds = equipesDoGrupamento.map((e: any) => e.id);
+    return membrosReais.filter(m => equipesIds.includes(m.equipe_id));
+  }, [equipesReais, membrosReais]);
 
   // Save a schedule alteration
   const saveAlteracao = useCallback(async (
@@ -411,5 +487,8 @@ export const useCampanhaData = (year: number) => {
     getTeamId,
     getTeamName,
     refetch: fetchData,
+    // Dados das equipes reais
+    equipesReais,
+    membrosReais,
   };
 };
