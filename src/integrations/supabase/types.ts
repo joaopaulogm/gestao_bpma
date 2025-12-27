@@ -487,6 +487,44 @@ export type Database = {
         }
         Relationships: []
       }
+      fat_abono: {
+        Row: {
+          ano: number
+          created_at: string | null
+          efetivo_id: string | null
+          id: string
+          mes: number
+          observacao: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ano?: number
+          created_at?: string | null
+          efetivo_id?: string | null
+          id?: string
+          mes: number
+          observacao?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ano?: number
+          created_at?: string | null
+          efetivo_id?: string | null
+          id?: string
+          mes?: number
+          observacao?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_abono_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fat_campanha_alteracoes: {
         Row: {
           created_at: string | null
