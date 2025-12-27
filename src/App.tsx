@@ -33,6 +33,7 @@ const Afastamentos = lazy(() => import(/* webpackChunkName: "afastamentos" */ '@
 const Licencas = lazy(() => import(/* webpackChunkName: "licencas" */ '@/pages/pessoas/Licencas'));
 const Ferias = lazy(() => import(/* webpackChunkName: "ferias" */ '@/pages/pessoas/Ferias'));
 const Abono = lazy(() => import(/* webpackChunkName: "abono" */ '@/pages/pessoas/Abono'));
+const Campanha = lazy(() => import(/* webpackChunkName: "campanha" */ '@/pages/pessoas/Campanha'));
 const SecaoOperacional = lazy(() => import(/* webpackChunkName: "secao-operacional" */ '@/pages/SecaoOperacional'));
 const SecaoLogistica = lazy(() => import(/* webpackChunkName: "secao-logistica" */ '@/pages/SecaoLogistica'));
 const MaterialApoio = lazy(() => import(/* webpackChunkName: "material-apoio" */ '@/pages/MaterialApoio'));
@@ -99,6 +100,7 @@ function App() {
               <Route path="/secao-pessoas/licencas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Licencas /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/ferias" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Ferias /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/abono" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Abono /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-pessoas/campanha" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Campanha /></SidebarLayout></ProtectedRoute>} />
               
               {/* Seção Logística */}
               <Route path="/secao-logistica" element={<ProtectedRoute requiredRoles={['secao_logistica']}><SidebarLayout><SecaoLogistica /></SidebarLayout></ProtectedRoute>} />
