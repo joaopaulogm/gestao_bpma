@@ -167,10 +167,13 @@ Deno.serve(async (req) => {
     ) => {
       console.log(`Processing ${tipoLocal} species without images...`)
 
+      // Query species without images AND that haven't been marked as failed/not found
       const { data: speciesList, error } = await supabase
         .from(table)
-        .select('id, nome_cientifico, nome_popular')
+        .select('id, nome_cientifico, nome_popular, imagens_status')
         .or(hasNoImagesFilter)
+        .or('imagens_status.is.null,imagens_status.eq.pendente')
+        .not('imagens_status', 'in', '("nao_encontrado","erro")')
         .limit(processLimit)
 
       if (error) {
@@ -197,12 +200,16 @@ Deno.serve(async (req) => {
 
         const gbifKey = await searchGBIF(scientificName, kingdom)
         if (!gbifKey) {
+          // Mark as not found so we don't reprocess
+          await supabase.from(table).update({ imagens_status: 'nao_encontrado', imagens_erro: 'Espécie não encontrada no GBIF' }).eq('id', species.id)
           results.push({ tipo: tipoLocal, nome: displayName, status: 'not_found_gbif' })
           continue
         }
 
         const imageUrls = await getGBIFMedia(gbifKey)
         if (imageUrls.length === 0) {
+          // Mark as not found so we don't reprocess
+          await supabase.from(table).update({ imagens_status: 'nao_encontrado', imagens_erro: 'Nenhuma imagem disponível no GBIF' }).eq('id', species.id)
           results.push({ tipo: tipoLocal, nome: displayName, status: 'no_images_gbif' })
           continue
         }
