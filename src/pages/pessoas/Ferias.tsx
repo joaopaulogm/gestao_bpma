@@ -36,9 +36,15 @@ interface FeriasData {
   };
 }
 
-interface Parcela {
+interface ParcelaInfo {
   mes: number;
   dias: number;
+}
+
+interface ParcelaParsed {
+  feriasId: string;
+  ferias: FeriasData;
+  parcelas: ParcelaInfo[];
 }
 
 const MESES = [
@@ -46,7 +52,12 @@ const MESES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ];
 
-const MESES_ABREV = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+const MESES_ABREV: Record<string, number> = {
+  'JAN': 1, 'FEV': 2, 'MAR': 3, 'ABR': 4, 'MAI': 5, 'JUN': 6,
+  'JUL': 7, 'AGO': 8, 'SET': 9, 'OUT': 10, 'NOV': 11, 'DEZ': 12
+};
+
+const MESES_NUM_TO_ABREV = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
 const mesConfig: Record<number, { bg: string; icon: React.ReactNode; color: string }> = {
   1: { bg: 'from-slate-500 to-slate-600', icon: <CalendarDays className="h-5 w-5" />, color: 'slate' },
@@ -68,6 +79,36 @@ const postoOrdem: Record<string, number> = {
   'ST': 7, '1º SGT': 8, '2º SGT': 9, '3º SGT': 10, 'CB': 11, 'SD': 12
 };
 
+// Parse observacao field to extract parcelas
+function parseParcelasFromObservacao(observacao: string | null, mesInicio: number, dias: number): ParcelaInfo[] {
+  if (!observacao) {
+    return [{ mes: mesInicio, dias: dias || 30 }];
+  }
+
+  const parcelas: ParcelaInfo[] = [];
+  
+  // Pattern: "1ª: MAR(9d), 2ª: DEZ(21d)" or "1ª: ABR(5d), 2ª: AGO(5d), 3ª: NOV(20d)"
+  const regex = /(\d)ª:\s*([A-Z]{3})\((\d+)d\)/g;
+  let match;
+  
+  while ((match = regex.exec(observacao)) !== null) {
+    const mesAbrev = match[2];
+    const diasParcela = parseInt(match[3], 10);
+    const mesNum = MESES_ABREV[mesAbrev];
+    
+    if (mesNum && !isNaN(diasParcela)) {
+      parcelas.push({ mes: mesNum, dias: diasParcela });
+    }
+  }
+
+  // If no parcelas found, use mesInicio as default
+  if (parcelas.length === 0) {
+    return [{ mes: mesInicio, dias: dias || 30 }];
+  }
+
+  return parcelas;
+}
+
 const Ferias: React.FC = () => {
   const [search, setSearch] = useState('');
   const [mesSelecionado, setMesSelecionado] = useState<number | null>(null);
@@ -76,7 +117,7 @@ const Ferias: React.FC = () => {
   const [ano, setAno] = useState(2025);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPolicial, setEditingPolicial] = useState<FeriasData | null>(null);
-  const [parcelas, setParcelas] = useState<Parcela[]>([{ mes: 1, dias: 30 }]);
+  const [parcelas, setParcelas] = useState<ParcelaInfo[]>([{ mes: 1, dias: 30 }]);
   const [saving, setSaving] = useState(false);
 
   const fetchFerias = useCallback(async () => {
@@ -117,26 +158,43 @@ const Ferias: React.FC = () => {
     };
   }, [fetchFerias]);
 
-  // Summary by month
+  // Parse all ferias to extract parcelas
+  const feriasWithParcelas = useMemo(() => {
+    return ferias.map(f => ({
+      feriasId: f.id,
+      ferias: f,
+      parcelas: parseParcelasFromObservacao(f.observacao, f.mes_inicio, f.dias)
+    }));
+  }, [ferias]);
+
+  // Summary by month - counts each parcel separately
   const summaryByMonth = useMemo(() => {
-    const summary: Record<number, FeriasData[]> = {};
+    const summary: Record<number, { ferias: FeriasData; parcela: ParcelaInfo; parcelaIndex: number; totalParcelas: number }[]> = {};
     for (let i = 1; i <= 12; i++) { summary[i] = []; }
     
-    ferias.forEach(item => {
-      if (item.mes_inicio) summary[item.mes_inicio].push(item);
+    feriasWithParcelas.forEach(item => {
+      item.parcelas.forEach((parcela, idx) => {
+        summary[parcela.mes].push({
+          ferias: item.ferias,
+          parcela,
+          parcelaIndex: idx,
+          totalParcelas: item.parcelas.length
+        });
+      });
     });
     
     // Sort each month by posto
     Object.keys(summary).forEach(mes => {
       summary[parseInt(mes)].sort((a, b) => {
-        const postoA = postoOrdem[a.efetivo?.posto_graduacao || ''] || 99;
-        const postoB = postoOrdem[b.efetivo?.posto_graduacao || ''] || 99;
-        return postoA - postoB;
+        const postoA = postoOrdem[a.ferias.efetivo?.posto_graduacao || ''] || 99;
+        const postoB = postoOrdem[b.ferias.efetivo?.posto_graduacao || ''] || 99;
+        if (postoA !== postoB) return postoA - postoB;
+        return (a.ferias.efetivo?.nome_guerra || '').localeCompare(b.ferias.efetivo?.nome_guerra || '');
       });
     });
     
     return summary;
-  }, [ferias]);
+  }, [feriasWithParcelas]);
 
   const filteredPoliciais = useMemo(() => {
     if (mesSelecionado === null) return [];
@@ -144,9 +202,9 @@ const Ferias: React.FC = () => {
     
     if (search) {
       result = result.filter(item => 
-        item.efetivo?.nome_guerra?.toLowerCase().includes(search.toLowerCase()) ||
-        item.efetivo?.nome?.toLowerCase().includes(search.toLowerCase()) ||
-        item.efetivo?.matricula?.includes(search)
+        item.ferias.efetivo?.nome_guerra?.toLowerCase().includes(search.toLowerCase()) ||
+        item.ferias.efetivo?.nome?.toLowerCase().includes(search.toLowerCase()) ||
+        item.ferias.efetivo?.matricula?.includes(search)
       );
     }
     
@@ -154,10 +212,20 @@ const Ferias: React.FC = () => {
   }, [mesSelecionado, summaryByMonth, search]);
 
   const totalPoliciais = ferias.length;
+  
+  // Count policiais with parcelas in summer (Jul/Ago)
+  const veraoPoliciais = useMemo(() => {
+    const ids = new Set<string>();
+    [7, 8].forEach(mes => {
+      summaryByMonth[mes]?.forEach(item => ids.add(item.ferias.id));
+    });
+    return ids.size;
+  }, [summaryByMonth]);
 
-  const handleEditPolicial = (policial: FeriasData) => {
-    setEditingPolicial(policial);
-    setParcelas([{ mes: policial.mes_inicio, dias: policial.dias || 30 }]);
+  const handleEditPolicial = (feriaData: FeriasData) => {
+    setEditingPolicial(feriaData);
+    const parsedParcelas = parseParcelasFromObservacao(feriaData.observacao, feriaData.mes_inicio, feriaData.dias);
+    setParcelas(parsedParcelas);
     setEditDialogOpen(true);
   };
 
@@ -209,16 +277,21 @@ const Ferias: React.FC = () => {
     
     setSaving(true);
     try {
-      // Update the primary vacation record
+      // Sort parcelas by month
+      const sortedParcelas = [...parcelas].sort((a, b) => a.mes - b.mes);
+      
+      // Build observacao string
+      const observacaoStr = sortedParcelas.length > 1 
+        ? sortedParcelas.map((p, i) => `${i + 1}ª: ${MESES_NUM_TO_ABREV[p.mes - 1]}(${p.dias}d)`).join(', ')
+        : null;
+      
       const { error } = await supabase
         .from('fat_ferias')
         .update({
-          mes_inicio: parcelas[0].mes,
-          dias: parcelas[0].dias,
-          tipo: parcelas.length > 1 ? 'PARCELADA' : 'INTEGRAL',
-          observacao: parcelas.length > 1 
-            ? `Parcelada: ${parcelas.map((p, i) => `${i+1}ª parcela: ${MESES[p.mes-1]} (${p.dias} dias)`).join(', ')}`
-            : null
+          mes_inicio: sortedParcelas[0].mes,
+          dias: sortedParcelas[0].dias,
+          tipo: sortedParcelas.length > 1 ? 'PARCELADA' : 'INTEGRAL',
+          observacao: observacaoStr
         })
         .eq('id', editingPolicial.id);
 
@@ -236,6 +309,11 @@ const Ferias: React.FC = () => {
   };
 
   const totalDiasParcelas = parcelas.reduce((sum, p) => sum + p.dias, 0);
+
+  // Get full parcel info for display
+  const getParcelasForFerias = (feriaData: FeriasData): ParcelaInfo[] => {
+    return parseParcelasFromObservacao(feriaData.observacao, feriaData.mes_inicio, feriaData.dias);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -274,7 +352,7 @@ const Ferias: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-100">
+          <Card className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background border-blue-100 dark:border-blue-900/30">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-blue-500/10">
@@ -288,23 +366,21 @@ const Ferias: React.FC = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-amber-50 to-white border-amber-100">
+          <Card className="bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-background border-amber-100 dark:border-amber-900/30">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-amber-500/10">
                   <Sun className="h-5 w-5 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-amber-600">
-                    {summaryByMonth[7]?.length + summaryByMonth[8]?.length || 0}
-                  </p>
+                  <p className="text-2xl font-bold text-amber-600">{veraoPoliciais}</p>
                   <p className="text-xs text-muted-foreground">Férias Verão</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-emerald-50 to-white border-emerald-100">
+          <Card className="bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-background border-emerald-100 dark:border-emerald-900/30">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-emerald-500/10">
@@ -318,7 +394,7 @@ const Ferias: React.FC = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-purple-50 to-white border-purple-100">
+          <Card className="bg-gradient-to-br from-purple-50 to-white dark:from-purple-950/20 dark:to-background border-purple-100 dark:border-purple-900/30">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-purple-500/10">
@@ -326,9 +402,9 @@ const Ferias: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-purple-600">
-                    {Math.round(totalPoliciais / 12)}
+                    {ferias.filter(f => f.tipo === 'PARCELADA').length}
                   </p>
-                  <p className="text-xs text-muted-foreground">Média / Mês</p>
+                  <p className="text-xs text-muted-foreground">Parceladas</p>
                 </div>
               </div>
             </CardContent>
@@ -364,7 +440,7 @@ const Ferias: React.FC = () => {
                         relative overflow-hidden rounded-2xl p-4 transition-all duration-300
                         ${isSelected 
                           ? `bg-gradient-to-br ${config.bg} text-white shadow-lg scale-105` 
-                          : 'bg-white hover:bg-muted/50 border border-border hover:border-primary/30 hover:shadow-md'
+                          : 'bg-white dark:bg-card hover:bg-muted/50 border border-border hover:border-primary/30 hover:shadow-md'
                         }
                       `}
                     >
@@ -399,12 +475,12 @@ const Ferias: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-xl bg-gradient-to-br ${mesConfig[mesSelecionado].bg}`}>
-                    <span className="text-xl">{mesConfig[mesSelecionado].icon}</span>
+                    <span className="text-xl text-white">{mesConfig[mesSelecionado].icon}</span>
                   </div>
                   <div>
                     <CardTitle className="text-xl">{MESES[mesSelecionado - 1]} {ano}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {filteredPoliciais.length} policiais programados
+                      {filteredPoliciais.length} parcelas de férias
                     </p>
                   </div>
                 </div>
@@ -436,58 +512,75 @@ const Ferias: React.FC = () => {
                   <p className="text-muted-foreground">Nenhum policial programado para este mês</p>
                 </div>
               ) : (
-                <ScrollArea className="h-[400px] pr-4">
+                <ScrollArea className="h-[500px] pr-4">
                   <div className="grid gap-2">
-                    {filteredPoliciais.map((item, index) => (
-                      <div 
-                        key={item.id}
-                        className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors group"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
-                            {index + 1}
-                          </div>
-                          <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
-                            <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-white text-xs font-bold">
-                              {item.efetivo?.nome_guerra?.slice(0, 2).toUpperCase() || '??'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs font-mono">
-                                {item.efetivo?.posto_graduacao}
-                              </Badge>
-                              <span className="font-semibold text-foreground">
-                                {item.efetivo?.nome_guerra || item.efetivo?.nome}
-                              </span>
+                    {filteredPoliciais.map((item, index) => {
+                      const allParcelas = getParcelasForFerias(item.ferias);
+                      const isParcelada = allParcelas.length > 1;
+                      
+                      return (
+                        <div 
+                          key={`${item.ferias.id}-${item.parcelaIndex}`}
+                          className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                              {index + 1}
                             </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-muted-foreground font-mono">
-                                Mat: {item.efetivo?.matricula}
-                              </span>
-                              {item.tipo === 'PARCELADA' && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Parcelada
+                            <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                              <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xs font-bold">
+                                {item.ferias.efetivo?.nome_guerra?.slice(0, 2).toUpperCase() || '??'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant="outline" className="text-xs font-mono">
+                                  {item.ferias.efetivo?.posto_graduacao}
                                 </Badge>
-                              )}
+                                <span className="font-semibold text-foreground">
+                                  {item.ferias.efetivo?.nome_guerra || item.ferias.efetivo?.nome}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                <span className="text-xs text-muted-foreground font-mono">
+                                  Mat: {item.ferias.efetivo?.matricula}
+                                </span>
+                                {isParcelada ? (
+                                  <div className="flex items-center gap-1">
+                                    {allParcelas.map((p, pIdx) => (
+                                      <Badge 
+                                        key={pIdx} 
+                                        variant={p.mes === mesSelecionado ? 'default' : 'secondary'}
+                                        className={`text-xs ${p.mes === mesSelecionado ? 'ring-2 ring-primary ring-offset-1' : 'opacity-70'}`}
+                                      >
+                                        {pIdx + 1}ª {MESES_NUM_TO_ABREV[p.mes - 1]}({p.dias}d)
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Integral
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-800">
+                              {item.parcela.dias} dias
+                            </Badge>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleEditPolicial(item.ferias)}
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200">
-                            {item.dias} dias
-                          </Badge>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handleEditPolicial(item)}
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </ScrollArea>
               )}
@@ -531,7 +624,7 @@ const Ferias: React.FC = () => {
               {/* Policial Info */}
               <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
                 <Avatar className="h-12 w-12">
-                  <AvatarFallback className="bg-primary text-white font-bold">
+                  <AvatarFallback className="bg-primary text-primary-foreground font-bold">
                     {editingPolicial.efetivo?.nome_guerra?.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -589,7 +682,7 @@ const Ferias: React.FC = () => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {[5, 10, 15, 20, 25, 30].map(dias => (
+                              {Array.from({ length: 26 }, (_, i) => i + 5).map(dias => (
                                 <SelectItem key={dias} value={String(dias)}>
                                   {dias} dias
                                 </SelectItem>
