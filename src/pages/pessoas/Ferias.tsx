@@ -317,115 +317,118 @@ const Ferias: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-4 md:p-6 max-w-7xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link to="/secao-pessoas">
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25">
-                <Palmtree className="h-7 w-7 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground">Calendário de Férias</h1>
-                <p className="text-sm text-muted-foreground">Programação anual do efetivo BPMA</p>
+      <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl">
+        {/* Header - Mobile Optimized */}
+        <div className="flex flex-col gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Link to="/secao-pessoas">
+                <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 sm:h-10 sm:w-10">
+                  <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+              </Link>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25">
+                  <Palmtree className="h-5 w-5 sm:h-7 sm:w-7 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-foreground">Calendário de Férias</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Programação anual do efetivo BPMA</p>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => setAno(ano - 1)}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Badge variant="secondary" className="text-lg px-4 py-2 font-bold">
-              {ano}
-            </Badge>
-            <Button variant="outline" size="icon" onClick={() => setAno(ano + 1)}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            
+            {/* Year Selector */}
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setAno(ano - 1)}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Badge variant="secondary" className="text-sm sm:text-lg px-2 sm:px-4 py-1 sm:py-2 font-bold">
+                {ano}
+              </Badge>
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setAno(ano + 1)}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Stats Cards - Mobile Grid 2x2 */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6 sm:mb-8">
           <Card className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background border-blue-100 dark:border-blue-900/30">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-blue-500/10">
-                  <Users className="h-5 w-5 text-blue-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-blue-500/10">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-blue-600">{totalPoliciais}</p>
-                  <p className="text-xs text-muted-foreground">Total Policiais</p>
+                  <p className="text-xl sm:text-2xl font-bold text-blue-600">{totalPoliciais}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Total Policiais</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-background border-amber-100 dark:border-amber-900/30">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-amber-500/10">
-                  <Sun className="h-5 w-5 text-amber-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-amber-500/10">
+                  <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-amber-600">{veraoPoliciais}</p>
-                  <p className="text-xs text-muted-foreground">Férias Verão</p>
+                  <p className="text-xl sm:text-2xl font-bold text-amber-600">{veraoPoliciais}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Férias Verão</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-background border-emerald-100 dark:border-emerald-900/30">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-emerald-500/10">
-                  <CalendarDays className="h-5 w-5 text-emerald-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-emerald-500/10">
+                  <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-emerald-600">30</p>
-                  <p className="text-xs text-muted-foreground">Dias / Policial</p>
+                  <p className="text-xl sm:text-2xl font-bold text-emerald-600">30</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Dias / Policial</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-br from-purple-50 to-white dark:from-purple-950/20 dark:to-background border-purple-100 dark:border-purple-900/30">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-purple-500/10">
-                  <Plane className="h-5 w-5 text-purple-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-purple-500/10">
+                  <Plane className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-xl sm:text-2xl font-bold text-purple-600">
                     {ferias.filter(f => f.tipo === 'PARCELADA').length}
                   </p>
-                  <p className="text-xs text-muted-foreground">Parceladas</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Parceladas</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Calendar Grid */}
-        <Card className="mb-6 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Calendar className="h-5 w-5 text-primary" />
+        {/* Calendar Grid - Mobile Optimized */}
+        <Card className="mb-4 sm:mb-6 shadow-sm">
+          <CardHeader className="pb-2 px-3 sm:px-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               Selecione o Mês
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 sm:px-6">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <div className="flex items-center justify-center py-8 sm:py-12">
+                <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
                 {MESES.map((mes, idx) => {
                   const mesNum = idx + 1;
                   const config = mesConfig[mesNum];
@@ -437,26 +440,27 @@ const Ferias: React.FC = () => {
                       key={mes}
                       onClick={() => setMesSelecionado(isSelected ? null : mesNum)}
                       className={`
-                        relative overflow-hidden rounded-2xl p-4 transition-all duration-300
+                        relative overflow-hidden rounded-xl sm:rounded-2xl p-2 sm:p-4 transition-all duration-300
                         ${isSelected 
                           ? `bg-gradient-to-br ${config.bg} text-white shadow-lg scale-105` 
                           : 'bg-white dark:bg-card hover:bg-muted/50 border border-border hover:border-primary/30 hover:shadow-md'
                         }
                       `}
                     >
-                      <div className="flex flex-col items-center gap-1">
-                        <span className={`${isSelected ? 'text-white' : 'text-primary'}`}>{config.icon}</span>
-                        <span className={`font-semibold text-sm ${isSelected ? 'text-white' : 'text-foreground'}`}>
-                          {mes}
+                      <div className="flex flex-col items-center gap-0.5 sm:gap-1">
+                        <span className={`hidden sm:block ${isSelected ? 'text-white' : 'text-primary'}`}>{config.icon}</span>
+                        <span className={`font-semibold text-xs sm:text-sm ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                          {mes.slice(0, 3)}
+                          <span className="hidden sm:inline">{mes.slice(3)}</span>
                         </span>
                         <div className={`
-                          flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold
+                          flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold
                           ${isSelected 
                             ? 'bg-white/25 text-white' 
                             : 'bg-primary/10 text-primary'
                           }
                         `}>
-                          <Users className="h-3 w-3" />
+                          <Users className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                           {count}
                         </div>
                       </div>
@@ -468,35 +472,44 @@ const Ferias: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Selected Month Details */}
+        {/* Selected Month Details - Mobile Optimized */}
         {mesSelecionado && (
           <Card className="shadow-sm animate-in slide-in-from-bottom-4 duration-300">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl bg-gradient-to-br ${mesConfig[mesSelecionado].bg}`}>
-                    <span className="text-xl text-white">{mesConfig[mesSelecionado].icon}</span>
+            <CardHeader className="pb-3 px-3 sm:px-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-br ${mesConfig[mesSelecionado].bg}`}>
+                    <span className="text-base sm:text-xl text-white">{mesConfig[mesSelecionado].icon}</span>
                   </div>
-                  <div>
-                    <CardTitle className="text-xl">{MESES[mesSelecionado - 1]} {ano}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="flex-1">
+                    <CardTitle className="text-base sm:text-xl">{MESES[mesSelecionado - 1]} {ano}</CardTitle>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {filteredPoliciais.length} parcelas de férias
                     </p>
                   </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="sm:hidden h-8 w-8"
+                    onClick={() => setMesSelecionado(null)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-none">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Buscar policial..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="pl-9 w-[200px]"
+                      className="pl-9 w-full sm:w-[200px] h-9"
                     />
                   </div>
                   <Button 
                     variant="ghost" 
                     size="icon"
+                    className="hidden sm:flex"
                     onClick={() => setMesSelecionado(null)}
                   >
                     <X className="h-4 w-4" />
@@ -505,14 +518,14 @@ const Ferias: React.FC = () => {
               </div>
             </CardHeader>
             <Separator />
-            <CardContent className="pt-4">
+            <CardContent className="pt-4 px-3 sm:px-6">
               {filteredPoliciais.length === 0 ? (
-                <div className="text-center py-12">
-                  <Umbrella className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                  <p className="text-muted-foreground">Nenhum policial programado para este mês</p>
+                <div className="text-center py-8 sm:py-12">
+                  <Umbrella className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground/30 mb-3" />
+                  <p className="text-sm sm:text-base text-muted-foreground">Nenhum policial programado para este mês</p>
                 </div>
               ) : (
-                <ScrollArea className="h-[500px] pr-4">
+                <ScrollArea className="h-[400px] sm:h-[500px] -mx-1 px-1">
                   <div className="grid gap-2">
                     {filteredPoliciais.map((item, index) => {
                       const allParcelas = getParcelasForFerias(item.ferias);
@@ -521,61 +534,61 @@ const Ferias: React.FC = () => {
                       return (
                         <div 
                           key={`${item.ferias.id}-${item.parcelaIndex}`}
-                          className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors group"
+                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2.5 sm:p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors group gap-2 sm:gap-0"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                          <div className="flex items-start sm:items-center gap-2 sm:gap-3">
+                            <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary font-bold text-xs sm:text-sm shrink-0">
                               {index + 1}
                             </div>
-                            <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
-                              <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xs font-bold">
+                            <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-background shadow-sm shrink-0">
+                              <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[10px] sm:text-xs font-bold">
                                 {item.ferias.efetivo?.nome_guerra?.slice(0, 2).toUpperCase() || '??'}
                               </AvatarFallback>
                             </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Badge variant="outline" className="text-xs font-mono">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                                <Badge variant="outline" className="text-[10px] sm:text-xs font-mono px-1.5 py-0">
                                   {item.ferias.efetivo?.posto_graduacao}
                                 </Badge>
-                                <span className="font-semibold text-foreground">
+                                <span className="font-semibold text-foreground text-sm sm:text-base truncate">
                                   {item.ferias.efetivo?.nome_guerra || item.ferias.efetivo?.nome}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                <span className="text-xs text-muted-foreground font-mono">
-                                  Mat: {item.ferias.efetivo?.matricula}
+                              <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1 flex-wrap">
+                                <span className="text-[10px] sm:text-xs text-muted-foreground font-mono">
+                                  {item.ferias.efetivo?.matricula}
                                 </span>
                                 {isParcelada ? (
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
                                     {allParcelas.map((p, pIdx) => (
                                       <Badge 
                                         key={pIdx} 
                                         variant={p.mes === mesSelecionado ? 'default' : 'secondary'}
-                                        className={`text-xs ${p.mes === mesSelecionado ? 'ring-2 ring-primary ring-offset-1' : 'opacity-70'}`}
+                                        className={`text-[9px] sm:text-xs px-1 sm:px-1.5 py-0 ${p.mes === mesSelecionado ? 'ring-1 sm:ring-2 ring-primary ring-offset-1' : 'opacity-70'}`}
                                       >
-                                        {pIdx + 1}ª {MESES_NUM_TO_ABREV[p.mes - 1]}({p.dias}d)
+                                        {pIdx + 1}ª{MESES_NUM_TO_ABREV[p.mes - 1]}({p.dias}d)
                                       </Badge>
                                     ))}
                                   </div>
                                 ) : (
-                                  <Badge variant="secondary" className="text-xs">
+                                  <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0">
                                     Integral
                                   </Badge>
                                 )}
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-800">
-                              {item.parcela.dias} dias
+                          <div className="flex items-center justify-end gap-2 ml-auto">
+                            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-800 text-[10px] sm:text-xs px-1.5 sm:px-2">
+                              {item.parcela.dias}d
                             </Badge>
                             <Button 
                               variant="ghost" 
                               size="icon"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-7 w-7 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                               onClick={() => handleEditPolicial(item.ferias)}
                             >
-                              <Edit3 className="h-4 w-4" />
+                              <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </Button>
                           </div>
                         </div>
@@ -609,9 +622,9 @@ const Ferias: React.FC = () => {
         )}
       </div>
 
-      {/* Edit Dialog */}
+      {/* Edit Dialog - Mobile Optimized */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit3 className="h-5 w-5 text-primary" />
