@@ -69,25 +69,25 @@ const Hotspots = () => {
   console.log('Sample data:', data.slice(0, 2));
   
   return (
-    <Layout title="Hotspots de Resgates – Brasil" showBackButton>
+    <Layout title="Hotspots de Resgates" showBackButton>
       <div className="space-y-4" lang="pt-BR">
-        {/* Layout com mapa e legenda lado a lado */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[70vh] animate-fade-in">
+        {/* Layout com mapa e legenda - responsivo */}
+        <div className="flex flex-col lg:flex-row gap-4 min-h-[60vh] lg:h-[70vh] animate-fade-in">
           {/* Mapa */}
-          <div className="lg:col-span-3 h-full">
+          <div className="flex-1 h-[50vh] lg:h-full">
             <Card className="h-full">
               <CardContent className="p-0 h-full">
                 <div className="relative h-full rounded-lg overflow-hidden">
                   {isLoading ? (
                     <div className="flex flex-col items-center justify-center h-full gap-2">
-                      <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                      <p className="text-sm text-muted-foreground">Carregando dados do mapa...</p>
+                      <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 text-primary animate-spin" />
+                      <p className="text-xs sm:text-sm text-muted-foreground">Carregando dados do mapa...</p>
                     </div>
                   ) : data.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full gap-4">
-                      <MapPin className="h-12 w-12 text-primary" />
-                      <h3 className="text-lg font-medium">Sem dados de resgate</h3>
-                      <p className="text-sm text-muted-foreground max-w-xs text-center">
+                    <div className="flex flex-col items-center justify-center h-full gap-3 sm:gap-4 p-4">
+                      <MapPin className="h-10 w-10 sm:h-12 sm:w-12 text-primary" />
+                      <h3 className="text-base sm:text-lg font-medium text-center">Sem dados de resgate</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground max-w-xs text-center">
                         Não foram encontrados registros de resgate com dados de localização válidos.
                       </p>
                     </div>
@@ -99,8 +99,8 @@ const Hotspots = () => {
             </Card>
           </div>
 
-          {/* Legenda lateral */}
-          <div className="lg:col-span-1 h-full">
+          {/* Legenda lateral - responsivo */}
+          <div className="w-full lg:w-80 lg:flex-shrink-0">
             <HeatmapLegend 
               dataCount={data.length}
             />

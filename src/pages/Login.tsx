@@ -109,32 +109,32 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4">
       <Card className="w-full max-w-md border-border shadow-lg">
-        <CardHeader className="space-y-1 text-center pb-6">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Lock className="h-8 w-8 text-primary" />
+        <CardHeader className="space-y-1 text-center pb-4 sm:pb-6 px-4 sm:px-6">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <Lock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold text-foreground">
-            {isSignup ? 'Cadastro SOI/BPMA' : 'Atividade Operacional SOI/BPMA'}
+          <CardTitle className="text-xl sm:text-2xl font-bold text-foreground">
+            {isSignup ? 'Cadastro SOI/BPMA' : 'Atividade Operacional'}
           </CardTitle>
-          <CardDescription className="text-muted-foreground">
+          <CardDescription className="text-muted-foreground text-sm">
             {isSignup 
               ? 'Registrar novo usuário autorizado' 
               : 'Acesso restrito a usuários autorizados'
             }
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-4 sm:px-6">
           {/* Google Login Button */}
           <Button
             type="button"
             variant="outline"
-            className="w-full flex items-center justify-center gap-2"
+            className="w-full flex items-center justify-center gap-2 h-10 sm:h-11 text-sm sm:text-base"
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading}
           >
-            <svg className="h-5 w-5" viewBox="0 0 24 24">
+            <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
               <path
                 fill="currentColor"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -164,7 +164,7 @@ const Login = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="space-y-2">
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -173,7 +173,7 @@ const Login = () => {
                   placeholder="E-mail"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
                   required
                 />
               </div>
@@ -186,7 +186,7 @@ const Login = () => {
                   placeholder="Senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
                   required
                 />
               </div>
@@ -201,7 +201,7 @@ const Login = () => {
                     placeholder="Confirmar Senha"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
                     required
                   />
                 </div>
@@ -210,8 +210,7 @@ const Login = () => {
             
             <Button 
               type="submit" 
-              className="w-full"
-              size="lg"
+              className="w-full h-10 sm:h-11 text-sm sm:text-base"
               disabled={isLoading}
             >
               {isLoading 
@@ -225,7 +224,7 @@ const Login = () => {
                 type="button"
                 variant="ghost"
                 onClick={() => setIsSignup(!isSignup)}
-                className="text-sm text-primary hover:text-primary/80"
+                className="text-xs sm:text-sm text-primary hover:text-primary/80"
               >
                 <UserPlus className="mr-2 h-4 w-4" />
                 {isSignup ? 'Já tem conta? Fazer login' : 'Cadastrar novo usuário'}
@@ -233,7 +232,7 @@ const Login = () => {
             </div>
           </form>
         </CardContent>
-        <CardFooter className="text-center text-sm text-muted-foreground pt-0">
+        <CardFooter className="text-center text-xs sm:text-sm text-muted-foreground pt-0 px-4 sm:px-6">
           <p className="w-full">
             Este sistema é de uso exclusivo para membros autorizados do SOI/BPMA.
           </p>

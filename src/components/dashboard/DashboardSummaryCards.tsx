@@ -33,31 +33,32 @@ const DashboardSummaryCards = ({ data }: DashboardSummaryCardsProps) => {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
       {data.metricas.map((metric, index) => (
-        <Card key={index} className="overflow-hidden border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
-          <CardContent className="p-4 flex flex-col">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm font-medium text-slate-500">
+        <Card key={index} className="overflow-hidden border-border shadow-sm hover:shadow-md transition-shadow duration-300">
+          <CardContent className="p-3 sm:p-4 flex flex-col">
+            <div className="flex justify-between items-center mb-2 sm:mb-3">
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground line-clamp-1">
                 {metric.title}
               </span>
-              <div className="bg-slate-100 p-1.5 rounded-full">
+              <div className="bg-muted p-1 sm:p-1.5 rounded-full flex-shrink-0">
                 {renderIcon(metric.iconType, metric.iconColor)}
               </div>
             </div>
-            <div className="text-2xl font-bold text-slate-800">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
               {metric.value.toLocaleString('pt-BR')}
             </div>
             {metric.change !== undefined && (
-              <div className={`flex items-center mt-2 text-xs font-medium ${
-                metric.change >= 0 ? "text-green-600" : "text-red-600"
+              <div className={`flex items-center mt-1 sm:mt-2 text-[10px] sm:text-xs font-medium ${
+                metric.change >= 0 ? "text-success" : "text-destructive"
               }`}>
                 {metric.change >= 0 ? (
                   <TrendingUp className="h-3 w-3 mr-1" />
                 ) : (
                   <TrendingDown className="h-3 w-3 mr-1" />
                 )}
-                {Math.abs(metric.change)}% vs. período anterior
+                <span className="hidden sm:inline">{Math.abs(metric.change)}% vs. período anterior</span>
+                <span className="sm:hidden">{Math.abs(metric.change)}%</span>
               </div>
             )}
           </CardContent>
