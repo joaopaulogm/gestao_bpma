@@ -14,17 +14,23 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import logoBpma from '@/assets/logo-bpma.svg';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-const CheckeredDivider = () => (
-  <div className="flex gap-[3px]">
-    {Array.from({ length: 20 }).map((_, i) => (
-      <div key={i} className="flex flex-col gap-[3px]">
-        <div className={`w-2.5 h-2.5 md:w-3 md:h-3 ${i % 2 === 0 ? 'bg-[#071d49]' : 'bg-transparent'}`} />
-        <div className={`w-2.5 h-2.5 md:w-3 md:h-3 ${i % 2 === 1 ? 'bg-[#071d49]' : 'bg-transparent'}`} />
-      </div>
-    ))}
-  </div>
-);
+const CheckeredDivider = () => {
+  const isMobile = useIsMobile();
+  const count = isMobile ? 10 : 20;
+  
+  return (
+    <div className="flex gap-[2px] sm:gap-[3px]">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex flex-col gap-[2px] sm:gap-[3px]">
+          <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 ${i % 2 === 0 ? 'bg-primary' : 'bg-transparent'}`} />
+          <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 ${i % 2 === 1 ? 'bg-primary' : 'bg-transparent'}`} />
+        </div>
+      ))}
+    </div>
+  );
+};
 
 interface HomeCardProps {
   title: string;
@@ -36,49 +42,50 @@ const HomeCard: React.FC<HomeCardProps> = ({ title, icon: Icon, to }) => {
   return (
     <Link 
       to={to}
-      className="flex flex-col items-center justify-center gap-3 p-4 aspect-square rounded-xl 
-        bg-[#071d49] backdrop-blur-md border-2 border-[#ffcc00]/40
-        hover:scale-105 hover:border-[#ffcc00] hover:shadow-[0_0_25px_rgba(255,204,0,0.5)] 
-        transition-all duration-300 shadow-lg"
+      className="flex flex-col items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 aspect-square rounded-xl 
+        bg-primary backdrop-blur-md border-2 border-accent/40
+        hover:scale-105 hover:border-accent hover:shadow-[0_0_25px_rgba(255,204,0,0.5)] 
+        transition-all duration-300 shadow-lg active:scale-95"
     >
-      <Icon className="h-8 w-8 text-[#ffcc00]" />
-      <span className="text-xs font-medium text-center text-white leading-tight">{title}</span>
+      <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-accent" />
+      <span className="text-[10px] sm:text-xs font-medium text-center text-primary-foreground leading-tight line-clamp-2">{title}</span>
     </Link>
   );
 };
 
 const Index = () => {
   const { isAuthenticated, isAdmin, hasAccess } = useAuth();
+  const isMobile = useIsMobile();
   
   return (
-    <div className="p-6 md:p-10">
+    <div className="p-4 sm:p-6 md:p-10 min-h-screen">
       {/* Header */}
-      <div className="text-center mb-8">
-        <div className="w-32 h-32 rounded-full bg-[#071d49] flex items-center justify-center mx-auto mb-4 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,204,0,0.6)] cursor-pointer overflow-hidden">
-          <img src={logoBpma} alt="Logo BPMA" className="h-40 w-40 object-contain" />
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-primary flex items-center justify-center mx-auto mb-3 sm:mb-4 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,204,0,0.6)] cursor-pointer overflow-hidden">
+          <img src={logoBpma} alt="Logo BPMA" className="h-32 w-32 sm:h-40 sm:w-40 object-contain" />
         </div>
-        <div className="flex items-center justify-center gap-4 mb-3">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-2 sm:mb-3">
           <CheckeredDivider />
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground whitespace-nowrap">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground whitespace-nowrap">
             Gestão - BPMA
           </h1>
           <CheckeredDivider />
         </div>
-        <p className="text-muted-foreground text-base">
+        <p className="text-muted-foreground text-sm sm:text-base px-4">
           Sistema de gestão de ocorrências e dados ambientais
         </p>
       </div>
       
-      <div className="max-w-3xl mx-auto space-y-8">
+      <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8">
         {/* Restricted Area */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center gap-2 text-primary font-semibold px-1">
             <Lock className="h-4 w-4" />
-            <span className="text-sm">Atividade Operacional</span>
+            <span className="text-xs sm:text-sm">Atividade Operacional</span>
           </div>
           
           {!isAuthenticated ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
               <HomeCard 
                 title="Fazer Login" 
                 icon={LogIn} 
@@ -88,7 +95,7 @@ const Index = () => {
           ) : (
             <>
               {/* Operador level - all authenticated users */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                 <HomeCard title="Resgate de Fauna" icon={Clipboard} to="/resgate-cadastro" />
                 <HomeCard title="Crimes Ambientais" icon={Shield} to="/crimes-ambientais" />
                 <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
@@ -97,12 +104,12 @@ const Index = () => {
               
               {/* Section-based access */}
               {(hasAccess(['secao_operacional']) || hasAccess(['secao_pessoas']) || hasAccess(['secao_logistica']) || isAdmin) && (
-                <div className="pt-4">
-                  <div className="flex items-center gap-2 text-primary font-semibold px-1 mb-4">
+                <div className="pt-3 sm:pt-4">
+                  <div className="flex items-center gap-2 text-primary font-semibold px-1 mb-3 sm:mb-4">
                     <Settings className="h-4 w-4" />
-                    <span className="text-sm">Seções Administrativas</span>
+                    <span className="text-xs sm:text-sm">Seções Administrativas</span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                     {hasAccess(['secao_operacional']) && (
                       <HomeCard title="Seção Operacional" icon={Briefcase} to="/secao-operacional" />
                     )}

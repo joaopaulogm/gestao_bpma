@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Clipboard, 
@@ -14,21 +14,44 @@ import {
   Settings,
   Briefcase,
   Wrench,
-  Trophy
+  Trophy,
+  Menu,
+  X
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { isAuthenticated, isAdmin, userRole, hasAccess, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [location.pathname]);
+
+  // Close mobile menu on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMobileOpen(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, []);
 
   const toggleSidebar = () => {
-    setIsOpen(!isOpen);
+    if (isMobile) {
+      setIsMobileOpen(!isMobileOpen);
+    } else {
+      setIsOpen(!isOpen);
+    }
   };
 
   const handleLogout = async () => {
@@ -48,31 +71,37 @@ const Sidebar = () => {
       : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
   );
 
-  return (
-    <aside 
-      className={cn(
-        "h-screen bg-sidebar text-sidebar-foreground transition-all duration-300 flex flex-col border-r border-sidebar-border",
-        isOpen ? "w-64" : "w-20"
-      )}
-    >
+  const sidebarContent = (
+    <>
       {/* Header */}
       <div className="flex items-center justify-between p-4">
-        {isOpen && (
+        {(isOpen || isMobile) && (
           <div className="flex-1 text-center">
             <span className="font-bold text-lg">Gestão - BPMA</span>
           </div>
         )}
-        <button 
-          onClick={toggleSidebar} 
-          className="p-2 rounded-lg hover:bg-sidebar-accent transition-colors flex-shrink-0"
-          aria-label={isOpen ? "Colapsar menu" : "Expandir menu"}
-        >
-          {isOpen ? (
-            <ChevronLeft className="h-5 w-5" />
-          ) : (
-            <ChevronRight className="h-5 w-5" />
-          )}
-        </button>
+        {!isMobile && (
+          <button 
+            onClick={toggleSidebar} 
+            className="p-2 rounded-lg hover:bg-sidebar-accent transition-colors flex-shrink-0"
+            aria-label={isOpen ? "Colapsar menu" : "Expandir menu"}
+          >
+            {isOpen ? (
+              <ChevronLeft className="h-5 w-5" />
+            ) : (
+              <ChevronRight className="h-5 w-5" />
+            )}
+          </button>
+        )}
+        {isMobile && (
+          <button 
+            onClick={() => setIsMobileOpen(false)} 
+            className="p-2 rounded-lg hover:bg-sidebar-accent transition-colors flex-shrink-0"
+            aria-label="Fechar menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
       
       <Separator className="bg-sidebar-border" />
@@ -83,7 +112,7 @@ const Sidebar = () => {
           <li>
             <Link to="/" className={linkClasses('/')}>
               <Home className="h-5 w-5 flex-shrink-0" />
-              {isOpen && <span className="truncate">Página Inicial</span>}
+              {(isOpen || isMobile) && <span className="truncate">Página Inicial</span>}
             </Link>
           </li>
         </ul>
@@ -94,7 +123,7 @@ const Sidebar = () => {
         <div className="mb-2">
           <div className="flex items-center gap-3 py-2 px-3 text-primary font-semibold">
             <Lock className="h-5 w-5 flex-shrink-0" />
-            {isOpen && <span className="text-sm truncate">Atividade Operacional</span>}
+            {(isOpen || isMobile) && <span className="text-sm truncate">Atividade Operacional</span>}
           </div>
           
           <ul className="space-y-1 mt-1">
@@ -102,7 +131,7 @@ const Sidebar = () => {
               <li>
                 <Link to="/login" className={linkClasses('/login', true)}>
                   <LogIn className="h-5 w-5 flex-shrink-0" />
-                  {isOpen && <span className="truncate">Fazer Login</span>}
+                  {(isOpen || isMobile) && <span className="truncate">Fazer Login</span>}
                 </Link>
               </li>
             ) : (
@@ -111,28 +140,28 @@ const Sidebar = () => {
                 <li>
                   <Link to="/resgate-cadastro" className={linkClasses('/resgate-cadastro', true)}>
                     <Clipboard className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Resgate de Fauna</span>}
+                    {(isOpen || isMobile) && <span className="truncate">Resgate de Fauna</span>}
                   </Link>
                 </li>
                 
                 <li>
                   <Link to="/crimes-ambientais" className={linkClasses('/crimes-ambientais', true)}>
                     <Shield className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Crimes Ambientais</span>}
+                    {(isOpen || isMobile) && <span className="truncate">Crimes Ambientais</span>}
                   </Link>
                 </li>
                 
                 <li>
                   <Link to="/material-apoio" className={linkClasses('/material-apoio', true)}>
                     <BookOpen className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Material de Apoio</span>}
+                    {(isOpen || isMobile) && <span className="truncate">Material de Apoio</span>}
                   </Link>
                 </li>
                 
                 <li>
                   <Link to="/ranking" className={linkClasses('/ranking', true)}>
                     <Trophy className="h-5 w-5 flex-shrink-0" />
-                    {isOpen && <span className="truncate">Ranking de Ocorrências</span>}
+                    {(isOpen || isMobile) && <span className="truncate">Ranking de Ocorrências</span>}
                   </Link>
                 </li>
                 
@@ -141,7 +170,7 @@ const Sidebar = () => {
                   <li>
                     <Link to="/secao-operacional" className={linkClasses('/secao-operacional', true)}>
                       <Briefcase className="h-5 w-5 flex-shrink-0" />
-                      {isOpen && <span className="truncate">Seção Operacional</span>}
+                      {(isOpen || isMobile) && <span className="truncate">Seção Operacional</span>}
                     </Link>
                   </li>
                 )}
@@ -151,7 +180,7 @@ const Sidebar = () => {
                   <li>
                     <Link to="/secao-pessoas" className={linkClasses('/secao-pessoas', true)}>
                       <Users className="h-5 w-5 flex-shrink-0" />
-                      {isOpen && <span className="truncate">Seção de Pessoas</span>}
+                      {(isOpen || isMobile) && <span className="truncate">Seção de Pessoas</span>}
                     </Link>
                   </li>
                 )}
@@ -161,7 +190,7 @@ const Sidebar = () => {
                   <li>
                     <Link to="/secao-logistica" className={linkClasses('/secao-logistica', true)}>
                       <Wrench className="h-5 w-5 flex-shrink-0" />
-                      {isOpen && <span className="truncate">Seção de Logística</span>}
+                      {(isOpen || isMobile) && <span className="truncate">Seção de Logística</span>}
                     </Link>
                   </li>
                 )}
@@ -171,7 +200,7 @@ const Sidebar = () => {
                   <li>
                     <Link to="/gerenciar-permissoes" className={linkClasses('/gerenciar-permissoes', true)}>
                       <Settings className="h-5 w-5 flex-shrink-0" />
-                      {isOpen && <span className="truncate">Gerenciar Permissões</span>}
+                      {(isOpen || isMobile) && <span className="truncate">Gerenciar Permissões</span>}
                     </Link>
                   </li>
                 )}
@@ -184,7 +213,7 @@ const Sidebar = () => {
       {/* User Info & Logout */}
       {isAuthenticated && (
         <div className="p-3 border-t border-sidebar-border">
-          {isOpen && user?.email && (
+          {(isOpen || isMobile) && user?.email && (
             <div className="mb-2 px-3 text-xs text-sidebar-foreground/70 truncate">
               {user.email}
             </div>
@@ -195,10 +224,56 @@ const Sidebar = () => {
             onClick={handleLogout}
           >
             <LogOut className="h-5 w-5 mr-2" />
-            {isOpen && "Sair"}
+            {(isOpen || isMobile) && "Sair"}
           </Button>
         </div>
       )}
+    </>
+  );
+
+  // Mobile: render hamburger button and overlay drawer
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile hamburger button */}
+        <button 
+          onClick={() => setIsMobileOpen(true)} 
+          className="fixed top-4 left-4 z-40 p-2 rounded-lg bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors"
+          aria-label="Abrir menu"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+        
+        {/* Overlay */}
+        {isMobileOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 animate-fade-in"
+            onClick={() => setIsMobileOpen(false)}
+          />
+        )}
+        
+        {/* Mobile drawer */}
+        <aside 
+          className={cn(
+            "fixed top-0 left-0 h-screen bg-sidebar text-sidebar-foreground z-50 flex flex-col border-r border-sidebar-border transition-transform duration-300 w-72",
+            isMobileOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          {sidebarContent}
+        </aside>
+      </>
+    );
+  }
+
+  // Desktop: normal sidebar
+  return (
+    <aside 
+      className={cn(
+        "h-screen bg-sidebar text-sidebar-foreground transition-all duration-300 flex flex-col border-r border-sidebar-border",
+        isOpen ? "w-64" : "w-20"
+      )}
+    >
+      {sidebarContent}
     </aside>
   );
 };
