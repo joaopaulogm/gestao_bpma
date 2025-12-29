@@ -316,8 +316,9 @@ const Ferias: React.FC = () => {
   };
 
   return (
+    <ScrollArea className="h-screen">
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl">
+      <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl pb-20">
         {/* Header - Mobile Optimized */}
         <div className="flex flex-col gap-4 mb-6 sm:mb-8">
           <div className="flex items-center justify-between">
@@ -752,6 +753,7 @@ const Ferias: React.FC = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </ScrollArea>
   );
 };
 

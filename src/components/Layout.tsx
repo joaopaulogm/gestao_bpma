@@ -20,10 +20,10 @@ const Layout = ({ children, title, showBackButton = false }: LayoutProps) => {
   const maxWidthClass = (isRegistrosPage || isHotspotsPage) ? 'max-w-full lg:max-w-[95%]' : 'max-w-4xl';
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col overflow-hidden">
       <Header />
       
-      <main className={`flex-1 p-4 sm:p-6 ${maxWidthClass} mx-auto w-full`}>
+      <main className={`flex-1 p-4 sm:p-6 ${maxWidthClass} mx-auto w-full overflow-y-auto`}>
         <div className="flex items-center gap-3 mb-6">
           {showBackButton && (
             <button 

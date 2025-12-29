@@ -11,6 +11,7 @@ import { useEfetivoTable, Efetivo } from '@/hooks/useEfetivoTable';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DeleteConfirmationDialog from '@/components/fauna/DeleteConfirmationDialog';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import * as XLSX from 'xlsx';
 
 const POSTOS_OFICIAIS = [
@@ -449,67 +450,70 @@ const EfetivoBPMA = () => {
 
         {/* Table */}
         <div className="rounded-lg border bg-card/50 backdrop-blur-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[80px]">Antig.</TableHead>
-                  <TableHead>Posto/Grad</TableHead>
-                  <TableHead>Quadro</TableHead>
-                  <TableHead>Nome de Guerra</TableHead>
-                  <TableHead>Nome Completo</TableHead>
-                  <TableHead>Matrícula</TableHead>
-                  <TableHead>Sexo</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
+          <ScrollArea className="h-[calc(100vh-350px)] min-h-[400px]">
+            <div className="min-w-[800px]">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      Carregando...
-                    </TableCell>
+                    <TableHead className="w-[80px]">Antig.</TableHead>
+                    <TableHead>Posto/Grad</TableHead>
+                    <TableHead>Quadro</TableHead>
+                    <TableHead>Nome de Guerra</TableHead>
+                    <TableHead>Nome Completo</TableHead>
+                    <TableHead>Matrícula</TableHead>
+                    <TableHead>Sexo</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ) : efetivo.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      Nenhum policial encontrado
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  efetivo.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>{item.antiguidade || '-'}</TableCell>
-                      <TableCell className="font-medium">{item.posto_graduacao}</TableCell>
-                      <TableCell>{item.quadro}</TableCell>
-                      <TableCell>{item.nome_guerra}</TableCell>
-                      <TableCell>{item.nome}</TableCell>
-                      <TableCell>{item.matricula}</TableCell>
-                      <TableCell>{item.sexo}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(item)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteClick(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        Carregando...
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ) : efetivo.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        Nenhum policial encontrado
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    efetivo.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.antiguidade || '-'}</TableCell>
+                        <TableCell className="font-medium">{item.posto_graduacao}</TableCell>
+                        <TableCell>{item.quadro}</TableCell>
+                        <TableCell>{item.nome_guerra}</TableCell>
+                        <TableCell>{item.nome}</TableCell>
+                        <TableCell>{item.matricula}</TableCell>
+                        <TableCell>{item.sexo}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteClick(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </div>
       </div>
 

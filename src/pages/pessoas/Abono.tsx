@@ -269,7 +269,8 @@ const Abono: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-6 max-w-7xl">
+    <ScrollArea className="h-screen">
+    <div className="container mx-auto p-4 md:p-6 max-w-7xl pb-20">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-4">
@@ -550,6 +551,7 @@ const Abono: React.FC = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </ScrollArea>
   );
 };
 

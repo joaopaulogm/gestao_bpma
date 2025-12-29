@@ -688,7 +688,8 @@ const Equipes: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <ScrollArea className="h-screen">
+    <div className="container mx-auto p-6 space-y-6 pb-20">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-[#071d49] flex items-center justify-center">
@@ -917,6 +918,7 @@ const Equipes: React.FC = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </ScrollArea>
   );
 };
 
