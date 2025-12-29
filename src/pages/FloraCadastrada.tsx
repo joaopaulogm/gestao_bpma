@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import DeleteConfirmationDialog from '@/components/fauna/DeleteConfirmationDialog';
 import { FloraEditDialog } from '@/components/flora/FloraEditDialog';
 import { useFloraTable, SortField } from '@/hooks/useFloraTable';
@@ -395,7 +396,9 @@ const FloraCadastrada = () => {
           </Card>
         ) : (
           <div className="border border-border rounded-lg overflow-hidden">
-            <Table>
+            <ScrollArea className="h-[calc(100vh-450px)] min-h-[350px]">
+              <div className="min-w-[800px]">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-16">Foto</TableHead>
@@ -528,6 +531,9 @@ const FloraCadastrada = () => {
                 )}
               </TableBody>
             </Table>
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
           </div>
         )}
       </div>

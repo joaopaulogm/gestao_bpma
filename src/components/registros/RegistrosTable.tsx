@@ -7,6 +7,7 @@ import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Registro } from '@/types/hotspots';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface RegistrosTableProps {
   registros: Registro[];
@@ -68,7 +69,8 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
   };
 
   return (
-    <div className="w-full overflow-x-auto rounded-lg">
+    <ScrollArea className="w-full rounded-lg">
+      <div className="min-w-[600px]">
       <Table className="w-full">
         <TableHeader>
           <TableRow>
@@ -152,7 +154,9 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
           )}
         </TableBody>
       </Table>
-    </div>
+      </div>
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
   );
 };
 

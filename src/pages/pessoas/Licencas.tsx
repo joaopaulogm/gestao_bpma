@@ -160,7 +160,8 @@ const Licencas: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-6 max-w-7xl">
+    <ScrollArea className="h-screen">
+    <div className="container mx-auto p-4 md:p-6 max-w-7xl pb-20">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Link to="/secao-pessoas">
@@ -401,6 +402,7 @@ const Licencas: React.FC = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </ScrollArea>
   );
 };
 
