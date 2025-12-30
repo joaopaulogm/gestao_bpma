@@ -1,9 +1,26 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// Restrict CORS to known origins for security
+const getAllowedOrigin = (requestOrigin: string | null): string => {
+  const allowedOrigins = [
+    'https://lovable.dev',
+    'https://preview--gestao-bpma.lovable.app',
+    'https://gestao-bpma.lovable.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+  
+  if (requestOrigin && allowedOrigins.some(origin => requestOrigin.startsWith(origin.replace(/\/$/, '')))) {
+    return requestOrigin;
+  }
+  
+  // Fallback for Lovable preview domains
+  if (requestOrigin && requestOrigin.includes('.lovable.app')) {
+    return requestOrigin;
+  }
+  
+  return allowedOrigins[0];
 };
 
 function slugify(text: string): string {
@@ -31,6 +48,12 @@ async function findImages(supabase: any, bucket: string, slug: string): Promise<
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': getAllowedOrigin(origin),
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -102,11 +125,19 @@ serve(async (req) => {
       }
     }
 
+    console.log('Sync species completed:', results);
+
     return new Response(
       JSON.stringify({ success: true, dryRun, tipo, offset, ...results }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
+    console.error('Sync species error:', error);
+    const origin = req.headers.get('origin');
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': getAllowedOrigin(origin),
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    };
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
