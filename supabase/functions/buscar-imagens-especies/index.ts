@@ -1,15 +1,38 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// Restrict CORS to known origins for security
+const getAllowedOrigin = (requestOrigin: string | null): string => {
+  const allowedOrigins = [
+    'https://lovable.dev',
+    'https://preview--gestao-bpma.lovable.app',
+    'https://gestao-bpma.lovable.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+  
+  if (requestOrigin && allowedOrigins.some(origin => requestOrigin.startsWith(origin.replace(/\/$/, '')))) {
+    return requestOrigin;
+  }
+  
+  // Fallback for Lovable preview domains
+  if (requestOrigin && requestOrigin.includes('.lovable.app')) {
+    return requestOrigin;
+  }
+  
+  return allowedOrigins[0];
 };
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
 serve(async (req: Request) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': getAllowedOrigin(origin),
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -127,6 +150,11 @@ serve(async (req: Request) => {
 
   } catch (error) {
     console.error('Erro na função buscar-imagens-especies:', error);
+    const origin = req.headers.get('origin');
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': getAllowedOrigin(origin),
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    };
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Erro interno',
