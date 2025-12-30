@@ -1305,6 +1305,63 @@ export type Database = {
           },
         ]
       }
+      fat_resgates_diarios_2020a2024: {
+        Row: {
+          Ano: number | null
+          classe_taxonomica: string | null
+          criado_em: string | null
+          data_ocorrencia: string | null
+          estado_de_conservacao: string | null
+          id: string
+          Mês: string | null
+          nome_cientifico: string | null
+          nome_popular: string | null
+          ordem_taxonomica: string | null
+          quantidade_feridos: number | null
+          quantidade_filhotes: number | null
+          quantidade_obitos: number | null
+          quantidade_resgates: number | null
+          quantidade_solturas: number | null
+          tipo_de_fauna: string | null
+        }
+        Insert: {
+          Ano?: number | null
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          Mês?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Update: {
+          Ano?: number | null
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          Mês?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Relationships: []
+      }
       fat_restricoes: {
         Row: {
           ano: number
@@ -1532,6 +1589,114 @@ export type Database = {
         }
         Relationships: []
       }
+      usuarios_por_login: {
+        Row: {
+          contato: string | null
+          cpf: number | null
+          data_inclusao: string | null
+          data_nascimento: string | null
+          email: string | null
+          id: string
+          idade: number | null
+          login: string | null
+          lotacao: string | null
+          matricula: number | null
+          nome: string | null
+          nome_guerra: string | null
+          porte_arma: string | null
+          post_grad: string | null
+          quadro: string | null
+          senha: number | null
+          sexo: string | null
+        }
+        Insert: {
+          contato?: string | null
+          cpf?: number | null
+          data_inclusao?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          id?: string
+          idade?: number | null
+          login?: string | null
+          lotacao?: string | null
+          matricula?: number | null
+          nome?: string | null
+          nome_guerra?: string | null
+          porte_arma?: string | null
+          post_grad?: string | null
+          quadro?: string | null
+          senha?: number | null
+          sexo?: string | null
+        }
+        Update: {
+          contato?: string | null
+          cpf?: number | null
+          data_inclusao?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          id?: string
+          idade?: number | null
+          login?: string | null
+          lotacao?: string | null
+          matricula?: number | null
+          nome?: string | null
+          nome_guerra?: string | null
+          porte_arma?: string | null
+          post_grad?: string | null
+          quadro?: string | null
+          senha?: number | null
+          sexo?: string | null
+        }
+        Relationships: []
+      }
+      usuarios_por_login_staging: {
+        Row: {
+          contato: string | null
+          cpf: string | null
+          data_inclusao: string | null
+          data_nascimento: string | null
+          email: string | null
+          id: string | null
+          idade: string | null
+          login: string | null
+          lotacao: string | null
+          matricula: string | null
+          porte_arma: string | null
+          senha: string | null
+          sexo: string | null
+        }
+        Insert: {
+          contato?: string | null
+          cpf?: string | null
+          data_inclusao?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          id?: string | null
+          idade?: string | null
+          login?: string | null
+          lotacao?: string | null
+          matricula?: string | null
+          porte_arma?: string | null
+          senha?: string | null
+          sexo?: string | null
+        }
+        Update: {
+          contato?: string | null
+          cpf?: string | null
+          data_inclusao?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          id?: string | null
+          idade?: string | null
+          login?: string | null
+          lotacao?: string | null
+          matricula?: string | null
+          porte_arma?: string | null
+          senha?: string | null
+          sexo?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1564,7 +1729,6 @@ export type Database = {
         | "secao_pessoas"
         | "secao_logistica"
         | "publico"
-      data: "01" | "10" | "1990"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1701,7 +1865,6 @@ export const Constants = {
         "secao_logistica",
         "publico",
       ],
-      data: ["01", "10", "1990"],
     },
   },
 } as const
