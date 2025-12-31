@@ -71,13 +71,13 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch all species with explicit limit to avoid Supabase default limit
+        // Fetch all species with explicit range to avoid PostgREST default limit
         const [especiesRes, estadosSaudeRes, estagiosVidaRes] = await Promise.all([
           supabase
             .from('dim_especies_fauna')
             .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
             .order('nome_popular', { ascending: true })
-            .limit(1000),
+            .range(0, 999),
           supabase.from('dim_estado_saude').select('id, nome').order('nome', { ascending: true }),
           supabase.from('dim_estagio_vida').select('id, nome').order('nome', { ascending: true })
         ]);
@@ -86,7 +86,14 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
           console.error('Erro ao carregar espécies:', especiesRes.error);
         } else if (especiesRes.data) {
           setEspeciesFauna(especiesRes.data as EspecieFauna[]);
-          const classes = [...new Set(especiesRes.data.map(e => e.classe_taxonomica).filter(Boolean))].sort() as string[];
+          const classes = [
+            ...new Set(
+              especiesRes.data
+                .map((e) => e.classe_taxonomica)
+                .filter(Boolean)
+                .map((c) => String(c).trim())
+            ),
+          ].sort((a, b) => a.localeCompare(b, 'pt-BR'));
           setClassesTaxonomicas(classes);
           console.log('Classes carregadas:', classes);
           console.log('Total espécies carregadas:', especiesRes.data.length);
@@ -104,8 +111,11 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
 
   const generateId = () => Math.random().toString(36).substring(2, 9);
 
+  const normalizeClasse = (v?: string | null) => (v ?? '').trim().toUpperCase();
+
   const getEspeciesPorClasse = (classe: string) => {
-    return especiesFauna.filter(e => e.classe_taxonomica === classe);
+    const wanted = normalizeClasse(classe);
+    return especiesFauna.filter((e) => normalizeClasse(e.classe_taxonomica) === wanted);
   };
 
   const handleAddEspecie = () => {
