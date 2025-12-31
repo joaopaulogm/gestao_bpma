@@ -51,9 +51,10 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
 
         if (data) {
           setEspeciesFauna(data);
-          const classes = [...new Set(data.map(e => e.classe_taxonomica))].sort();
+          const classes = [...new Set(data.map(e => e.classe_taxonomica).filter(Boolean))].sort() as string[];
           setClassesTaxonomicas(classes);
           console.log('Classes encontradas:', classes.join(', '));
+          console.log('Total espécies:', data.length);
         }
         if (error) {
           console.error('Erro ao carregar espécies:', error);
