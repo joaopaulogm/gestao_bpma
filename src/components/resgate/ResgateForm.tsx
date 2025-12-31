@@ -21,38 +21,14 @@ interface ResgateFormProps {
 
 const ResgateForm: React.FC<ResgateFormProps> = (props) => {
   const [membrosEquipe, setMembrosEquipe] = useState<MembroEquipe[]>([]);
-
-  const createEspecieItem = (): EspecieItem => ({
-    id: (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)),
-    especieId: '',
-    classeTaxonomica: '',
-    nomeCientifico: '',
-    ordemTaxonomica: '',
-    estadoConservacao: '',
-    tipoFauna: '',
-    estadoSaude: '',
-    atropelamento: '',
-    estagioVida: '',
-    quantidadeAdulto: 0,
-    quantidadeFilhote: 0,
-    quantidadeTotal: 0,
-    destinacao: '',
-    numeroTermoEntrega: '',
-    horaGuardaCEAPA: '',
-    motivoEntregaCEAPA: '',
-    latitudeSoltura: '',
-    longitudeSoltura: '',
-    outroDestinacao: '',
-  });
-
-  const [especies, setEspecies] = useState<EspecieItem[]>([createEspecieItem()]);
+  const [especies, setEspecies] = useState<EspecieItem[]>([]);
 
   const handleFormSubmitWithData = async (data: ResgateFormData) => {
     await props.handleFormSubmit(data, membrosEquipe, especies);
     // Reset after successful submit if not editing
     if (!props.isEditing) {
       setMembrosEquipe([]);
-      setEspecies([createEspecieItem()]);
+      setEspecies([]);
     }
   };
 
