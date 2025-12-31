@@ -79,8 +79,10 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
 
         if (especiesRes.data) {
           setEspeciesFauna(especiesRes.data);
-          const classes = [...new Set(especiesRes.data.map(e => e.classe_taxonomica))].sort();
+          const classes = [...new Set(especiesRes.data.map(e => e.classe_taxonomica).filter(Boolean))].sort() as string[];
           setClassesTaxonomicas(classes);
+          console.log('Classes carregadas:', classes);
+          console.log('Total espécies:', especiesRes.data.length);
         }
         if (estadosSaudeRes.data) setEstadosSaude(estadosSaudeRes.data);
         if (estagiosVidaRes.data) setEstagiosVida(estagiosVidaRes.data);
