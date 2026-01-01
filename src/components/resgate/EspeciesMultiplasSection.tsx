@@ -74,30 +74,44 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch all species - using multiple ranges to ensure we get all records
-        const especiesRes = await supabase
-          .from('dim_especies_fauna')
-          .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
-          .order('nome_popular', { ascending: true });
+        // Fetch ALL species using pagination to bypass any default limits
+        // The Supabase project may have a low default row limit configured
+        const PAGE_SIZE = 500;
+        let allSpecies: EspecieFauna[] = [];
+        let from = 0;
+        let hasMore = true;
 
-        const [estadosSaudeRes, estagiosVidaRes] = await Promise.all([
-          supabase.from('dim_estado_saude').select('id, nome').order('nome', { ascending: true }),
-          supabase.from('dim_estagio_vida').select('id, nome').order('nome', { ascending: true })
-        ]);
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from('dim_especies_fauna')
+            .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
+            .order('nome_popular', { ascending: true })
+            .range(from, from + PAGE_SIZE - 1);
 
-        if (especiesRes.error) {
-          console.error('Erro ao carregar espécies:', especiesRes.error);
-        } else if (especiesRes.data && especiesRes.data.length > 0) {
-          console.log('Dados brutos recebidos:', especiesRes.data.length, 'espécies');
+          if (error) {
+            console.error('Erro ao carregar espécies:', error);
+            break;
+          }
 
-          const fauna = especiesRes.data as EspecieFauna[];
-          setEspeciesFauna(fauna);
+          if (data && data.length > 0) {
+            allSpecies = [...allSpecies, ...(data as EspecieFauna[])];
+            from += PAGE_SIZE;
+            hasMore = data.length === PAGE_SIZE;
+          } else {
+            hasMore = false;
+          }
+        }
+
+        console.log('Total de espécies carregadas:', allSpecies.length);
+
+        if (allSpecies.length > 0) {
+          setEspeciesFauna(allSpecies);
 
           // Extract unique classes + counts (normalized for safety)
           const counts: Record<string, number> = {};
           const displayByNorm: Record<string, string> = {};
 
-          fauna.forEach((e) => {
+          allSpecies.forEach((e) => {
             const raw = (e.classe_taxonomica ?? '').trim();
             if (!raw) return;
             const norm = raw.toUpperCase();
@@ -113,10 +127,16 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
           setClassesCount(counts);
 
           console.log('Classes taxonômicas encontradas:', classes);
-          console.log('Total de espécies carregadas:', especiesRes.data.length);
+          console.log('Contagem por classe:', counts);
         } else {
           console.warn('Nenhuma espécie encontrada na tabela dim_especies_fauna');
         }
+
+        // Fetch dimension tables
+        const [estadosSaudeRes, estagiosVidaRes] = await Promise.all([
+          supabase.from('dim_estado_saude').select('id, nome').order('nome', { ascending: true }),
+          supabase.from('dim_estagio_vida').select('id, nome').order('nome', { ascending: true })
+        ]);
 
         if (estadosSaudeRes.data) setEstadosSaude(estadosSaudeRes.data);
         if (estagiosVidaRes.data) setEstagiosVida(estagiosVidaRes.data);
@@ -262,8 +282,8 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                 <SelectTrigger>
                   <SelectValue placeholder={loading ? "Carregando..." : "Selecione a classe"} />
                 </SelectTrigger>
-                <SelectContent className="bg-background max-h-60 overflow-y-auto">
-                  <div className="p-2">
+                <SelectContent className="bg-background max-h-60 overflow-y-auto z-50">
+                  <div className="p-2 sticky top-0 bg-background border-b">
                     <Input
                       value={classeSearchById[especie.id] ?? ''}
                       onChange={(e) =>
@@ -273,20 +293,34 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                       onKeyDown={(e) => e.stopPropagation()}
                     />
                   </div>
-                  {classesTaxonomicas
-                    .filter((c) =>
+                  {loading ? (
+                    <div className="p-3 text-center text-muted-foreground text-sm">
+                      Carregando classes...
+                    </div>
+                  ) : classesTaxonomicas.filter((c) =>
                       (c ?? '')
                         .toLowerCase()
                         .includes((classeSearchById[especie.id] ?? '').trim().toLowerCase())
-                    )
-                    .map((classe) => {
-                      const count = classesCount[normalizeClasse(classe)] ?? 0;
-                      return (
-                        <SelectItem key={classe} value={classe}>
-                          {classe} ({count})
-                        </SelectItem>
-                      );
-                    })}
+                    ).length === 0 ? (
+                    <div className="p-3 text-center text-muted-foreground text-sm">
+                      Nenhuma classe encontrada
+                    </div>
+                  ) : (
+                    classesTaxonomicas
+                      .filter((c) =>
+                        (c ?? '')
+                          .toLowerCase()
+                          .includes((classeSearchById[especie.id] ?? '').trim().toLowerCase())
+                      )
+                      .map((classe) => {
+                        const count = classesCount[normalizeClasse(classe)] ?? 0;
+                        return (
+                          <SelectItem key={classe} value={classe}>
+                            {classe} ({count})
+                          </SelectItem>
+                        );
+                      })
+                  )}
                 </SelectContent>
               </Select>
             </FormField>
@@ -302,8 +336,8 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                     placeholder={!especie.classeTaxonomica ? "Selecione a classe primeiro" : "Selecione a espécie"}
                   />
                 </SelectTrigger>
-                <SelectContent className="bg-background max-h-80 overflow-y-auto">
-                  <div className="p-2">
+                <SelectContent className="bg-background max-h-80 overflow-y-auto z-50">
+                  <div className="p-2 sticky top-0 bg-background border-b">
                     <Input
                       value={especieSearchById[especie.id] ?? ''}
                       onChange={(e) =>
@@ -314,17 +348,36 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                       onKeyDown={(e) => e.stopPropagation()}
                     />
                   </div>
-                  {getEspeciesPorClasse(especie.classeTaxonomica)
-                    .filter((ef) =>
-                      (ef.nome_popular ?? '')
-                        .toLowerCase()
-                        .includes((especieSearchById[especie.id] ?? '').trim().toLowerCase())
-                    )
-                    .map((ef) => (
-                      <SelectItem key={ef.id} value={ef.id}>
-                        {ef.nome_popular}
-                      </SelectItem>
-                    ))}
+                  {loading ? (
+                    <div className="p-3 text-center text-muted-foreground text-sm">
+                      Carregando espécies...
+                    </div>
+                  ) : !especie.classeTaxonomica ? (
+                    <div className="p-3 text-center text-muted-foreground text-sm">
+                      Selecione uma classe primeiro
+                    </div>
+                  ) : getEspeciesPorClasse(especie.classeTaxonomica)
+                      .filter((ef) =>
+                        (ef.nome_popular ?? '')
+                          .toLowerCase()
+                          .includes((especieSearchById[especie.id] ?? '').trim().toLowerCase())
+                      ).length === 0 ? (
+                    <div className="p-3 text-center text-muted-foreground text-sm">
+                      Nenhuma espécie encontrada
+                    </div>
+                  ) : (
+                    getEspeciesPorClasse(especie.classeTaxonomica)
+                      .filter((ef) =>
+                        (ef.nome_popular ?? '')
+                          .toLowerCase()
+                          .includes((especieSearchById[especie.id] ?? '').trim().toLowerCase())
+                      )
+                      .map((ef) => (
+                        <SelectItem key={ef.id} value={ef.id}>
+                          {ef.nome_popular}
+                        </SelectItem>
+                      ))
+                  )}
                 </SelectContent>
               </Select>
             </FormField>
