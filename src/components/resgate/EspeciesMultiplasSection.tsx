@@ -71,33 +71,49 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch all species with explicit range to avoid PostgREST default limit
-        const [especiesRes, estadosSaudeRes, estagiosVidaRes] = await Promise.all([
-          supabase
-            .from('dim_especies_fauna')
-            .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
-            .order('nome_popular', { ascending: true })
-            .range(0, 999),
+        // Fetch all species - using multiple ranges to ensure we get all records
+        const especiesRes = await supabase
+          .from('dim_especies_fauna')
+          .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
+          .order('nome_popular', { ascending: true });
+
+        const [estadosSaudeRes, estagiosVidaRes] = await Promise.all([
           supabase.from('dim_estado_saude').select('id, nome').order('nome', { ascending: true }),
           supabase.from('dim_estagio_vida').select('id, nome').order('nome', { ascending: true })
         ]);
 
         if (especiesRes.error) {
           console.error('Erro ao carregar espécies:', especiesRes.error);
-        } else if (especiesRes.data) {
+        } else if (especiesRes.data && especiesRes.data.length > 0) {
+          console.log('Dados brutos recebidos:', especiesRes.data.length, 'espécies');
+          
           setEspeciesFauna(especiesRes.data as EspecieFauna[]);
-          const classes = [
-            ...new Set(
-              especiesRes.data
-                .map((e) => e.classe_taxonomica)
-                .filter(Boolean)
-                .map((c) => String(c).trim())
-            ),
-          ].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+          
+          // Extract unique classes directly from the data
+          const classesSet = new Set<string>();
+          especiesRes.data.forEach((e) => {
+            if (e.classe_taxonomica) {
+              classesSet.add(String(e.classe_taxonomica).trim());
+            }
+          });
+          
+          const classes = Array.from(classesSet).sort((a, b) => a.localeCompare(b, 'pt-BR'));
           setClassesTaxonomicas(classes);
-          console.log('Classes carregadas:', classes);
-          console.log('Total espécies carregadas:', especiesRes.data.length);
+          
+          console.log('Classes taxonômicas encontradas:', classes);
+          console.log('Total de espécies carregadas:', especiesRes.data.length);
+          
+          // Log count per class for debugging
+          classes.forEach(c => {
+            const count = especiesRes.data.filter(e => 
+              String(e.classe_taxonomica || '').trim().toUpperCase() === c.toUpperCase()
+            ).length;
+            console.log(`  - ${c}: ${count} espécies`);
+          });
+        } else {
+          console.warn('Nenhuma espécie encontrada na tabela dim_especies_fauna');
         }
+        
         if (estadosSaudeRes.data) setEstadosSaude(estadosSaudeRes.data);
         if (estagiosVidaRes.data) setEstagiosVida(estagiosVidaRes.data);
       } catch (err) {
