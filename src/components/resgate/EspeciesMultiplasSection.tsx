@@ -63,6 +63,9 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
 }) => {
   const [especiesFauna, setEspeciesFauna] = useState<EspecieFauna[]>([]);
   const [classesTaxonomicas, setClassesTaxonomicas] = useState<string[]>([]);
+  const [classesCount, setClassesCount] = useState<Record<string, number>>({});
+  const [classeSearchById, setClasseSearchById] = useState<Record<string, string>>({});
+  const [especieSearchById, setEspecieSearchById] = useState<Record<string, string>>({});
   const [estadosSaude, setEstadosSaude] = useState<DimensionItem[]>([]);
   const [estagiosVida, setEstagiosVida] = useState<DimensionItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,34 +89,35 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
           console.error('Erro ao carregar espécies:', especiesRes.error);
         } else if (especiesRes.data && especiesRes.data.length > 0) {
           console.log('Dados brutos recebidos:', especiesRes.data.length, 'espécies');
-          
-          setEspeciesFauna(especiesRes.data as EspecieFauna[]);
-          
-          // Extract unique classes directly from the data
-          const classesSet = new Set<string>();
-          especiesRes.data.forEach((e) => {
-            if (e.classe_taxonomica) {
-              classesSet.add(String(e.classe_taxonomica).trim());
-            }
+
+          const fauna = especiesRes.data as EspecieFauna[];
+          setEspeciesFauna(fauna);
+
+          // Extract unique classes + counts (normalized for safety)
+          const counts: Record<string, number> = {};
+          const displayByNorm: Record<string, string> = {};
+
+          fauna.forEach((e) => {
+            const raw = (e.classe_taxonomica ?? '').trim();
+            if (!raw) return;
+            const norm = raw.toUpperCase();
+            displayByNorm[norm] = displayByNorm[norm] ?? raw;
+            counts[norm] = (counts[norm] ?? 0) + 1;
           });
-          
-          const classes = Array.from(classesSet).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+          const classes = Object.keys(displayByNorm)
+            .map((norm) => displayByNorm[norm])
+            .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
           setClassesTaxonomicas(classes);
-          
+          setClassesCount(counts);
+
           console.log('Classes taxonômicas encontradas:', classes);
           console.log('Total de espécies carregadas:', especiesRes.data.length);
-          
-          // Log count per class for debugging
-          classes.forEach(c => {
-            const count = especiesRes.data.filter(e => 
-              String(e.classe_taxonomica || '').trim().toUpperCase() === c.toUpperCase()
-            ).length;
-            console.log(`  - ${c}: ${count} espécies`);
-          });
         } else {
           console.warn('Nenhuma espécie encontrada na tabela dim_especies_fauna');
         }
-        
+
         if (estadosSaudeRes.data) setEstadosSaude(estadosSaudeRes.data);
         if (estagiosVidaRes.data) setEstagiosVida(estagiosVidaRes.data);
       } catch (err) {
@@ -258,10 +262,31 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                 <SelectTrigger>
                   <SelectValue placeholder={loading ? "Carregando..." : "Selecione a classe"} />
                 </SelectTrigger>
-                <SelectContent className="max-h-60 overflow-y-auto">
-                  {classesTaxonomicas.map((classe) => (
-                    <SelectItem key={classe} value={classe}>{classe}</SelectItem>
-                  ))}
+                <SelectContent className="bg-background max-h-60 overflow-y-auto">
+                  <div className="p-2">
+                    <Input
+                      value={classeSearchById[especie.id] ?? ''}
+                      onChange={(e) =>
+                        setClasseSearchById((prev) => ({ ...prev, [especie.id]: e.target.value }))
+                      }
+                      placeholder="Buscar classe..."
+                      onKeyDown={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  {classesTaxonomicas
+                    .filter((c) =>
+                      (c ?? '')
+                        .toLowerCase()
+                        .includes((classeSearchById[especie.id] ?? '').trim().toLowerCase())
+                    )
+                    .map((classe) => {
+                      const count = classesCount[normalizeClasse(classe)] ?? 0;
+                      return (
+                        <SelectItem key={classe} value={classe}>
+                          {classe} ({count})
+                        </SelectItem>
+                      );
+                    })}
                 </SelectContent>
               </Select>
             </FormField>
@@ -273,12 +298,33 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                 disabled={loading || !especie.classeTaxonomica}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={!especie.classeTaxonomica ? "Selecione a classe primeiro" : "Selecione a espécie"} />
+                  <SelectValue
+                    placeholder={!especie.classeTaxonomica ? "Selecione a classe primeiro" : "Selecione a espécie"}
+                  />
                 </SelectTrigger>
-                <SelectContent className="max-h-80 overflow-y-auto">
-                  {getEspeciesPorClasse(especie.classeTaxonomica).map((ef) => (
-                    <SelectItem key={ef.id} value={ef.id}>{ef.nome_popular}</SelectItem>
-                  ))}
+                <SelectContent className="bg-background max-h-80 overflow-y-auto">
+                  <div className="p-2">
+                    <Input
+                      value={especieSearchById[especie.id] ?? ''}
+                      onChange={(e) =>
+                        setEspecieSearchById((prev) => ({ ...prev, [especie.id]: e.target.value }))
+                      }
+                      placeholder="Buscar espécie..."
+                      disabled={!especie.classeTaxonomica}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  {getEspeciesPorClasse(especie.classeTaxonomica)
+                    .filter((ef) =>
+                      (ef.nome_popular ?? '')
+                        .toLowerCase()
+                        .includes((especieSearchById[especie.id] ?? '').trim().toLowerCase())
+                    )
+                    .map((ef) => (
+                      <SelectItem key={ef.id} value={ef.id}>
+                        {ef.nome_popular}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </FormField>
