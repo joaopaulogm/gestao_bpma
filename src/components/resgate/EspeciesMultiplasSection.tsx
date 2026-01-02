@@ -1,6 +1,6 @@
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import FormSection from './FormSection';
 import FormField from './FormField';
 import { Input } from '@/components/ui/input';
@@ -184,8 +184,9 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
 
   const normalizeClasse = (v?: string | null) => (v ?? '').trim().toUpperCase();
 
-  const getEspeciesPorClasse = (classe: string) => {
-    if (!classe) return [];
+  // Memoizar resultado para evitar recálculos desnecessários
+  const getEspeciesPorClasse = useCallback((classe: string) => {
+    if (!classe || !especiesFauna.length) return [];
     // Normalizar a classe selecionada para comparação
     const wanted = normalizeClasse(classe);
     // Filtrar espécies pela classe (comparação case-insensitive)
@@ -194,18 +195,11 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
       return especieClasse === wanted;
     });
     
-    console.log(`Filtrando espécies para classe "${classe}":`, {
-      classeSelecionada: classe,
-      classeNormalizada: wanted,
-      totalEspecies: especiesFauna.length,
-      especiesFiltradas: especiesFiltradas.length
-    });
-    
     // Ordenar por nome popular
     return especiesFiltradas.sort((a, b) => 
       (a.nome_popular || '').localeCompare(b.nome_popular || '', 'pt-BR')
     );
-  };
+  }, [especiesFauna]);
 
   const handleAddEspecie = () => {
     const novaEspecie: EspecieItem = {
@@ -243,23 +237,51 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
 
       const updatedEspecie = { ...e, [field]: value };
 
-      // Se mudou a classe, limpa a espécie
+      // Se mudou a classe, limpa a espécie e campos relacionados
       if (field === 'classeTaxonomica') {
         updatedEspecie.especieId = '';
         updatedEspecie.nomeCientifico = '';
         updatedEspecie.ordemTaxonomica = '';
         updatedEspecie.estadoConservacao = '';
         updatedEspecie.tipoFauna = '';
+        // Limpar busca de espécie quando classe muda
+        setEspecieSearchById((prev) => {
+          const newState = { ...prev };
+          delete newState[id];
+          return newState;
+        });
       }
 
-      // Se selecionou uma espécie, preenche os detalhes
+      // Se selecionou uma espécie, preenche os detalhes e sincroniza classe
       if (field === 'especieId') {
-        const especie = especiesFauna.find(ef => ef.id === value);
-        if (especie) {
-          updatedEspecie.nomeCientifico = especie.nome_cientifico;
-          updatedEspecie.ordemTaxonomica = especie.ordem_taxonomica;
-          updatedEspecie.estadoConservacao = especie.estado_de_conservacao;
-          updatedEspecie.tipoFauna = especie.tipo_de_fauna;
+        // Se value for vazio, limpar campos
+        if (!value || value === '') {
+          updatedEspecie.nomeCientifico = '';
+          updatedEspecie.ordemTaxonomica = '';
+          updatedEspecie.estadoConservacao = '';
+          updatedEspecie.tipoFauna = '';
+        } else {
+          const especie = especiesFauna.find(ef => ef.id === value);
+          if (especie) {
+            updatedEspecie.nomeCientifico = especie.nome_cientifico || '';
+            updatedEspecie.ordemTaxonomica = especie.ordem_taxonomica || '';
+            updatedEspecie.estadoConservacao = especie.estado_de_conservacao || '';
+            updatedEspecie.tipoFauna = especie.tipo_de_fauna || '';
+            
+            // Sincronizar classe taxonômica se estiver vazia ou diferente
+            const especieClasse = especie.classe_taxonomica || '';
+            if (especieClasse && (!updatedEspecie.classeTaxonomica || 
+                normalizeClasse(updatedEspecie.classeTaxonomica) !== normalizeClasse(especieClasse))) {
+              updatedEspecie.classeTaxonomica = especieClasse;
+            }
+          } else {
+            // Se espécie não encontrada, limpar campos mas manter classe
+            console.warn(`Espécie com ID ${value} não encontrada`);
+            updatedEspecie.nomeCientifico = '';
+            updatedEspecie.ordemTaxonomica = '';
+            updatedEspecie.estadoConservacao = '';
+            updatedEspecie.tipoFauna = '';
+          }
         }
       }
 
@@ -409,28 +431,32 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                     <div className="p-3 text-center text-muted-foreground text-sm">
                       Selecione uma classe primeiro
                     </div>
-                  ) : getEspeciesPorClasse(especie.classeTaxonomica)
-                      .filter((ef) =>
-                        (ef.nome_popular ?? '')
-                          .toLowerCase()
-                          .includes((especieSearchById[especie.id] ?? '').trim().toLowerCase())
-                      ).length === 0 ? (
-                    <div className="p-3 text-center text-muted-foreground text-sm">
-                      Nenhuma espécie encontrada
-                    </div>
-                  ) : (
-                    getEspeciesPorClasse(especie.classeTaxonomica)
-                      .filter((ef) =>
-                        (ef.nome_popular ?? '')
-                          .toLowerCase()
-                          .includes((especieSearchById[especie.id] ?? '').trim().toLowerCase())
-                      )
-                      .map((ef) => (
-                        <SelectItem key={ef.id} value={ef.id}>
-                          {ef.nome_popular}
-                        </SelectItem>
-                      ))
-                  )}
+                  ) : (() => {
+                    // Calcular espécies filtradas uma única vez
+                    const especiesFiltradas = getEspeciesPorClasse(especie.classeTaxonomica);
+                    const searchTerm = (especieSearchById[especie.id] ?? '').trim().toLowerCase();
+                    const especiesComBusca = searchTerm 
+                      ? especiesFiltradas.filter((ef) =>
+                          (ef.nome_popular ?? '')
+                            .toLowerCase()
+                            .includes(searchTerm)
+                        )
+                      : especiesFiltradas;
+                    
+                    if (especiesComBusca.length === 0) {
+                      return (
+                        <div className="p-3 text-center text-muted-foreground text-sm">
+                          {searchTerm ? 'Nenhuma espécie encontrada' : 'Nenhuma espécie disponível para esta classe'}
+                        </div>
+                      );
+                    }
+                    
+                    return especiesComBusca.map((ef) => (
+                      <SelectItem key={ef.id} value={ef.id}>
+                        {ef.nome_popular}
+                      </SelectItem>
+                    ));
+                  })()}
                 </SelectContent>
               </Select>
             </FormField>
