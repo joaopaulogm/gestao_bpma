@@ -15,7 +15,8 @@ const fetchFromTableWithFallback = async (
   fallbackTable: string,
   selectQuery: string,
   filters: FilterState
-) => {
+): Promise<{ data: any[]; error: any }> => {
+  // Tentar tabela principal primeiro
   try {
     let query = supabase.from(tableName).select(selectQuery);
     
@@ -41,42 +42,60 @@ const fetchFromTableWithFallback = async (
     
     // Aplicar filtro de origem se especificado
     if (filters.origem) {
-      const { data: origemData } = await supabase
-        .from('dim_origem')
-        .select('id')
-        .ilike('nome', filters.origem)
-        .maybeSingle();
-      
-      if (origemData) {
-        query = query.eq('origem_id', origemData.id);
+      try {
+        const { data: origemData } = await supabase
+          .from('dim_origem')
+          .select('id')
+          .ilike('nome', filters.origem)
+          .maybeSingle();
+        
+        if (origemData) {
+          query = query.eq('origem_id', origemData.id);
+        }
+      } catch (origemErr) {
+        console.warn('Erro ao buscar origem:', origemErr);
+        // Continuar sem filtro de origem
       }
     }
     
     const { data, error } = await query;
     
-    if (error) {
-      // Se erro indica que tabela não existe, tentar fallback
-      if (error.code === '42P01' || error.message?.includes('does not exist')) {
-        console.warn(`Tabela ${tableName} não encontrada, usando fallback ${fallbackTable}`);
-        return fetchFromTableWithFallback(fallbackTable, fallbackTable, selectQuery, filters);
-      }
-      throw error;
+    // Se não houver erro, retornar dados
+    if (!error) {
+      console.log(`✅ Dados carregados de ${tableName}:`, data?.length || 0, 'registros');
+      return { data: data || [], error: null };
     }
     
-    return { data: data || [], error: null };
+    // Se erro indica que tabela não existe, tentar fallback
+    if (error.code === '42P01' || error.message?.includes('does not exist') || error.message?.includes('relation') || error.message?.includes('permission')) {
+      console.warn(`⚠️ Tabela ${tableName} não acessível (${error.message}), tentando fallback ${fallbackTable}`);
+      
+      // Tentar fallback apenas se não for a mesma tabela
+      if (tableName !== fallbackTable) {
+        return fetchFromTableWithFallback(fallbackTable, fallbackTable, selectQuery, filters);
+      }
+    }
+    
+    // Para outros erros, logar mas retornar array vazio (não quebrar dashboard)
+    console.warn(`⚠️ Erro ao buscar de ${tableName}:`, error.message || error);
+    return { data: [], error: null }; // Retornar sem erro para não quebrar o dashboard
   } catch (err: any) {
-    // Se ainda houver erro e não for a tabela de fallback, tentar fallback
-    if (tableName !== fallbackTable && (err.code === '42P01' || err.message?.includes('does not exist'))) {
-      console.warn(`Erro ao acessar ${tableName}, usando fallback ${fallbackTable}`);
+    console.warn(`⚠️ Exceção ao buscar de ${tableName}:`, err?.message || err);
+    
+    // Se não for a tabela de fallback, tentar fallback
+    if (tableName !== fallbackTable) {
+      console.log(`🔄 Tentando fallback para ${fallbackTable}`);
       return fetchFromTableWithFallback(fallbackTable, fallbackTable, selectQuery, filters);
     }
-    throw err;
+    
+    // Se já estamos no fallback, retornar vazio sem erro
+    return { data: [], error: null };
   }
 };
 
 export const fetchRegistryData = async (filters: FilterState): Promise<any[]> => {
   try {
-    console.log("Fetching dashboard data with filters:", filters);
+    console.log("🔍 [Dashboard] Iniciando busca de dados com filtros:", filters);
     
     // Determinar qual tabela usar baseado no ano
     const tabelaResgates = filters.year === 2025 
@@ -96,18 +115,15 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
     `;
     
     // Buscar dados atuais de resgates com fallback
-    const { data: registrosAtuais, error: errorAtuais } = await fetchFromTableWithFallback(
+    console.log(`📊 [Dashboard] Tentando buscar de ${tabelaResgates}...`);
+    const { data: registrosAtuais } = await fetchFromTableWithFallback(
       tabelaResgates,
       tabelaFallback,
       selectQuery,
       filters
     );
     
-    if (errorAtuais) {
-      console.error('Erro ao buscar dados atuais do dashboard:', errorAtuais);
-      // Retornar array vazio ao invés de lançar erro para não quebrar o dashboard
-      return [];
-    }
+    console.log(`✅ [Dashboard] Registros atuais carregados:`, registrosAtuais?.length || 0);
   
     
     // Buscar dados históricos (2020-2024) se o filtro de ano for entre 2020-2024
@@ -185,12 +201,15 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
       ...historicosNormalizados
     ];
     
-    console.log(`Total de registros: ${todosRegistros.length} (${registrosAtuais?.length || 0} atuais + ${historicosNormalizados.length} históricos)`);
+    console.log(`✅ [Dashboard] Total de registros combinados: ${todosRegistros.length} (${registrosAtuais?.length || 0} atuais + ${historicosNormalizados.length} históricos)`);
     
-    return todosRegistros;
-  } catch (error) {
-    console.error('Erro crítico ao buscar dados do dashboard:', error);
-    // Retornar array vazio ao invés de lançar erro
+    // SEMPRE retornar array (mesmo que vazio) - nunca lançar erro
+    return todosRegistros || [];
+  } catch (error: any) {
+    // Log detalhado do erro mas NUNCA lançar - sempre retornar array vazio
+    console.warn('⚠️ [Dashboard] Erro ao buscar dados (retornando array vazio):', error?.message || error);
+    console.warn('⚠️ [Dashboard] Stack:', error?.stack);
+    // Retornar array vazio ao invés de lançar erro - isso evita que o React Query marque como erro
     return [];
   }
 };
