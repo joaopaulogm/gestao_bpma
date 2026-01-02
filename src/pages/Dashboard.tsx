@@ -19,8 +19,10 @@ const Dashboard = () => {
   
   // Initialize year filter to 2025 when component mounts
   useEffect(() => {
-    console.log("Setting initial filters");
-    updateFilters({ year: 2025, month: null });
+    // Apenas definir filtros iniciais se ainda não foram definidos
+    if (!filters.year) {
+      updateFilters({ year: 2025, month: null });
+    }
   }, []);
   
   const [activeTab, setActiveTab] = useState("geral");
@@ -42,7 +44,7 @@ const Dashboard = () => {
     );
   }
 
-  if (error || !data) {
+  if (error) {
     console.error("Dashboard error:", error);
     return (
       <Layout title="Painel de Dados" showBackButton>
@@ -51,7 +53,14 @@ const Dashboard = () => {
     );
   }
 
-  console.log("Dashboard data loaded:", data);
+  // Se não há dados mas não há erro, mostrar dados vazios ao invés de erro
+  if (!data) {
+    return (
+      <Layout title="Painel de Dados" showBackButton>
+        <DashboardLoading />
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="Painel de Dados" showBackButton>
@@ -62,7 +71,7 @@ const Dashboard = () => {
             month={filters.month}
             origem={filters.origem}
             classeTaxonomica={filters.classeTaxonomica}
-            classesDisponiveis={data.classeTaxonomica.map(c => c.name)}
+            classesDisponiveis={data?.classeTaxonomica?.map(c => c.name) || []}
             ultimaAtualizacao={data.ultimaAtualizacao}
             onFilterChange={updateFilters}
             onRefresh={handleRefresh}

@@ -11,6 +11,15 @@ interface DashboardGraficosGeraisProps {
 }
 
 const DashboardGraficosGerais: React.FC<DashboardGraficosGeraisProps> = ({ data }) => {
+  // Validar dados
+  if (!data) {
+    return (
+      <div className="text-center text-muted-foreground p-8">
+        Dados não disponíveis
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-8">
       <SummaryChartsSection data={data} />

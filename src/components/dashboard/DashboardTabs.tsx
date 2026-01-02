@@ -75,8 +75,8 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({
       
       <TabsContent value="mapas" className="mt-6">
         <DashboardMapas 
-          dataOrigem={data.mapDataOrigem} 
-          dataSoltura={data.mapDataSoltura} 
+          dataOrigem={data?.mapDataOrigem || []} 
+          dataSoltura={data?.mapDataSoltura || []} 
         />
       </TabsContent>
     </Tabs>

@@ -6,30 +6,45 @@ import { format, parseISO } from 'date-fns';
  * Transforms registro data into time series data for trend visualization
  */
 export const transformTimeSeriesData = (registros: Registro[]): TimeSeriesItem[] => {
+  if (!Array.isArray(registros)) return [];
+  
   // Group registros by date
   const dateMap = new Map<string, { resgates: number; apreensoes: number; total: number }>();
   
   registros.forEach(registro => {
+    if (!registro || !registro.data) return;
+    
     try {
-      // Format date to YYYY-MM-DD
-      const date = format(parseISO(registro.data), 'yyyy-MM-dd');
-      
-      if (!dateMap.has(date)) {
-        dateMap.set(date, { resgates: 0, apreensoes: 0, total: 0 });
+      // Parse date - pode ser string ISO ou Date object
+      let dateStr: string;
+      if (typeof registro.data === 'string') {
+        dateStr = registro.data.split('T')[0]; // Pega apenas a parte da data
+      } else if (registro.data instanceof Date) {
+        dateStr = format(registro.data, 'yyyy-MM-dd');
+      } else {
+        return; // Skip se não for formato válido
       }
       
-      const currentCount = dateMap.get(date)!;
+      if (!dateMap.has(dateStr)) {
+        dateMap.set(dateStr, { resgates: 0, apreensoes: 0, total: 0 });
+      }
       
-      // Increment counts based on origem
-      if (registro.origem?.nome === 'Resgate de Fauna') {
+      const currentCount = dateMap.get(dateStr)!;
+      
+      // Increment counts based on origem ou tipo_registro
+      const origemNome = registro.origem?.nome;
+      const tipoRegistro = registro.tipo_registro;
+      
+      if (origemNome === 'Resgate de Fauna' || tipoRegistro === 'resgate' || tipoRegistro === 'historico' || !origemNome) {
         currentCount.resgates += 1;
-      } else if (registro.origem?.nome === 'Apreensão') {
+      } else if (origemNome === 'Apreensão' || origemNome === 'Ação Policial') {
         currentCount.apreensoes += 1;
       }
       
       currentCount.total += 1;
     } catch (error) {
-      console.error('Error processing date for time series:', error);
+      console.warn('Error processing date for time series:', error, registro);
+      // Continue processando outros registros
     }
   });
   
@@ -37,9 +52,10 @@ export const transformTimeSeriesData = (registros: Registro[]): TimeSeriesItem[]
   return Array.from(dateMap.entries())
     .map(([date, counts]) => ({
       date,
-      resgates: counts.resgates,
-      apreensoes: counts.apreensoes,
-      total: counts.total
+      resgates: counts.resgates || 0,
+      apreensoes: counts.apreensoes || 0,
+      total: counts.total || 0
     }))
+    .filter(item => item.total > 0)
     .sort((a, b) => a.date.localeCompare(b.date));
 };

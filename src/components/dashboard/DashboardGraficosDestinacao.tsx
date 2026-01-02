@@ -10,11 +10,20 @@ interface DashboardGraficosDestinacaoProps {
 }
 
 const DashboardGraficosDestinacao = ({ data }: DashboardGraficosDestinacaoProps) => {
+  // Validar dados
+  if (!data) {
+    return (
+      <div className="text-center text-muted-foreground p-8">
+        Dados não disponíveis
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-8">
-      <DestinacaoTiposPieChart data={data.destinacaoTipos} />
-      <DestinacaoTiposBarChart data={data.destinacaoTipos} />
-      <MotivosEntregaCEAPAChart data={data.motivosEntregaCEAPA} />
+      <DestinacaoTiposPieChart data={data.destinacaoTipos || []} />
+      <DestinacaoTiposBarChart data={data.destinacaoTipos || []} />
+      <MotivosEntregaCEAPAChart data={data.motivosEntregaCEAPA || []} />
     </div>
   );
 };

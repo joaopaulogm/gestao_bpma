@@ -17,12 +17,25 @@ interface ClassDistributionChartProps {
 }
 
 const ClassDistributionChart: React.FC<ClassDistributionChartProps> = ({ data }) => {
+  // Validar dados
+  const validData = Array.isArray(data) && data.length > 0 ? data : [];
+  
+  if (validData.length === 0) {
+    return (
+      <ChartCard title="Distribuição por Classe">
+        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+          Nenhum dado disponível
+        </div>
+      </ChartCard>
+    );
+  }
+  
   return (
     <ChartCard title="Distribuição por Classe">
       <ResponsiveContainer width="100%" height={300}>
         <PieChart margin={{ top: 10, right: 30, left: 30, bottom: 10 }}>
           <Pie
-            data={data}
+            data={validData}
             cx="50%"
             cy="50%"
             labelLine={false}
@@ -33,7 +46,7 @@ const ClassDistributionChart: React.FC<ClassDistributionChartProps> = ({ data })
             dataKey="value"
             paddingAngle={2}
           >
-            {data.map((entry, index) => (
+            {validData.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
                 fill={CHART_COLORS[index % CHART_COLORS.length]} 

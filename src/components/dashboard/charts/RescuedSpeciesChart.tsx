@@ -19,11 +19,26 @@ interface SpeciesChartProps {
 }
 
 const RescuedSpeciesChart: React.FC<SpeciesChartProps> = ({ data }) => {
+  // Validar e limitar dados
+  const validData = Array.isArray(data) && data.length > 0 
+    ? data.slice(0, 10).filter(item => item && item.name && typeof item.quantidade === 'number')
+    : [];
+  
+  if (validData.length === 0) {
+    return (
+      <ChartCard title="Espécies Mais Resgatadas" subtitle="Top 10 espécies em número de resgates">
+        <div className="flex items-center justify-center h-[400px] text-muted-foreground">
+          Nenhum dado disponível
+        </div>
+      </ChartCard>
+    );
+  }
+  
   return (
     <ChartCard title="Espécies Mais Resgatadas" subtitle="Top 10 espécies em número de resgates">
       <ResponsiveContainer width="100%" height={400}>
         <BarChart 
-          data={data} 
+          data={validData} 
           margin={{ top: 20, right: 30, left: 140, bottom: 20 }}
           barSize={25}
           layout="vertical"

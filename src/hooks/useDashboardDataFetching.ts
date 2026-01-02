@@ -10,18 +10,32 @@ import { FilterState } from './useFilterState';
  */
 export const useDashboardDataFetching = (filters: FilterState) => {
   const fetchDashboardData = async (): Promise<DashboardData> => {
-    // Fetch the raw data from Supabase
-    const registros = await fetchRegistryData(filters);
-    
-    // Process the raw data into dashboard data
-    return processDashboardData(registros);
+    try {
+      // Fetch the raw data from Supabase
+      const registros = await fetchRegistryData(filters);
+      
+      // Validar dados recebidos
+      if (!Array.isArray(registros)) {
+        console.warn('fetchDashboardData: dados recebidos não são um array');
+        return processDashboardData([]);
+      }
+      
+      // Process the raw data into dashboard data
+      return processDashboardData(registros);
+    } catch (error) {
+      console.error('Erro ao buscar dados do dashboard:', error);
+      // Retornar estrutura vazia ao invés de lançar erro
+      return processDashboardData([]);
+    }
   };
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['dashboardData', filters],
     queryFn: fetchDashboardData,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    retry: 2, // Tentar novamente até 2 vezes em caso de erro
+    retryDelay: 1000 // Esperar 1 segundo entre tentativas
   });
 
   return {

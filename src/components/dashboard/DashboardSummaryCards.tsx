@@ -9,6 +9,17 @@ interface DashboardSummaryCardsProps {
 }
 
 const DashboardSummaryCards = ({ data }: DashboardSummaryCardsProps) => {
+  // Validar dados
+  if (!data || !data.metricas || !Array.isArray(data.metricas)) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-6 text-center text-muted-foreground">
+          Dados não disponíveis
+        </Card>
+      </div>
+    );
+  }
+  
   // Função para renderizar o ícone correto
   const renderIcon = (iconType: string, iconColor: string) => {
     const iconProps = { className: `h-5 w-5 ${iconColor}` };

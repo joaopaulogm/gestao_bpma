@@ -10,47 +10,57 @@ export const transformDashboardMetrics = (
   apreensoes: Registro[],
   animaisAtropelados: Registro[]
 ): DashboardMetric[] => {
+  // Validar entradas
+  const validRegistros = Array.isArray(registros) ? registros.filter(r => r) : [];
+  const validResgates = Array.isArray(resgates) ? resgates.filter(r => r) : [];
+  const validApreensoes = Array.isArray(apreensoes) ? apreensoes.filter(r => r) : [];
+  const validAtropelados = Array.isArray(animaisAtropelados) ? animaisAtropelados.filter(r => r) : [];
+  
   // Calculate total specimens count (using quantidade_total when available)
-  const totalSpecimens = registros.reduce(
-    (sum, reg) => sum + (reg.quantidade_total || reg.quantidade || 0),
+  const totalSpecimens = validRegistros.reduce(
+    (sum, reg) => {
+      const qtd = reg.quantidade_total ?? reg.quantidade ?? 0;
+      return sum + (typeof qtd === 'number' && !isNaN(qtd) ? qtd : 0);
+    },
     0
   );
 
   // Calculate average specimens per occurrence
-  const avgSpecimensPerOccurrence = registros.length > 0
-    ? Math.round((totalSpecimens / registros.length) * 10) / 10
+  const avgSpecimensPerOccurrence = validRegistros.length > 0
+    ? Math.round((totalSpecimens / validRegistros.length) * 10) / 10
     : 0;
 
   // Count unique species
   const uniqueSpecies = new Set(
-    registros
-      .filter(reg => reg.especie?.nome_cientifico)
+    validRegistros
+      .filter(reg => reg?.especie?.nome_cientifico)
       .map(reg => reg.especie!.nome_cientifico)
+      .filter(Boolean)
   ).size;
 
   // Return dashboard metrics
   return [
     {
       title: 'Total de Registros',
-      value: registros.length,
+      value: validRegistros.length,
       iconType: 'FileText',
       iconColor: 'text-blue-500'
     },
     {
       title: 'Total de Resgates',
-      value: resgates.length,
+      value: validResgates.length,
       iconType: 'Clipboard',
       iconColor: 'text-green-500'
     },
     {
       title: 'Total de Apreensões',
-      value: apreensoes.length,
+      value: validApreensoes.length,
       iconType: 'ShieldAlert',
       iconColor: 'text-amber-500'
     },
     {
       title: 'Animais Atropelados',
-      value: animaisAtropelados.length,
+      value: validAtropelados.length,
       iconType: 'AlertTriangle',
       iconColor: 'text-red-500'
     },

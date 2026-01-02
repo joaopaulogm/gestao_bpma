@@ -13,19 +13,28 @@ interface DashboardGraficosEspeciesProps {
 }
 
 const DashboardGraficosEspecies = ({ data }: DashboardGraficosEspeciesProps) => {
+  // Validar dados
+  if (!data) {
+    return (
+      <div className="text-center text-muted-foreground p-8">
+        Dados não disponíveis
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-8">
-      <RescuedSpeciesChart data={data.especiesMaisResgatadas} />
+      <RescuedSpeciesChart data={data.especiesMaisResgatadas || []} />
       
-      <SeizedSpeciesChart data={data.especiesMaisApreendidas} />
+      <SeizedSpeciesChart data={data.especiesMaisApreendidas || []} />
       
-      <RoadkillSpeciesChart data={data.especiesAtropeladas} />
+      <RoadkillSpeciesChart data={data.especiesAtropeladas || []} />
       
-      <LifeStageChart data={data.estagioVidaDistribuicao} />
+      <LifeStageChart data={data.estagioVidaDistribuicao || []} />
       
-      <RoadkillDistributionChart data={data.atropelamentoDistribuicao} />
+      <RoadkillDistributionChart data={data.atropelamentoDistribuicao || []} />
       
-      <QuantityStatisticsChart data={data.quantidadePorOcorrencia} />
+      <QuantityStatisticsChart data={data.quantidadePorOcorrencia || { min: 0, max: 0, avg: 0, median: 0 }} />
     </div>
   );
 };

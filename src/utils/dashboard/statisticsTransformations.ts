@@ -5,7 +5,7 @@ import { Registro } from '@/types/hotspots';
  * Calculates basic statistical measures for quantities of specimens per occurrence
  */
 export const transformQuantityStatistics = (registros: Registro[]) => {
-  if (registros.length === 0) {
+  if (!Array.isArray(registros) || registros.length === 0) {
     return {
       min: 0,
       max: 0,
@@ -16,8 +16,22 @@ export const transformQuantityStatistics = (registros: Registro[]) => {
 
   // Usamos agora o campo quantidade_total, com fallback para quantidade
   const quantities = registros
-    .map(r => r.quantidade_total || r.quantidade || 0)
+    .filter(r => r) // Filtrar registros nulos/undefined
+    .map(r => {
+      const qtd = r.quantidade_total ?? r.quantidade ?? 0;
+      return typeof qtd === 'number' && !isNaN(qtd) ? qtd : 0;
+    })
+    .filter(q => q > 0) // Filtrar quantidades inválidas
     .sort((a, b) => a - b);
+  
+  if (quantities.length === 0) {
+    return {
+      min: 0,
+      max: 0,
+      avg: 0,
+      median: 0
+    };
+  }
 
   const min = quantities[0];
   const max = quantities[quantities.length - 1];
