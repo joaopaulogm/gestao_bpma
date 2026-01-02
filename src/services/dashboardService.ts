@@ -209,89 +209,106 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
       ? 'fat_registros_de_resgate_2025' 
       : 'fat_registros_de_resgate';
     
-    // Tentar primeiro com joins (para tabelas que têm foreign keys)
-    console.log(`📊 [Dashboard] Tentando buscar de ${tabelaResgates} com joins...`);
     let registrosAtuais: any[] = [];
-    let errorOcorrido: any = null;
     
-    try {
-      const selectQuery = `
-        *,
-        regiao_administrativa:dim_regiao_administrativa(nome),
-        origem:dim_origem(nome),
-        destinacao:dim_destinacao(nome),
-        estado_saude:dim_estado_saude(nome),
-        estagio_vida:dim_estagio_vida(nome),
-        desfecho:dim_desfecho(nome, tipo),
-        especie:dim_especies_fauna(*)
-      `;
-      
-      let query = supabase.from(tabelaResgates).select(selectQuery);
-      
-      // Aplicar filtros de data
-      const startDate = `${filters.year}-01-01`;
-      const endDate = `${filters.year}-12-31`;
-      query = query.gte('data', startDate).lte('data', endDate);
-      
-      // Aplicar filtro de mês se especificado
-      if (filters.month !== null) {
-        const monthStart = `${filters.year}-${String(filters.month + 1).padStart(2, '0')}-01`;
-        const monthEnd = format(
-          endOfMonth(new Date(filters.year, filters.month, 1)),
-          'yyyy-MM-dd'
-        );
-        query = query.gte('data', monthStart).lte('data', monthEnd);
-      }
-      
-      // Aplicar filtro de classe taxonômica se especificado
-      if (filters.classeTaxonomica) {
-        query = query.eq('especie.classe_taxonomica', filters.classeTaxonomica);
-      }
-      
-      // Aplicar filtro de origem se especificado
-      if (filters.origem) {
-        try {
-          const { data: origemData } = await supabase
-            .from('dim_origem')
-            .select('id')
-            .ilike('nome', filters.origem)
-            .maybeSingle();
-          
-          if (origemData) {
-            query = query.eq('origem_id', origemData.id);
-          }
-        } catch (origemErr) {
-          console.warn('Erro ao buscar origem:', origemErr);
-        }
-      }
-      
-      const { data, error } = await query;
-      
+    // Para 2025, sabemos que a tabela pode não ter foreign keys, então usar busca sem joins diretamente
+    // Para outros anos, tentar com joins primeiro
+    if (filters.year === 2025) {
+      console.log(`📊 [Dashboard] Buscando de ${tabelaResgates} sem joins (2025 - sem foreign keys)...`);
+      const { data, error } = await fetchDataWithoutJoins(tabelaResgates, filters);
       if (!error) {
-        console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates} com joins:`, data?.length || 0, 'registros');
         registrosAtuais = data || [];
+        console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates}:`, registrosAtuais.length, 'registros');
       } else {
-        errorOcorrido = error;
-        // Se erro é de relacionamento (PGRST200), tentar sem joins
-        if (error.code === 'PGRST200' || error.message?.includes('relationship') || error.message?.includes('foreign key')) {
-          console.warn(`⚠️ [Dashboard] Erro de relacionamento (PGRST200) em ${tabelaResgates}, buscando sem joins...`);
-          const { data: dataSemJoins, error: errorSemJoins } = await fetchDataWithoutJoins(tabelaResgates, filters);
-          if (!errorSemJoins) {
-            registrosAtuais = dataSemJoins || [];
-            console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates} sem joins:`, registrosAtuais.length, 'registros');
-          } else {
-            console.warn(`⚠️ [Dashboard] Erro ao buscar sem joins também:`, errorSemJoins);
-          }
+        console.warn(`⚠️ [Dashboard] Erro ao buscar de ${tabelaResgates}, tentando fallback...`);
+        // Tentar fallback para tabela padrão
+        const { data: fallbackData, error: fallbackError } = await fetchDataWithoutJoins('fat_registros_de_resgate', filters);
+        if (!fallbackError) {
+          registrosAtuais = fallbackData || [];
+          console.log(`✅ [Dashboard] Dados carregados do fallback:`, registrosAtuais.length, 'registros');
         } else {
-          console.warn(`⚠️ [Dashboard] Erro ao buscar de ${tabelaResgates}:`, error.message || error);
+          console.warn(`⚠️ [Dashboard] Erro no fallback também:`, fallbackError);
         }
       }
-    } catch (err: any) {
-      console.warn(`⚠️ [Dashboard] Exceção ao buscar de ${tabelaResgates}, tentando sem joins:`, err?.message || err);
-      const { data: dataSemJoins, error: errorSemJoins } = await fetchDataWithoutJoins(tabelaResgates, filters);
-      if (!errorSemJoins) {
-        registrosAtuais = dataSemJoins || [];
-        console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates} sem joins (após exceção):`, registrosAtuais.length, 'registros');
+    } else {
+      // Para outros anos, tentar com joins primeiro
+      console.log(`📊 [Dashboard] Tentando buscar de ${tabelaResgates} com joins...`);
+      try {
+        const selectQuery = `
+          *,
+          regiao_administrativa:dim_regiao_administrativa(nome),
+          origem:dim_origem(nome),
+          destinacao:dim_destinacao(nome),
+          estado_saude:dim_estado_saude(nome),
+          estagio_vida:dim_estagio_vida(nome),
+          desfecho:dim_desfecho(nome, tipo),
+          especie:dim_especies_fauna(*)
+        `;
+        
+        let query = supabase.from(tabelaResgates).select(selectQuery);
+        
+        // Aplicar filtros de data
+        const startDate = `${filters.year}-01-01`;
+        const endDate = `${filters.year}-12-31`;
+        query = query.gte('data', startDate).lte('data', endDate);
+        
+        // Aplicar filtro de mês se especificado
+        if (filters.month !== null) {
+          const monthStart = `${filters.year}-${String(filters.month + 1).padStart(2, '0')}-01`;
+          const monthEnd = format(
+            endOfMonth(new Date(filters.year, filters.month, 1)),
+            'yyyy-MM-dd'
+          );
+          query = query.gte('data', monthStart).lte('data', monthEnd);
+        }
+        
+        // Aplicar filtro de classe taxonômica se especificado
+        if (filters.classeTaxonomica) {
+          query = query.eq('especie.classe_taxonomica', filters.classeTaxonomica);
+        }
+        
+        // Aplicar filtro de origem se especificado
+        if (filters.origem) {
+          try {
+            const { data: origemData } = await supabase
+              .from('dim_origem')
+              .select('id')
+              .ilike('nome', filters.origem)
+              .maybeSingle();
+            
+            if (origemData) {
+              query = query.eq('origem_id', origemData.id);
+            }
+          } catch (origemErr) {
+            console.warn('Erro ao buscar origem:', origemErr);
+          }
+        }
+        
+        const { data, error } = await query;
+        
+        if (!error) {
+          console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates} com joins:`, data?.length || 0, 'registros');
+          registrosAtuais = data || [];
+        } else {
+          // Se erro é de relacionamento (PGRST200), tentar sem joins
+          if (error.code === 'PGRST200' || error.message?.includes('relationship') || error.message?.includes('foreign key')) {
+            console.warn(`⚠️ [Dashboard] Erro de relacionamento (PGRST200) em ${tabelaResgates}, buscando sem joins...`);
+            const { data: dataSemJoins, error: errorSemJoins } = await fetchDataWithoutJoins(tabelaResgates, filters);
+            if (!errorSemJoins) {
+              registrosAtuais = dataSemJoins || [];
+              console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates} sem joins:`, registrosAtuais.length, 'registros');
+            }
+          } else {
+            console.warn(`⚠️ [Dashboard] Erro ao buscar de ${tabelaResgates}:`, error.message || error);
+          }
+        }
+      } catch (err: any) {
+        console.warn(`⚠️ [Dashboard] Exceção ao buscar de ${tabelaResgates}, tentando sem joins:`, err?.message || err);
+        const { data: dataSemJoins, error: errorSemJoins } = await fetchDataWithoutJoins(tabelaResgates, filters);
+        if (!errorSemJoins) {
+          registrosAtuais = dataSemJoins || [];
+          console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates} sem joins (após exceção):`, registrosAtuais.length, 'registros');
+        }
       }
     }
     
