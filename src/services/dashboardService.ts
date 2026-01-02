@@ -10,13 +10,109 @@ import { format, endOfMonth } from 'date-fns';
 /**
  * Tenta buscar dados de uma tabela específica, com fallback para tabela padrão
  */
+/**
+ * Busca dados sem usar joins (para tabelas sem foreign keys configuradas)
+ */
+const fetchDataWithoutJoins = async (
+  tableName: string,
+  filters: FilterState
+): Promise<{ data: any[]; error: any }> => {
+  try {
+    let query = supabase.from(tableName).select('*');
+    
+    // Aplicar filtros de data
+    const startDate = `${filters.year}-01-01`;
+    const endDate = `${filters.year}-12-31`;
+    query = query.gte('data', startDate).lte('data', endDate);
+    
+    // Aplicar filtro de mês se especificado
+    if (filters.month !== null) {
+      const monthStart = `${filters.year}-${String(filters.month + 1).padStart(2, '0')}-01`;
+      const monthEnd = format(
+        endOfMonth(new Date(filters.year, filters.month, 1)),
+        'yyyy-MM-dd'
+      );
+      query = query.gte('data', monthStart).lte('data', monthEnd);
+    }
+    
+    // Aplicar filtro de origem se especificado
+    if (filters.origem) {
+      try {
+        const { data: origemData } = await supabase
+          .from('dim_origem')
+          .select('id')
+          .ilike('nome', filters.origem)
+          .maybeSingle();
+        
+        if (origemData) {
+          query = query.eq('origem_id', origemData.id);
+        }
+      } catch (origemErr) {
+        console.warn('Erro ao buscar origem:', origemErr);
+      }
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      return { data: [], error };
+    }
+    
+    // Buscar dados relacionados manualmente
+    const enrichedData = await enrichDataWithRelations(data || []);
+    
+    return { data: enrichedData, error: null };
+  } catch (err: any) {
+    return { data: [], error: err };
+  }
+};
+
+/**
+ * Enriquece dados com relacionamentos buscando manualmente
+ */
+const enrichDataWithRelations = async (registros: any[]): Promise<any[]> => {
+  if (!registros || registros.length === 0) return [];
+  
+  // Buscar todas as dimensões de uma vez
+  const [regioesRes, origensRes, destinacoesRes, estadosSaudeRes, estagiosVidaRes, desfechosRes, especiesRes] = await Promise.all([
+    supabase.from('dim_regiao_administrativa').select('id, nome'),
+    supabase.from('dim_origem').select('id, nome'),
+    supabase.from('dim_destinacao').select('id, nome'),
+    supabase.from('dim_estado_saude').select('id, nome'),
+    supabase.from('dim_estagio_vida').select('id, nome'),
+    supabase.from('dim_desfecho').select('id, nome, tipo'),
+    supabase.from('dim_especies_fauna').select('*')
+  ]);
+  
+  // Criar maps para lookup rápido
+  const regioesMap = new Map((regioesRes.data || []).map(r => [r.id, r]));
+  const origensMap = new Map((origensRes.data || []).map(r => [r.id, r]));
+  const destinacoesMap = new Map((destinacoesRes.data || []).map(r => [r.id, r]));
+  const estadosSaudeMap = new Map((estadosSaudeRes.data || []).map(r => [r.id, r]));
+  const estagiosVidaMap = new Map((estagiosVidaRes.data || []).map(r => [r.id, r]));
+  const desfechosMap = new Map((desfechosRes.data || []).map(r => [r.id, r]));
+  const especiesMap = new Map((especiesRes.data || []).map(r => [r.id, r]));
+  
+  // Enriquecer cada registro
+  return registros.map(reg => ({
+    ...reg,
+    regiao_administrativa: reg.regiao_administrativa_id ? regioesMap.get(reg.regiao_administrativa_id) : null,
+    origem: reg.origem_id ? origensMap.get(reg.origem_id) : null,
+    destinacao: reg.destinacao_id ? destinacoesMap.get(reg.destinacao_id) : null,
+    estado_saude: reg.estado_saude_id ? estadosSaudeMap.get(reg.estado_saude_id) : null,
+    estagio_vida: reg.estagio_vida_id ? estagiosVidaMap.get(reg.estagio_vida_id) : null,
+    desfecho: reg.desfecho_id ? desfechosMap.get(reg.desfecho_id) : null,
+    especie: reg.especie_id ? especiesMap.get(reg.especie_id) : null
+  }));
+};
+
 const fetchFromTableWithFallback = async (
   tableName: string,
   fallbackTable: string,
   selectQuery: string,
   filters: FilterState
 ): Promise<{ data: any[]; error: any }> => {
-  // Tentar tabela principal primeiro
+  // Tentar tabela principal primeiro com joins
   try {
     let query = supabase.from(tableName).select(selectQuery);
     
@@ -54,7 +150,6 @@ const fetchFromTableWithFallback = async (
         }
       } catch (origemErr) {
         console.warn('Erro ao buscar origem:', origemErr);
-        // Continuar sem filtro de origem
       }
     }
     
@@ -62,8 +157,14 @@ const fetchFromTableWithFallback = async (
     
     // Se não houver erro, retornar dados
     if (!error) {
-      console.log(`✅ Dados carregados de ${tableName}:`, data?.length || 0, 'registros');
+      console.log(`✅ Dados carregados de ${tableName} com joins:`, data?.length || 0, 'registros');
       return { data: data || [], error: null };
+    }
+    
+    // Se erro é de relacionamento (PGRST200), tentar sem joins
+    if (error.code === 'PGRST200' || error.message?.includes('relationship') || error.message?.includes('foreign key')) {
+      console.warn(`⚠️ Erro de relacionamento em ${tableName}, tentando sem joins...`);
+      return fetchDataWithoutJoins(tableName, filters);
     }
     
     // Se erro indica que tabela não existe, tentar fallback
@@ -76,11 +177,17 @@ const fetchFromTableWithFallback = async (
       }
     }
     
-    // Para outros erros, logar mas retornar array vazio (não quebrar dashboard)
-    console.warn(`⚠️ Erro ao buscar de ${tableName}:`, error.message || error);
-    return { data: [], error: null }; // Retornar sem erro para não quebrar o dashboard
+    // Para outros erros, tentar sem joins
+    console.warn(`⚠️ Erro ao buscar de ${tableName}, tentando sem joins:`, error.message || error);
+    return fetchDataWithoutJoins(tableName, filters);
   } catch (err: any) {
-    console.warn(`⚠️ Exceção ao buscar de ${tableName}:`, err?.message || err);
+    console.warn(`⚠️ Exceção ao buscar de ${tableName}, tentando sem joins:`, err?.message || err);
+    
+    // Tentar sem joins primeiro
+    const resultWithoutJoins = await fetchDataWithoutJoins(tableName, filters);
+    if (!resultWithoutJoins.error) {
+      return resultWithoutJoins;
+    }
     
     // Se não for a tabela de fallback, tentar fallback
     if (tableName !== fallbackTable) {
