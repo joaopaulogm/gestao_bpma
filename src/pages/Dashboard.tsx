@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import DashboardSummaryCards from '@/components/dashboard/DashboardSummaryCards';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
+import { processDashboardData } from '@/utils/dashboardDataProcessor';
 
 const Dashboard = () => {
   const { 
@@ -44,6 +45,11 @@ const Dashboard = () => {
     );
   }
 
+  // Criar dados vazios usando useMemo para evitar recriação
+  const emptyData = useMemo(() => {
+    return processDashboardData([]);
+  }, []);
+
   // NUNCA mostrar tela de erro - sempre mostrar dados (mesmo que vazios)
   // Se não há dados ainda, mostrar loading
   if (!data && isLoading) {
@@ -54,71 +60,12 @@ const Dashboard = () => {
     );
   }
 
-  // Se não há dados mas não está carregando, criar estrutura vazia
+  // Se não há dados mas não está carregando, usar estrutura vazia processada
+  const displayData = data || emptyData;
+  
   if (!data) {
-    console.warn("⚠️ [Dashboard] Sem dados disponíveis, criando estrutura vazia");
-    // Retornar estrutura vazia processada
-    const emptyData = {
-      totalRegistros: 0,
-      totalResgates: 0,
-      totalApreensoes: 0,
-      totalAtropelamentos: 0,
-      timeSeriesData: [],
-      regiaoAdministrativa: [],
-      origemDistribuicao: [],
-      classeTaxonomica: [],
-      desfechoResgate: [],
-      desfechoApreensao: [],
-      estadoSaude: [],
-      destinacaoTipos: [],
-      atropelamentoDistribuicao: [],
-      estagioVidaDistribuicao: [],
-      especiesMaisResgatadas: [],
-      especiesMaisApreendidas: [],
-      especiesAtropeladas: [],
-      motivosEntregaCEAPA: [],
-      mapDataOrigem: [],
-      mapDataSoltura: [],
-      quantidadePorOcorrencia: { min: 0, max: 0, avg: 0, median: 0 },
-      metricas: [],
-      ultimaAtualizacao: new Date().toLocaleString('pt-BR'),
-      distribuicaoPorClasse: [],
-      destinos: [],
-      desfechos: [],
-      atropelamentos: [],
-      rawData: []
-    };
+    console.warn("⚠️ [Dashboard] Sem dados disponíveis, usando estrutura vazia");
     
-    return (
-      <Layout title="Painel de Dados" showBackButton>
-        <div className="space-y-8 animate-fade-in">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <DashboardHeader 
-              year={filters.year}
-              month={filters.month}
-              origem={filters.origem}
-              classeTaxonomica={filters.classeTaxonomica}
-              classesDisponiveis={[]}
-              ultimaAtualizacao={emptyData.ultimaAtualizacao}
-              onFilterChange={updateFilters}
-              onRefresh={handleRefresh}
-              data={emptyData}
-              isLoading={isLoading}
-            />
-          </div>
-
-          <DashboardSummaryCards data={emptyData} />
-          
-          <DashboardTabs 
-            data={emptyData} 
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-        </div>
-      </Layout>
-    );
-  }
-
   return (
     <Layout title="Painel de Dados" showBackButton>
       <div className="space-y-8 animate-fade-in">
@@ -128,19 +75,19 @@ const Dashboard = () => {
             month={filters.month}
             origem={filters.origem}
             classeTaxonomica={filters.classeTaxonomica}
-            classesDisponiveis={data?.classeTaxonomica?.map(c => c.name) || []}
-            ultimaAtualizacao={data.ultimaAtualizacao}
+            classesDisponiveis={displayData?.classeTaxonomica?.map(c => c.name) || []}
+            ultimaAtualizacao={displayData.ultimaAtualizacao}
             onFilterChange={updateFilters}
             onRefresh={handleRefresh}
-            data={data}
+            data={displayData}
             isLoading={isLoading}
           />
         </div>
 
-        <DashboardSummaryCards data={data} />
+        <DashboardSummaryCards data={displayData} />
         
         <DashboardTabs 
-          data={data} 
+          data={displayData} 
           activeTab={activeTab}
           onTabChange={handleTabChange}
         />
