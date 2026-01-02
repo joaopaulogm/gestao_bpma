@@ -1305,6 +1305,71 @@ export type Database = {
           },
         ]
       }
+      fat_resgates_diarios_2020: {
+        Row: {
+          classe_taxonomica: string | null
+          criado_em: string | null
+          data_ocorrencia: string | null
+          especie_id: string | null
+          estado_de_conservacao: string | null
+          id: string
+          mes: string | null
+          nome_cientifico: string | null
+          nome_popular: string | null
+          ordem_taxonomica: string | null
+          quantidade_feridos: number | null
+          quantidade_filhotes: number | null
+          quantidade_obitos: number | null
+          quantidade_resgates: number | null
+          quantidade_solturas: number | null
+          tipo_de_fauna: string | null
+        }
+        Insert: {
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          especie_id?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          mes?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Update: {
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          especie_id?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          mes?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_resgates_diarios_2020_especie_id_fkey"
+            columns: ["especie_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fat_resgates_diarios_2020a2024: {
         Row: {
           Ano: number | null
@@ -1361,6 +1426,266 @@ export type Database = {
           tipo_de_fauna?: string | null
         }
         Relationships: []
+      }
+      fat_resgates_diarios_2021: {
+        Row: {
+          classe_taxonomica: string | null
+          criado_em: string | null
+          data_ocorrencia: string | null
+          especie_id: string | null
+          estado_de_conservacao: string | null
+          id: string
+          mes: string | null
+          nome_cientifico: string | null
+          nome_popular: string | null
+          ordem_taxonomica: string | null
+          quantidade_feridos: number | null
+          quantidade_filhotes: number | null
+          quantidade_obitos: number | null
+          quantidade_resgates: number | null
+          quantidade_solturas: number | null
+          tipo_de_fauna: string | null
+        }
+        Insert: {
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          especie_id?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          mes?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Update: {
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          especie_id?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          mes?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_resgates_diarios_2021_especie_id_fkey"
+            columns: ["especie_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_resgates_diarios_2022: {
+        Row: {
+          classe_taxonomica: string | null
+          criado_em: string | null
+          data_ocorrencia: string | null
+          especie_id: string | null
+          estado_de_conservacao: string | null
+          id: string
+          mes: string | null
+          nome_cientifico: string | null
+          nome_popular: string | null
+          ordem_taxonomica: string | null
+          quantidade_feridos: number | null
+          quantidade_filhotes: number | null
+          quantidade_obitos: number | null
+          quantidade_resgates: number | null
+          quantidade_solturas: number | null
+          tipo_de_fauna: string | null
+        }
+        Insert: {
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          especie_id?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          mes?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Update: {
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          especie_id?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          mes?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_resgates_diarios_2022_especie_id_fkey"
+            columns: ["especie_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_resgates_diarios_2023: {
+        Row: {
+          classe_taxonomica: string | null
+          criado_em: string | null
+          data_ocorrencia: string | null
+          especie_id: string | null
+          estado_de_conservacao: string | null
+          id: string
+          mes: string | null
+          nome_cientifico: string | null
+          nome_popular: string | null
+          ordem_taxonomica: string | null
+          quantidade_feridos: number | null
+          quantidade_filhotes: number | null
+          quantidade_obitos: number | null
+          quantidade_resgates: number | null
+          quantidade_solturas: number | null
+          tipo_de_fauna: string | null
+        }
+        Insert: {
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          especie_id?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          mes?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Update: {
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          especie_id?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          mes?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_resgates_diarios_2023_especie_id_fkey"
+            columns: ["especie_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_resgates_diarios_2024: {
+        Row: {
+          classe_taxonomica: string | null
+          criado_em: string | null
+          data_ocorrencia: string | null
+          especie_id: string | null
+          estado_de_conservacao: string | null
+          id: string
+          mes: string | null
+          nome_cientifico: string | null
+          nome_popular: string | null
+          ordem_taxonomica: string | null
+          quantidade_feridos: number | null
+          quantidade_filhotes: number | null
+          quantidade_obitos: number | null
+          quantidade_resgates: number | null
+          quantidade_solturas: number | null
+          tipo_de_fauna: string | null
+        }
+        Insert: {
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          especie_id?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          mes?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Update: {
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          especie_id?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          mes?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_resgates_diarios_2024_especie_id_fkey"
+            columns: ["especie_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fat_restricoes: {
         Row: {
@@ -1699,7 +2024,78 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_distribuicao_classe_historico: {
+        Row: {
+          ano: number | null
+          classe_taxonomica: string | null
+          registros: number | null
+          total_obitos: number | null
+          total_resgates: number | null
+          total_solturas: number | null
+        }
+        Relationships: []
+      }
+      vw_distribuicao_conservacao_historico: {
+        Row: {
+          ano: number | null
+          especies_unicas: number | null
+          estado_de_conservacao: string | null
+          total_resgates: number | null
+        }
+        Relationships: []
+      }
+      vw_resgates_historicos: {
+        Row: {
+          ano: number | null
+          classe_taxonomica: string | null
+          criado_em: string | null
+          data_ocorrencia: string | null
+          especie_id: string | null
+          estado_de_conservacao: string | null
+          id: string | null
+          mes: string | null
+          nome_cientifico: string | null
+          nome_popular: string | null
+          ordem_taxonomica: string | null
+          quantidade_feridos: number | null
+          quantidade_filhotes: number | null
+          quantidade_obitos: number | null
+          quantidade_resgates: number | null
+          quantidade_solturas: number | null
+          tipo_de_fauna: string | null
+        }
+        Relationships: []
+      }
+      vw_resumo_anual_resgates: {
+        Row: {
+          ano: number | null
+          classe_taxonomica: string | null
+          especies_unicas: number | null
+          tipo_de_fauna: string | null
+          total_feridos: number | null
+          total_filhotes: number | null
+          total_obitos: number | null
+          total_resgates: number | null
+          total_solturas: number | null
+        }
+        Relationships: []
+      }
+      vw_resumo_especies_historico: {
+        Row: {
+          classe_taxonomica: string | null
+          estado_de_conservacao: string | null
+          nome_cientifico: string | null
+          nome_popular: string | null
+          num_ocorrencias: number | null
+          tipo_de_fauna: string | null
+          total_feridos: number | null
+          total_filhotes: number | null
+          total_obitos: number | null
+          total_resgates: number | null
+          total_solturas: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       fn_nome_cientifico_prefix: { Args: { nome: string }; Returns: string }

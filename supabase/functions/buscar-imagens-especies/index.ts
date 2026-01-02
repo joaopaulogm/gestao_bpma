@@ -155,9 +155,10 @@ serve(async (req: Request) => {
       'Access-Control-Allow-Origin': getAllowedOrigin(origin),
       'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     };
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno';
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Erro interno',
+        error: errorMessage,
         success: false,
         url: null,
         urls: []
