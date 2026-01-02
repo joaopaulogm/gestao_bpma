@@ -5,12 +5,13 @@ import { format, endOfMonth } from 'date-fns';
 
 /**
  * Fetches registry data from Supabase based on filters
+ * Inclui dados atuais (fat_registros_de_resgate) e históricos (fat_resgates_diarios_2020a2024)
  */
 export const fetchRegistryData = async (filters: FilterState) => {
   console.log("Fetching dashboard data with filters:", filters);
   
-  // Construir query de data base com joins para as tabelas de dimensão
-  let query = supabase
+  // Buscar dados atuais de resgates (2025+)
+  let queryAtuais = supabase
     .from('fat_registros_de_resgate')
     .select(`
       *,
@@ -26,7 +27,7 @@ export const fetchRegistryData = async (filters: FilterState) => {
   // Aplicar filtro de ano
   const startDate = `${filters.year}-01-01`;
   const endDate = `${filters.year}-12-31`;
-  query = query.gte('data', startDate).lte('data', endDate);
+  queryAtuais = queryAtuais.gte('data', startDate).lte('data', endDate);
   
   // Aplicar filtro de mês se especificado
   if (filters.month !== null) {
@@ -36,12 +37,12 @@ export const fetchRegistryData = async (filters: FilterState) => {
       'yyyy-MM-dd'
     );
     
-    query = query.gte('data', monthStart).lte('data', monthEnd);
+    queryAtuais = queryAtuais.gte('data', monthStart).lte('data', monthEnd);
   }
   
   // Aplicar filtro de classe taxonômica se especificado
   if (filters.classeTaxonomica) {
-    query = query.eq('especie.classe_taxonomica', filters.classeTaxonomica);
+    queryAtuais = queryAtuais.eq('especie.classe_taxonomica', filters.classeTaxonomica);
   }
   
   // Aplicar filtro de origem se especificado (usando ID da dimensão)
@@ -54,16 +55,87 @@ export const fetchRegistryData = async (filters: FilterState) => {
       .maybeSingle();
     
     if (origemData) {
-      query = query.eq('origem_id', origemData.id);
+      queryAtuais = queryAtuais.eq('origem_id', origemData.id);
     }
   }
   
-  const { data: registros, error } = await query;
+  const { data: registrosAtuais, error: errorAtuais } = await queryAtuais;
   
-  if (error) {
-    console.error('Erro ao buscar dados do dashboard:', error);
-    throw error;
+  if (errorAtuais) {
+    console.error('Erro ao buscar dados atuais do dashboard:', errorAtuais);
+    throw errorAtuais;
   }
   
-  return registros;
+  // Buscar dados históricos (2020-2024) se o filtro de ano for entre 2020-2024
+  let registrosHistoricos: any[] = [];
+  
+  if (filters.year >= 2020 && filters.year <= 2024) {
+    let queryHistoricos = supabase
+      .from('fat_resgates_diarios_2020a2024')
+      .select('*');
+    
+    // Aplicar filtro de ano
+    queryHistoricos = queryHistoricos.eq('Ano', filters.year);
+    
+    // Aplicar filtro de mês se especificado
+    if (filters.month !== null) {
+      const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      const mesNome = meses[filters.month];
+      queryHistoricos = queryHistoricos.eq('Mês', mesNome);
+    }
+    
+    // Aplicar filtro de classe taxonômica se especificado
+    if (filters.classeTaxonomica) {
+      queryHistoricos = queryHistoricos.eq('classe_taxonomica', filters.classeTaxonomica);
+    }
+    
+    const { data: historicos, error: errorHistoricos } = await queryHistoricos;
+    
+    if (errorHistoricos) {
+      console.error('Erro ao buscar dados históricos do dashboard:', errorHistoricos);
+      // Não lançar erro, apenas logar - continuar com dados atuais
+    } else {
+      registrosHistoricos = historicos || [];
+    }
+  }
+  
+  // Combinar e normalizar dados históricos para o formato esperado
+  const historicosNormalizados = registrosHistoricos.map(h => ({
+    id: h.id,
+    data: h.data_ocorrencia || (h.Ano && h.Mês ? 
+      new Date(h.Ano, 
+        ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].indexOf(h.Mês), 
+        1).toISOString().split('T')[0] : null),
+    quantidade: h.quantidade_resgates || 0,
+    quantidade_adulto: 0,
+    quantidade_filhote: h.quantidade_filhotes || 0,
+    atropelamento: null,
+    regiao_administrativa: null,
+    origem: { nome: 'Resgate de Fauna' }, // Assumir que dados históricos são resgates
+    destinacao: null,
+    estado_saude: null,
+    estagio_vida: null,
+    desfecho: null,
+    especie: {
+      nome_popular: h.nome_popular,
+      nome_cientifico: h.nome_cientifico,
+      classe_taxonomica: h.classe_taxonomica,
+      ordem_taxonomica: h.ordem_taxonomica,
+      estado_de_conservacao: h.estado_de_conservacao,
+      tipo_de_fauna: h.tipo_de_fauna
+    },
+    tipo_registro: 'historico'
+  }));
+  
+  // Combinar dados atuais e históricos
+  const todosRegistros = [
+    ...(registrosAtuais || []),
+    ...historicosNormalizados
+  ];
+  
+  console.log(`Total de registros: ${todosRegistros.length} (${registrosAtuais?.length || 0} atuais + ${historicosNormalizados.length} históricos)`);
+  
+  return todosRegistros;
 };

@@ -7,7 +7,7 @@
 -- 1. VIEW: Estatísticas Gerais de Resgates (com dados históricos)
 -- ============================================
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_estatisticas_resgates AS
--- Dados atuais de resgates
+-- Dados atuais de resgates (apenas de 2025 em diante)
 SELECT 
   EXTRACT(YEAR FROM r.data)::integer as ano,
   EXTRACT(MONTH FROM r.data)::integer as mes,
@@ -18,12 +18,12 @@ SELECT
   e.ordem_taxonomica,
   e.estado_de_conservacao,
   e.tipo_de_fauna,
-  COALESCE(r.quantidade, 0) as quantidade_resgates,
+  COALESCE(r.quantidade, 0)::numeric as quantidade_resgates,
   0::numeric as quantidade_solturas,
-  COALESCE(r.quantidade_filhote, 0) as quantidade_filhotes,
+  COALESCE(r.quantidade_filhote, 0)::numeric as quantidade_filhotes,
   0::numeric as quantidade_obitos,
   0::numeric as quantidade_feridos,
-  COALESCE(r.quantidade_adulto, 0) as quantidade_adultos,
+  COALESCE(r.quantidade_adulto, 0)::numeric as quantidade_adultos,
   r.id::text as registro_id,
   r.origem_id,
   r.destinacao_id,
@@ -34,39 +34,62 @@ SELECT
   'resgate' as tipo_registro
 FROM public.fat_registros_de_resgate r
 LEFT JOIN public.dim_especies_fauna e ON e.id = r.especie_id
+WHERE r.data >= '2025-01-01' -- Apenas dados atuais de 2025 em diante
 
 UNION ALL
 
--- Dados históricos (2020-2024) - apenas se não existir registro equivalente
+-- Dados históricos (2020-2024) - TODOS os dados da tabela histórica
 SELECT 
   h."Ano"::integer as ano,
-  CASE h."Mês"
-    WHEN 'Janeiro' THEN 1
-    WHEN 'Fevereiro' THEN 2
-    WHEN 'Março' THEN 3
-    WHEN 'Abril' THEN 4
-    WHEN 'Maio' THEN 5
-    WHEN 'Junho' THEN 6
-    WHEN 'Julho' THEN 7
-    WHEN 'Agosto' THEN 8
-    WHEN 'Setembro' THEN 9
-    WHEN 'Outubro' THEN 10
-    WHEN 'Novembro' THEN 11
-    WHEN 'Dezembro' THEN 12
+  CASE 
+    WHEN h."Mês" = 'Janeiro' THEN 1
+    WHEN h."Mês" = 'Fevereiro' THEN 2
+    WHEN h."Mês" = 'Março' THEN 3
+    WHEN h."Mês" = 'Abril' THEN 4
+    WHEN h."Mês" = 'Maio' THEN 5
+    WHEN h."Mês" = 'Junho' THEN 6
+    WHEN h."Mês" = 'Julho' THEN 7
+    WHEN h."Mês" = 'Agosto' THEN 8
+    WHEN h."Mês" = 'Setembro' THEN 9
+    WHEN h."Mês" = 'Outubro' THEN 10
+    WHEN h."Mês" = 'Novembro' THEN 11
+    WHEN h."Mês" = 'Dezembro' THEN 12
     ELSE NULL
   END::integer as mes,
-  h.data_ocorrencia,
+  COALESCE(h.data_ocorrencia, 
+    CASE 
+      WHEN h."Ano" IS NOT NULL AND h."Mês" IS NOT NULL THEN
+        -- Criar data aproximada se não houver data_ocorrencia
+        MAKE_DATE(h."Ano"::integer, 
+          CASE h."Mês"
+            WHEN 'Janeiro' THEN 1
+            WHEN 'Fevereiro' THEN 2
+            WHEN 'Março' THEN 3
+            WHEN 'Abril' THEN 4
+            WHEN 'Maio' THEN 5
+            WHEN 'Junho' THEN 6
+            WHEN 'Julho' THEN 7
+            WHEN 'Agosto' THEN 8
+            WHEN 'Setembro' THEN 9
+            WHEN 'Outubro' THEN 10
+            WHEN 'Novembro' THEN 11
+            WHEN 'Dezembro' THEN 12
+            ELSE 1
+          END, 1)
+      ELSE NULL
+    END
+  ) as data_ocorrencia,
   h.nome_popular,
   h.nome_cientifico,
   h.classe_taxonomica,
   h.ordem_taxonomica,
   h.estado_de_conservacao,
   h.tipo_de_fauna,
-  COALESCE(h.quantidade_resgates, 0) as quantidade_resgates,
-  COALESCE(h.quantidade_solturas, 0) as quantidade_solturas,
-  COALESCE(h.quantidade_filhotes, 0) as quantidade_filhotes,
-  COALESCE(h.quantidade_obitos, 0) as quantidade_obitos,
-  COALESCE(h.quantidade_feridos, 0) as quantidade_feridos,
+  COALESCE(h.quantidade_resgates, 0)::numeric as quantidade_resgates,
+  COALESCE(h.quantidade_solturas, 0)::numeric as quantidade_solturas,
+  COALESCE(h.quantidade_filhotes, 0)::numeric as quantidade_filhotes,
+  COALESCE(h.quantidade_obitos, 0)::numeric as quantidade_obitos,
+  COALESCE(h.quantidade_feridos, 0)::numeric as quantidade_feridos,
   0::numeric as quantidade_adultos,
   h.id::text as registro_id,
   NULL::uuid as origem_id,
@@ -77,7 +100,9 @@ SELECT
   NULL::uuid as regiao_administrativa_id,
   'historico' as tipo_registro
 FROM public.fat_resgates_diarios_2020a2024 h
-WHERE h.data_ocorrencia < '2025-01-01' -- Apenas dados históricos antes de 2025
+WHERE h."Ano" IS NOT NULL 
+  AND h."Ano" >= 2020 
+  AND h."Ano" <= 2024 -- Incluir TODOS os dados de 2020 a 2024
 
 -- Criar índices para performance
 CREATE INDEX IF NOT EXISTS idx_mv_resgates_ano ON public.mv_estatisticas_resgates(ano);
