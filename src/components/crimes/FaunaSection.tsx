@@ -76,8 +76,10 @@ const FaunaSection: React.FC<FaunaSectionProps> = ({
 
         if (especiesResult.data) {
           setEspeciesFauna(especiesResult.data);
-          // Extrair classes taxonômicas únicas
-          const classes = [...new Set(especiesResult.data.map(e => e.classe_taxonomica))].sort();
+          // Extrair classes taxonômicas únicas da coluna classe_taxonomica
+          const classes = [...new Set(especiesResult.data.map(e => e.classe_taxonomica).filter(Boolean))].sort((a, b) => 
+            (a || '').localeCompare(b || '', 'pt-BR')
+          );
           setClassesTaxonomicas(classes);
         }
         if (estadosResult.data) setEstadosSaude(estadosResult.data);
@@ -210,7 +212,11 @@ const FaunaSection: React.FC<FaunaSectionProps> = ({
   }, [faunaItems.length, onFaunaItemsChange]);
 
   const getEspeciesPorClasse = (classe: string) => {
-    return especiesFauna.filter(e => e.classe_taxonomica === classe);
+    if (!classe) return [];
+    // Filtrar espécies pela classe taxonômica selecionada e ordenar por nome popular
+    return especiesFauna
+      .filter(e => e.classe_taxonomica === classe)
+      .sort((a, b) => (a.nome_popular || '').localeCompare(b.nome_popular || '', 'pt-BR'));
   };
 
   return (

@@ -51,7 +51,10 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
 
         if (data) {
           setEspeciesFauna(data);
-          const classes = [...new Set(data.map(e => e.classe_taxonomica).filter(Boolean))].sort() as string[];
+          // Extrair classes taxonômicas únicas da coluna classe_taxonomica
+          const classes = [...new Set(data.map(e => e.classe_taxonomica).filter(Boolean))].sort((a, b) => 
+            (a || '').localeCompare(b || '', 'pt-BR')
+          ) as string[];
           setClassesTaxonomicas(classes);
           console.log('Classes encontradas:', classes.join(', '));
           console.log('Total espécies:', data.length);
@@ -69,7 +72,11 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
   }, []);
 
   const getEspeciesPorClasse = (classe: string) => {
-    return especiesFauna.filter(e => e.classe_taxonomica === classe);
+    if (!classe) return [];
+    // Filtrar espécies pela classe taxonômica selecionada e ordenar por nome popular
+    return especiesFauna
+      .filter(e => e.classe_taxonomica === classe)
+      .sort((a, b) => (a.nome_popular || '').localeCompare(b.nome_popular || '', 'pt-BR'));
   };
 
   const getEspecieDetails = () => {

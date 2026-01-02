@@ -154,8 +154,11 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
   const normalizeClasse = (v?: string | null) => (v ?? '').trim().toUpperCase();
 
   const getEspeciesPorClasse = (classe: string) => {
+    if (!classe) return [];
     const wanted = normalizeClasse(classe);
-    return especiesFauna.filter((e) => normalizeClasse(e.classe_taxonomica) === wanted);
+    return especiesFauna
+      .filter((e) => normalizeClasse(e.classe_taxonomica) === wanted)
+      .sort((a, b) => (a.nome_popular || '').localeCompare(b.nome_popular || '', 'pt-BR'));
   };
 
   const handleAddEspecie = () => {
