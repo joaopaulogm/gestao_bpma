@@ -75,18 +75,45 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
       setLoading(true);
       try {
         // Fetch ALL species - buscar todas as espécies com range explícito grande
-        const { data, error } = await supabase
+        // Tentar sem order primeiro para ver se há algum problema com a ordenação
+        let { data, error } = await supabase
           .from('dim_especies_fauna')
           .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
-          .order('nome_popular', { ascending: true })
           .range(0, 9999);
+        
+        // Se não retornou dados ou retornou menos de 100, tentar sem range para ver o limite padrão
+        if (!data || data.length < 100) {
+          console.warn('Poucos dados retornados, tentando sem range...');
+          const { data: dataWithoutRange, error: errorWithoutRange } = await supabase
+            .from('dim_especies_fauna')
+            .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao');
+          
+          if (dataWithoutRange && dataWithoutRange.length > (data?.length || 0)) {
+            data = dataWithoutRange;
+            error = errorWithoutRange;
+            console.log('Dados sem range retornaram mais registros:', dataWithoutRange.length);
+          }
+        }
+        
+        // Ordenar localmente se necessário
+        if (data) {
+          data = data.sort((a, b) => 
+            (a.nome_popular || '').localeCompare(b.nome_popular || '', 'pt-BR')
+          );
+        }
 
         if (error) {
           console.error('Erro ao carregar espécies:', error);
         }
 
         const allSpecies = (data as EspecieFauna[]) || [];
+        console.log('=== DEBUG CARREGAMENTO ESPÉCIES ===');
         console.log('Total de espécies carregadas:', allSpecies.length);
+        console.log('Primeiras 10 espécies:', allSpecies.slice(0, 10).map(e => ({
+          nome: e.nome_popular,
+          classe: e.classe_taxonomica,
+          classeRaw: JSON.stringify(e.classe_taxonomica)
+        })));
 
         if (allSpecies.length > 0) {
           setEspeciesFauna(allSpecies);
@@ -95,10 +122,15 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
           // Usar o valor original da primeira ocorrência para preservar acentos e formatação
           const counts: Record<string, number> = {};
           const displayByNorm: Record<string, string> = {};
+          const todasClasses: string[] = [];
 
           allSpecies.forEach((e) => {
             const raw = (e.classe_taxonomica ?? '').trim();
             if (!raw) return;
+            
+            // Adicionar à lista de todas as classes (para debug)
+            todasClasses.push(raw);
+            
             // Normalizar para comparação (maiúsculas, sem espaços extras)
             const norm = raw.toUpperCase().trim();
             // Preservar o valor original da primeira ocorrência encontrada
@@ -116,9 +148,13 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
           setClassesTaxonomicas(classes);
           setClassesCount(counts);
 
-          console.log('Total de espécies carregadas:', allSpecies.length);
-          console.log('Classes taxonômicas encontradas:', classes);
+          console.log('=== RESUMO ===');
+          console.log('Total de espécies:', allSpecies.length);
+          console.log('Todas as classes encontradas (com duplicatas):', [...new Set(todasClasses)]);
+          console.log('Classes únicas normalizadas:', Object.keys(displayByNorm));
+          console.log('Classes finais para exibição:', classes);
           console.log('Contagem por classe:', counts);
+          console.log('=== FIM DEBUG ===');
         } else {
           console.warn('Nenhuma espécie encontrada na tabela dim_especies_fauna');
         }
@@ -306,30 +342,34 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                     <div className="p-3 text-center text-muted-foreground text-sm">
                       Carregando classes...
                     </div>
-                  ) : classesTaxonomicas.filter((c) =>
-                      (c ?? '')
-                        .toLowerCase()
-                        .includes((classeSearchById[especie.id] ?? '').trim().toLowerCase())
-                    ).length === 0 ? (
-                    <div className="p-3 text-center text-muted-foreground text-sm">
-                      Nenhuma classe encontrada
-                    </div>
-                  ) : (
-                    classesTaxonomicas
-                      .filter((c) =>
-                        (c ?? '')
-                          .toLowerCase()
-                          .includes((classeSearchById[especie.id] ?? '').trim().toLowerCase())
-                      )
-                      .map((classe) => {
-                        const count = classesCount[normalizeClasse(classe)] ?? 0;
-                        return (
-                          <SelectItem key={classe} value={classe}>
-                            {classe} ({count})
-                          </SelectItem>
-                        );
-                      })
-                  )}
+                  ) : (() => {
+                    const searchTerm = (classeSearchById[especie.id] ?? '').trim().toLowerCase();
+                    const filtered = classesTaxonomicas.filter((c) =>
+                      (c ?? '').toLowerCase().includes(searchTerm)
+                    );
+                    
+                    // Debug: log das classes filtradas
+                    if (searchTerm) {
+                      console.log('Filtrando classes com termo:', searchTerm, 'Resultado:', filtered);
+                    }
+                    
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="p-3 text-center text-muted-foreground text-sm">
+                          Nenhuma classe encontrada
+                        </div>
+                      );
+                    }
+                    
+                    return filtered.map((classe) => {
+                      const count = classesCount[normalizeClasse(classe)] ?? 0;
+                      return (
+                        <SelectItem key={classe} value={classe}>
+                          {classe} ({count})
+                        </SelectItem>
+                      );
+                    });
+                  })()}
                 </SelectContent>
               </Select>
             </FormField>
