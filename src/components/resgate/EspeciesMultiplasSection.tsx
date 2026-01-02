@@ -52,7 +52,7 @@ interface EspeciesMultiplasSectionProps {
   especies: EspecieItem[];
   onEspeciesChange: (especies: EspecieItem[]) => void;
   isEvadido?: boolean;
-  errors?: any;
+  errors?: Record<string, { message?: string }>;
 }
 
 const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
@@ -79,7 +79,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
         let allData: EspecieFauna[] = [];
         let from = 0;
         let hasMore = true;
-        let error: any = null;
+        let error: Error | null = null;
 
         while (hasMore) {
           const { data: pageData, error: pageError } = await supabase
