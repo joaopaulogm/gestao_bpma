@@ -107,7 +107,7 @@ function slugify(input: string): string {
 }
 
 async function downloadAndUploadImage(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   imageUrl: string,
   bucket: string,
   slug: string,
@@ -321,7 +321,8 @@ Deno.serve(async (req) => {
       'Access-Control-Allow-Origin': getAllowedOrigin(origin),
       'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     };
-    return new Response(JSON.stringify({ success: false, error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ success: false, error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
