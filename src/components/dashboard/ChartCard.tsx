@@ -44,14 +44,18 @@ export interface ChartCardProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-3 border border-gray-200 rounded-md shadow-md">
-        <p className="font-medium text-sm">{label}</p>
-        <p className="text-sm text-gray-700">
-          <span className="font-medium" style={{ color: payload[0].color }}>
-            {payload[0].name}: 
-          </span>{' '}
-          {payload[0].value}
-        </p>
+      <div className="bg-background/95 backdrop-blur-sm p-4 border border-border rounded-lg shadow-xl ring-1 ring-border/50">
+        <p className="font-semibold text-sm mb-2 text-foreground">{label}</p>
+        {payload.map((item: any, index: number) => (
+          <p key={index} className="text-sm text-foreground/80 flex items-center gap-2">
+            <span 
+              className="w-3 h-3 rounded-full inline-block" 
+              style={{ backgroundColor: item.color }}
+            />
+            <span className="font-medium">{item.name}:</span>
+            <span className="font-bold text-foreground">{item.value.toLocaleString('pt-BR')}</span>
+          </p>
+        ))}
       </div>
     );
   }
@@ -103,12 +107,12 @@ const ChartCard: React.FC<ChartCardProps> = ({
             margin={{ top: 10, right: 30, left: 30, bottom: 30 }}
             barSize={24}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" opacity={0.3} vertical={false} />
             <XAxis 
               dataKey={nameKey} 
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
               angle={-25}
               textAnchor="end"
               height={60}
@@ -116,7 +120,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
             <YAxis 
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
             />
             <Tooltip content={<CustomTooltip />} />
             {showLegend && (
@@ -129,11 +133,22 @@ const ChartCard: React.FC<ChartCardProps> = ({
             <Bar 
               dataKey={dataKey} 
               name="Quantidade" 
-              fill="#3b82f6" 
-              radius={[4, 4, 0, 0]} 
+              fill="url(#colorGradient)" 
+              radius={[8, 8, 0, 0]}
             >
-              <LabelList dataKey={dataKey} position="top" style={{ fontSize: '11px' }} />
+              <LabelList 
+                dataKey={dataKey} 
+                position="top" 
+                style={{ fontSize: '11px', fill: 'hsl(var(--foreground))', fontWeight: 500 }} 
+                formatter={(value: number) => value.toLocaleString('pt-BR')}
+              />
             </Bar>
+            <defs>
+              <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
+                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
+              </linearGradient>
+            </defs>
           </BarChart>
         </ResponsiveContainer>
       );
@@ -177,14 +192,16 @@ const ChartCard: React.FC<ChartCardProps> = ({
   };
 
   return (
-    <Card className={`overflow-hidden ${className}`}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium">{title}</CardTitle>
+    <Card className={`overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-background to-muted/20 ${className}`}>
+      <CardHeader className="pb-3 border-b border-border/50 bg-gradient-to-r from-background to-muted/30">
+        <CardTitle className="text-xl font-semibold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          {title}
+        </CardTitle>
         {subtitle && (
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
         )}
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-6 bg-background/50">
         {renderChart()}
       </CardContent>
     </Card>

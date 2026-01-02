@@ -14,11 +14,15 @@ interface DashboardChartsProps {
 
 const DashboardCharts = ({ data }: DashboardChartsProps) => {
   return (
-    <div className="grid grid-cols-1 gap-8 animate-fade-in">
-      <ClassDistributionChart data={data.distribuicaoPorClasse} />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
+      <div className="lg:col-span-2">
+        <ClassDistributionChart data={data.distribuicaoPorClasse} />
+      </div>
       <DestinationsChart data={data.destinos} />
       <OutcomesChart data={data.desfechos} />
-      <RescuedSpeciesChart data={data.especiesMaisResgatadas} />
+      <div className="lg:col-span-2">
+        <RescuedSpeciesChart data={data.especiesMaisResgatadas} />
+      </div>
       <SeizedSpeciesChart data={data.especiesMaisApreendidas} />
       <RoadkillSpeciesChart data={data.atropelamentos} />
     </div>

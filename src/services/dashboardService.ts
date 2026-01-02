@@ -10,9 +10,15 @@ import { format, endOfMonth } from 'date-fns';
 export const fetchRegistryData = async (filters: FilterState) => {
   console.log("Fetching dashboard data with filters:", filters);
   
-  // Buscar dados atuais de resgates (2025+)
+  // Determinar qual tabela usar baseado no ano
+  // Se for 2025, usar fat_registros_de_resgate_2025, senão usar fat_registros_de_resgate
+  const tabelaResgates = filters.year === 2025 
+    ? 'fat_registros_de_resgate_2025' 
+    : 'fat_registros_de_resgate';
+  
+  // Buscar dados atuais de resgates
   let queryAtuais = supabase
-    .from('fat_registros_de_resgate')
+    .from(tabelaResgates)
     .select(`
       *,
       regiao_administrativa:dim_regiao_administrativa(nome),
@@ -24,10 +30,12 @@ export const fetchRegistryData = async (filters: FilterState) => {
       especie:dim_especies_fauna(*)
     `);
   
-  // Aplicar filtro de ano
-  const startDate = `${filters.year}-01-01`;
-  const endDate = `${filters.year}-12-31`;
-  queryAtuais = queryAtuais.gte('data', startDate).lte('data', endDate);
+  // Aplicar filtro de ano apenas se não for 2025 (tabela específica já filtra)
+  if (filters.year !== 2025) {
+    const startDate = `${filters.year}-01-01`;
+    const endDate = `${filters.year}-12-31`;
+    queryAtuais = queryAtuais.gte('data', startDate).lte('data', endDate);
+  }
   
   // Aplicar filtro de mês se especificado
   if (filters.month !== null) {

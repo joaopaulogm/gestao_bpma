@@ -7,9 +7,15 @@ import * as transformations from './dashboardDataTransformations';
  */
 export const processDashboardData = (registros: Registro[]): DashboardData => {
   // Filter data for different categories
-  const resgates = registros.filter(r => r.origem?.nome === 'Resgate de Fauna');
-  const apreensoes = registros.filter(r => r.origem?.nome === 'Apreensão');
-  const animaisAtropelados = registros.filter(r => r.atropelamento === 'Sim');
+  // Se origem for 'Resgate de Fauna' ou se não houver origem (tabela específica de resgates), considerar como resgate
+  const resgates = registros.filter(r => 
+    r.origem?.nome === 'Resgate de Fauna' || 
+    !r.origem || 
+    r.tipo_registro === 'resgate' ||
+    r.tipo_registro === 'historico'
+  );
+  const apreensoes = registros.filter(r => r.origem?.nome === 'Apreensão' || r.origem?.nome === 'Ação Policial');
+  const animaisAtropelados = registros.filter(r => r.atropelamento === 'Sim' || r.atropelamento === true);
   
   // Transform data for different charts and metrics
   const regiaoAdministrativa = transformations.transformRegionalData(registros);

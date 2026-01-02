@@ -33,32 +33,45 @@ const DashboardSummaryCards = ({ data }: DashboardSummaryCardsProps) => {
   };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {data.metricas.map((metric, index) => (
-        <Card key={index} className="overflow-hidden border-border shadow-sm hover:shadow-md transition-shadow duration-300">
-          <CardContent className="p-3 sm:p-4 flex flex-col">
-            <div className="flex justify-between items-center mb-2 sm:mb-3">
-              <span className="text-xs sm:text-sm font-medium text-muted-foreground line-clamp-1">
+        <Card 
+          key={index} 
+          className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-background via-background to-muted/30 group"
+        >
+          <CardContent className="p-6 flex flex-col relative">
+            {/* Decorative gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            
+            <div className="flex justify-between items-start mb-4 relative z-10">
+              <span className="text-sm font-medium text-muted-foreground line-clamp-2 flex-1">
                 {metric.title}
               </span>
-              <div className="bg-muted p-1 sm:p-1.5 rounded-full flex-shrink-0">
+              <div className="bg-gradient-to-br from-muted to-muted/50 p-2.5 rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300 flex-shrink-0 ml-3">
                 {renderIcon(metric.iconType, metric.iconColor)}
               </div>
             </div>
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
+            
+            <div className="text-3xl font-bold text-foreground mb-2 relative z-10 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
               {metric.value.toLocaleString('pt-BR')}
             </div>
+            
             {metric.change !== undefined && (
-              <div className={`flex items-center mt-1 sm:mt-2 text-[10px] sm:text-xs font-medium ${
-                metric.change >= 0 ? "text-success" : "text-destructive"
+              <div className={`flex items-center mt-auto pt-2 text-xs font-medium relative z-10 ${
+                metric.change >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
               }`}>
-                {metric.change >= 0 ? (
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                ) : (
-                  <TrendingDown className="h-3 w-3 mr-1" />
-                )}
-                <span className="hidden sm:inline">{Math.abs(metric.change)}% vs. período anterior</span>
-                <span className="sm:hidden">{Math.abs(metric.change)}%</span>
+                <div className={`p-1 rounded-md mr-2 ${
+                  metric.change >= 0 
+                    ? "bg-green-100 dark:bg-green-900/30" 
+                    : "bg-red-100 dark:bg-red-900/30"
+                }`}>
+                  {metric.change >= 0 ? (
+                    <TrendingUp className="h-3 w-3" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3" />
+                  )}
+                </div>
+                <span>{Math.abs(metric.change)}% vs. período anterior</span>
               </div>
             )}
           </CardContent>
