@@ -68,11 +68,39 @@ const FaunaSection: React.FC<FaunaSectionProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [especiesResult, estadosResult, estagiosResult] = await Promise.all([
-          supabase.from('dim_especies_fauna').select('*').order('nome_popular', { ascending: true }).range(0, 9999),
+        // Carregar espécies com paginação
+        const PAGE_SIZE = 1000;
+        let allEspecies: any[] = [];
+        let from = 0;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data: pageData, error: pageError } = await supabase
+            .from('dim_especies_fauna')
+            .select('*')
+            .order('nome_popular', { ascending: true })
+            .range(from, from + PAGE_SIZE - 1);
+
+          if (pageError) {
+            console.error('Erro ao carregar espécies:', pageError);
+            break;
+          }
+
+          if (pageData && pageData.length > 0) {
+            allEspecies = [...allEspecies, ...pageData];
+            from += PAGE_SIZE;
+            hasMore = pageData.length === PAGE_SIZE;
+          } else {
+            hasMore = false;
+          }
+        }
+
+        const [estadosResult, estagiosResult] = await Promise.all([
           supabase.from('dim_estado_saude').select('id, nome'),
           supabase.from('dim_estagio_vida').select('id, nome')
         ]);
+
+        const especiesResult = { data: allEspecies, error: null };
 
         if (especiesResult.data) {
           setEspeciesFauna(especiesResult.data);

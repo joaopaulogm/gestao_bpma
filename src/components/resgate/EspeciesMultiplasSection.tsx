@@ -74,33 +74,37 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch ALL species - buscar todas as espécies com range explícito grande
-        // Tentar sem order primeiro para ver se há algum problema com a ordenação
-        let { data, error } = await supabase
-          .from('dim_especies_fauna')
-          .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
-          .range(0, 9999);
-        
-        // Se não retornou dados ou retornou menos de 100, tentar sem range para ver o limite padrão
-        if (!data || data.length < 100) {
-          console.warn('Poucos dados retornados, tentando sem range...');
-          const { data: dataWithoutRange, error: errorWithoutRange } = await supabase
+        // Fetch ALL species usando paginação para garantir que todas sejam carregadas
+        const PAGE_SIZE = 1000; // Tamanho máximo recomendado do Supabase
+        let allData: EspecieFauna[] = [];
+        let from = 0;
+        let hasMore = true;
+        let error: any = null;
+
+        while (hasMore) {
+          const { data: pageData, error: pageError } = await supabase
             .from('dim_especies_fauna')
-            .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao');
-          
-          if (dataWithoutRange && dataWithoutRange.length > (data?.length || 0)) {
-            data = dataWithoutRange;
-            error = errorWithoutRange;
-            console.log('Dados sem range retornaram mais registros:', dataWithoutRange.length);
+            .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
+            .order('nome_popular', { ascending: true })
+            .range(from, from + PAGE_SIZE - 1);
+
+          if (pageError) {
+            console.error('Erro ao carregar página:', pageError);
+            error = pageError;
+            break;
+          }
+
+          if (pageData && pageData.length > 0) {
+            allData = [...allData, ...(pageData as EspecieFauna[])];
+            from += PAGE_SIZE;
+            hasMore = pageData.length === PAGE_SIZE;
+            console.log(`Carregadas ${allData.length} espécies até agora...`);
+          } else {
+            hasMore = false;
           }
         }
-        
-        // Ordenar localmente se necessário
-        if (data) {
-          data = data.sort((a, b) => 
-            (a.nome_popular || '').localeCompare(b.nome_popular || '', 'pt-BR')
-          );
-        }
+
+        const data = allData;
 
         if (error) {
           console.error('Erro ao carregar espécies:', error);

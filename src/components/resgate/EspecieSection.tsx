@@ -44,11 +44,36 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('dim_especies_fauna')
-          .select('*')
-          .order('nome_popular', { ascending: true })
-          .range(0, 9999);
+        // Fetch ALL species usando paginação para garantir que todas sejam carregadas
+        const PAGE_SIZE = 1000;
+        let allData: EspecieFauna[] = [];
+        let from = 0;
+        let hasMore = true;
+        let error: any = null;
+
+        while (hasMore) {
+          const { data: pageData, error: pageError } = await supabase
+            .from('dim_especies_fauna')
+            .select('*')
+            .order('nome_popular', { ascending: true })
+            .range(from, from + PAGE_SIZE - 1);
+
+          if (pageError) {
+            console.error('Erro ao carregar página:', pageError);
+            error = pageError;
+            break;
+          }
+
+          if (pageData && pageData.length > 0) {
+            allData = [...allData, ...(pageData as EspecieFauna[])];
+            from += PAGE_SIZE;
+            hasMore = pageData.length === PAGE_SIZE;
+          } else {
+            hasMore = false;
+          }
+        }
+
+        const data = allData;
 
         if (data) {
           setEspeciesFauna(data);
