@@ -74,58 +74,49 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch ALL species using pagination to bypass any default limits
-        // The Supabase project may have a low default row limit configured
-        const PAGE_SIZE = 500;
-        let allSpecies: EspecieFauna[] = [];
-        let from = 0;
-        let hasMore = true;
+        // Fetch ALL species - buscar todas as espécies com range explícito grande
+        const { data, error } = await supabase
+          .from('dim_especies_fauna')
+          .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
+          .order('nome_popular', { ascending: true })
+          .range(0, 9999);
 
-        while (hasMore) {
-          const { data, error } = await supabase
-            .from('dim_especies_fauna')
-            .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
-            .order('nome_popular', { ascending: true })
-            .range(from, from + PAGE_SIZE - 1);
-
-          if (error) {
-            console.error('Erro ao carregar espécies:', error);
-            break;
-          }
-
-          if (data && data.length > 0) {
-            allSpecies = [...allSpecies, ...(data as EspecieFauna[])];
-            from += PAGE_SIZE;
-            hasMore = data.length === PAGE_SIZE;
-          } else {
-            hasMore = false;
-          }
+        if (error) {
+          console.error('Erro ao carregar espécies:', error);
         }
 
+        const allSpecies = (data as EspecieFauna[]) || [];
         console.log('Total de espécies carregadas:', allSpecies.length);
 
         if (allSpecies.length > 0) {
           setEspeciesFauna(allSpecies);
 
           // Extract unique classes + counts (normalized for safety)
+          // Usar o valor original da primeira ocorrência para preservar acentos e formatação
           const counts: Record<string, number> = {};
           const displayByNorm: Record<string, string> = {};
 
           allSpecies.forEach((e) => {
             const raw = (e.classe_taxonomica ?? '').trim();
             if (!raw) return;
-            const norm = raw.toUpperCase();
-            displayByNorm[norm] = displayByNorm[norm] ?? raw;
+            // Normalizar para comparação (maiúsculas, sem espaços extras)
+            const norm = raw.toUpperCase().trim();
+            // Preservar o valor original da primeira ocorrência encontrada
+            if (!displayByNorm[norm]) {
+              displayByNorm[norm] = raw;
+            }
             counts[norm] = (counts[norm] ?? 0) + 1;
           });
 
+          // Ordenar classes mantendo o valor original (com acentos)
           const classes = Object.keys(displayByNorm)
             .map((norm) => displayByNorm[norm])
-            .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
 
           setClassesTaxonomicas(classes);
           setClassesCount(counts);
 
+          console.log('Total de espécies carregadas:', allSpecies.length);
           console.log('Classes taxonômicas encontradas:', classes);
           console.log('Contagem por classe:', counts);
         } else {
@@ -155,10 +146,25 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
 
   const getEspeciesPorClasse = (classe: string) => {
     if (!classe) return [];
+    // Normalizar a classe selecionada para comparação
     const wanted = normalizeClasse(classe);
-    return especiesFauna
-      .filter((e) => normalizeClasse(e.classe_taxonomica) === wanted)
-      .sort((a, b) => (a.nome_popular || '').localeCompare(b.nome_popular || '', 'pt-BR'));
+    // Filtrar espécies pela classe (comparação case-insensitive)
+    const especiesFiltradas = especiesFauna.filter((e) => {
+      const especieClasse = normalizeClasse(e.classe_taxonomica);
+      return especieClasse === wanted;
+    });
+    
+    console.log(`Filtrando espécies para classe "${classe}":`, {
+      classeSelecionada: classe,
+      classeNormalizada: wanted,
+      totalEspecies: especiesFauna.length,
+      especiesFiltradas: especiesFiltradas.length
+    });
+    
+    // Ordenar por nome popular
+    return especiesFiltradas.sort((a, b) => 
+      (a.nome_popular || '').localeCompare(b.nome_popular || '', 'pt-BR')
+    );
   };
 
   const handleAddEspecie = () => {

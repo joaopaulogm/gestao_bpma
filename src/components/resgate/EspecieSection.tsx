@@ -47,7 +47,8 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
         const { data, error } = await supabase
           .from('dim_especies_fauna')
           .select('*')
-          .order('nome_popular', { ascending: true });
+          .order('nome_popular', { ascending: true })
+          .range(0, 9999);
 
         if (data) {
           setEspeciesFauna(data);
@@ -73,10 +74,21 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
 
   const getEspeciesPorClasse = (classe: string) => {
     if (!classe) return [];
-    // Filtrar espécies pela classe taxonômica selecionada e ordenar por nome popular
-    return especiesFauna
-      .filter(e => e.classe_taxonomica === classe)
-      .sort((a, b) => (a.nome_popular || '').localeCompare(b.nome_popular || '', 'pt-BR'));
+    // Filtrar espécies pela classe taxonômica selecionada (comparação case-insensitive)
+    const normalize = (v?: string | null) => (v ?? '').trim().toUpperCase();
+    const wanted = normalize(classe);
+    const especiesFiltradas = especiesFauna.filter(e => normalize(e.classe_taxonomica) === wanted);
+    
+    console.log(`Filtrando espécies para classe "${classe}":`, {
+      classeSelecionada: classe,
+      totalEspecies: especiesFauna.length,
+      especiesFiltradas: especiesFiltradas.length
+    });
+    
+    // Ordenar por nome popular
+    return especiesFiltradas.sort((a, b) => 
+      (a.nome_popular || '').localeCompare(b.nome_popular || '', 'pt-BR')
+    );
   };
 
   const getEspecieDetails = () => {
