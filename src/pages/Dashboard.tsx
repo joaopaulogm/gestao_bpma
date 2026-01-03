@@ -6,6 +6,7 @@ import DashboardSummaryCards from '@/components/dashboard/DashboardSummaryCards'
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
+import DashboardYearTabs from '@/components/dashboard/DashboardYearTabs';
 import { processDashboardData } from '@/utils/dashboardDataProcessor';
 
 const Dashboard = () => {
@@ -37,6 +38,10 @@ const Dashboard = () => {
     setActiveTab(value);
   };
 
+  const handleYearChange = (year: number) => {
+    updateFilters({ year, month: null });
+  };
+
   // Criar dados vazios usando useMemo para evitar recriação (hooks devem ser chamados sempre)
   const emptyData = useMemo(() => {
     return processDashboardData([]);
@@ -45,6 +50,10 @@ const Dashboard = () => {
   if (isLoading) {
     return (
       <Layout title="Painel de Dados" showBackButton>
+        <DashboardYearTabs 
+          selectedYear={filters.year} 
+          onYearChange={handleYearChange} 
+        />
         <DashboardLoading />
       </Layout>
     );
@@ -55,6 +64,10 @@ const Dashboard = () => {
   if (!data && isLoading) {
     return (
       <Layout title="Painel de Dados" showBackButton>
+        <DashboardYearTabs 
+          selectedYear={filters.year} 
+          onYearChange={handleYearChange} 
+        />
         <DashboardLoading />
       </Layout>
     );
@@ -69,8 +82,13 @@ const Dashboard = () => {
   
   return (
     <Layout title="Painel de Dados" showBackButton>
-      <div className="space-y-8 animate-fade-in">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+      <div className="space-y-6 animate-fade-in">
+        <DashboardYearTabs 
+          selectedYear={filters.year} 
+          onYearChange={handleYearChange} 
+        />
+        
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <DashboardHeader 
             year={filters.year}
             month={filters.month}
