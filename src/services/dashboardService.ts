@@ -203,6 +203,7 @@ const fetchFromTableWithFallback = async (
 export const fetchRegistryData = async (filters: FilterState): Promise<any[]> => {
   try {
     console.log("🔍 [Dashboard] Iniciando busca de dados com filtros:", filters);
+    console.log("🔍 [Dashboard] Ano do filtro:", filters.year, "Tipo:", typeof filters.year);
     
     // Determinar qual tabela usar baseado no ano
     // Para 2025, usar fat_resgates_diarios_2025 (nome correto da tabela)
@@ -211,12 +212,25 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
       ? 'fat_resgates_diarios_2025' 
       : 'fat_registros_de_resgate';
     
+    console.log(`📊 [Dashboard] Tabela selecionada: ${tabelaResgates} (ano: ${filters.year})`);
+    
     let registrosAtuais: any[] = [];
     
-    // Tentar com joins primeiro (para 2025, após migration, foreign keys devem estar disponíveis)
-    // Se falhar com PGRST200 (relacionamento não encontrado), fazer fallback para busca sem joins
-    console.log(`📊 [Dashboard] Tentando buscar de ${tabelaResgates} com joins...`);
-    try {
+    // Para 2025, SEMPRE usar busca sem joins diretamente (evitar erro PGRST200)
+    // Para outros anos, tentar com joins primeiro
+    if (filters.year === 2025) {
+      console.log(`📊 [Dashboard] Ano 2025 detectado - usando busca sem joins diretamente para ${tabelaResgates}...`);
+      const { data, error } = await fetchDataWithoutJoins(tabelaResgates, filters);
+      if (!error) {
+        registrosAtuais = data || [];
+        console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates} sem joins:`, registrosAtuais.length, 'registros');
+      } else {
+        console.warn(`⚠️ [Dashboard] Erro ao buscar de ${tabelaResgates} sem joins:`, error);
+      }
+    } else {
+      // Para outros anos, tentar com joins primeiro
+      console.log(`📊 [Dashboard] Tentando buscar de ${tabelaResgates} com joins...`);
+      try {
         const selectQuery = `
           *,
           regiao_administrativa:dim_regiao_administrativa(nome),
