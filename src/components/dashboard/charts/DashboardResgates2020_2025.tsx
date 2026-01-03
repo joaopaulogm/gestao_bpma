@@ -10,7 +10,10 @@ import {
   ResponsiveContainer,
   ScatterChart,
   Scatter,
-  Cell
+  Cell,
+  PieChart,
+  Pie,
+  Legend
 } from 'recharts';
 import { DashboardData } from '@/types/hotspots';
 import { format } from 'date-fns';
@@ -60,6 +63,7 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
     let totalResgates = 0;
     let solturas = 0;
     let filhotes = 0;
+    let adultos = 0;
     let obitos = 0;
     let feridos = 0;
     let atropelamentos = 0;
@@ -92,6 +96,9 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
         
         // Filhotes = soma de quantidade_filhotes
         filhotes += qtdFilhotes;
+        
+        // Adultos = quantidade_resgates - quantidade_filhotes
+        adultos += Math.max(0, qtdResgates - qtdFilhotes);
         
         // Óbitos: usar quantidade_obitos diretamente
         // Se não existir, calcular: quantidade_resgates - quantidade_feridos - quantidade_solturas
@@ -126,11 +133,18 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
         r.desfecho?.tipo === 'Soltura'
       ).length;
       
-      // Filhotes (contagem de registros com filhotes)
-      filhotes = registros.filter(r => {
+      // Filhotes (soma de quantidade_filhote)
+      registros.forEach(r => {
         const qtdFilhote = Number(r.quantidade_filhote) || 0;
-        return qtdFilhote > 0;
-      }).length;
+        filhotes += qtdFilhote;
+      });
+      
+      // Adultos (soma de quantidade - quantidade_filhote)
+      registros.forEach(r => {
+        const qtdTotal = Number(r.quantidade) || Number(r.quantidade_total) || 0;
+        const qtdFilhote = Number(r.quantidade_filhote) || 0;
+        adultos += Math.max(0, qtdTotal - qtdFilhote);
+      });
       
       // Óbitos (contagem de registros com óbito)
       obitos = registros.filter(r => 
@@ -139,10 +153,13 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
         r.estado_saude?.nome?.toLowerCase().includes('morto')
       ).length;
       
-      // Atropelamentos (contagem de registros com atropelamento)
-      atropelamentos = registros.filter(r => 
-        r.atropelamento === 'Sim' || r.atropelamento === true || r.atropelamento === 'true'
-      ).length;
+      // Atropelamentos (soma de quantidades de registros com atropelamento)
+      registros.forEach(r => {
+        if (r.atropelamento === 'Sim' || r.atropelamento === true || r.atropelamento === 'true') {
+          const quantidade = Number(r.quantidade) || Number(r.quantidade_total) || 1;
+          atropelamentos += quantidade;
+        }
+      });
     }
     
     // Maior quantidade em um dia
@@ -212,6 +229,7 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
       totalResgates,
       solturas,
       filhotes,
+      adultos,
       obitos,
       feridos,
       atropelamentos,
@@ -269,6 +287,124 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* N° de Atropelamentos */}
+      <Card className="glass-card border-green-100 shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-green-50/80 to-white/80 backdrop-blur-sm border-b border-green-100">
+          <CardTitle className="text-lg font-semibold text-green-700">
+            N° de Atropelamentos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 bg-white/50 backdrop-blur-sm">
+          <div className="text-center">
+            <div className="text-5xl font-bold text-green-600 mb-2">
+              {estatisticas.atropelamentos.toLocaleString('pt-BR')}
+            </div>
+            <p className="text-lg text-green-700 font-medium">
+              Total de animais atropelados em {year}
+            </p>
+            {estatisticas.atropelamentos === 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Dados de atropelamento não disponíveis para anos históricos (2020-2025)
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Estágio da Vida (Adulto x Filhotes) */}
+      <Card className="glass-card border-green-100 shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-green-50/80 to-white/80 backdrop-blur-sm border-b border-green-100">
+          <CardTitle className="text-lg font-semibold text-green-700">
+            Estágio de Vida
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 bg-white/50 backdrop-blur-sm">
+          {estatisticas.adultos > 0 || estatisticas.filhotes > 0 ? (
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Adultos', value: estatisticas.adultos },
+                    { name: 'Filhotes', value: estatisticas.filhotes }
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({
+                    cx,
+                    cy,
+                    midAngle,
+                    innerRadius,
+                    outerRadius,
+                    percent,
+                    name,
+                  }) => {
+                    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                    const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
+                    const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill="white"
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fontSize={14}
+                        fontWeight="bold"
+                      >
+                        {`${(percent * 100).toFixed(1)}%`}
+                      </text>
+                    );
+                  }}
+                  outerRadius="80%"
+                  innerRadius="55%"
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  <Cell fill="#10b981" stroke="#fff" />
+                  <Cell fill="#34d399" stroke="#fff" />
+                </Pie>
+                <Tooltip 
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0];
+                      return (
+                        <div className="bg-white/95 backdrop-blur-md p-4 border border-green-200 rounded-lg shadow-xl">
+                          <p className="font-semibold text-sm mb-2 text-green-700">{data.name}</p>
+                          <p className="text-sm text-green-600">
+                            <span className="font-medium">Quantidade:</span>{' '}
+                            <span className="font-bold text-green-700">{data.value?.toLocaleString('pt-BR') || 0}</span>
+                          </p>
+                          <p className="text-sm text-green-600">
+                            <span className="font-medium">Percentual:</span>{' '}
+                            <span className="font-bold text-green-700">
+                              {((Number(data.value) / (estatisticas.adultos + estatisticas.filhotes)) * 100).toFixed(1)}%
+                            </span>
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Legend 
+                  layout="horizontal" 
+                  verticalAlign="bottom" 
+                  align="center"
+                  iconType="circle"
+                  wrapperStyle={{ paddingTop: '20px' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-center text-muted-foreground py-8">
+              Nenhum dado disponível
+            </div>
+          )}
         </CardContent>
       </Card>
 
