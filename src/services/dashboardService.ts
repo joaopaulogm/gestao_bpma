@@ -13,14 +13,13 @@ const supabaseAny = supabase as any;
 
 /**
  * Busca dados sem usar joins (para tabelas sem foreign keys configuradas)
+ * Usa paginação para buscar todos os registros (sem limite de 1000)
  */
 const fetchDataWithoutJoins = async (
   tableName: string,
   filters: FilterState
 ): Promise<{ data: any[]; error: any }> => {
   try {
-    let query = supabaseAny.from(tableName).select('*');
-    
     // Normalizar o ano para número
     const ano = typeof filters.year === 'string' ? parseInt(filters.year, 10) : filters.year;
     
@@ -32,50 +31,76 @@ const fetchDataWithoutJoins = async (
     const startDate = `${ano}-01-01`;
     const endDate = `${ano}-12-31`;
     
-    // Tentar usar o campo 'data' primeiro, se falhar, usar 'data_ocorrencia'
-    try {
-      query = query.gte(campoData, startDate).lte(campoData, endDate);
-    } catch {
-      // Se falhar, tentar com data_ocorrencia
-      const campoAlternativo = campoData === 'data' ? 'data_ocorrencia' : 'data';
-      query = query.gte(campoAlternativo, startDate).lte(campoAlternativo, endDate);
-    }
+    // Usar paginação para buscar todos os registros
+    const PAGE_SIZE = 1000;
+    let allData: any[] = [];
+    let from = 0;
+    let hasMore = true;
     
-    // Aplicar filtro de mês se especificado
-    if (filters.month !== null) {
-      const monthStart = `${ano}-${String(filters.month + 1).padStart(2, '0')}-01`;
-      const monthEnd = format(
-        endOfMonth(new Date(ano, filters.month, 1)),
-        'yyyy-MM-dd'
-      );
-      query = query.gte(campoData, monthStart).lte(campoData, monthEnd);
-    }
-    
-    // Aplicar filtro de origem se especificado
-    if (filters.origem) {
+    while (hasMore) {
+      let query = supabaseAny.from(tableName).select('*');
+      
+      // Aplicar filtros de data
       try {
-        const { data: origemData } = await supabase
-          .from('dim_origem')
-          .select('id')
-          .ilike('nome', filters.origem)
-          .maybeSingle();
-        
-        if (origemData) {
-          query = query.eq('origem_id', origemData.id);
+        query = query.gte(campoData, startDate).lte(campoData, endDate);
+      } catch {
+        // Se falhar, tentar com data_ocorrencia
+        const campoAlternativo = campoData === 'data' ? 'data_ocorrencia' : 'data';
+        query = query.gte(campoAlternativo, startDate).lte(campoAlternativo, endDate);
+      }
+      
+      // Aplicar filtro de mês se especificado
+      if (filters.month !== null) {
+        const monthStart = `${ano}-${String(filters.month + 1).padStart(2, '0')}-01`;
+        const monthEnd = format(
+          endOfMonth(new Date(ano, filters.month, 1)),
+          'yyyy-MM-dd'
+        );
+        query = query.gte(campoData, monthStart).lte(campoData, monthEnd);
+      }
+      
+      // Aplicar filtro de origem se especificado
+      if (filters.origem) {
+        try {
+          const { data: origemData } = await supabase
+            .from('dim_origem')
+            .select('id')
+            .ilike('nome', filters.origem)
+            .maybeSingle();
+          
+          if (origemData) {
+            query = query.eq('origem_id', origemData.id);
+          }
+        } catch (origemErr) {
+          console.warn('Erro ao buscar origem:', origemErr);
         }
-      } catch (origemErr) {
-        console.warn('Erro ao buscar origem:', origemErr);
+      }
+      
+      // Aplicar paginação
+      query = query.range(from, from + PAGE_SIZE - 1);
+      
+      const { data: pageData, error } = await query;
+      
+      if (error) {
+        if (from === 0) {
+          // Se for a primeira página e houver erro, retornar erro
+          return { data: [], error };
+        }
+        // Se não for a primeira página, parar e retornar o que já foi carregado
+        break;
+      }
+      
+      if (pageData && pageData.length > 0) {
+        allData = [...allData, ...pageData];
+        from += PAGE_SIZE;
+        hasMore = pageData.length === PAGE_SIZE;
+      } else {
+        hasMore = false;
       }
     }
     
-    const { data, error } = await query;
-    
-    if (error) {
-      return { data: [], error };
-    }
-    
     // Buscar dados relacionados manualmente
-    const enrichedData = await enrichDataWithRelations(data || []);
+    const enrichedData = await enrichDataWithRelations(allData);
     
     return { data: enrichedData, error: null };
   } catch (err: any) {
@@ -131,68 +156,69 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
     const ano = typeof filters.year === 'string' ? parseInt(filters.year, 10) : filters.year;
     
     // Determinar qual tabela usar baseado no ano
-    // Para 2025, usar fat_resgates_diarios_2025 (nome correto da tabela)
-    const tabelaResgates = (ano === 2025) 
-      ? 'fat_resgates_diarios_2025' 
-      : 'fat_resgates_diarios_2025'; // Fallback para 2025 também
+    let tabelaResgates = '';
+    if (ano >= 2020 && ano <= 2024) {
+      // Para anos históricos, usar a tabela específica do ano
+      tabelaResgates = `fat_resgates_diarios_${ano}`;
+    } else if (ano === 2025) {
+      // Para 2025, usar fat_resgates_diarios_2025 e também fat_registros_de_resgate
+      tabelaResgates = 'fat_resgates_diarios_2025';
+    } else if (ano >= 2026) {
+      // Para 2026+, usar fat_registros_de_resgate
+      tabelaResgates = 'fat_registros_de_resgate';
+    } else {
+      tabelaResgates = 'fat_registros_de_resgate';
+    }
     
     console.log(`📊 [Dashboard] Tabela selecionada: ${tabelaResgates} (ano: ${ano}, original: ${filters.year})`);
     
     let registrosAtuais: any[] = [];
     
-    // Usar busca sem joins diretamente para evitar erros
-    console.log(`📊 [Dashboard] Buscando de ${tabelaResgates} sem joins...`);
-    const { data, error } = await fetchDataWithoutJoins(tabelaResgates, filters);
-    if (!error) {
-      registrosAtuais = data || [];
-      console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates}:`, registrosAtuais.length, 'registros');
+    // Para 2020-2024, buscar diretamente da tabela específica
+    if (ano >= 2020 && ano <= 2024) {
+      // Usar busca sem joins diretamente para evitar erros
+      console.log(`📊 [Dashboard] Buscando de ${tabelaResgates} sem joins...`);
+      const { data, error } = await fetchDataWithoutJoins(tabelaResgates, filters);
+      if (!error) {
+        registrosAtuais = data || [];
+        console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates}:`, registrosAtuais.length, 'registros');
+      } else {
+        console.warn(`⚠️ [Dashboard] Erro ao buscar de ${tabelaResgates}:`, error);
+      }
     } else {
-      console.warn(`⚠️ [Dashboard] Erro ao buscar de ${tabelaResgates}:`, error);
+      // Para 2025 e 2026+, buscar de fat_registros_de_resgate ou fat_resgates_diarios_2025
+      if (ano === 2025) {
+        // Buscar de ambas as tabelas para 2025
+        const { data: data2025, error: error2025 } = await fetchDataWithoutJoins('fat_resgates_diarios_2025', filters);
+        const { data: dataRegistros, error: errorRegistros } = await fetchDataWithoutJoins('fat_registros_de_resgate', filters);
+        
+        if (!error2025 && data2025) {
+          registrosAtuais = [...registrosAtuais, ...data2025];
+        }
+        if (!errorRegistros && dataRegistros) {
+          registrosAtuais = [...registrosAtuais, ...dataRegistros];
+        }
+        console.log(`✅ [Dashboard] Dados carregados para 2025:`, registrosAtuais.length, 'registros');
+      } else {
+        // Para 2026+, buscar de fat_registros_de_resgate
+        const { data, error } = await fetchDataWithoutJoins('fat_registros_de_resgate', filters);
+        if (!error) {
+          registrosAtuais = data || [];
+          console.log(`✅ [Dashboard] Dados carregados de fat_registros_de_resgate:`, registrosAtuais.length, 'registros');
+        } else {
+          console.warn(`⚠️ [Dashboard] Erro ao buscar de fat_registros_de_resgate:`, error);
+        }
+      }
     }
     
     console.log(`✅ [Dashboard] Registros atuais carregados:`, registrosAtuais?.length || 0);
     
-    // Buscar dados históricos (2020-2024) se o filtro de ano for entre 2020-2024
-    let registrosHistoricos: any[] = [];
+    // Para anos históricos (2020-2024), normalizar os dados para o formato esperado
+    let todosRegistros: any[] = [];
     
     if (ano >= 2020 && ano <= 2024) {
-      try {
-        let queryHistoricos = supabaseAny
-          .from('fat_resgates_diarios_2020a2024')
-          .select('*');
-        
-        // Aplicar filtro de ano
-        queryHistoricos = queryHistoricos.eq('Ano', ano);
-        
-        // Aplicar filtro de mês se especificado
-        if (filters.month !== null) {
-          const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-                         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-          const mesNome = meses[filters.month];
-          queryHistoricos = queryHistoricos.eq('Mês', mesNome);
-        }
-        
-        // Aplicar filtro de classe taxonômica se especificado
-        if (filters.classeTaxonomica) {
-          queryHistoricos = queryHistoricos.eq('classe_taxonomica', filters.classeTaxonomica);
-        }
-        
-        const { data: historicos, error: errorHistoricos } = await queryHistoricos;
-        
-        if (errorHistoricos) {
-          console.warn('Erro ao buscar dados históricos do dashboard:', errorHistoricos);
-          // Continuar sem dados históricos
-        } else {
-          registrosHistoricos = historicos || [];
-        }
-      } catch (err) {
-        console.warn('Exceção ao buscar dados históricos:', err);
-        // Continuar sem dados históricos
-      }
-    }
-    
-    // Combinar e normalizar dados históricos para o formato esperado
-    const historicosNormalizados = registrosHistoricos.map((h: any) => ({
+      // Os dados históricos já foram buscados em registrosAtuais, normalizar para o formato esperado
+      const historicosNormalizados = registrosAtuais.map((h: any) => ({
       id: h.id || `hist-${Math.random().toString(36).substring(7)}`,
       data: h.data_ocorrencia || (h.Ano && h.Mês ? 
         new Date(h.Ano, 
@@ -219,15 +245,15 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
         tipo_de_fauna: h.tipo_de_fauna || ''
       },
       tipo_registro: 'historico'
-    }));
-    
-    // Combinar dados atuais e históricos
-    const todosRegistros = [
-      ...(registrosAtuais || []),
-      ...historicosNormalizados
-    ];
-    
-    console.log(`✅ [Dashboard] Total de registros combinados: ${todosRegistros.length} (${registrosAtuais?.length || 0} atuais + ${historicosNormalizados.length} históricos)`);
+      }));
+      
+      todosRegistros = historicosNormalizados;
+      console.log(`✅ [Dashboard] Total de registros históricos normalizados: ${todosRegistros.length}`);
+    } else {
+      // Para 2025 e 2026+, usar os dados já buscados
+      todosRegistros = registrosAtuais || [];
+      console.log(`✅ [Dashboard] Total de registros: ${todosRegistros.length}`);
+    }
     
     // SEMPRE retornar array (mesmo que vazio) - nunca lançar erro
     return todosRegistros || [];

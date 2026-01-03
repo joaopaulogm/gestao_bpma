@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { PlusCircle, List, BarChart, MapPin, Table, FileText, Package, Leaf, History } from 'lucide-react';
+import { PlusCircle, List, BarChart, MapPin, Table, FileText, Package, Leaf } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Briefcase } from 'lucide-react';
 
@@ -8,7 +8,6 @@ const menuItems = [
   { title: 'Cadastrar Fauna', description: 'Registrar novas espécies de fauna', icon: PlusCircle, path: '/secao-operacional/fauna-cadastro' },
   { title: 'Fauna Cadastrada', description: 'Listar espécies de fauna', icon: List, path: '/secao-operacional/fauna-cadastrada' },
   { title: 'Dashboard', description: 'Visualizar estatísticas', icon: BarChart, path: '/secao-operacional/dashboard' },
-  { title: 'Dashboard Histórico', description: 'Análise 2020-2024', icon: History, path: '/secao-operacional/dashboard-historico' },
   { title: 'Hotspots', description: 'Mapa de ocorrências', icon: MapPin, path: '/secao-operacional/hotspots' },
   { title: 'Lista de Registros', description: 'Todos os registros', icon: Table, path: '/secao-operacional/registros' },
   { title: 'Relatórios', description: 'Gerar relatórios', icon: FileText, path: '/secao-operacional/relatorios' },

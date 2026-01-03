@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -40,7 +40,6 @@ const MaterialApoio = lazy(() => import(/* webpackChunkName: "material-apoio" */
 const IdentificarEspecie = lazy(() => import(/* webpackChunkName: "identificar-especie" */ '@/pages/apoio/IdentificarEspecie'));
 const ManualRAP = lazy(() => import(/* webpackChunkName: "manual-rap" */ '@/pages/apoio/ManualRAP'));
 const RankingOcorrencias = lazy(() => import(/* webpackChunkName: "ranking" */ '@/pages/RankingOcorrencias'));
-const DashboardHistorico = lazy(() => import(/* webpackChunkName: "dashboard-historico" */ '@/pages/DashboardHistorico'));
 const UploadSchemas = lazy(() => import(/* webpackChunkName: "upload-schemas" */ '@/pages/UploadSchemas'));
 
 const queryClient = new QueryClient();
@@ -86,7 +85,7 @@ function App() {
               <Route path="/secao-operacional/fauna-cadastro/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/fauna-cadastrada" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FaunaCadastrada /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/dashboard" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Dashboard /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/dashboard-historico" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><DashboardHistorico /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/dashboard-historico" element={<Navigate to="/secao-operacional/dashboard" replace />} />
               <Route path="/secao-operacional/hotspots" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Hotspots /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/registros" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Registros /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/relatorios" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Relatorios /></SidebarLayout></ProtectedRoute>} />
