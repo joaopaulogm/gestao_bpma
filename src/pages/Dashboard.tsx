@@ -121,6 +121,7 @@ const Dashboard = () => {
           data={displayData} 
           activeTab={activeTab}
           onTabChange={handleTabChange}
+          year={filters.year}
         />
       </div>
     </Layout>

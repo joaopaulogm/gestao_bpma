@@ -6,9 +6,10 @@ import TaxonomicDataSection from './sections/TaxonomicDataSection';
 
 interface DashboardGraficosGeraisProps {
   data: DashboardData;
+  year?: number;
 }
 
-const DashboardGraficosGerais: React.FC<DashboardGraficosGeraisProps> = ({ data }) => {
+const DashboardGraficosGerais: React.FC<DashboardGraficosGeraisProps> = ({ data, year = 2025 }) => {
   // Validar dados
   if (!data) {
     return (
@@ -20,7 +21,7 @@ const DashboardGraficosGerais: React.FC<DashboardGraficosGeraisProps> = ({ data 
   
   return (
     <div className="space-y-8">
-      <SummaryChartsSection data={data} />
+      <SummaryChartsSection data={data} year={year} />
       <TaxonomicDataSection data={data} />
     </div>
   );

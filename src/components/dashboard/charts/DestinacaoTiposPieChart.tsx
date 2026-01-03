@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import ChartCard from '../ChartCard';
 import { ChartDataItem } from '@/types/hotspots';
-import { CHART_COLORS, CustomTooltip } from './ChartUtils';
+import { CHART_COLORS_ARRAY, CustomTooltip } from './ChartUtils';
 
 interface DestinacaoTiposPieChartProps {
   data: ChartDataItem[];
@@ -61,7 +61,7 @@ const DestinacaoTiposPieChart = ({ data }: DestinacaoTiposPieChartProps) => {
             {data.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
-                fill={CHART_COLORS[index % CHART_COLORS.length]} 
+                fill={CHART_COLORS_ARRAY[index % CHART_COLORS_ARRAY.length]} 
                 stroke="#fff"
               />
             ))}
