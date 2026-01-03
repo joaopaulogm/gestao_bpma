@@ -205,8 +205,10 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
     console.log("🔍 [Dashboard] Iniciando busca de dados com filtros:", filters);
     
     // Determinar qual tabela usar baseado no ano
+    // Para 2025, usar fat_resgates_diarios_2025 (nome correto da tabela)
+    // Para outros anos, usar fat_registros_de_resgate
     const tabelaResgates = filters.year === 2025 
-      ? 'fat_registros_de_resgate_2025' 
+      ? 'fat_resgates_diarios_2025' 
       : 'fat_registros_de_resgate';
     
     let registrosAtuais: any[] = [];
