@@ -65,7 +65,8 @@ const Dashboard = () => {
   
   if (!data) {
     console.warn("⚠️ [Dashboard] Sem dados disponíveis, usando estrutura vazia");
-    
+  }
+  
   return (
     <Layout title="Painel de Dados" showBackButton>
       <div className="space-y-8 animate-fade-in">

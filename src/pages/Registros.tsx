@@ -13,6 +13,7 @@ import RegistrosLoading from '@/components/registros/RegistrosLoading';
 import { useRegistroDelete } from '@/hooks/useRegistroDelete';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { handleSupabaseError } from '@/utils/errorHandler';
 
 const Registros = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,29 +44,212 @@ const Registros = () => {
   const fetchRegistros = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('fat_registros_de_resgate')
-        .select(`
-          *,
-          regiao_administrativa:dim_regiao_administrativa(nome),
-          origem:dim_origem(nome),
-          destinacao:dim_destinacao(nome),
-          estado_saude:dim_estado_saude(nome),
-          estagio_vida:dim_estagio_vida(nome),
-          desfecho:dim_desfecho(nome, tipo),
-          especie:dim_especies_fauna(*)
-        `)
-        .order('data', { ascending: false });
+      const allRegistros: Registro[] = [];
       
-      if (error) throw error;
+      // Lista de todas as tabelas a serem consultadas
+      const tabelas = [
+        'fat_registros_de_resgate',
+        'fat_resgates_diarios_2020',
+        'fat_resgates_diarios_2021',
+        'fat_resgates_diarios_2022',
+        'fat_resgates_diarios_2023',
+        'fat_resgates_diarios_2024',
+        'fat_resgates_diarios_2025'
+      ];
       
-      setRegistros(data || []);
+      // Buscar dados de todas as tabelas em paralelo
+      const promises = tabelas.map(async (tabela) => {
+        try {
+          // Para fat_registros_de_resgate, usar joins
+          if (tabela === 'fat_registros_de_resgate') {
+            const { data, error } = await supabase
+              .from(tabela)
+              .select(`
+                *,
+                regiao_administrativa:dim_regiao_administrativa(nome),
+                origem:dim_origem(nome),
+                destinacao:dim_destinacao(nome),
+                estado_saude:dim_estado_saude(nome),
+                estagio_vida:dim_estagio_vida(nome),
+                desfecho:dim_desfecho(nome, tipo),
+                especie:dim_especies_fauna(*)
+              `)
+              .order('data', { ascending: false });
+            
+            if (error) {
+              console.warn(`Erro ao buscar de ${tabela}:`, error);
+              return [];
+            }
+            
+            return data || [];
+          } else {
+            // Para tabelas fat_resgates_diarios_*, buscar sem joins primeiro
+            // e depois enriquecer os dados manualmente
+            // Tentar ordenar por 'data' primeiro (para 2025), se falhar, usar 'data_ocorrencia'
+            let query = supabase.from(tabela).select('*');
+            
+            // Tentar ordenar por 'data' (2025 usa este campo)
+            try {
+              query = query.order('data', { ascending: false });
+            } catch {
+              // Se falhar, tentar 'data_ocorrencia' (2020-2024 usam este)
+              query = query.order('data_ocorrencia', { ascending: false });
+            }
+            
+            const { data, error } = await query;
+            
+            if (error) {
+              // Se erro ao ordenar por 'data', tentar 'data_ocorrencia'
+              if (error.message?.includes('data') || error.code === 'PGRST116') {
+                const { data: dataRetry, error: errorRetry } = await supabase
+                  .from(tabela)
+                  .select('*')
+                  .order('data_ocorrencia', { ascending: false });
+                
+                if (errorRetry) {
+                  console.warn(`Erro ao buscar de ${tabela}:`, errorRetry);
+                  return [];
+                }
+                
+                // Enriquecer dados com relacionamentos
+                if (dataRetry && dataRetry.length > 0) {
+                  return await enrichHistoricalData(dataRetry);
+                }
+                return [];
+              }
+              
+              console.warn(`Erro ao buscar de ${tabela}:`, error);
+              return [];
+            }
+            
+            // Enriquecer dados com relacionamentos
+            if (data && data.length > 0) {
+              return await enrichHistoricalData(data);
+            }
+            
+            return [];
+          }
+        } catch (err) {
+          console.warn(`Erro ao buscar de ${tabela}:`, err);
+          return [];
+        }
+      });
+      
+      // Aguardar todas as queries
+      const results = await Promise.all(promises);
+      
+      // Combinar todos os resultados
+      results.forEach(registros => {
+        if (Array.isArray(registros)) {
+          allRegistros.push(...registros);
+        }
+      });
+      
+      // Normalizar campo de data (algumas tabelas usam 'data', outras 'data_ocorrencia')
+      const normalizedRegistros = allRegistros.map(reg => {
+        const normalized = { ...reg };
+        
+        // Se não tem 'data' mas tem 'data_ocorrencia', usar 'data_ocorrencia'
+        if (!normalized.data && normalized.data_ocorrencia) {
+          normalized.data = normalized.data_ocorrencia;
+        }
+        // Se não tem 'data_ocorrencia' mas tem 'data', manter 'data'
+        else if (normalized.data && !normalized.data_ocorrencia) {
+          // Já está correto, não precisa fazer nada
+        }
+        
+        return normalized;
+      });
+      
+      // Ordenar por data (mais recente primeiro)
+      normalizedRegistros.sort((a, b) => {
+        const dateA = a.data ? new Date(a.data).getTime() : 0;
+        const dateB = b.data ? new Date(b.data).getTime() : 0;
+        return dateB - dateA;
+      });
+      
+      setRegistros(normalizedRegistros);
+      console.log(`✅ Total de registros carregados: ${normalizedRegistros.length}`);
     } catch (error) {
       console.error('Erro ao buscar registros:', error);
-      toast.error('Erro ao carregar os registros');
+      toast.error(handleSupabaseError(error, 'carregar os registros'));
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  // Função para enriquecer dados históricos com relacionamentos
+  const enrichHistoricalData = async (registros: any[]): Promise<Registro[]> => {
+    if (!registros || registros.length === 0) return [];
+    
+    // Buscar todas as dimensões de uma vez
+    const [regioesRes, origensRes, destinacoesRes, estadosSaudeRes, estagiosVidaRes, desfechosRes, especiesRes] = await Promise.all([
+      supabase.from('dim_regiao_administrativa').select('id, nome'),
+      supabase.from('dim_origem').select('id, nome'),
+      supabase.from('dim_destinacao').select('id, nome'),
+      supabase.from('dim_estado_saude').select('id, nome'),
+      supabase.from('dim_estagio_vida').select('id, nome'),
+      supabase.from('dim_desfecho').select('id, nome, tipo'),
+      supabase.from('dim_especies_fauna').select('*')
+    ]);
+    
+    const regioes = new Map((regioesRes.data || []).map(r => [r.id, r]));
+    const origens = new Map((origensRes.data || []).map(r => [r.id, r]));
+    const destinacoes = new Map((destinacoesRes.data || []).map(r => [r.id, r]));
+    const estadosSaude = new Map((estadosSaudeRes.data || []).map(r => [r.id, r]));
+    const estagiosVida = new Map((estagiosVidaRes.data || []).map(r => [r.id, r]));
+    const desfechos = new Map((desfechosRes.data || []).map(r => [r.id, r]));
+    const especies = new Map((especiesRes.data || []).map(e => [e.id, e]));
+    
+    // Enriquecer cada registro
+    return registros.map(reg => {
+      const enriched: any = { ...reg };
+      
+      // Normalizar campo de data (algumas tabelas usam 'data', outras 'data_ocorrencia')
+      if (reg.data) {
+        enriched.data = reg.data;
+      } else if (reg.data_ocorrencia) {
+        enriched.data = reg.data_ocorrencia;
+      }
+      
+      // Enriquecer com relacionamentos se existirem IDs
+      if (reg.regiao_administrativa_id) {
+        enriched.regiao_administrativa = regioes.get(reg.regiao_administrativa_id) || null;
+      }
+      if (reg.origem_id) {
+        enriched.origem = origens.get(reg.origem_id) || null;
+      }
+      if (reg.destinacao_id) {
+        enriched.destinacao = destinacoes.get(reg.destinacao_id) || null;
+      }
+      if (reg.estado_saude_id) {
+        enriched.estado_saude = estadosSaude.get(reg.estado_saude_id) || null;
+      }
+      if (reg.estagio_vida_id) {
+        enriched.estagio_vida = estagiosVida.get(reg.estagio_vida_id) || null;
+      }
+      if (reg.desfecho_id) {
+        enriched.desfecho = desfechos.get(reg.desfecho_id) || null;
+      }
+      if (reg.especie_id) {
+        enriched.especie = especies.get(reg.especie_id) || null;
+      } else if (reg.nome_cientifico) {
+        // Tentar encontrar espécie pelo nome científico
+        const especie = Array.from(especies.values()).find(
+          e => e.nome_cientifico?.toLowerCase() === reg.nome_cientifico?.toLowerCase()
+        );
+        if (especie) {
+          enriched.especie = especie;
+        }
+      }
+      
+      // Mapear quantidade se necessário
+      if (reg.quantidade_resgates !== undefined && !reg.quantidade) {
+        enriched.quantidade = reg.quantidade_resgates;
+      }
+      
+      return enriched;
+    });
   };
   
   const filteredRegistros = registros.filter(registro => {

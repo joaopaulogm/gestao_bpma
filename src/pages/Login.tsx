@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Lock, User, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { handleSupabaseError } from '@/utils/errorHandler';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -43,7 +44,7 @@ const Login = () => {
 
         if (checkError) {
           console.error('Error checking allowed user:', checkError);
-          toast.error('Erro ao verificar permissão de cadastro');
+          toast.error(handleSupabaseError(checkError, 'verificar permissão de cadastro'));
           return;
         }
 
@@ -62,11 +63,7 @@ const Login = () => {
         });
 
         if (error) {
-          if (error.message === 'User already registered') {
-            toast.error('Usuário já cadastrado. Faça login.');
-          } else {
-            toast.error(error.message);
-          }
+          toast.error(handleSupabaseError(error, 'realizar cadastro'));
         } else {
           toast.success('Cadastro realizado! Verifique seu e-mail para confirmar.');
           setIsSignup(false);
@@ -98,11 +95,11 @@ const Login = () => {
       });
 
       if (error) {
-        toast.error('Erro ao fazer login com Google: ' + error.message);
+        toast.error(handleSupabaseError(error, 'fazer login com Google'));
       }
     } catch (error: any) {
       console.error('Google login error:', error);
-      toast.error('Erro ao fazer login com Google');
+      toast.error(handleSupabaseError(error, 'fazer login com Google'));
     } finally {
       setIsGoogleLoading(false);
     }

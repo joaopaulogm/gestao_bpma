@@ -20,19 +20,34 @@ const fetchDataWithoutJoins = async (
   try {
     let query = supabase.from(tableName).select('*');
     
+    // Normalizar o ano para número
+    const ano = typeof filters.year === 'string' ? parseInt(filters.year, 10) : filters.year;
+    
     // Aplicar filtros de data
-    const startDate = `${filters.year}-01-01`;
-    const endDate = `${filters.year}-12-31`;
-    query = query.gte('data', startDate).lte('data', endDate);
+    // Para tabelas fat_resgates_diarios_*, verificar qual campo de data usar
+    const campoData = tableName.includes('fat_resgates_diarios_2025') ? 'data' : 
+                      tableName.includes('fat_resgates_diarios_') ? 'data_ocorrencia' : 'data';
+    
+    const startDate = `${ano}-01-01`;
+    const endDate = `${ano}-12-31`;
+    
+    // Tentar usar o campo 'data' primeiro, se falhar, usar 'data_ocorrencia'
+    try {
+      query = query.gte(campoData, startDate).lte(campoData, endDate);
+    } catch {
+      // Se falhar, tentar com data_ocorrencia
+      const campoAlternativo = campoData === 'data' ? 'data_ocorrencia' : 'data';
+      query = query.gte(campoAlternativo, startDate).lte(campoAlternativo, endDate);
+    }
     
     // Aplicar filtro de mês se especificado
     if (filters.month !== null) {
-      const monthStart = `${filters.year}-${String(filters.month + 1).padStart(2, '0')}-01`;
+      const monthStart = `${ano}-${String(filters.month + 1).padStart(2, '0')}-01`;
       const monthEnd = format(
-        endOfMonth(new Date(filters.year, filters.month, 1)),
+        endOfMonth(new Date(ano, filters.month, 1)),
         'yyyy-MM-dd'
       );
-      query = query.gte('data', monthStart).lte('data', monthEnd);
+      query = query.gte(campoData, monthStart).lte(campoData, monthEnd);
     }
     
     // Aplicar filtro de origem se especificado
@@ -205,20 +220,23 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
     console.log("🔍 [Dashboard] Iniciando busca de dados com filtros:", filters);
     console.log("🔍 [Dashboard] Ano do filtro:", filters.year, "Tipo:", typeof filters.year);
     
+    // Normalizar o ano para número (pode vir como string)
+    const ano = typeof filters.year === 'string' ? parseInt(filters.year, 10) : filters.year;
+    
     // Determinar qual tabela usar baseado no ano
     // Para 2025, usar fat_resgates_diarios_2025 (nome correto da tabela)
     // Para outros anos, usar fat_registros_de_resgate
-    const tabelaResgates = filters.year === 2025 
+    const tabelaResgates = (ano === 2025 || ano === '2025') 
       ? 'fat_resgates_diarios_2025' 
       : 'fat_registros_de_resgate';
     
-    console.log(`📊 [Dashboard] Tabela selecionada: ${tabelaResgates} (ano: ${filters.year})`);
+    console.log(`📊 [Dashboard] Tabela selecionada: ${tabelaResgates} (ano: ${ano}, original: ${filters.year})`);
     
     let registrosAtuais: any[] = [];
     
     // Para 2025, SEMPRE usar busca sem joins diretamente (evitar erro PGRST200)
     // Para outros anos, tentar com joins primeiro
-    if (filters.year === 2025) {
+    if (ano === 2025 || ano === '2025') {
       console.log(`📊 [Dashboard] Ano 2025 detectado - usando busca sem joins diretamente para ${tabelaResgates}...`);
       const { data, error } = await fetchDataWithoutJoins(tabelaResgates, filters);
       if (!error) {
@@ -245,15 +263,15 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
         let query = supabase.from(tabelaResgates).select(selectQuery);
         
         // Aplicar filtros de data
-        const startDate = `${filters.year}-01-01`;
-        const endDate = `${filters.year}-12-31`;
+        const startDate = `${ano}-01-01`;
+        const endDate = `${ano}-12-31`;
         query = query.gte('data', startDate).lte('data', endDate);
         
         // Aplicar filtro de mês se especificado
         if (filters.month !== null) {
-          const monthStart = `${filters.year}-${String(filters.month + 1).padStart(2, '0')}-01`;
+          const monthStart = `${ano}-${String(filters.month + 1).padStart(2, '0')}-01`;
           const monthEnd = format(
-            endOfMonth(new Date(filters.year, filters.month, 1)),
+            endOfMonth(new Date(ano, filters.month, 1)),
             'yyyy-MM-dd'
           );
           query = query.gte('data', monthStart).lte('data', monthEnd);
@@ -299,12 +317,13 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
             console.warn(`⚠️ [Dashboard] Erro ao buscar de ${tabelaResgates}:`, error.message || error);
           }
         }
-    } catch (err: any) {
-      console.warn(`⚠️ [Dashboard] Exceção ao buscar de ${tabelaResgates}, tentando sem joins:`, err?.message || err);
-      const { data: dataSemJoins, error: errorSemJoins } = await fetchDataWithoutJoins(tabelaResgates, filters);
-      if (!errorSemJoins) {
-        registrosAtuais = dataSemJoins || [];
-        console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates} sem joins (após exceção):`, registrosAtuais.length, 'registros');
+      } catch (err: any) {
+        console.warn(`⚠️ [Dashboard] Exceção ao buscar de ${tabelaResgates}, tentando sem joins:`, err?.message || err);
+        const { data: dataSemJoins, error: errorSemJoins } = await fetchDataWithoutJoins(tabelaResgates, filters);
+        if (!errorSemJoins) {
+          registrosAtuais = dataSemJoins || [];
+          console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates} sem joins (após exceção):`, registrosAtuais.length, 'registros');
+        }
       }
     }
     
