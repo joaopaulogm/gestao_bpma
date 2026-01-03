@@ -61,32 +61,58 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
     let solturas = 0;
     let filhotes = 0;
     let obitos = 0;
+    let feridos = 0;
     let atropelamentos = 0;
+    
+    // Para gráfico de atropelamentos por espécie
+    const atropelamentosPorEspecie = new Map<string, number>();
     
     if (isHistoricalData) {
       // Dados das tabelas históricas (fat_resgates_diarios_2020-2025)
-      // CONTAGEM DE REGISTROS (cada linha é um registro)
-      totalResgates = registros.length;
-      
-      // Contar registros com solturas
-      solturas = registros.filter((r: any) => {
+      // SOMAR AS QUANTIDADES (não contar registros)
+      registros.forEach((r: any) => {
+        const qtdResgates = Number(r.quantidade_resgates) || 0;
         const qtdSolturas = Number(r.quantidade_solturas) || 0;
-        return qtdSolturas > 0;
-      }).length;
-      
-      // Contar registros com filhotes
-      filhotes = registros.filter((r: any) => {
         const qtdFilhotes = Number(r.quantidade_filhotes) || Number(r.quantidade_filhote) || 0;
-        return qtdFilhotes > 0;
-      }).length;
-      
-      // Contar registros com óbitos
-      obitos = registros.filter((r: any) => {
         const qtdObitos = Number(r.quantidade_obitos) || 0;
-        return qtdObitos > 0;
-      }).length;
+        const qtdFeridos = Number(r.quantidade_feridos) || 0;
+        
+        // Total de resgates = soma de quantidade_resgates
+        totalResgates += qtdResgates;
+        
+        // Solturas: usar quantidade_solturas diretamente
+        // Se não existir, calcular: quantidade_resgates - quantidade_obitos - quantidade_feridos
+        if (qtdSolturas > 0) {
+          solturas += qtdSolturas;
+        } else {
+          // Fórmula: Do total de resgates - obitos - feridos = soltura
+          const solturasCalculadas = Math.max(0, qtdResgates - qtdObitos - qtdFeridos);
+          solturas += solturasCalculadas;
+        }
+        
+        // Filhotes = soma de quantidade_filhotes
+        filhotes += qtdFilhotes;
+        
+        // Óbitos: usar quantidade_obitos diretamente
+        // Se não existir, calcular: quantidade_resgates - quantidade_feridos - quantidade_solturas
+        if (qtdObitos > 0) {
+          obitos += qtdObitos;
+        } else {
+          // Fórmula: Do total de resgates - feridos - soltura = óbitos
+          const solturasParaCalculo = qtdSolturas > 0 ? qtdSolturas : Math.max(0, qtdResgates - qtdObitos - qtdFeridos);
+          const obitosCalculados = Math.max(0, qtdResgates - qtdFeridos - solturasParaCalculo);
+          obitos += obitosCalculados;
+        }
+        
+        // Feridos = soma de quantidade_feridos
+        feridos += qtdFeridos;
+        
+        // Para atropelamentos em dados históricos, não há campo específico
+        // Mas podemos tentar inferir de outras formas se necessário
+        // Por enquanto, não há dados de atropelamento nas tabelas históricas
+      });
       
-      // Para atropelamentos em dados históricos, geralmente não há campo específico
+      // Atropelamentos não disponível em dados históricos
       atropelamentos = 0;
     } else {
       // Dados da tabela fat_registros_de_resgate
@@ -166,14 +192,32 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
       .sort((a, b) => b.quantidade - a.quantidade)
       .slice(0, 3);
     
+    // Calcular atropelamentos por espécie (apenas para dados não históricos)
+    if (!isHistoricalData) {
+      registros.forEach(r => {
+        if (r.atropelamento === 'Sim' || r.atropelamento === true || r.atropelamento === 'true') {
+          const especieNome = r.especie?.nome_popular || r.especie?.nome_cientifico || 'Espécie não identificada';
+          const quantidade = Number(r.quantidade) || Number(r.quantidade_total) || 1;
+          atropelamentosPorEspecie.set(especieNome, (atropelamentosPorEspecie.get(especieNome) || 0) + quantidade);
+        }
+      });
+    }
+    
+    const atropelamentosPorEspecieArray = Array.from(atropelamentosPorEspecie.entries())
+      .map(([nome, quantidade]) => ({ name: nome, quantidade }))
+      .sort((a, b) => b.quantidade - a.quantidade)
+      .slice(0, 10); // Top 10
+    
     return {
       totalResgates,
       solturas,
       filhotes,
       obitos,
+      feridos,
       atropelamentos,
       maiorQuantidadeDia,
-      top3DiasSemana
+      top3DiasSemana,
+      atropelamentosPorEspecie: atropelamentosPorEspecieArray
     };
   }, [registros]);
 
@@ -182,6 +226,7 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
     { name: 'Solturas', valor: estatisticas.solturas },
     { name: 'Filhotes', valor: estatisticas.filhotes },
     { name: 'Óbitos', valor: estatisticas.obitos },
+    { name: 'Feridos', valor: estatisticas.feridos },
     { name: 'Atropelamentos', valor: estatisticas.atropelamentos },
   ];
 
@@ -327,6 +372,49 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Animais Atropelados por Espécie - Apenas para 2026+ */}
+      {estatisticas.atropelamentosPorEspecie && estatisticas.atropelamentosPorEspecie.length > 0 && (
+        <Card className="glass-card border-green-100 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-green-50/80 to-white/80 backdrop-blur-sm border-b border-green-100">
+            <CardTitle className="text-lg font-semibold text-green-700">
+              Animais Atropelados por Espécie
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 bg-white/50 backdrop-blur-sm">
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart 
+                data={estatisticas.atropelamentosPorEspecie}
+                margin={{ top: 20, right: 30, left: 140, bottom: 20 }}
+                barSize={32}
+                layout="vertical"
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.2} horizontal={true} vertical={false} />
+                <XAxis 
+                  type="number"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 13, fill: '#6b7280', fontWeight: 500 }}
+                />
+                <YAxis 
+                  type="category"
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 13, fill: '#374151', fontWeight: 500 }}
+                  width={160}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="quantidade" name="Quantidade" radius={[0, 12, 12, 0]}>
+                  {estatisticas.atropelamentosPorEspecie.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
