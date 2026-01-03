@@ -213,26 +213,10 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
     
     let registrosAtuais: any[] = [];
     
-    // Para 2025, sabemos que a tabela pode não ter foreign keys, então usar busca sem joins diretamente
-    // Para outros anos, tentar com joins primeiro
-    if (filters.year === 2025) {
-      console.log(`📊 [Dashboard] Buscando de ${tabelaResgates} sem joins (2025 - sem foreign keys)...`);
-      const { data, error } = await fetchDataWithoutJoins(tabelaResgates, filters);
-      if (!error) {
-        registrosAtuais = data || [];
-        console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates}:`, registrosAtuais.length, 'registros');
-      } else {
-        console.warn(`⚠️ [Dashboard] Erro ao buscar de ${tabelaResgates}, tentando fallback...`);
-        // Tentar fallback para tabela padrão
-        const { data: fallbackData, error: fallbackError } = await fetchDataWithoutJoins('fat_registros_de_resgate', filters);
-        if (!fallbackError) {
-          registrosAtuais = fallbackData || [];
-          console.log(`✅ [Dashboard] Dados carregados do fallback:`, registrosAtuais.length, 'registros');
-        } else {
-          console.warn(`⚠️ [Dashboard] Erro no fallback também:`, fallbackError);
-        }
-      }
-    } else {
+    // Tentar com joins primeiro (para 2025, após migration, foreign keys devem estar disponíveis)
+    // Se falhar com PGRST200 (relacionamento não encontrado), fazer fallback para busca sem joins
+    console.log(`📊 [Dashboard] Tentando buscar de ${tabelaResgates} com joins...`);
+    try {
       // Para outros anos, tentar com joins primeiro
       console.log(`📊 [Dashboard] Tentando buscar de ${tabelaResgates} com joins...`);
       try {
