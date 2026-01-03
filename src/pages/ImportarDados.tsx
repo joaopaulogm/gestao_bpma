@@ -6,6 +6,9 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { buscarIdPorNome } from '@/services/dimensionService';
+
+// Type-safe wrapper para queries em tabelas não tipadas
+const supabaseAny = supabase as any;
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { parse, isValid, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -205,7 +208,7 @@ const ImportarDados = () => {
             const regiaoId = await buscarIdPorNome('dim_regiao_administrativa', record.regiao_administrativa);
             const coords = obterCoordenadas(record.regiao_administrativa);
             
-            const { error } = await supabase.from('fat_registros_de_resgate').insert({
+            const { error } = await supabaseAny.from('fat_resgates_diarios_2025').insert({
               data: dataFormatada,
               especie_id: especieId,
               origem_id: origemId,

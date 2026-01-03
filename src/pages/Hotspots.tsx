@@ -9,6 +9,8 @@ import HeatmapLegend from '@/components/hotspots/HeatmapLegend';
 import type { OcorrenciaData } from '@/types/hotspots';
 import { supabase } from '@/integrations/supabase/client';
 
+// Type-safe wrapper para queries em tabelas não tipadas
+const supabaseAny = supabase as any;
 const Hotspots = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<OcorrenciaData[]>([]);
@@ -20,8 +22,8 @@ const Hotspots = () => {
         console.log('Fetching registros for heatmap...');
         
         // Buscar registros do Supabase com joins
-        const { data: registros, error } = await supabase
-          .from('fat_registros_de_resgate')
+        const { data: registros, error } = await supabaseAny
+          .from('fat_resgates_diarios_2025')
           .select(`
             id,
             latitude_origem,

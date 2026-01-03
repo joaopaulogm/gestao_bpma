@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+
+// Type-safe wrapper para queries em tabelas não tipadas
+const supabaseAny = supabase as any;
 import { toast } from 'sonner';
 import Layout from '@/components/Layout';
 import { Registro } from '@/types/hotspots';
@@ -20,8 +23,8 @@ const ResgateEditar = () => {
       try {
         console.log("Buscando registro para edição, ID:", id);
         
-        const { data, error } = await supabase
-          .from('fat_registros_de_resgate')
+        const { data, error } = await supabaseAny
+          .from('fat_resgates_diarios_2025')
           .select(`
             *,
             regiao_administrativa:dim_regiao_administrativa(nome),

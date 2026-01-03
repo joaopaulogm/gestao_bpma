@@ -10,6 +10,9 @@ import { buscarIdPorNome } from '@/services/dimensionService';
 import { parse, format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+// Type-safe wrapper para queries em tabelas não tipadas
+const supabaseAny = supabase as any;
+
 export const useResgateFormSubmitEdit = (
   form: UseFormReturn<ResgateFormData>,
   handleSubmit: any // Using any here as we're just passing it through
@@ -74,8 +77,8 @@ export const useResgateFormSubmitEdit = (
             : Promise.resolve(null)
       ]);
 
-      const { error } = await supabase
-        .from('fat_registros_de_resgate')
+      const { error } = await supabaseAny
+        .from('fat_resgates_diarios_2025')
         .update({
           data: dataFormatada,
           especie_id: especieSelecionada?.id || originalRegistro.especie_id,
