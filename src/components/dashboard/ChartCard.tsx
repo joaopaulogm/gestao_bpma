@@ -43,15 +43,16 @@ export interface ChartCardProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-card/95 backdrop-blur-sm p-3 border border-border rounded-xl shadow-lg">
-        <p className="font-semibold text-sm mb-1.5 text-foreground">{label || payload[0]?.name}</p>
+      <div className="bg-white/95 backdrop-blur-md p-4 border border-green-200 rounded-lg shadow-xl ring-1 ring-green-100">
+        <p className="font-semibold text-sm mb-2 text-green-700">{label || payload[0]?.name}</p>
         {payload.map((item: any, index: number) => (
-          <p key={index} className="text-sm text-muted-foreground flex items-center gap-2">
+          <p key={index} className="text-sm text-green-600 flex items-center gap-2">
             <span 
-              className="w-2.5 h-2.5 rounded-full inline-block" 
+              className="w-3 h-3 rounded-full inline-block" 
               style={{ backgroundColor: item.color }}
             />
-            <span className="font-bold text-foreground">{item.value.toLocaleString('pt-BR')}</span>
+            <span className="font-medium">{item.name}:</span>
+            <span className="font-bold text-green-700">{item.value?.toLocaleString('pt-BR') || 0}</span>
           </p>
         ))}
       </div>
@@ -199,16 +200,16 @@ const ChartCard: React.FC<ChartCardProps> = ({
   };
 
   return (
-    <div className={`bg-card rounded-2xl border border-border/50 overflow-hidden transition-all duration-200 hover:shadow-md hover:border-border ${className}`}>
-      <div className="px-5 py-4 border-b border-border/30">
-        <h3 className="text-base font-semibold text-foreground">
+    <div className={`glass-card border-green-100 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden ${className}`}>
+      <div className="px-5 py-4 border-b border-green-100 bg-gradient-to-r from-green-50/80 to-white/80 backdrop-blur-sm">
+        <h3 className="text-base font-semibold text-green-700">
           {title}
         </h3>
         {subtitle && (
-          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+          <p className="text-xs text-green-600 mt-0.5 font-medium">{subtitle}</p>
         )}
       </div>
-      <div className="p-4">
+      <div className="p-4 bg-white/50 backdrop-blur-sm">
         {renderChart()}
       </div>
     </div>
