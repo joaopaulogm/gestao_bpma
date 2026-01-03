@@ -9,7 +9,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import ChartCard from '../ChartCard';
-import { CHART_COLORS, CustomTooltip, renderCustomizedLabel } from './ChartUtils';
+import { CHART_COLORS_ARRAY, CustomTooltip, renderCustomizedLabel } from './ChartUtils';
 import { ChartDataItem } from '@/types/hotspots';
 
 interface ClassDistributionChartProps {
@@ -49,7 +49,7 @@ const ClassDistributionChart: React.FC<ClassDistributionChartProps> = ({ data })
             {validData.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
-                fill={CHART_COLORS[index % CHART_COLORS.length]} 
+                fill={CHART_COLORS_ARRAY[index % CHART_COLORS_ARRAY.length]} 
                 stroke="#fff"
                 strokeWidth={1}
               />
