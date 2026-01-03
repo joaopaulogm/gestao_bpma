@@ -322,7 +322,7 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 bg-white/50 backdrop-blur-sm">
-          {estatisticas.adultos > 0 || estatisticas.filhotes > 0 ? (
+          {estatisticas.totalResgates > 0 ? (
             <ResponsiveContainer width="100%" height={350}>
               <PieChart>
                 <Pie
