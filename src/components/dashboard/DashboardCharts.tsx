@@ -5,7 +5,6 @@ import ClassDistributionChart from './charts/ClassDistributionChart';
 import DestinationsChart from './charts/DestinationsChart';
 import OutcomesChart from './charts/OutcomesChart';
 import RescuedSpeciesChart from './charts/RescuedSpeciesChart';
-import SeizedSpeciesChart from './charts/SeizedSpeciesChart';
 import RoadkillSpeciesChart from './charts/RoadkillSpeciesChart';
 
 interface DashboardChartsProps {
@@ -32,7 +31,6 @@ const DashboardCharts = ({ data }: DashboardChartsProps) => {
       <div className="lg:col-span-2">
         <RescuedSpeciesChart data={data.especiesMaisResgatadas || []} />
       </div>
-      <SeizedSpeciesChart data={data.especiesMaisApreendidas || []} />
       <RoadkillSpeciesChart data={data.atropelamentos || []} />
     </div>
   );
