@@ -1,6 +1,5 @@
 
 import React, { ReactNode } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartDataItem } from '@/types/hotspots';
 import { 
   BarChart, 
@@ -17,16 +16,16 @@ import {
   LabelList
 } from 'recharts';
 
-// New enhanced color palette
-const COLORS = [
-  '#3b82f6', // Blue
-  '#8b5cf6', // Purple
-  '#ec4899', // Pink
-  '#f97316', // Orange
-  '#10b981', // Green
-  '#06b6d4', // Cyan
-  '#6366f1', // Indigo
-  '#a855f7', // Violet
+// Chart colors following site identity - navy, yellow accent, complementary
+const CHART_COLORS = [
+  'hsl(220, 83%, 16%)',    // Navy blue (primary)
+  'hsl(48, 100%, 50%)',    // Yellow (accent)
+  'hsl(142, 76%, 36%)',    // Green (success)
+  'hsl(220, 60%, 35%)',    // Medium blue
+  'hsl(48, 90%, 60%)',     // Light yellow
+  'hsl(142, 60%, 50%)',    // Light green
+  'hsl(220, 40%, 50%)',    // Slate blue
+  'hsl(25, 90%, 55%)',     // Orange
 ];
 
 export interface ChartCardProps {
@@ -44,15 +43,14 @@ export interface ChartCardProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-background/95 backdrop-blur-sm p-4 border border-border rounded-lg shadow-xl ring-1 ring-border/50">
-        <p className="font-semibold text-sm mb-2 text-foreground">{label}</p>
+      <div className="bg-card/95 backdrop-blur-sm p-3 border border-border rounded-xl shadow-lg">
+        <p className="font-semibold text-sm mb-1.5 text-foreground">{label || payload[0]?.name}</p>
         {payload.map((item: any, index: number) => (
-          <p key={index} className="text-sm text-foreground/80 flex items-center gap-2">
+          <p key={index} className="text-sm text-muted-foreground flex items-center gap-2">
             <span 
-              className="w-3 h-3 rounded-full inline-block" 
+              className="w-2.5 h-2.5 rounded-full inline-block" 
               style={{ backgroundColor: item.color }}
             />
-            <span className="font-medium">{item.name}:</span>
             <span className="font-bold text-foreground">{item.value.toLocaleString('pt-BR')}</span>
           </p>
         ))}
@@ -68,6 +66,8 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
+  if (percent < 0.05) return null; // Hide labels for small slices
+
   return (
     <text 
       x={x} 
@@ -75,8 +75,8 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
       fill="white" 
       textAnchor="middle" 
       dominantBaseline="central"
-      fontSize={12}
-      fontWeight="medium"
+      fontSize={11}
+      fontWeight="600"
     >
       {`${(percent * 100).toFixed(0)}%`}
     </text>
@@ -101,26 +101,27 @@ const ChartCard: React.FC<ChartCardProps> = ({
 
     if (type === 'bar') {
       return (
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={280}>
           <BarChart 
             data={data} 
-            margin={{ top: 10, right: 30, left: 30, bottom: 30 }}
-            barSize={24}
+            margin={{ top: 10, right: 10, left: 0, bottom: 40 }}
+            barSize={32}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" opacity={0.3} vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} vertical={false} />
             <XAxis 
               dataKey={nameKey} 
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
               angle={-25}
               textAnchor="end"
-              height={60}
+              height={50}
             />
             <YAxis 
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              width={40}
             />
             <Tooltip content={<CustomTooltip />} />
             {showLegend && (
@@ -133,22 +134,21 @@ const ChartCard: React.FC<ChartCardProps> = ({
             <Bar 
               dataKey={dataKey} 
               name="Quantidade" 
-              fill="url(#colorGradient)" 
-              radius={[8, 8, 0, 0]}
+              radius={[6, 6, 0, 0]}
             >
+              {data.map((_entry: any, index: number) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={CHART_COLORS[index % CHART_COLORS.length]} 
+                />
+              ))}
               <LabelList 
                 dataKey={dataKey} 
                 position="top" 
-                style={{ fontSize: '11px', fill: 'hsl(var(--foreground))', fontWeight: 500 }} 
+                style={{ fontSize: '10px', fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} 
                 formatter={(value: number) => value.toLocaleString('pt-BR')}
               />
             </Bar>
-            <defs>
-              <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
-                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
-              </linearGradient>
-            </defs>
           </BarChart>
         </ResponsiveContainer>
       );
@@ -156,32 +156,39 @@ const ChartCard: React.FC<ChartCardProps> = ({
     
     if (type === 'pie') {
       return (
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+        <ResponsiveContainer width="100%" height={280}>
+          <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
             <Pie
               data={data}
               cx="50%"
-              cy="50%"
+              cy="45%"
               labelLine={false}
               label={renderCustomizedLabel}
-              outerRadius="70%"
-              innerRadius="40%"
+              outerRadius="75%"
+              innerRadius="45%"
               fill="#8884d8"
               dataKey={dataKey}
-              paddingAngle={5}
+              paddingAngle={3}
+              stroke="hsl(var(--background))"
+              strokeWidth={2}
             >
               {data.map((_entry: any, index: number) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  fill={COLORS[index % COLORS.length]} 
-                  stroke="#fff"
-                  strokeWidth={1}
+                  fill={CHART_COLORS[index % CHART_COLORS.length]} 
                 />
               ))}
             </Pie>
             <Tooltip content={<CustomTooltip />} />
             {showLegend && (
-              <Legend layout="horizontal" verticalAlign="bottom" align="center" />
+              <Legend 
+                layout="horizontal" 
+                verticalAlign="bottom" 
+                align="center"
+                iconType="circle"
+                iconSize={8}
+                formatter={(value) => <span className="text-xs text-muted-foreground">{value}</span>}
+              />
             )}
           </PieChart>
         </ResponsiveContainer>
@@ -192,19 +199,19 @@ const ChartCard: React.FC<ChartCardProps> = ({
   };
 
   return (
-    <Card className={`overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-background to-muted/20 ${className}`}>
-      <CardHeader className="pb-3 border-b border-border/50 bg-gradient-to-r from-background to-muted/30">
-        <CardTitle className="text-xl font-semibold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+    <div className={`bg-card rounded-2xl border border-border/50 overflow-hidden transition-all duration-200 hover:shadow-md hover:border-border ${className}`}>
+      <div className="px-5 py-4 border-b border-border/30">
+        <h3 className="text-base font-semibold text-foreground">
           {title}
-        </CardTitle>
+        </h3>
         {subtitle && (
-          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
         )}
-      </CardHeader>
-      <CardContent className="p-6 bg-background/50">
+      </div>
+      <div className="p-4">
         {renderChart()}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

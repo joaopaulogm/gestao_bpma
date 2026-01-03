@@ -21,7 +21,6 @@ const Dashboard = () => {
   
   // Initialize year filter to 2025 when component mounts
   useEffect(() => {
-    // Apenas definir filtros iniciais se ainda não foram definidos
     if (!filters.year) {
       updateFilters({ year: 2025, month: null });
     }
@@ -50,25 +49,28 @@ const Dashboard = () => {
   if (isLoading) {
     return (
       <Layout title="Painel de Dados" showBackButton>
-        <DashboardYearTabs 
-          selectedYear={filters.year} 
-          onYearChange={handleYearChange} 
-        />
-        <DashboardLoading />
+        <div className="space-y-6">
+          <DashboardYearTabs 
+            selectedYear={filters.year} 
+            onYearChange={handleYearChange} 
+          />
+          <DashboardLoading />
+        </div>
       </Layout>
     );
   }
 
   // NUNCA mostrar tela de erro - sempre mostrar dados (mesmo que vazios)
-  // Se não há dados ainda, mostrar loading
   if (!data && isLoading) {
     return (
       <Layout title="Painel de Dados" showBackButton>
-        <DashboardYearTabs 
-          selectedYear={filters.year} 
-          onYearChange={handleYearChange} 
-        />
-        <DashboardLoading />
+        <div className="space-y-6">
+          <DashboardYearTabs 
+            selectedYear={filters.year} 
+            onYearChange={handleYearChange} 
+          />
+          <DashboardLoading />
+        </div>
       </Layout>
     );
   }
@@ -83,12 +85,14 @@ const Dashboard = () => {
   return (
     <Layout title="Painel de Dados" showBackButton>
       <div className="space-y-6 animate-fade-in">
-        <DashboardYearTabs 
-          selectedYear={filters.year} 
-          onYearChange={handleYearChange} 
-        />
-        
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        {/* Header with title and actions */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Acompanhe e analise os dados de fauna com facilidade.
+            </p>
+          </div>
           <DashboardHeader 
             year={filters.year}
             month={filters.month}
@@ -103,8 +107,16 @@ const Dashboard = () => {
           />
         </div>
 
+        {/* Year tabs */}
+        <DashboardYearTabs 
+          selectedYear={filters.year} 
+          onYearChange={handleYearChange} 
+        />
+
+        {/* Summary cards */}
         <DashboardSummaryCards data={displayData} />
         
+        {/* Content tabs */}
         <DashboardTabs 
           data={displayData} 
           activeTab={activeTab}

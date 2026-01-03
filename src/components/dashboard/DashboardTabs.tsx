@@ -1,17 +1,12 @@
 
 import React from 'react';
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
 import { LineChart, PieChart, BarChart4, MapPin } from 'lucide-react';
 import DashboardGraficosGerais from './DashboardGraficosGerais';
 import DashboardGraficosEspecies from './DashboardGraficosEspecies';
 import DashboardGraficosDestinacao from './DashboardGraficosDestinacao';
 import DashboardMapas from './DashboardMapas';
 import { DashboardData } from '@/types/hotspots';
+import { cn } from '@/lib/utils';
 
 interface DashboardTabsProps {
   data: DashboardData;
@@ -19,67 +14,58 @@ interface DashboardTabsProps {
   onTabChange: (value: string) => void;
 }
 
+const tabs = [
+  { id: 'geral', label: 'Dados Gerais', icon: LineChart },
+  { id: 'especies', label: 'Espécies', icon: PieChart },
+  { id: 'destinacao', label: 'Destinação', icon: BarChart4 },
+  { id: 'mapas', label: 'Mapas', icon: MapPin },
+];
+
 const DashboardTabs: React.FC<DashboardTabsProps> = ({ 
   data, 
   activeTab,
   onTabChange 
 }) => {
   return (
-    <Tabs 
-      value={activeTab} 
-      onValueChange={onTabChange}
-      className="space-y-6"
-    >
-      <TabsList className="grid grid-cols-4 w-full max-w-3xl mx-auto bg-slate-50 p-1 rounded-xl">
-        <TabsTrigger 
-          value="geral" 
-          className="data-[state=active]:bg-white data-[state=active]:text-blue-600"
-        >
-          <LineChart className="h-4 w-4 mr-2" />
-          Dados Gerais
-        </TabsTrigger>
-        <TabsTrigger 
-          value="especies" 
-          className="data-[state=active]:bg-white data-[state=active]:text-green-600"
-        >
-          <PieChart className="h-4 w-4 mr-2" />
-          Espécies
-        </TabsTrigger>
-        <TabsTrigger 
-          value="destinacao" 
-          className="data-[state=active]:bg-white data-[state=active]:text-purple-600"
-        >
-          <BarChart4 className="h-4 w-4 mr-2" />
-          Destinação
-        </TabsTrigger>
-        <TabsTrigger 
-          value="mapas" 
-          className="data-[state=active]:bg-white data-[state=active]:text-amber-600"
-        >
-          <MapPin className="h-4 w-4 mr-2" />
-          Mapas
-        </TabsTrigger>
-      </TabsList>
+    <div className="space-y-6">
+      {/* Tab buttons */}
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={cn(
+                "inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
+                "border",
+                isActive
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-card text-muted-foreground border-border/50 hover:border-border hover:text-foreground hover:bg-muted/30"
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
       
-      <TabsContent value="geral" className="mt-6">
-        <DashboardGraficosGerais data={data} />
-      </TabsContent>
-      
-      <TabsContent value="especies" className="mt-6">
-        <DashboardGraficosEspecies data={data} />
-      </TabsContent>
-      
-      <TabsContent value="destinacao" className="mt-6">
-        <DashboardGraficosDestinacao data={data} />
-      </TabsContent>
-      
-      <TabsContent value="mapas" className="mt-6">
-        <DashboardMapas 
-          dataOrigem={data?.mapDataOrigem || []} 
-          dataSoltura={data?.mapDataSoltura || []} 
-        />
-      </TabsContent>
-    </Tabs>
+      {/* Tab content */}
+      <div className="animate-fade-in">
+        {activeTab === 'geral' && <DashboardGraficosGerais data={data} />}
+        {activeTab === 'especies' && <DashboardGraficosEspecies data={data} />}
+        {activeTab === 'destinacao' && <DashboardGraficosDestinacao data={data} />}
+        {activeTab === 'mapas' && (
+          <DashboardMapas 
+            dataOrigem={data?.mapDataOrigem || []} 
+            dataSoltura={data?.mapDataSoltura || []} 
+          />
+        )}
+      </div>
+    </div>
   );
 };
 
