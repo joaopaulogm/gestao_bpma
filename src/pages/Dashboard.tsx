@@ -37,6 +37,11 @@ const Dashboard = () => {
     setActiveTab(value);
   };
 
+  // Criar dados vazios usando useMemo para evitar recriação (hooks devem ser chamados sempre)
+  const emptyData = useMemo(() => {
+    return processDashboardData([]);
+  }, []);
+
   if (isLoading) {
     return (
       <Layout title="Painel de Dados" showBackButton>
@@ -44,11 +49,6 @@ const Dashboard = () => {
       </Layout>
     );
   }
-
-  // Criar dados vazios usando useMemo para evitar recriação
-  const emptyData = useMemo(() => {
-    return processDashboardData([]);
-  }, []);
 
   // NUNCA mostrar tela de erro - sempre mostrar dados (mesmo que vazios)
   // Se não há dados ainda, mostrar loading
