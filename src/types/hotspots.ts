@@ -34,6 +34,7 @@ export interface HotspotRegion {
 export interface Registro {
   id: string;
   data: string;
+  data_ocorrencia?: string; // Campo alternativo para tabelas históricas
   // Foreign key IDs
   especie_id: string | null;
   regiao_administrativa_id: string | null;
@@ -77,6 +78,8 @@ export interface Registro {
   motivo_entrega_ceapa: string | null;
   outro_destinacao: string | null;
   created_at: string;
+  // Campo para identificar tipo de registro (resgate, historico, apreensao)
+  tipo_registro?: 'resgate' | 'historico' | 'apreensao' | string;
 }
 
 export interface ChartDataItem {

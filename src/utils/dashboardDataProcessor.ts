@@ -29,7 +29,7 @@ export const processDashboardData = (registros: Registro[]): DashboardData => {
   );
   
   const animaisAtropelados = registros.filter(r => 
-    r && (r.atropelamento === 'Sim' || r.atropelamento === true || r.atropelamento === 'true')
+    r && (r.atropelamento === 'Sim' || r.atropelamento === 'true')
   );
   
   // Transform data for different charts and metrics

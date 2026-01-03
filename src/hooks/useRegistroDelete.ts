@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+// Type-safe wrapper para queries em tabelas não tipadas
+const supabaseAny = supabase as any;
+
 export const useRegistroDelete = (onDeleteSuccess: (deletedId: string) => void) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [registroToDelete, setRegistroToDelete] = useState<{ id: string, nome: string } | null>(null);
@@ -18,8 +21,8 @@ export const useRegistroDelete = (onDeleteSuccess: (deletedId: string) => void) 
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('fat_registros_de_resgate')
+      const { error } = await supabaseAny
+        .from('fat_resgates_diarios_2025')
         .delete()
         .eq('id', registroToDelete.id);
       

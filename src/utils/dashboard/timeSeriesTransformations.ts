@@ -19,8 +19,8 @@ export const transformTimeSeriesData = (registros: Registro[]): TimeSeriesItem[]
       let dateStr: string;
       if (typeof registro.data === 'string') {
         dateStr = registro.data.split('T')[0]; // Pega apenas a parte da data
-      } else if (registro.data instanceof Date) {
-        dateStr = format(registro.data, 'yyyy-MM-dd');
+      } else if (typeof registro.data === 'object' && registro.data !== null) {
+        dateStr = format(registro.data as Date, 'yyyy-MM-dd');
       } else {
         return; // Skip se não for formato válido
       }

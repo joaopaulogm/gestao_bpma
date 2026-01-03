@@ -9,6 +9,9 @@ import { buscarEspeciePorNomeCientifico } from '@/services/especieService';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+// Type-safe wrapper para queries em tabelas não tipadas
+const supabaseAny = supabase as any;
+
 export const useResgateFormEdit = (
   form: UseFormReturn<ResgateFormData>,
   editingId: string | null,
@@ -50,8 +53,8 @@ export const useResgateFormEdit = (
   const fetchRegistro = async (id: string) => {
     try {
       setFetchError(null);
-      const { data, error } = await supabase
-        .from('fat_registros_de_resgate')
+      const { data, error } = await supabaseAny
+        .from('fat_resgates_diarios_2025')
         .select(`
           *,
           regiao_administrativa:dim_regiao_administrativa(nome),

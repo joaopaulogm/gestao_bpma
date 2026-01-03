@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { supabase } from '@/integrations/supabase/client';
+
+// Type-safe wrapper para queries em tabelas não tipadas
+const supabaseAny = supabase as any;
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Registro } from '@/types/hotspots';
@@ -61,8 +64,8 @@ const Registros = () => {
       const promises = tabelas.map(async (tabela) => {
         try {
           // Para fat_registros_de_resgate, usar joins
-          if (tabela === 'fat_registros_de_resgate') {
-            const { data, error } = await supabase
+          if (tabela === 'fat_registros_de_resgate' || tabela === 'fat_resgates_diarios_2025') {
+            const { data, error } = await supabaseAny
               .from(tabela)
               .select(`
                 *,
@@ -85,39 +88,18 @@ const Registros = () => {
           } else {
             // Para tabelas fat_resgates_diarios_*, buscar sem joins primeiro
             // e depois enriquecer os dados manualmente
-            // Tentar ordenar por 'data' primeiro (para 2025), se falhar, usar 'data_ocorrencia'
-            let query = supabase.from(tabela).select('*');
+            // Usar cast para evitar erros de TypeScript com tabelas não tipadas
+            const supabaseAny = supabase as any;
             
-            // Tentar ordenar por 'data' (2025 usa este campo)
-            try {
-              query = query.order('data', { ascending: false });
-            } catch {
-              // Se falhar, tentar 'data_ocorrencia' (2020-2024 usam este)
-              query = query.order('data_ocorrencia', { ascending: false });
-            }
+            // Para 2025 usar 'data', para outras usar 'data_ocorrencia'
+            const campoData = tabela === 'fat_resgates_diarios_2025' ? 'data' : 'data_ocorrencia';
             
-            const { data, error } = await query;
+            const { data, error } = await supabaseAny
+              .from(tabela)
+              .select('*')
+              .order(campoData, { ascending: false });
             
             if (error) {
-              // Se erro ao ordenar por 'data', tentar 'data_ocorrencia'
-              if (error.message?.includes('data') || error.code === 'PGRST116') {
-                const { data: dataRetry, error: errorRetry } = await supabase
-                  .from(tabela)
-                  .select('*')
-                  .order('data_ocorrencia', { ascending: false });
-                
-                if (errorRetry) {
-                  console.warn(`Erro ao buscar de ${tabela}:`, errorRetry);
-                  return [];
-                }
-                
-                // Enriquecer dados com relacionamentos
-                if (dataRetry && dataRetry.length > 0) {
-                  return await enrichHistoricalData(dataRetry);
-                }
-                return [];
-              }
-              
               console.warn(`Erro ao buscar de ${tabela}:`, error);
               return [];
             }
@@ -146,16 +128,12 @@ const Registros = () => {
       });
       
       // Normalizar campo de data (algumas tabelas usam 'data', outras 'data_ocorrencia')
-      const normalizedRegistros = allRegistros.map(reg => {
+      const normalizedRegistros = allRegistros.map((reg: any) => {
         const normalized = { ...reg };
         
         // Se não tem 'data' mas tem 'data_ocorrencia', usar 'data_ocorrencia'
         if (!normalized.data && normalized.data_ocorrencia) {
           normalized.data = normalized.data_ocorrencia;
-        }
-        // Se não tem 'data_ocorrencia' mas tem 'data', manter 'data'
-        else if (normalized.data && !normalized.data_ocorrencia) {
-          // Já está correto, não precisa fazer nada
         }
         
         return normalized;

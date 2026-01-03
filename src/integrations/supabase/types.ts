@@ -1161,150 +1161,6 @@ export type Database = {
           },
         ]
       }
-      fat_registros_de_resgate: {
-        Row: {
-          atropelamento: string
-          created_at: string
-          data: string
-          desfecho_id: string | null
-          destinacao_id: string | null
-          especie_id: string | null
-          estado_saude_id: string | null
-          estagio_vida_id: string | null
-          hora_guarda_ceapa: string | null
-          id: string
-          latitude_origem: string
-          latitude_soltura: string | null
-          longitude_origem: string
-          longitude_soltura: string | null
-          motivo_entrega_ceapa: string | null
-          numero_tco: string | null
-          numero_termo_entrega: string | null
-          origem_id: string | null
-          outro_desfecho: string | null
-          outro_destinacao: string | null
-          quantidade: number | null
-          quantidade_adulto: number | null
-          quantidade_filhote: number | null
-          quantidade_total: number | null
-          regiao_administrativa_id: string | null
-          tipo_area_id: string | null
-        }
-        Insert: {
-          atropelamento: string
-          created_at?: string
-          data: string
-          desfecho_id?: string | null
-          destinacao_id?: string | null
-          especie_id?: string | null
-          estado_saude_id?: string | null
-          estagio_vida_id?: string | null
-          hora_guarda_ceapa?: string | null
-          id?: string
-          latitude_origem: string
-          latitude_soltura?: string | null
-          longitude_origem: string
-          longitude_soltura?: string | null
-          motivo_entrega_ceapa?: string | null
-          numero_tco?: string | null
-          numero_termo_entrega?: string | null
-          origem_id?: string | null
-          outro_desfecho?: string | null
-          outro_destinacao?: string | null
-          quantidade?: number | null
-          quantidade_adulto?: number | null
-          quantidade_filhote?: number | null
-          quantidade_total?: number | null
-          regiao_administrativa_id?: string | null
-          tipo_area_id?: string | null
-        }
-        Update: {
-          atropelamento?: string
-          created_at?: string
-          data?: string
-          desfecho_id?: string | null
-          destinacao_id?: string | null
-          especie_id?: string | null
-          estado_saude_id?: string | null
-          estagio_vida_id?: string | null
-          hora_guarda_ceapa?: string | null
-          id?: string
-          latitude_origem?: string
-          latitude_soltura?: string | null
-          longitude_origem?: string
-          longitude_soltura?: string | null
-          motivo_entrega_ceapa?: string | null
-          numero_tco?: string | null
-          numero_termo_entrega?: string | null
-          origem_id?: string | null
-          outro_desfecho?: string | null
-          outro_destinacao?: string | null
-          quantidade?: number | null
-          quantidade_adulto?: number | null
-          quantidade_filhote?: number | null
-          quantidade_total?: number | null
-          regiao_administrativa_id?: string | null
-          tipo_area_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fat_registros_de_resgate_tipo_area_id_fkey"
-            columns: ["tipo_area_id"]
-            isOneToOne: false
-            referencedRelation: "dim_tipo_de_area"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_registros_desfecho"
-            columns: ["desfecho_id"]
-            isOneToOne: false
-            referencedRelation: "dim_desfecho"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_registros_destinacao"
-            columns: ["destinacao_id"]
-            isOneToOne: false
-            referencedRelation: "dim_destinacao"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_registros_especie"
-            columns: ["especie_id"]
-            isOneToOne: false
-            referencedRelation: "dim_especies_fauna"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_registros_estado_saude"
-            columns: ["estado_saude_id"]
-            isOneToOne: false
-            referencedRelation: "dim_estado_saude"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_registros_estagio_vida"
-            columns: ["estagio_vida_id"]
-            isOneToOne: false
-            referencedRelation: "dim_estagio_vida"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_registros_origem"
-            columns: ["origem_id"]
-            isOneToOne: false
-            referencedRelation: "dim_origem"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_registros_regiao"
-            columns: ["regiao_administrativa_id"]
-            isOneToOne: false
-            referencedRelation: "dim_regiao_administrativa"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       fat_resgates_diarios_2020: {
         Row: {
           classe_taxonomica: string | null
@@ -1683,6 +1539,203 @@ export type Database = {
             columns: ["especie_id"]
             isOneToOne: false
             referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_resgates_diarios_2025: {
+        Row: {
+          atropelamento: string
+          created_at: string
+          data: string
+          desfecho_id: string | null
+          destinacao_id: string | null
+          especie_id: string | null
+          estado_saude_id: string | null
+          estagio_vida_id: string | null
+          hora_guarda_ceapa: string | null
+          id: string
+          latitude_origem: string
+          latitude_soltura: string | null
+          longitude_origem: string
+          longitude_soltura: string | null
+          motivo_entrega_ceapa: string | null
+          numero_termo_entrega: string | null
+          origem_id: string | null
+          outro_desfecho: string | null
+          outro_destinacao: string | null
+          quantidade: number | null
+          quantidade_adulto: number | null
+          quantidade_filhote: number | null
+          quantidade_total: number | null
+          regiao_administrativa_id: string | null
+          tipo_area_id: string | null
+        }
+        Insert: {
+          atropelamento: string
+          created_at?: string
+          data: string
+          desfecho_id?: string | null
+          destinacao_id?: string | null
+          especie_id?: string | null
+          estado_saude_id?: string | null
+          estagio_vida_id?: string | null
+          hora_guarda_ceapa?: string | null
+          id?: string
+          latitude_origem: string
+          latitude_soltura?: string | null
+          longitude_origem: string
+          longitude_soltura?: string | null
+          motivo_entrega_ceapa?: string | null
+          numero_termo_entrega?: string | null
+          origem_id?: string | null
+          outro_desfecho?: string | null
+          outro_destinacao?: string | null
+          quantidade?: number | null
+          quantidade_adulto?: number | null
+          quantidade_filhote?: number | null
+          quantidade_total?: number | null
+          regiao_administrativa_id?: string | null
+          tipo_area_id?: string | null
+        }
+        Update: {
+          atropelamento?: string
+          created_at?: string
+          data?: string
+          desfecho_id?: string | null
+          destinacao_id?: string | null
+          especie_id?: string | null
+          estado_saude_id?: string | null
+          estagio_vida_id?: string | null
+          hora_guarda_ceapa?: string | null
+          id?: string
+          latitude_origem?: string
+          latitude_soltura?: string | null
+          longitude_origem?: string
+          longitude_soltura?: string | null
+          motivo_entrega_ceapa?: string | null
+          numero_termo_entrega?: string | null
+          origem_id?: string | null
+          outro_desfecho?: string | null
+          outro_destinacao?: string | null
+          quantidade?: number | null
+          quantidade_adulto?: number | null
+          quantidade_filhote?: number | null
+          quantidade_total?: number | null
+          regiao_administrativa_id?: string | null
+          tipo_area_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_registros_de_resgate_tipo_area_id_fkey"
+            columns: ["tipo_area_id"]
+            isOneToOne: false
+            referencedRelation: "dim_tipo_de_area"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_desfecho"
+            columns: ["desfecho_id"]
+            isOneToOne: false
+            referencedRelation: "dim_desfecho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_destinacao"
+            columns: ["destinacao_id"]
+            isOneToOne: false
+            referencedRelation: "dim_destinacao"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_especie"
+            columns: ["especie_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_estado_saude"
+            columns: ["estado_saude_id"]
+            isOneToOne: false
+            referencedRelation: "dim_estado_saude"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_estagio_vida"
+            columns: ["estagio_vida_id"]
+            isOneToOne: false
+            referencedRelation: "dim_estagio_vida"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_origem"
+            columns: ["origem_id"]
+            isOneToOne: false
+            referencedRelation: "dim_origem"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_registros_regiao"
+            columns: ["regiao_administrativa_id"]
+            isOneToOne: false
+            referencedRelation: "dim_regiao_administrativa"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_resgates_2025_desfecho"
+            columns: ["desfecho_id"]
+            isOneToOne: false
+            referencedRelation: "dim_desfecho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_resgates_2025_destinacao"
+            columns: ["destinacao_id"]
+            isOneToOne: false
+            referencedRelation: "dim_destinacao"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_resgates_2025_especie"
+            columns: ["especie_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_resgates_2025_estado_saude"
+            columns: ["estado_saude_id"]
+            isOneToOne: false
+            referencedRelation: "dim_estado_saude"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_resgates_2025_estagio_vida"
+            columns: ["estagio_vida_id"]
+            isOneToOne: false
+            referencedRelation: "dim_estagio_vida"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_resgates_2025_origem"
+            columns: ["origem_id"]
+            isOneToOne: false
+            referencedRelation: "dim_origem"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_resgates_2025_regiao"
+            columns: ["regiao_administrativa_id"]
+            isOneToOne: false
+            referencedRelation: "dim_regiao_administrativa"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_resgates_2025_tipo_area"
+            columns: ["tipo_area_id"]
+            isOneToOne: false
+            referencedRelation: "dim_tipo_de_area"
             referencedColumns: ["id"]
           },
         ]

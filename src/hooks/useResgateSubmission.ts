@@ -8,6 +8,9 @@ import { parse, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { EspecieItem } from '@/components/resgate/EspeciesMultiplasSection';
 
+// Type-safe wrapper para queries em tabelas não tipadas
+const supabaseAny = supabase as any;
+
 export interface MembroEquipeSubmit {
   efetivo_id: string;
 }
@@ -72,8 +75,8 @@ export const useResgateSubmission = () => {
           buscarIdPorNome('dim_destinacao', especie.destinacao)
         ]);
 
-        const { data: insertedRecord, error } = await supabase
-          .from('fat_registros_de_resgate')
+        const { data: insertedRecord, error } = await supabaseAny
+          .from('fat_resgates_diarios_2025')
           .insert({
             data: dataFormatada,
             especie_id: especie.especieId || null,
