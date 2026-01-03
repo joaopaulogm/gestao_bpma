@@ -217,9 +217,6 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
     // Se falhar com PGRST200 (relacionamento não encontrado), fazer fallback para busca sem joins
     console.log(`📊 [Dashboard] Tentando buscar de ${tabelaResgates} com joins...`);
     try {
-      // Para outros anos, tentar com joins primeiro
-      console.log(`📊 [Dashboard] Tentando buscar de ${tabelaResgates} com joins...`);
-      try {
         const selectQuery = `
           *,
           regiao_administrativa:dim_regiao_administrativa(nome),
@@ -288,13 +285,12 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
             console.warn(`⚠️ [Dashboard] Erro ao buscar de ${tabelaResgates}:`, error.message || error);
           }
         }
-      } catch (err: any) {
-        console.warn(`⚠️ [Dashboard] Exceção ao buscar de ${tabelaResgates}, tentando sem joins:`, err?.message || err);
-        const { data: dataSemJoins, error: errorSemJoins } = await fetchDataWithoutJoins(tabelaResgates, filters);
-        if (!errorSemJoins) {
-          registrosAtuais = dataSemJoins || [];
-          console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates} sem joins (após exceção):`, registrosAtuais.length, 'registros');
-        }
+    } catch (err: any) {
+      console.warn(`⚠️ [Dashboard] Exceção ao buscar de ${tabelaResgates}, tentando sem joins:`, err?.message || err);
+      const { data: dataSemJoins, error: errorSemJoins } = await fetchDataWithoutJoins(tabelaResgates, filters);
+      if (!errorSemJoins) {
+        registrosAtuais = dataSemJoins || [];
+        console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates} sem joins (após exceção):`, registrosAtuais.length, 'registros');
       }
     }
     
