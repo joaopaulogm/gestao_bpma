@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import DashboardSummaryCards from '@/components/dashboard/DashboardSummaryCards';
+import DashboardAdvancedKPIs from '@/components/dashboard/DashboardAdvancedKPIs';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
@@ -100,6 +101,7 @@ const Dashboard = () => {
             classeTaxonomica={filters.classeTaxonomica}
             classesDisponiveis={displayData?.classeTaxonomica?.map(c => c.name) || []}
             ultimaAtualizacao={displayData.ultimaAtualizacao}
+            filters={filters}
             onFilterChange={updateFilters}
             onRefresh={handleRefresh}
             data={displayData}
@@ -115,6 +117,13 @@ const Dashboard = () => {
 
         {/* Summary cards */}
         <DashboardSummaryCards data={displayData} />
+        
+        {/* Advanced KPIs */}
+        <DashboardAdvancedKPIs 
+          data={displayData} 
+          year={filters.year} 
+          month={filters.month}
+        />
         
         {/* Content tabs */}
         <DashboardTabs 

@@ -75,6 +75,38 @@ const fetchDataWithoutJoins = async (
           console.warn('Erro ao buscar origem:', origemErr);
         }
       }
+
+      // Aplicar novos filtros avançados
+      if (filters.especie) {
+        query = query.eq('especie_id', filters.especie);
+      }
+      
+      if (filters.regiaoAdministrativa) {
+        query = query.eq('regiao_administrativa_id', filters.regiaoAdministrativa);
+      }
+      
+      if (filters.desfecho) {
+        query = query.eq('desfecho_id', filters.desfecho);
+      }
+      
+      if (filters.tipoRegistro) {
+        // Para dados históricos, verificar tipo_registro ou tabela
+        if (tableName.includes('fat_resgates_diarios_')) {
+          if (filters.tipoRegistro !== 'historico') {
+            // Se não for histórico, não buscar desta tabela
+            hasMore = false;
+            break;
+          }
+        } else {
+          // Para fat_registros_de_resgate, verificar se há campo tipo_registro
+          // ou assumir que é 'resgate'
+          if (filters.tipoRegistro !== 'resgate') {
+            // Se não for resgate, não buscar desta tabela
+            hasMore = false;
+            break;
+          }
+        }
+      }
       
       // Aplicar paginação
       query = query.range(from, from + PAGE_SIZE - 1);
@@ -255,8 +287,35 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
       console.log(`✅ [Dashboard] Total de registros: ${todosRegistros.length}`);
     }
     
+    // Aplicar filtros avançados nos dados já enriquecidos
+    let registrosFiltrados = todosRegistros || [];
+    
+    // Filtrar por classe taxonômica (se não foi aplicado na query)
+    if (filters.classeTaxonomica) {
+      registrosFiltrados = registrosFiltrados.filter((r: any) => 
+        r.especie?.classe_taxonomica === filters.classeTaxonomica ||
+        r.classe_taxonomica === filters.classeTaxonomica
+      );
+    }
+    
+    // Filtrar por exótica
+    if (filters.exotica !== null) {
+      registrosFiltrados = registrosFiltrados.filter((r: any) => 
+        r.especie?.exotica === filters.exotica ||
+        (filters.exotica === false && (r.especie?.exotica === null || r.especie?.exotica === false))
+      );
+    }
+    
+    // Filtrar por ameaçada
+    if (filters.ameacada !== null) {
+      registrosFiltrados = registrosFiltrados.filter((r: any) => 
+        r.especie?.ameacada === filters.ameacada ||
+        (filters.ameacada === false && (r.especie?.ameacada === null || r.especie?.ameacada === false))
+      );
+    }
+    
     // SEMPRE retornar array (mesmo que vazio) - nunca lançar erro
-    return todosRegistros || [];
+    return registrosFiltrados;
   } catch (error: any) {
     // Log detalhado do erro mas NUNCA lançar - sempre retornar array vazio
     console.warn('⚠️ [Dashboard] Erro ao buscar dados (retornando array vazio):', error?.message || error);

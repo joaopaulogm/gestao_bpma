@@ -10,6 +10,8 @@ import DashboardGraficosGerais from './DashboardGraficosGerais';
 import DashboardGraficosEspecies from './DashboardGraficosEspecies';
 import DashboardGraficosDestinacao from './DashboardGraficosDestinacao';
 import DashboardMapas from './DashboardMapas';
+import DashboardSazonalidade from './DashboardSazonalidade';
+import DashboardComparativos from './DashboardComparativos';
 import DashboardResgates2020_2025 from './charts/DashboardResgates2020_2025';
 
 interface DashboardResgatesProps {
@@ -101,7 +103,7 @@ const DashboardResgatesAno: React.FC<DashboardResgatesAnoProps> = ({
       onValueChange={setActiveViewTab}
       className="space-y-6"
     >
-      <TabsList className="grid grid-cols-4 w-full max-w-3xl mx-auto bg-slate-50 p-1 rounded-xl shadow-sm">
+      <TabsList className="grid grid-cols-6 w-full max-w-5xl mx-auto bg-slate-50 p-1 rounded-xl shadow-sm">
         <TabsTrigger 
           value="geral" 
           className="data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm"
@@ -126,6 +128,18 @@ const DashboardResgatesAno: React.FC<DashboardResgatesAnoProps> = ({
         >
           Mapas
         </TabsTrigger>
+        <TabsTrigger 
+          value="sazonalidade" 
+          className="data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm"
+        >
+          Sazonalidade
+        </TabsTrigger>
+        <TabsTrigger 
+          value="comparativos" 
+          className="data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm"
+        >
+          Comparativos
+        </TabsTrigger>
       </TabsList>
       
       <TabsContent value="geral" className="mt-6">
@@ -145,6 +159,14 @@ const DashboardResgatesAno: React.FC<DashboardResgatesAnoProps> = ({
           dataOrigem={data?.mapDataOrigem || []} 
           dataSoltura={data?.mapDataSoltura || []} 
         />
+      </TabsContent>
+      
+      <TabsContent value="sazonalidade" className="mt-6">
+        <DashboardSazonalidade data={data} year={year} />
+      </TabsContent>
+      
+      <TabsContent value="comparativos" className="mt-6">
+        <DashboardComparativos data={data} />
       </TabsContent>
     </Tabs>
   );

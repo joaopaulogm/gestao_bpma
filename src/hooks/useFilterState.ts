@@ -6,6 +6,13 @@ export interface FilterState {
   month: number | null;
   classeTaxonomica: string | null;
   origem: string | null;
+  // Novos filtros avançados
+  especie: string | null; // especie_id
+  regiaoAdministrativa: string | null; // ra_id ou nome
+  desfecho: string | null; // desfecho_id ou nome
+  tipoRegistro: string | null; // 'resgate' | 'historico' | 'apreensao'
+  exotica: boolean | null; // true | false | null (todos)
+  ameacada: boolean | null; // true | false | null (todos)
 }
 
 /**
@@ -17,6 +24,12 @@ export const useFilterState = (initialYear = new Date().getFullYear()) => {
     month: null,
     classeTaxonomica: null,
     origem: null,
+    especie: null,
+    regiaoAdministrativa: null,
+    desfecho: null,
+    tipoRegistro: null,
+    exotica: null,
+    ameacada: null,
   });
 
   const updateFilters = (newFilters: Partial<FilterState>) => {
@@ -29,6 +42,12 @@ export const useFilterState = (initialYear = new Date().getFullYear()) => {
       month: null,
       classeTaxonomica: null,
       origem: null,
+      especie: null,
+      regiaoAdministrativa: null,
+      desfecho: null,
+      tipoRegistro: null,
+      exotica: null,
+      ameacada: null,
     });
   };
 
