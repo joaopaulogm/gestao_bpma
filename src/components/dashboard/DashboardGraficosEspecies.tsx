@@ -2,8 +2,6 @@
 import React from 'react';
 import { DashboardData } from '@/types/hotspots';
 import RescuedSpeciesChart from './charts/RescuedSpeciesChart';
-import RoadkillSpeciesChart from './charts/RoadkillSpeciesChart';
-import RoadkillDistributionChart from './charts/RoadkillDistributionChart';
 import QuantityStatisticsChart from './charts/QuantityStatisticsChart';
 
 interface DashboardGraficosEspeciesProps {
@@ -23,10 +21,6 @@ const DashboardGraficosEspecies = ({ data }: DashboardGraficosEspeciesProps) => 
   return (
     <div className="space-y-8">
       <RescuedSpeciesChart data={data.especiesMaisResgatadas || []} />
-      
-      <RoadkillSpeciesChart data={data.especiesAtropeladas || []} />
-      
-      <RoadkillDistributionChart data={data.atropelamentoDistribuicao || []} />
       
       <QuantityStatisticsChart data={data.quantidadePorOcorrencia || { min: 0, max: 0, avg: 0, median: 0 }} />
     </div>

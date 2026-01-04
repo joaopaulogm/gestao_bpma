@@ -2,15 +2,28 @@
 import React from 'react';
 
 // Chart colors following site identity - navy, yellow accent, complementary
-export const CHART_COLORS = [
-  'hsl(220, 83%, 16%)',    // Navy blue (primary)
-  'hsl(48, 100%, 50%)',    // Yellow (accent)
-  'hsl(142, 76%, 36%)',    // Green (success)
-  'hsl(220, 60%, 35%)',    // Medium blue
-  'hsl(48, 90%, 60%)',     // Light yellow
-  'hsl(142, 60%, 50%)',    // Light green
-  'hsl(220, 40%, 50%)',    // Slate blue
-  'hsl(25, 90%, 55%)',     // Orange
+export const CHART_COLORS = {
+  navy: 'hsl(220, 83%, 16%)',
+  yellow: 'hsl(48, 100%, 50%)',
+  green: 'hsl(142, 76%, 36%)',
+  blue: 'hsl(220, 60%, 35%)',
+  lightYellow: 'hsl(48, 90%, 60%)',
+  lightGreen: 'hsl(142, 60%, 50%)',
+  slate: 'hsl(220, 40%, 50%)',
+  orange: 'hsl(25, 90%, 55%)',
+  muted: 'hsl(var(--muted))',
+};
+
+// Array version for indexed access
+export const CHART_COLORS_ARRAY = [
+  CHART_COLORS.navy,
+  CHART_COLORS.yellow,
+  CHART_COLORS.green,
+  CHART_COLORS.blue,
+  CHART_COLORS.lightYellow,
+  CHART_COLORS.lightGreen,
+  CHART_COLORS.slate,
+  CHART_COLORS.orange,
 ];
 
 // Custom tooltip component for charts

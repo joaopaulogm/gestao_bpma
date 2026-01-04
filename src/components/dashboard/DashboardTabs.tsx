@@ -12,6 +12,7 @@ interface DashboardTabsProps {
   data: DashboardData;
   activeTab: string;
   onTabChange: (value: string) => void;
+  year?: number;
 }
 
 const tabs = [
@@ -24,7 +25,8 @@ const tabs = [
 const DashboardTabs: React.FC<DashboardTabsProps> = ({ 
   data, 
   activeTab,
-  onTabChange 
+  onTabChange,
+  year = 2025
 }) => {
   return (
     <div className="space-y-6">
@@ -55,7 +57,7 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({
       
       {/* Tab content */}
       <div className="animate-fade-in">
-        {activeTab === 'geral' && <DashboardGraficosGerais data={data} />}
+        {activeTab === 'geral' && <DashboardGraficosGerais data={data} year={year} />}
         {activeTab === 'especies' && <DashboardGraficosEspecies data={data} />}
         {activeTab === 'destinacao' && <DashboardGraficosDestinacao data={data} />}
         {activeTab === 'mapas' && (

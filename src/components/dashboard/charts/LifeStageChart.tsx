@@ -9,7 +9,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import ChartCard from '../ChartCard';
-import { CHART_COLORS, CustomTooltip } from './ChartUtils';
+import { CHART_COLORS_ARRAY, CustomTooltip } from './ChartUtils';
 import { ChartDataItem } from '@/types/hotspots';
 
 interface LifeStageChartProps {
@@ -61,7 +61,7 @@ const LifeStageChart: React.FC<LifeStageChartProps> = ({ data }) => {
             {data.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
-                fill={CHART_COLORS[index % CHART_COLORS.length]} 
+                fill={CHART_COLORS_ARRAY[index % CHART_COLORS_ARRAY.length]} 
                 stroke="#fff"
               />
             ))}
