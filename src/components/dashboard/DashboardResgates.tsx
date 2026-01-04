@@ -143,7 +143,7 @@ const DashboardResgatesAno: React.FC<DashboardResgatesAnoProps> = ({
       </TabsList>
       
       <TabsContent value="geral" className="mt-6">
-        <DashboardGraficosGerais data={data} />
+        <DashboardGraficosGerais data={data} year={year} />
       </TabsContent>
       
       <TabsContent value="especies" className="mt-6">
@@ -151,13 +151,14 @@ const DashboardResgatesAno: React.FC<DashboardResgatesAnoProps> = ({
       </TabsContent>
       
       <TabsContent value="destinacao" className="mt-6">
-        <DashboardGraficosDestinacao data={data} />
+        <DashboardGraficosDestinacao data={data} year={year} />
       </TabsContent>
       
       <TabsContent value="mapas" className="mt-6">
         <DashboardMapas 
           dataOrigem={data?.mapDataOrigem || []} 
-          dataSoltura={data?.mapDataSoltura || []} 
+          dataSoltura={data?.mapDataSoltura || []}
+          data={data}
         />
       </TabsContent>
       

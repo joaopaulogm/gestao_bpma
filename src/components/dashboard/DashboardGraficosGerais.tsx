@@ -4,6 +4,7 @@ import { DashboardData } from '@/types/hotspots';
 import SummaryChartsSection from './sections/SummaryChartsSection';
 import TaxonomicDataSection from './sections/TaxonomicDataSection';
 import SerieTemporalMensalChart from './charts/SerieTemporalMensalChart';
+import HeatmapDiaSemanaMesChart from './charts/HeatmapDiaSemanaMesChart';
 import { useDashboardData } from '@/hooks/useDashboardData';
 
 interface DashboardGraficosGeraisProps {
@@ -11,13 +12,8 @@ interface DashboardGraficosGeraisProps {
   year?: number;
 }
 
-<<<<<<< HEAD
-const DashboardGraficosGerais: React.FC<DashboardGraficosGeraisProps> = ({ data }) => {
-  const { filters } = useDashboardData();
-  
-=======
 const DashboardGraficosGerais: React.FC<DashboardGraficosGeraisProps> = ({ data, year = 2025 }) => {
->>>>>>> 8cd9eea008d022067f01316c737467ef9a9093f6
+  const { filters } = useDashboardData();
   // Validar dados
   if (!data) {
     return (
@@ -33,7 +29,8 @@ const DashboardGraficosGerais: React.FC<DashboardGraficosGeraisProps> = ({ data,
       <TaxonomicDataSection data={data} />
       
       {/* Novos gráficos adicionados */}
-      <SerieTemporalMensalChart data={data} year={filters.year} />
+      <SerieTemporalMensalChart data={data} year={filters.year || year} />
+      <HeatmapDiaSemanaMesChart data={data} year={filters.year || year} />
     </div>
   );
 };

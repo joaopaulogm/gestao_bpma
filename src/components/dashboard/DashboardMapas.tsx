@@ -9,10 +9,12 @@ import {
 } from 'react-leaflet';
 import { MapDataPoint } from '@/types/hotspots';
 import ChartCard from './ChartCard';
+import HotspotsRankingChart from './charts/HotspotsRankingChart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import L from 'leaflet';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle } from 'lucide-react';
+import { DashboardData } from '@/types/hotspots';
 
 // Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';
@@ -57,9 +59,10 @@ const solturaIcon = new L.Icon({
 interface DashboardMapasProps {
   dataOrigem: MapDataPoint[];
   dataSoltura: MapDataPoint[];
+  data?: DashboardData;
 }
 
-const DashboardMapas = ({ dataOrigem, dataSoltura }: DashboardMapasProps) => {
+const DashboardMapas = ({ dataOrigem, dataSoltura, data }: DashboardMapasProps) => {
   const [activeTab, setActiveTab] = useState('origem');
   
   // Centro do mapa (Brasília, DF)
@@ -231,6 +234,11 @@ const DashboardMapas = ({ dataOrigem, dataSoltura }: DashboardMapasProps) => {
           </ChartCard>
         </TabsContent>
       </Tabs>
+      
+      {/* Ranking de Hotspots */}
+      {data && (
+        <HotspotsRankingChart data={data} />
+      )}
     </div>
   );
 };

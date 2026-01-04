@@ -13,6 +13,47 @@ export const exportToExcel = (data: DashboardData, fileName: string) => {
   // Convertemos a estrutura de dados complexa em um formato plano para Excel
   const workbook = XLSX.utils.book_new();
   
+  // Calcular KPIs avançados
+  const registros = data.rawData || [];
+  const totalPeriodo = registros.reduce((acc: number, r: any) => {
+    return acc + (Number(r.quantidade) || Number(r.quantidade_total) || Number(r.quantidade_resgates) || 0);
+  }, 0);
+  
+  const solturas = registros.filter((r: any) => 
+    r.destinacao?.nome?.toLowerCase().includes('soltura') ||
+    r.desfecho?.nome?.toLowerCase().includes('soltura') ||
+    r.desfecho?.tipo === 'Soltura' ||
+    (r as any).quantidade_solturas > 0
+  );
+  
+  const totalSolturas = solturas.reduce((acc: number, r: any) => {
+    return acc + (Number(r.quantidade) || Number(r.quantidade_total) || Number(r.quantidade_solturas) || 0);
+  }, 0);
+  
+  const taxaSoltura = totalPeriodo > 0 ? (totalSolturas / totalPeriodo) * 100 : 0;
+  
+  const especiesDistintas = new Set(
+    registros
+      .map((r: any) => r.especie?.id || r.especie_id || r.nome_cientifico || r.nome_popular)
+      .filter(Boolean)
+  ).size;
+  
+  // Top 1 espécie
+  const especiesMap = new Map<string, number>();
+  registros.forEach((r: any) => {
+    const especieNome = r.especie?.nome_popular || r.nome_popular || 'Não identificada';
+    const quantidade = Number(r.quantidade) || Number(r.quantidade_total) || Number(r.quantidade_resgates) || 0;
+    especiesMap.set(especieNome, (especiesMap.get(especieNome) || 0) + quantidade);
+  });
+  
+  const topEspecie = Array.from(especiesMap.values())
+    .sort((a, b) => b - a)[0];
+  const topEspecieNome = Array.from(especiesMap.entries())
+    .sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+  const percentualTopEspecie = totalPeriodo > 0 && topEspecie
+    ? (topEspecie / totalPeriodo) * 100
+    : 0;
+  
   // Resumo geral
   const resumoSheet = [
     ['Métrica', 'Valor'],
@@ -24,6 +65,14 @@ export const exportToExcel = (data: DashboardData, fileName: string) => {
     ['Quantidade Máxima por Ocorrência', data.quantidadePorOcorrencia.max.toString()],
     ['Quantidade Média por Ocorrência', data.quantidadePorOcorrencia.avg.toString()],
     ['Quantidade Mediana por Ocorrência', data.quantidadePorOcorrencia.median.toString()],
+    ['', ''],
+    ['=== KPIs Avançados ===', ''],
+    ['Taxa de Soltura (%)', taxaSoltura.toFixed(2)],
+    ['Riqueza de Espécies', especiesDistintas.toString()],
+    ['Top 1 Espécie', topEspecieNome],
+    ['Percentual Top 1 Espécie (%)', percentualTopEspecie.toFixed(2)],
+    ['Total de Solturas', totalSolturas.toString()],
+    ['', ''],
     ['Data da Exportação', data.ultimaAtualizacao]
   ];
   
@@ -198,6 +247,45 @@ export const exportToPDF = (data: DashboardData, fileName: string) => {
   // 1. Resumo
   yPos = addSectionTitle("Resumo", yPos);
   
+  // Calcular KPIs avançados para PDF também
+  const registrosPDF = data.rawData || [];
+  const totalPeriodoPDF = registrosPDF.reduce((acc: number, r: any) => {
+    return acc + (Number(r.quantidade) || Number(r.quantidade_total) || Number(r.quantidade_resgates) || 0);
+  }, 0);
+  
+  const solturasPDF = registrosPDF.filter((r: any) => 
+    r.destinacao?.nome?.toLowerCase().includes('soltura') ||
+    r.desfecho?.nome?.toLowerCase().includes('soltura') ||
+    r.desfecho?.tipo === 'Soltura' ||
+    (r as any).quantidade_solturas > 0
+  );
+  
+  const totalSolturasPDF = solturasPDF.reduce((acc: number, r: any) => {
+    return acc + (Number(r.quantidade) || Number(r.quantidade_total) || Number(r.quantidade_solturas) || 0);
+  }, 0);
+  
+  const taxaSolturaPDF = totalPeriodoPDF > 0 ? (totalSolturasPDF / totalPeriodoPDF) * 100 : 0;
+  
+  const especiesDistintasPDF = new Set(
+    registrosPDF
+      .map((r: any) => r.especie?.id || r.especie_id || r.nome_cientifico || r.nome_popular)
+      .filter(Boolean)
+  ).size;
+  
+  const especiesMapPDF = new Map<string, number>();
+  registrosPDF.forEach((r: any) => {
+    const especieNome = r.especie?.nome_popular || r.nome_popular || 'Não identificada';
+    const quantidade = Number(r.quantidade) || Number(r.quantidade_total) || Number(r.quantidade_resgates) || 0;
+    especiesMapPDF.set(especieNome, (especiesMapPDF.get(especieNome) || 0) + quantidade);
+  });
+  
+  const topEspeciePDF = Array.from(especiesMapPDF.entries())
+    .sort((a, b) => b[1] - a[1])[0];
+  const topEspecieNomePDF = topEspeciePDF?.[0] || 'N/A';
+  const percentualTopEspeciePDF = totalPeriodoPDF > 0 && topEspeciePDF
+    ? (topEspeciePDF[1] / totalPeriodoPDF) * 100
+    : 0;
+  
   autoTable(doc, {
     startY: yPos,
     head: [['Métrica', 'Valor']],
@@ -205,7 +293,14 @@ export const exportToPDF = (data: DashboardData, fileName: string) => {
       ['Total de Registros', data.totalRegistros.toString()],
       ['Total de Resgates', data.totalResgates.toString()],
       ['Total de Apreensões', data.totalApreensoes.toString()],
-      ['Total de Atropelamentos', data.totalAtropelamentos.toString()]
+      ['Total de Atropelamentos', data.totalAtropelamentos.toString()],
+      ['', ''],
+      ['=== KPIs Avançados ===', ''],
+      ['Taxa de Soltura (%)', taxaSolturaPDF.toFixed(2)],
+      ['Riqueza de Espécies', especiesDistintasPDF.toString()],
+      ['Top 1 Espécie', topEspecieNomePDF],
+      ['Percentual Top 1 Espécie (%)', percentualTopEspeciePDF.toFixed(2)],
+      ['Total de Solturas', totalSolturasPDF.toString()]
     ],
     theme: 'grid',
     headStyles: { 
