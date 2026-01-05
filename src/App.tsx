@@ -29,6 +29,7 @@ const GerenciarPermissoes = lazy(() => import(/* webpackChunkName: "gerenciar-pe
 const SecaoPessoas = lazy(() => import(/* webpackChunkName: "secao-pessoas" */ '@/pages/SecaoPessoas'));
 const Equipes = lazy(() => import(/* webpackChunkName: "equipes" */ '@/pages/pessoas/Equipes'));
 const Escalas = lazy(() => import(/* webpackChunkName: "escalas" */ '@/pages/pessoas/Escalas'));
+const EscalaAdministrativo = lazy(() => import(/* webpackChunkName: "escala-administrativo" */ '@/pages/pessoas/EscalaAdministrativo'));
 const Afastamentos = lazy(() => import(/* webpackChunkName: "afastamentos" */ '@/pages/pessoas/Afastamentos'));
 const Licencas = lazy(() => import(/* webpackChunkName: "licencas" */ '@/pages/pessoas/Licencas'));
 const Ferias = lazy(() => import(/* webpackChunkName: "ferias" */ '@/pages/pessoas/Ferias'));
@@ -99,6 +100,7 @@ function App() {
               <Route path="/secao-pessoas/efetivo" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><EfetivoBPMA /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/equipes" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Equipes /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/escalas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Escalas /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-pessoas/escala-administrativo" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><EscalaAdministrativo /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/afastamentos" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Afastamentos /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/licencas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Licencas /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/ferias" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Ferias /></SidebarLayout></ProtectedRoute>} />

@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Calendar, UserMinus, FileCheck, Palmtree, Gift, UsersRound, Target } from 'lucide-react';
+import { Users, Calendar, UserMinus, FileCheck, Palmtree, Gift, UsersRound, Target, Building } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const menuItems = [
   { title: 'Efetivo BPMA', description: 'Gerenciar efetivo policial', icon: Users, path: '/secao-pessoas/efetivo' },
   { title: 'Equipes', description: 'Gerenciar equipes de serviço', icon: UsersRound, path: '/secao-pessoas/equipes' },
   { title: 'Escalas', description: 'Escalas de serviço', icon: Calendar, path: '/secao-pessoas/escalas' },
+  { title: 'Escala Administrativo', description: 'Escalonamento administrativo', icon: Building, path: '/secao-pessoas/escala-administrativo' },
   { title: 'Campanha', description: 'Calendário de campanha', icon: Target, path: '/secao-pessoas/campanha' },
   { title: 'Afastamentos', description: 'Registros de afastamentos', icon: UserMinus, path: '/secao-pessoas/afastamentos' },
   { title: 'Licenças', description: 'Licenças concedidas', icon: FileCheck, path: '/secao-pessoas/licencas' },

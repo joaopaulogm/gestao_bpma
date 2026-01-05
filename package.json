@@ -9,7 +9,10 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "sync-inaturalist": "tsx src/scripts/sync-inaturalist-images.ts"
+    "sync-inaturalist": "tsx src/scripts/sync-inaturalist-images.ts",
+    "migrate-repteis": "tsx src/scripts/run-migration-repteis.ts",
+    "remove-anilius": "tsx src/scripts/remove-anilius-scytale.ts",
+    "remove-liophis": "tsx src/scripts/remove-liophis-typhlus.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
