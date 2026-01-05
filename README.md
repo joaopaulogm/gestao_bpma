@@ -59,6 +59,19 @@ This project is built with .
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase (Backend as a Service)
+
+## Segurança
+
+Este projeto implementa várias medidas de segurança:
+
+- **Row Level Security (RLS)** habilitado em todas as tabelas
+- **Variáveis de ambiente** para credenciais sensíveis
+- **CORS restrito** em funções do Supabase
+- **Validação e sanitização** de inputs do usuário
+- **Autenticação obrigatória** para operações sensíveis
+
+Consulte [SECURITY.md](./SECURITY.md) para mais informações sobre políticas de segurança.
 
 ## How can I deploy this project?
 

@@ -1,9 +1,31 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// Restrict CORS to known origins for security
+const getAllowedOrigin = (requestOrigin: string | null): string => {
+  const allowedOrigins = [
+    'https://lovable.dev',
+    'https://preview--gestao-bpma.lovable.app',
+    'https://gestao-bpma.lovable.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+  
+  if (requestOrigin && allowedOrigins.some(origin => requestOrigin.startsWith(origin.replace(/\/$/, '')))) {
+    return requestOrigin;
+  }
+  
+  // Fallback for Lovable preview domains
+  if (requestOrigin && requestOrigin.includes('.lovable.app')) {
+    return requestOrigin;
+  }
+  
+  return allowedOrigins[0];
 };
+
+const corsHeaders = (origin: string | null) => ({
+  'Access-Control-Allow-Origin': getAllowedOrigin(origin),
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+});
 
 // Folder IDs from Google Drive
 const FOLDER_IDS = {
@@ -96,9 +118,12 @@ async function getFileContent(fileId: string, accessToken: string): Promise<{ da
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const headers = corsHeaders(origin);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers });
   }
 
   try {
@@ -133,7 +158,7 @@ serve(async (req) => {
       if (!targetFolderId) {
         return new Response(
           JSON.stringify({ error: 'Missing folderId or folderKey parameter' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
         );
       }
 
@@ -142,7 +167,7 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ files }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -151,7 +176,7 @@ serve(async (req) => {
       if (!fileId) {
         return new Response(
           JSON.stringify({ error: 'Missing fileId parameter' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
         );
       }
 
@@ -159,7 +184,7 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ data, mimeType }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -170,7 +195,7 @@ serve(async (req) => {
       if (!fileName) {
         return new Response(
           JSON.stringify({ error: 'Missing fileName parameter' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
         );
       }
 
@@ -195,7 +220,7 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ files: data.files || [] }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -204,7 +229,7 @@ serve(async (req) => {
       if (!fileId) {
         return new Response(
           JSON.stringify({ error: 'Missing fileId parameter' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
         );
       }
 
@@ -229,7 +254,7 @@ serve(async (req) => {
           webContentLink: metadata.webContentLink,
           directLink: `https://drive.google.com/uc?export=view&id=${fileId}`
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -243,7 +268,7 @@ serve(async (req) => {
     console.error('Error in get-drive-image function:', errorMessage);
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
     );
   }
 });

@@ -1,13 +1,38 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+// Restrict CORS to known origins for security
+const getAllowedOrigin = (requestOrigin: string | null): string => {
+  const allowedOrigins = [
+    'https://lovable.dev',
+    'https://preview--gestao-bpma.lovable.app',
+    'https://gestao-bpma.lovable.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+  
+  if (requestOrigin && allowedOrigins.some(origin => requestOrigin.startsWith(origin.replace(/\/$/, '')))) {
+    return requestOrigin;
+  }
+  
+  // Fallback for Lovable preview domains
+  if (requestOrigin && requestOrigin.includes('.lovable.app')) {
+    return requestOrigin;
+  }
+  
+  return allowedOrigins[0];
 };
 
+const corsHeaders = (origin: string | null) => ({
+  "Access-Control-Allow-Origin": getAllowedOrigin(origin),
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+});
+
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const headers = corsHeaders(origin);
+  
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers });
   }
 
   try {
@@ -16,7 +41,7 @@ serve(async (req) => {
     if (!imageBase64) {
       return new Response(
         JSON.stringify({ error: "Imagem não fornecida" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
       );
     }
 
@@ -102,13 +127,13 @@ serve(async (req) => {
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 429, headers: { ...headers, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 402) {
         return new Response(
           JSON.stringify({ error: "Créditos insuficientes para IA." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 402, headers: { ...headers, "Content-Type": "application/json" } }
         );
       }
       const errorText = await response.text();
@@ -146,7 +171,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...headers, "Content-Type": "application/json" },
     });
 
   } catch (error) {
@@ -156,7 +181,7 @@ serve(async (req) => {
         error: error instanceof Error ? error.message : "Erro ao identificar espécie",
         identificado: false 
       }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...headers, "Content-Type": "application/json" } }
     );
   }
 });
