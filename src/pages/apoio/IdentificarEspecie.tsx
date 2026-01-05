@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { buscarImagemEspecie, getDirectImageUrl } from '@/services/speciesImageService';
+import AISpeciesIdentifier from '@/components/species/AISpeciesIdentifier';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -623,16 +624,31 @@ const IdentificarEspecie: React.FC = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex items-center gap-4 mb-6">
-        <Link to="/material-apoio">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div className="flex items-center gap-3">
-          <Search className="h-8 w-8 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">Identificar Espécie</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <Link to="/material-apoio">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div className="flex items-center gap-3">
+            <Search className="h-8 w-8 text-primary" />
+            <h1 className="text-2xl font-bold text-foreground">Identificar Espécie</h1>
+          </div>
         </div>
+        
+        {/* AI Identification Button - Google Lens style */}
+        <AISpeciesIdentifier 
+          tipo={activeTab} 
+          onIdentified={(result) => {
+            // Auto-search for identified species
+            if (result.nome_popular) {
+              setSearchTerm(result.nome_popular);
+            } else if (result.nome_cientifico) {
+              setSearchTerm(result.nome_cientifico);
+            }
+          }}
+        />
       </div>
 
       {/* Tab Buttons */}

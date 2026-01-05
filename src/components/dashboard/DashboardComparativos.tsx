@@ -57,8 +57,8 @@ const DashboardComparativos: React.FC<DashboardComparativosProps> = ({ data }) =
   
   // Calcular métricas comparativas
   const metricas = useMemo(() => {
-    const totalA = dadosComparativos.reduce((acc, item) => acc + item[`Ano ${anoA}`], 0);
-    const totalB = dadosComparativos.reduce((acc, item) => acc + item[`Ano ${anoB}`], 0);
+    const totalA = dadosComparativos.reduce((acc, item) => acc + (Number(item[`Ano ${anoA}`]) || 0), 0);
+    const totalB = dadosComparativos.reduce((acc, item) => acc + (Number(item[`Ano ${anoB}`]) || 0), 0);
     
     // Taxa de soltura (simplificado - assumindo que temos dados de soltura)
     const solturasA = 0; // Calcular baseado nos dados
