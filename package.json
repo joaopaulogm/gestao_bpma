@@ -8,7 +8,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync-inaturalist": "tsx src/scripts/sync-inaturalist-images.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -83,7 +84,9 @@
     "globals": "^15.9.0",
     "lovable-tagger": "^1.1.3",
     "postcss": "^8.4.47",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.4.11",
+    "tsx": "^4.21.0",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"

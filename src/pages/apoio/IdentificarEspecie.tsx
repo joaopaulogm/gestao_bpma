@@ -354,31 +354,68 @@ const IdentificarEspecie: React.FC = () => {
   const [faunaPage, setFaunaPage] = useState(1);
   const [floraPage, setFloraPage] = useState(1);
 
-  // Fetch data from Supabase - using dim_especies tables
+  // Fetch data from Supabase - using dim_especies tables with pagination
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: fauna, error: faunaError } = await supabase
-        .from('dim_especies_fauna')
-        .select('*')
-        .order('nome_popular', { ascending: true });
+      // Fetch fauna with pagination to get ALL records
+      const PAGE_SIZE = 1000; // Supabase max limit per query
+      let allFauna: FaunaRecord[] = [];
+      let faunaFrom = 0;
+      let faunaHasMore = true;
 
-      if (faunaError) {
-        console.error('Error fetching fauna:', faunaError);
-      } else {
-        setFaunaData((fauna || []) as FaunaRecord[]);
+      while (faunaHasMore) {
+        const { data: faunaPage, error: faunaError } = await supabase
+          .from('dim_especies_fauna')
+          .select('*')
+          .order('nome_popular', { ascending: true })
+          .range(faunaFrom, faunaFrom + PAGE_SIZE - 1);
+
+        if (faunaError) {
+          console.error('Error fetching fauna:', faunaError);
+          break;
+        }
+
+        if (faunaPage && faunaPage.length > 0) {
+          allFauna = [...allFauna, ...(faunaPage as FaunaRecord[])];
+          faunaFrom += PAGE_SIZE;
+          faunaHasMore = faunaPage.length === PAGE_SIZE;
+        } else {
+          faunaHasMore = false;
+        }
       }
 
-      const { data: flora, error: floraError } = await supabase
-        .from('dim_especies_flora')
-        .select('*')
-        .order('nome_popular', { ascending: true });
+      setFaunaData(allFauna);
+      console.log(`Carregadas ${allFauna.length} espécies de fauna`);
 
-      if (floraError) {
-        console.error('Error fetching flora:', floraError);
-      } else {
-        setFloraData((flora || []) as FloraRecord[]);
+      // Fetch flora with pagination to get ALL records
+      let allFlora: FloraRecord[] = [];
+      let floraFrom = 0;
+      let floraHasMore = true;
+
+      while (floraHasMore) {
+        const { data: floraPage, error: floraError } = await supabase
+          .from('dim_especies_flora')
+          .select('*')
+          .order('nome_popular', { ascending: true })
+          .range(floraFrom, floraFrom + PAGE_SIZE - 1);
+
+        if (floraError) {
+          console.error('Error fetching flora:', floraError);
+          break;
+        }
+
+        if (floraPage && floraPage.length > 0) {
+          allFlora = [...allFlora, ...(floraPage as FloraRecord[])];
+          floraFrom += PAGE_SIZE;
+          floraHasMore = floraPage.length === PAGE_SIZE;
+        } else {
+          floraHasMore = false;
+        }
       }
+
+      setFloraData(allFlora);
+      console.log(`Carregadas ${allFlora.length} espécies de flora`);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
