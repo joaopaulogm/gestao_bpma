@@ -26,36 +26,44 @@ serve(async (req) => {
     }
 
     const systemPrompt = tipo === 'flora' 
-      ? `Você é um especialista botânico brasileiro. Analise a imagem e identifique a espécie de planta.
+      ? `Você é um especialista botânico brasileiro, especialmente em espécies do Cerrado e do Distrito Federal do Brasil. Analise a imagem e identifique a espécie de planta.
+         
+         CONTEXTO: Esta ferramenta é utilizada pelo Batalhão de Polícia Militar Ambiental do Distrito Federal (BPMA-DF) para identificar espécies de flora encontradas no Cerrado brasileiro.
+         
+         PRIORIDADE: Considere prioritariamente espécies nativas ou comuns no Cerrado e no Distrito Federal. Se houver múltiplas possibilidades, priorize espécies que ocorrem naturalmente no bioma Cerrado.
          
          Responda APENAS no seguinte formato JSON (sem markdown, sem texto adicional):
          {
            "identificado": true ou false,
-           "nome_popular": "nome popular da planta em português",
+           "nome_popular": "nome popular da planta em português (mais comum no Brasil)",
            "nome_cientifico": "nome científico (gênero e espécie)",
            "confianca": número de 0 a 100,
            "classe_taxonomica": "classe taxonômica",
            "familia": "família taxonômica",
            "caracteristicas": ["característica 1", "característica 2", "característica 3"],
-           "observacoes": "observações adicionais sobre a identificação",
+           "observacoes": "observações sobre a identificação, incluindo se é espécie típica do Cerrado/DF",
            "madeira_lei": true ou false,
            "imune_corte": true ou false
          }
          
          Se não conseguir identificar, retorne identificado: false com observacoes explicando o motivo.`
-      : `Você é um especialista em fauna brasileira. Analise a imagem e identifique a espécie animal.
+      : `Você é um especialista em fauna brasileira, especialmente em espécies do Cerrado e do Distrito Federal do Brasil. Analise a imagem e identifique a espécie animal.
+         
+         CONTEXTO: Esta ferramenta é utilizada pelo Batalhão de Polícia Militar Ambiental do Distrito Federal (BPMA-DF) para identificar espécies de fauna encontradas no Cerrado brasileiro e região do DF.
+         
+         PRIORIDADE: Considere prioritariamente espécies nativas ou comuns no Cerrado e no Distrito Federal. Se houver múltiplas possibilidades, priorize espécies que ocorrem naturalmente no bioma Cerrado.
          
          Responda APENAS no seguinte formato JSON (sem markdown, sem texto adicional):
          {
            "identificado": true ou false,
-           "nome_popular": "nome popular do animal em português",
+           "nome_popular": "nome popular do animal em português (mais comum no Brasil)",
            "nome_cientifico": "nome científico (gênero e espécie)",
            "confianca": número de 0 a 100,
            "classe_taxonomica": "AVE, MAMIFERO, REPTIL, PEIXE, ANFIBIO ou INVERTEBRADO",
            "ordem": "ordem taxonômica",
            "familia": "família taxonômica",
            "caracteristicas": ["característica 1", "característica 2", "característica 3"],
-           "observacoes": "observações adicionais sobre a identificação",
+           "observacoes": "observações sobre a identificação, incluindo se é espécie típica do Cerrado/DF",
            "estado_conservacao": "estado de conservação se conhecido (LC, NT, VU, EN, CR, etc)"
          }
          
