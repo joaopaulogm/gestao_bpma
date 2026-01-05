@@ -30,7 +30,7 @@ interface FaunaEditDialogProps {
 const CLASSES_TAXONOMICAS = [
   'AVE',
   'MAMIFERO',
-  'REPTIL',
+  'RÉPTEIS',
   'PEIXE',
   'ANFIBIO',
   'INVERTEBRADO',

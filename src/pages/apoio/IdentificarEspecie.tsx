@@ -20,7 +20,7 @@ const imageCache = new Map<string, string[]>();
 const FAUNA_CATEGORIES = [
   { value: 'AVE', label: 'Aves', icon: Bird, color: 'bg-sky-500/10 text-sky-600 border-sky-500/30 hover:bg-sky-500/20' },
   { value: 'MAMIFERO', label: 'Mamíferos', icon: PawPrint, color: 'bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20' },
-  { value: 'REPTIL', label: 'Répteis', icon: Leaf, color: 'bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/20' },
+  { value: 'RÉPTEIS', label: 'Répteis', icon: Leaf, color: 'bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/20' },
   { value: 'PEIXE', label: 'Peixes', icon: Fish, color: 'bg-blue-500/10 text-blue-600 border-blue-500/30 hover:bg-blue-500/20' },
 ];
 
@@ -505,7 +505,7 @@ const IdentificarEspecie: React.FC = () => {
     const classMapping: Record<string, string[]> = {
       'AVE': ['AVE', 'AVES'],
       'MAMIFERO': ['MAMIFERO', 'MAMIFEROS', 'MAMÍFERO', 'MAMÍFEROS'],
-      'REPTIL': ['REPTIL', 'REPTEIS', 'RÉPTIL', 'RÉPTEIS'],
+      'RÉPTEIS': ['RÉPTEIS', 'REPTIL', 'REPTEIS', 'RÉPTIL'],
       'PEIXE': ['PEIXE', 'PEIXES']
     };
     
@@ -562,11 +562,26 @@ const IdentificarEspecie: React.FC = () => {
       });
     }
 
-    // Category filter (classe_taxonomica)
+    // Category filter (classe_taxonomica) - normalizar para aceitar variações
     if (faunaCategory) {
-      result = result.filter(item => 
-        item.classe_taxonomica?.toUpperCase() === faunaCategory.toUpperCase()
-      );
+      const normalizeClass = (classe: string | null): string => {
+        if (!classe) return '';
+        return classe
+          .toUpperCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+          .trim();
+      };
+      
+      const normalizedCategory = normalizeClass(faunaCategory);
+      result = result.filter(item => {
+        const normalizedItemClass = normalizeClass(item.classe_taxonomica);
+        // Aceitar RÉPTEIS mesmo se no banco estiver como REPTIL (compatibilidade)
+        if (normalizedCategory === 'REPTEIS' || normalizedCategory === 'RÉPTEIS') {
+          return normalizedItemClass === 'REPTEIS' || normalizedItemClass === 'REPTIL';
+        }
+        return normalizedItemClass === normalizedCategory;
+      });
     }
 
     // Conservation status filter

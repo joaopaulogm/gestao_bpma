@@ -23,7 +23,7 @@ import {
   atualizarImagensEspecie
 } from '@/services/especieService';
 
-const CLASSES_TAXONOMICAS = ['AVE', 'MAMIFERO', 'REPTIL', 'PEIXE'];
+const CLASSES_TAXONOMICAS = ['AVE', 'MAMIFERO', 'RÉPTEIS', 'PEIXE'];
 const ESTADOS_CONSERVACAO = [
   'Pouco Preocupante',
   'Quase Ameaçada',
