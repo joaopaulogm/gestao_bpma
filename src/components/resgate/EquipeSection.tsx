@@ -50,12 +50,12 @@ const EquipeSection: React.FC<EquipeSectionProps> = ({ membros, onMembrosChange 
     try {
       // Sanitizar inputs para prevenir problemas de segurança
       const sanitizedMatricula = matriculaInput.trim().replace(/[^0-9]/g, '');
-      const sanitizedMatriculaSemZeros = matriculaSemZeros.replace(/[^0-9]/g, '');
-      const sanitizedSearchTerm = searchTerm.replace(/[<>'"&]/g, '').substring(0, 100); // Limitar tamanho
+      const sanitizedMatriculaSemZeros = sanitizedMatricula.replace(/^0+/, '');
+      const sanitizedSearchTerm = matriculaInput.trim().replace(/[<>'"&]/g, '').substring(0, 100); // Limitar tamanho
       
       // Validar que temos algo para buscar
-      if (!sanitizedMatricula && !sanitizedSearchTerm) {
-        toast.error('Digite uma matrícula ou nome válido');
+      if (!sanitizedMatricula && sanitizedSearchTerm.length < 2) {
+        toast.error('Digite uma matrícula ou nome válido (mínimo 2 caracteres)');
         return;
       }
       
@@ -67,14 +67,29 @@ const EquipeSection: React.FC<EquipeSectionProps> = ({ membros, onMembrosChange 
         .limit(10);
       
       // Construir query de forma segura usando métodos do Supabase
-      // O PostgREST sanitiza automaticamente os valores, mas ainda validamos
+      // Buscar por matrícula E/OU nome simultaneamente
+      const conditions: string[] = [];
+      
+      // Se houver números no input, buscar por matrícula
       if (sanitizedMatricula && sanitizedMatricula.length > 0) {
-        // Buscar por matrícula exata (com e sem zeros)
-        query = query.or(`matricula.eq.${sanitizedMatricula},matricula.eq.${sanitizedMatriculaSemZeros}`);
-      } else if (sanitizedSearchTerm && sanitizedSearchTerm.length >= 2) {
-        // Buscar por nome (nome_guerra ou nome completo)
-        // Usar ilike para busca case-insensitive e parcial
-        query = query.or(`nome_guerra.ilike.%${sanitizedSearchTerm}%,nome.ilike.%${sanitizedSearchTerm}%`);
+        conditions.push(`matricula.eq.${sanitizedMatricula}`);
+        if (sanitizedMatriculaSemZeros && sanitizedMatriculaSemZeros !== sanitizedMatricula) {
+          conditions.push(`matricula.eq.${sanitizedMatriculaSemZeros}`);
+        }
+      }
+      
+      // Se houver texto no input (mínimo 2 caracteres), buscar por nome
+      if (sanitizedSearchTerm && sanitizedSearchTerm.length >= 2) {
+        conditions.push(`nome_guerra.ilike.%${sanitizedSearchTerm}%`);
+        conditions.push(`nome.ilike.%${sanitizedSearchTerm}%`);
+      }
+      
+      // Aplicar condições usando OR
+      if (conditions.length > 0) {
+        query = query.or(conditions.join(','));
+      } else {
+        toast.error('Digite uma matrícula ou nome válido');
+        return;
       }
       
       const { data, error } = await query;
