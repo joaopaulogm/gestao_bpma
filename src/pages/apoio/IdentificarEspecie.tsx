@@ -452,11 +452,40 @@ const IdentificarEspecie: React.FC = () => {
   }, [floraData]);
 
   // Count fauna by category (classe_taxonomica)
+  // Normaliza e compara de forma mais flexível para capturar variações como "AVES", "AVE", "MAMÍFEROS", "MAMIFERO", etc.
   const faunaCounts = useMemo(() => {
+    const normalizeClass = (classe: string | null): string => {
+      if (!classe) return '';
+      return classe
+        .toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+        .trim();
+    };
+    
+    // Mapear valores esperados para possíveis variações no banco
+    const classMapping: Record<string, string[]> = {
+      'AVE': ['AVE', 'AVES'],
+      'MAMIFERO': ['MAMIFERO', 'MAMIFEROS', 'MAMÍFERO', 'MAMÍFEROS'],
+      'REPTIL': ['REPTIL', 'REPTEIS', 'RÉPTIL', 'RÉPTEIS'],
+      'PEIXE': ['PEIXE', 'PEIXES']
+    };
+    
     return FAUNA_CATEGORIES.reduce((acc, cat) => {
-      acc[cat.value] = faunaData.filter(item => 
-        item.classe_taxonomica?.toUpperCase() === cat.value.toUpperCase()
-      ).length;
+      const normalizedCatValue = normalizeClass(cat.value);
+      const possibleValues = classMapping[cat.value] || [cat.value];
+      
+      acc[cat.value] = faunaData.filter(item => {
+        if (!item.classe_taxonomica) return false;
+        const normalizedItemClass = normalizeClass(item.classe_taxonomica);
+        
+        // Verifica se corresponde a algum valor possível
+        return possibleValues.some(val => 
+          normalizedItemClass === normalizeClass(val) ||
+          normalizedItemClass.includes(normalizeClass(val)) ||
+          normalizeClass(val).includes(normalizedItemClass)
+        );
+      }).length;
       return acc;
     }, {} as Record<string, number>);
   }, [faunaData]);
