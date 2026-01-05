@@ -290,7 +290,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ error: 'Invalid action. Use: list, get, search, or thumbnail' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
