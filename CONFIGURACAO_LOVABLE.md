@@ -1,54 +1,89 @@
 # Configuração de Variáveis de Ambiente no Lovable
 
-## ⚠️ IMPORTANTE: Configurar Variáveis de Ambiente no Lovable
+## ✅ IMPORTANTE: O código já funciona com valores padrão!
 
-Para que as alterações de segurança funcionem corretamente no ambiente de produção (Lovable), você **DEVE** configurar as variáveis de ambiente no projeto.
+**Boa notícia**: O código já tem valores padrão (fallback) configurados, então **deve funcionar mesmo sem configurar variáveis de ambiente no Lovable**.
 
-## Passos para Configurar no Lovable:
+As variáveis de ambiente são uma **melhor prática de segurança**, mas não são obrigatórias para o funcionamento, pois a chave anon do Supabase é pública por design.
 
-1. **Acesse o projeto no Lovable**
-   - Vá para: https://lovable.dev/projects/o679bdd7-61a0-41f0-ae02-460a13e03df4
-   - Ou acesse o projeto através do dashboard do Lovable
+## 🔍 Como Configurar Variáveis de Ambiente no Lovable (Opcional):
 
-2. **Navegue até as Configurações do Projeto**
-   - Procure por "Environment Variables" ou "Variáveis de Ambiente"
-   - Geralmente está em: **Settings** → **Environment Variables** ou **Config** → **Env Variables**
+### Opção 1: Através do Prompt do Lovable
 
-3. **Adicione as seguintes variáveis de ambiente:**
+No chat do Lovable, você pode pedir:
+
+```
+"Configure as variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para este projeto"
+```
+
+E fornecer os valores quando solicitado.
+
+### Opção 2: Criar arquivo .env diretamente no Lovable
+
+1. **No editor do Lovable**, crie um novo arquivo chamado `.env` na raiz do projeto
+2. **Adicione o seguinte conteúdo:**
 
    ```
    VITE_SUPABASE_URL=https://oiwwptnqaunsyhpkwbrz.supabase.co
    VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pd3dwdG5xYXVuc3locGt3YnJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA3NjI2MzQsImV4cCI6MjA1NjMzODYzNH0.lK5-KS8bxrtQYJsCRNOeeqBS-9Fn0MMsIdolhkeApuE
    ```
 
-4. **Salve as configurações**
+3. **Salve o arquivo** (o Lovable deve detectar automaticamente)
 
-5. **Reinicie o ambiente de desenvolvimento/preview**
-   - Após adicionar as variáveis, pode ser necessário reiniciar o servidor de desenvolvimento
-   - No Lovable, geralmente há um botão "Restart" ou "Redeploy"
+### Opção 3: Verificar se há seção de Configurações
+
+1. **Procure por um menu ou ícone de configurações** (geralmente um ícone de engrenagem ⚙️)
+2. **Procure por seções como:**
+   - "Project Settings"
+   - "Deploy Settings"
+   - "Build Settings"
+   - "Environment"
+   - "Secrets"
+   - "Variables"
+
+### Opção 4: Usar o arquivo .env local (se o Lovable sincronizar)
+
+Se o Lovable sincronizar arquivos do repositório Git, o arquivo `.env` local será ignorado pelo `.gitignore`, mas você pode criar um `.env` diretamente no editor do Lovable.
+
+## ⚠️ Nota Importante:
+
+**O código já funciona sem configurar variáveis de ambiente!**
+
+O arquivo `src/integrations/supabase/client.ts` tem valores padrão (fallback) que são usados automaticamente se as variáveis de ambiente não estiverem configuradas:
+
+```typescript
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://oiwwptnqaunsyhpkwbrz.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGci...";
+```
+
+Isso significa que:
+- ✅ **O aplicativo funciona normalmente** mesmo sem configurar variáveis
+- ✅ **As alterações de segurança já estão ativas** (CORS restrito, sanitização de inputs, etc.)
+- ⚠️ **Configurar variáveis de ambiente é uma boa prática**, mas não é obrigatório
 
 ## Verificação:
 
-Após configurar, verifique se as variáveis estão sendo carregadas:
-- O aplicativo deve funcionar normalmente
-- Não deve aparecer erros relacionados a variáveis de ambiente ausentes
+Para verificar se está funcionando:
+1. **Teste o aplicativo** - deve funcionar normalmente
+2. **Teste a busca de policiais** - deve permitir buscar por matrícula ou nome
+3. **Verifique o console do navegador** - não deve haver erros relacionados a variáveis
 
-## Notas:
+## Se ainda não estiver funcionando:
 
-- As variáveis de ambiente no Lovable são diferentes do arquivo `.env` local
-- O arquivo `.env` local é apenas para desenvolvimento local
-- No Lovable, você deve configurar as variáveis através da interface do projeto
-- As variáveis começam com `VITE_` porque o projeto usa Vite como bundler
+Se as alterações não estão aparecendo no Lovable, pode ser necessário:
+
+1. **Fazer um novo deploy/publicação** no Lovable
+2. **Limpar o cache do navegador** e recarregar a página
+3. **Verificar se o código foi atualizado** no repositório Git que o Lovable usa
 
 ## Problemas Comuns:
 
+### ❌ Alterações não aparecem no Lovable
+- **Solução**: Verifique se o código foi commitado e enviado para o GitHub
+- O Lovable pode precisar de alguns minutos para sincronizar as alterações
+
 ### ❌ "Missing Supabase environment variables"
-- **Solução**: Verifique se as variáveis foram adicionadas corretamente no Lovable
-- Certifique-se de que os nomes estão exatamente como: `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`
+- **Solução**: Isso não deve acontecer, pois há valores padrão. Se acontecer, crie o arquivo `.env` no Lovable conforme a Opção 2 acima.
 
-### ❌ Aplicativo não funciona após adicionar variáveis
-- **Solução**: Reinicie o ambiente de desenvolvimento/preview no Lovable
-
-### ❌ Variáveis não são reconhecidas
-- **Solução**: Verifique se os nomes das variáveis estão corretos (case-sensitive)
-- Certifique-se de que não há espaços extras antes ou depois dos valores
+### ❌ Busca de policiais não funciona
+- **Solução**: Verifique se o código foi atualizado. A lógica de busca foi corrigida para funcionar com matrícula E nome.
