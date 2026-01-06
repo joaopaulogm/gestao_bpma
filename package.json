@@ -12,7 +12,9 @@
     "sync-inaturalist": "tsx src/scripts/sync-inaturalist-images.ts",
     "migrate-repteis": "tsx src/scripts/run-migration-repteis.ts",
     "remove-anilius": "tsx src/scripts/remove-anilius-scytale.ts",
-    "remove-liophis": "tsx src/scripts/remove-liophis-typhlus.ts"
+    "remove-liophis": "tsx src/scripts/remove-liophis-typhlus.ts",
+    "migrate-estatisticas": "tsx scripts/run-migration-estatisticas.ts",
+    "executar-migrations-auto": "tsx scripts/executar-migrations-auto.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

@@ -1,3 +1,4 @@
+/* Apple HIG - SF Pro Font (fallback to Inter) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -6,104 +7,110 @@
 
 @layer base {
   :root {
-    /* Primary - White background */
-    --background: 0 0% 100%;
-    --foreground: 220 83% 16%;
+    /* Apple HIG - Light Mode Colors */
+    /* Background - SF Colors */
+    --background: 0 0% 95%; /* #F2F2F7 */
+    --foreground: 0 0% 15%; /* Dark text for clarity */
 
-    /* Cards - Clean white */
+    /* Cards - Clean white with subtle elevation */
     --card: 0 0% 100%;
-    --card-foreground: 220 83% 16%;
+    --card-foreground: 0 0% 15%;
 
     /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 220 83% 16%;
+    --popover-foreground: 0 0% 15%;
 
-    /* Primary - Navy Blue #071d49 */
-    --primary: 220 83% 16%;
+    /* Primary - Apple Blue #007AFF */
+    --primary: 210 100% 50%; /* #007AFF */
     --primary-foreground: 0 0% 100%;
 
     /* Secondary - Light gray for subtle backgrounds */
-    --secondary: 220 20% 96%;
-    --secondary-foreground: 220 83% 16%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 15%;
 
     /* Muted - Subtle backgrounds */
-    --muted: 220 20% 96%;
-    --muted-foreground: 220 30% 45%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%; /* #8E8E93 */
 
-    /* Accent - Yellow #ffcc00 */
+    /* Accent - Yellow #ffcc00 (maintained from original) */
     --accent: 48 100% 50%;
-    --accent-foreground: 220 83% 16%;
+    --accent-foreground: 0 0% 15%;
 
-    /* Destructive - Red #ff0000 */
-    --destructive: 0 100% 50%;
+    /* Destructive - Apple Red #FF3B30 */
+    --destructive: 3 100% 59%; /* #FF3B30 */
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders and inputs */
-    --border: 220 20% 90%;
-    --input: 220 20% 90%;
-    --ring: 220 83% 16%;
-
-    --radius: 0.75rem;
-
-    /* Sidebar - Navy Blue theme */
-    --sidebar-background: 220 83% 16%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 48 100% 50%;
-    --sidebar-primary-foreground: 220 83% 16%;
-    --sidebar-accent: 220 83% 22%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 83% 22%;
-    --sidebar-ring: 48 100% 50%;
-
-    /* Custom tokens */
-    --warning: 48 100% 50%;
-    --warning-foreground: 220 83% 16%;
-    --success: 142 76% 36%;
+    /* Success - Apple Green #34C759 */
+    --success: 142 71% 45%; /* #34C759 */
     --success-foreground: 0 0% 100%;
+
+    /* Warning - Apple Orange #FF9500 */
+    --warning: 28 100% 50%; /* #FF9500 */
+    --warning-foreground: 0 0% 100%;
+
+    /* Borders and inputs - Subtle gray */
+    --border: 0 0% 90%; /* rgba(0, 0, 0, 0.1) */
+    --input: 0 0% 90%;
+    --ring: 210 100% 50%; /* Apple Blue for focus */
+
+    /* Border radius - Apple style */
+    --radius: 0.75rem; /* 12px - medium radius */
+
+    /* Sidebar - Apple style with subtle background */
+    --sidebar-background: 0 0% 98%; /* Light gray */
+    --sidebar-foreground: 0 0% 15%;
+    --sidebar-primary: 210 100% 50%; /* Apple Blue */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 95%; /* Hover state */
+    --sidebar-accent-foreground: 0 0% 15%;
+    --sidebar-border: 0 0% 90%; /* Subtle border */
+    --sidebar-ring: 210 100% 50%;
   }
 
   .dark {
-    --background: 220 83% 10%;
-    --foreground: 0 0% 98%;
+    /* Apple HIG - Dark Mode Colors */
+    --background: 0 0% 11%; /* #1C1C1E */
+    --foreground: 0 0% 95%; /* Light text */
 
-    --card: 220 83% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 18%; /* #2C2C2E */
+    --card-foreground: 0 0% 95%;
 
-    --popover: 220 83% 12%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 18%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 0 0% 98%;
-    --primary-foreground: 220 83% 16%;
+    --primary: 210 100% 50%; /* Apple Blue - same in dark mode */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 50% 20%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 220 50% 20%;
-    --muted-foreground: 220 20% 65%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 65%;
 
     --accent: 48 100% 50%;
-    --accent-foreground: 220 83% 16%;
+    --accent-foreground: 0 0% 15%;
 
-    --destructive: 0 100% 40%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 3 100% 59%; /* Apple Red */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 50% 20%;
-    --input: 220 50% 20%;
-    --ring: 48 100% 50%;
-
-    --sidebar-background: 220 83% 10%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 48 100% 50%;
-    --sidebar-primary-foreground: 220 83% 16%;
-    --sidebar-accent: 220 83% 16%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 220 50% 20%;
-    --sidebar-ring: 48 100% 50%;
-
-    --warning: 48 100% 50%;
-    --warning-foreground: 220 83% 16%;
-    --success: 142 76% 36%;
+    --success: 142 71% 45%; /* Apple Green */
     --success-foreground: 0 0% 100%;
+
+    --warning: 28 100% 50%; /* Apple Orange */
+    --warning-foreground: 0 0% 100%;
+
+    --border: 0 0% 30%; /* Subtle border in dark */
+    --input: 0 0% 30%;
+    --ring: 210 100% 50%;
+
+    --sidebar-background: 0 0% 11%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 30%;
+    --sidebar-ring: 210 100% 50%;
   }
 }
 
@@ -114,7 +121,10 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    /* Apple system fonts with Inter fallback */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
@@ -138,9 +148,11 @@
   background: hsl(var(--primary) / 0.5);
 }
 
-/* Custom animations */
+/* Apple HIG - Custom Animations */
+/* Smooth, natural animations with proper easing */
+
 .fade-in {
-  animation: fadeIn 0.5s ease-in;
+  animation: fadeIn 0.25s cubic-bezier(0.0, 0.0, 0.2, 1);
 }
 
 @keyframes fadeIn {
@@ -153,18 +165,37 @@
 }
 
 .slide-up {
-  animation: slideUp 0.4s ease-out;
+  animation: slideUp 0.35s cubic-bezier(0.0, 0.0, 0.2, 1);
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(20px);
+    transform: translateY(8px);
     opacity: 0;
   }
   to {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* Apple-style scale animation for buttons */
+.scale-press {
+  transition: transform 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.scale-press:active {
+  transform: scale(0.97);
+}
+
+/* Smooth hover transitions */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.4, 0.0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
 }
 
 /* Dotted line decorative elements */
@@ -201,48 +232,45 @@
   border: 1px solid hsl(var(--border)) !important;
 }
 
-/* Glassmorphism styles */
+/* Apple HIG - Card Styles with Subtle Elevation */
 .glass {
-  background: hsl(var(--background) / 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid hsl(var(--primary) / 0.1);
-  box-shadow: 0 8px 32px hsl(var(--primary) / 0.08);
+  background: hsl(var(--card));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid hsl(var(--border));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Level 1 elevation */
 }
 
 .glass-card {
-  background: hsl(var(--background) / 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid hsl(var(--primary) / 0.12);
-  box-shadow: 
-    0 4px 6px hsl(var(--primary) / 0.04),
-    0 10px 40px hsl(var(--primary) / 0.08);
-  transition: all 0.3s ease;
+  background: hsl(var(--card));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid hsl(var(--border));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Level 2 elevation */
+  transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .glass-card:hover {
-  background: hsl(var(--background) / 0.95);
-  border-color: hsl(var(--primary) / 0.2);
-  box-shadow: 
-    0 8px 16px hsl(var(--primary) / 0.08),
-    0 20px 60px hsl(var(--primary) / 0.12);
-  transform: translateY(-2px);
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Level 3 elevation on hover */
+  transform: translateY(-1px);
 }
 
-/* Custom card styles for dashboard */
+/* Apple HIG - Dashboard Card Styles */
 .dashboard-card {
-  @apply rounded-2xl transition-all duration-300;
-  background: hsl(var(--background) / 0.9);
-  backdrop-filter: blur(12px);
-  border: 1px solid hsl(var(--primary) / 0.1);
-  box-shadow: 0 4px 24px hsl(var(--primary) / 0.06);
+  @apply rounded-xl transition-all duration-250;
+  background: hsl(var(--card));
+  border: 0.5px solid hsl(var(--border));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Level 2 elevation */
+  transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .dashboard-card:hover {
-  background: hsl(var(--background) / 0.98);
-  border-color: hsl(var(--primary) / 0.2);
-  box-shadow: 0 8px 32px hsl(var(--primary) / 0.1);
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Level 3 elevation */
+  transform: translateY(-1px);
 }
 
 /* Accent gradients */
@@ -254,33 +282,39 @@
   background: linear-gradient(135deg, hsl(var(--primary) / 0.05), hsl(var(--background) / 0.9));
 }
 
-/* Button glass effect */
+/* Apple HIG - Button Styles */
 .btn-glass {
-  background: hsl(var(--primary) / 0.9);
-  backdrop-filter: blur(8px);
-  border: 1px solid hsl(var(--primary));
-  box-shadow: 0 4px 14px hsl(var(--primary) / 0.3);
-  transition: all 0.2s ease;
+  background: hsl(var(--primary));
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
+  min-height: 44px; /* Apple touch target */
 }
 
 .btn-glass:hover {
-  background: hsl(var(--primary));
-  box-shadow: 0 6px 20px hsl(var(--primary) / 0.4);
-  transform: translateY(-1px);
+  background: hsl(var(--primary) / 0.9);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-/* Input glass effect */
+.btn-glass:active {
+  transform: scale(0.97);
+}
+
+/* Apple HIG - Input Styles */
 .input-glass {
-  background: hsl(var(--background) / 0.8);
-  backdrop-filter: blur(8px);
-  border: 1px solid hsl(var(--primary) / 0.15);
-  transition: all 0.2s ease;
+  background: hsl(var(--background));
+  border: 0.5px solid hsl(var(--border));
+  border-radius: 12px;
+  min-height: 44px; /* Apple touch target */
+  padding: 12px 16px;
+  transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .input-glass:focus {
-  background: hsl(var(--background) / 0.95);
-  border-color: hsl(var(--primary) / 0.4);
-  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+  background: hsl(var(--background));
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2); /* Apple-style focus ring */
+  outline: none;
 }
 
 /* Icon container */

@@ -72,6 +72,15 @@ export default {
 					foreground: 'hsl(var(--success-foreground))'
 				}
 			},
+			spacing: {
+				// Apple HIG spacing system (4px base)
+				'apple-xs': '4px',
+				'apple-sm': '8px',
+				'apple-md': '16px',
+				'apple-lg': '24px',
+				'apple-xl': '32px',
+				'apple-2xl': '48px',
+			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
@@ -114,10 +123,21 @@ export default {
 				}
 			},
 			animation: {
-				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
-				'slide-up': 'slide-up 0.4s ease-out',
-				'fade-in': 'fade-in 0.5s ease-out'
+				'accordion-down': 'accordion-down 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)',
+				'accordion-up': 'accordion-up 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)',
+				'slide-up': 'slide-up 0.35s cubic-bezier(0.0, 0.0, 0.2, 1)',
+				'fade-in': 'fade-in 0.25s cubic-bezier(0.0, 0.0, 0.2, 1)',
+				'scale-press': 'scale-press 0.15s cubic-bezier(0.4, 0.0, 0.2, 1)',
+			},
+			transitionDuration: {
+				'apple-fast': '150ms',
+				'apple-normal': '250ms',
+				'apple-slow': '350ms',
+			},
+			transitionTimingFunction: {
+				'apple': 'cubic-bezier(0.4, 0.0, 0.2, 1)',
+				'apple-in': 'cubic-bezier(0.0, 0.0, 0.2, 1)',
+				'apple-out': 'cubic-bezier(0.4, 0.0, 1, 1)',
 			}
 		}
 	},
