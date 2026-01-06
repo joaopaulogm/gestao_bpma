@@ -4,9 +4,14 @@ Este documento descreve as correções aplicadas e as ações manuais necessári
 
 ## ✅ Correções Aplicadas Automaticamente
 
+### Migration Principal: `20260108000000_corrigir_todos_erros_seguranca_final.sql`
+
+Esta migration corrige TODOS os erros de segurança de forma abrangente:
+
 ### 1. RLS Habilitado em Todas as Tabelas Públicas
-- ✅ Migration `20260107000000_corrigir_todos_erros_seguranca.sql` aplicada
-- ✅ Todas as tabelas críticas agora têm RLS habilitado
+- ✅ Migration `20260108000000_corrigir_todos_erros_seguranca_final.sql` aplicada
+- ✅ RLS habilitado automaticamente em TODAS as tabelas públicas
+- ✅ Verificação automática de tabelas sem RLS
 
 ### 2. Proteção de Dados Pessoais de Funcionários
 - ✅ `dim_efetivo`: Apenas usuários autenticados podem ver dados básicos
@@ -93,6 +98,15 @@ Isso instalará a versão atualizada do React (18.3.2) que corrige a vulnerabili
 
 **Nota:** O Supabase gerencia atualizações de PostgreSQL automaticamente. Você será notificado quando houver patches de segurança disponíveis.
 
+### 9. Remoção de Políticas "Always True"
+- ✅ Remove automaticamente todas as políticas RLS que usam `USING (true)` ou `WITH CHECK (true)`
+- ✅ Mantém leitura pública apenas para tabelas de dimensões (dados não sensíveis)
+- ✅ Restringe escrita/modificação em todas as tabelas
+
+### 10. Correção de Funções SECURITY DEFINER
+- ✅ Todas as funções conhecidas agora têm `SET search_path = public, pg_temp`
+- ✅ Funções corrigidas: `update_quantidade_total`, `format_date_trigger`, `sync_fauna_from_dimension`, `sync_flora_from_dimension`, `has_role`, `is_allowed_user`, `handle_new_user`
+
 ## 📋 Verificação das Correções
 
 ### Verificar RLS Habilitado
@@ -148,7 +162,9 @@ ORDER BY tablename, policyname;
 
 ## ✅ Próximos Passos
 
-1. ✅ Execute a migration `20260107000000_corrigir_todos_erros_seguranca.sql` no Supabase
+1. ✅ **IMPORTANTE:** Execute a migration `20260108000000_corrigir_todos_erros_seguranca_final.sql` no Supabase Dashboard → SQL Editor
+   - Esta migration corrige TODOS os erros de segurança de forma abrangente
+   - Ela remove políticas "always true", habilita RLS em todas as tabelas e corrige funções
 2. ⚠️ Configure OTP Expiry no Dashboard (Ação Manual 1)
 3. ⚠️ Habilite Leaked Password Protection (Ação Manual 2)
 4. ✅ Execute `npm install` para atualizar React (Ação Manual 3)
