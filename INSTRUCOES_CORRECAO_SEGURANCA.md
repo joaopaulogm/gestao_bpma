@@ -40,8 +40,10 @@ Este documento descreve as correções aplicadas e as ações manuais necessári
 - ✅ `fact_indicador_mensal_bpma`: Protegido
 - ✅ `fact_resgate_fauna_especie_mensal`: Protegido
 
-### 8. Atualização do React
-- ✅ `package.json` atualizado para React 18.3.2 (corrige vulnerabilidade XSS)
+### 8. Verificação do React
+- ✅ React 18.3.1 não possui vulnerabilidade XSS conhecida (verificado)
+- ℹ️ O aviso pode ser um falso positivo do scanner
+- ℹ️ Para atualizar para React 19 (opcional), execute: `npm install react@latest react-dom@latest`
 
 ## ⚠️ Ações Manuais Necessárias
 
