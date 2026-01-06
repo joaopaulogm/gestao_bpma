@@ -26,6 +26,13 @@ const teamColors: Record<TeamType, string> = {
   'Delta': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
 };
 
+const teamBorderColors: Record<TeamType, string> = {
+  'Alfa': 'border-red-500/30',
+  'Bravo': 'border-blue-500/30',
+  'Charlie': 'border-green-500/30',
+  'Delta': 'border-purple-500/30',
+};
+
 const unitIcons: Record<UnitType, React.ReactNode> = {
   'Guarda': <Shield className="h-4 w-4" />,
   'Armeiro': <Target className="h-4 w-4" />,
@@ -253,7 +260,7 @@ const Campanha: React.FC = () => {
                 className={`flex flex-col ${
                   isAdmin 
                     ? (works ? 'border-primary/30' : 'border-border/30 opacity-50')
-                    : team ? `border-${team === 'Alfa' ? 'red' : team === 'Bravo' ? 'blue' : team === 'Charlie' ? 'green' : 'purple'}-500/30` : ''
+                    : team ? teamBorderColors[team] : ''
                 }`}
               >
                 <CardHeader className="pb-2 flex-shrink-0">
