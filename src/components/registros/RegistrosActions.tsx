@@ -1,12 +1,20 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Filter, Search, Download } from 'lucide-react';
+import { Filter, Search, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface RegistrosActionsProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   onToggleFilters: () => void;
   onExportCSV: () => void;
+  onExportPDF: () => void;
+  onExportXLSX: () => void;
 }
 
 const RegistrosActions = ({
@@ -14,6 +22,8 @@ const RegistrosActions = ({
   onSearchChange,
   onToggleFilters,
   onExportCSV,
+  onExportPDF,
+  onExportXLSX,
 }) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between gap-4">
@@ -37,14 +47,28 @@ const RegistrosActions = ({
           Filtros
         </Button>
         
-        <Button 
-          variant="outline" 
-          className="gap-2"
-          onClick={onExportCSV}
-        >
-          <Download className="h-4 w-4" />
-          Exportar CSV
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Exportar
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onExportCSV}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onExportPDF}>
+              <FileText className="h-4 w-4 mr-2" />
+              Exportar PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onExportXLSX}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Exportar XLSX
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

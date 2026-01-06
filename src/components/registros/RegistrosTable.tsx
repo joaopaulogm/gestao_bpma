@@ -2,7 +2,7 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, Trash2 } from 'lucide-react';
+import { Eye, Edit, Trash2, Copy } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Registro } from '@/types/hotspots';
@@ -14,6 +14,7 @@ interface RegistrosTableProps {
   onViewDetails: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string, nome: string) => void;
+  onDuplicate: (id: string) => void;
 }
 
 const RegistrosTable: React.FC<RegistrosTableProps> = ({ 
@@ -130,6 +131,16 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
                     >
                       <Edit className="h-3.5 w-3.5 text-amber-500" />
                       <span className="sr-only">Editar</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 w-7 p-0"
+                      onClick={() => onDuplicate(registro.id)}
+                      title="Duplicar registro"
+                    >
+                      <Copy className="h-3.5 w-3.5 text-blue-500" />
+                      <span className="sr-only">Duplicar</span>
                     </Button>
                     <Button 
                       variant="ghost" 

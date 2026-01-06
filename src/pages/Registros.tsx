@@ -17,6 +17,9 @@ import { useRegistroDelete } from '@/hooks/useRegistroDelete';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { handleSupabaseError } from '@/utils/errorHandler';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 const Registros = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -550,6 +553,97 @@ const Registros = () => {
     navigate(`/resgate-editar/${id}`);
   };
   
+  const handleDuplicate = async (id: string) => {
+    try {
+      const registro = registros.find(r => r.id === id);
+      if (!registro) {
+        toast.error('Registro não encontrado');
+        return;
+      }
+      
+      // Determinar qual tabela usar baseado na data
+      const dataRegistro = registro.data || registro.data_ocorrencia;
+      if (!dataRegistro) {
+        toast.error('Data do registro não encontrada');
+        return;
+      }
+      
+      const ano = new Date(dataRegistro).getFullYear();
+      let tabelaDestino = 'fat_registros_de_resgate';
+      
+      if (ano >= 2020 && ano <= 2024) {
+        tabelaDestino = `fat_resgates_diarios_${ano}`;
+      } else if (ano >= 2025) {
+        tabelaDestino = 'fat_registros_de_resgate';
+      }
+      
+      // Preparar dados para duplicação (remover ID e campos de auditoria)
+      const dadosDuplicacao: any = {
+        data: registro.data || registro.data_ocorrencia,
+        regiao_administrativa_id: registro.regiao_administrativa_id,
+        origem_id: registro.origem_id,
+        destinacao_id: registro.destinacao_id,
+        estado_saude_id: registro.estado_saude_id,
+        estagio_vida_id: registro.estagio_vida_id,
+        desfecho_id: registro.desfecho_id,
+        especie_id: registro.especie_id,
+        quantidade: registro.quantidade || 0,
+        quantidade_total: registro.quantidade_total || registro.quantidade || 0,
+        quantidade_adulto: registro.quantidade_adulto || 0,
+        quantidade_filhote: registro.quantidade_filhote || 0,
+        latitude_origem: registro.latitude_origem,
+        longitude_origem: registro.longitude_origem,
+        atropelamento: registro.atropelamento,
+      };
+      
+      // Para tabelas históricas, usar campos diferentes
+      if (ano >= 2020 && ano <= 2024) {
+        dadosDuplicacao.data_ocorrencia = registro.data || registro.data_ocorrencia;
+        dadosDuplicacao.nome_popular = registro.especie?.nome_popular || '';
+        dadosDuplicacao.nome_cientifico = registro.especie?.nome_cientifico || '';
+        dadosDuplicacao.classe_taxonomica = registro.especie?.classe_taxonomica || '';
+        dadosDuplicacao.quantidade_resgates = registro.quantidade || 0;
+        // Remover campos que não existem em tabelas históricas
+        delete dadosDuplicacao.data;
+        delete dadosDuplicacao.regiao_administrativa_id;
+        delete dadosDuplicacao.origem_id;
+        delete dadosDuplicacao.destinacao_id;
+        delete dadosDuplicacao.estado_saude_id;
+        delete dadosDuplicacao.estagio_vida_id;
+        delete dadosDuplicacao.desfecho_id;
+        delete dadosDuplicacao.quantidade;
+        delete dadosDuplicacao.quantidade_total;
+        delete dadosDuplicacao.quantidade_adulto;
+        delete dadosDuplicacao.quantidade_filhote;
+        delete dadosDuplicacao.latitude_origem;
+        delete dadosDuplicacao.longitude_origem;
+        delete dadosDuplicacao.atropelamento;
+      }
+      
+      const { data: novoRegistro, error } = await supabaseAny
+        .from(tabelaDestino)
+        .insert(dadosDuplicacao)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Erro ao duplicar registro:', error);
+        toast.error(`Erro ao duplicar registro: ${error.message}`);
+        return;
+      }
+      
+      toast.success('Registro duplicado com sucesso!');
+      
+      // Recarregar registros
+      if (dimensionCache) {
+        fetchRegistros();
+      }
+    } catch (error: any) {
+      console.error('Erro ao duplicar registro:', error);
+      toast.error(`Erro ao duplicar registro: ${error?.message || 'Erro desconhecido'}`);
+    }
+  };
+  
   const formatDateForExport = (dateString: string) => {
     try {
       if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
@@ -630,6 +724,111 @@ const Registros = () => {
     link.click();
     document.body.removeChild(link);
   };
+  
+  const handleExportPDF = () => {
+    try {
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+      
+      // Título
+      doc.setFontSize(16);
+      doc.text('Registros de Resgate de Fauna', 14, 15);
+      
+      // Data de exportação
+      doc.setFontSize(10);
+      doc.text(`Exportado em: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, 14, 22);
+      doc.text(`Total de registros: ${filteredRegistros.length}`, 14, 27);
+      
+      // Preparar dados da tabela
+      const tableData = filteredRegistros.map(registro => [
+        formatDateForExport(registro.data),
+        registro.regiao_administrativa?.nome || '-',
+        registro.origem?.nome || '-',
+        registro.especie?.nome_popular || '-',
+        registro.especie?.nome_cientifico || '-',
+        registro.especie?.classe_taxonomica || '-',
+        registro.estado_saude?.nome || '-',
+        registro.estagio_vida?.nome || '-',
+        registro.quantidade?.toString() || '0',
+        registro.destinacao?.nome || '-'
+      ]);
+      
+      // Criar tabela
+      autoTable(doc, {
+        head: [['Data', 'Região', 'Tipo', 'Espécie', 'Nome Científico', 'Classe', 'Estado', 'Estágio', 'Qtd.', 'Destinação']],
+        body: tableData,
+        startY: 32,
+        styles: { fontSize: 7, cellPadding: 1 },
+        headStyles: { fillColor: [7, 29, 73], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        margin: { top: 32, right: 14, bottom: 14, left: 14 },
+        tableWidth: 'wrap'
+      });
+      
+      // Salvar PDF
+      doc.save(`registros_fauna_${new Date().toISOString().split('T')[0]}.pdf`);
+      toast.success('PDF exportado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      toast.error('Erro ao exportar PDF');
+    }
+  };
+  
+  const handleExportXLSX = () => {
+    try {
+      // Preparar dados
+      const dados = filteredRegistros.map(registro => ({
+        'Data': formatDateForExport(registro.data),
+        'Região Administrativa': registro.regiao_administrativa?.nome || '',
+        'Tipo': registro.origem?.nome || '',
+        'Latitude': registro.latitude_origem || '',
+        'Longitude': registro.longitude_origem || '',
+        'Classe Taxonômica': registro.especie?.classe_taxonomica || '',
+        'Nome Científico': registro.especie?.nome_cientifico || '',
+        'Nome Popular': registro.especie?.nome_popular || '',
+        'Estado de Saúde': registro.estado_saude?.nome || '',
+        'Atropelamento': registro.atropelamento || '',
+        'Estágio de Vida': registro.estagio_vida?.nome || '',
+        'Quantidade': registro.quantidade || 0,
+        'Quantidade Adulto': registro.quantidade_adulto || 0,
+        'Quantidade Filhote': registro.quantidade_filhote || 0,
+        'Destinação': registro.destinacao?.nome || ''
+      }));
+      
+      // Criar workbook
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(dados);
+      
+      // Ajustar largura das colunas
+      const colWidths = [
+        { wch: 12 }, // Data
+        { wch: 25 }, // Região
+        { wch: 20 }, // Tipo
+        { wch: 12 }, // Latitude
+        { wch: 12 }, // Longitude
+        { wch: 15 }, // Classe
+        { wch: 30 }, // Nome Científico
+        { wch: 25 }, // Nome Popular
+        { wch: 15 }, // Estado
+        { wch: 12 }, // Atropelamento
+        { wch: 15 }, // Estágio
+        { wch: 10 }, // Quantidade
+        { wch: 12 }, // Qtd Adulto
+        { wch: 12 }, // Qtd Filhote
+        { wch: 20 }  // Destinação
+      ];
+      ws['!cols'] = colWidths;
+      
+      // Adicionar worksheet ao workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Registros');
+      
+      // Salvar arquivo
+      XLSX.writeFile(wb, `registros_fauna_${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast.success('XLSX exportado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao exportar XLSX:', error);
+      toast.error('Erro ao exportar XLSX');
+    }
+  };
 
   return (
     <Layout title="Lista de Registros" showBackButton>
@@ -681,6 +880,7 @@ const Registros = () => {
               onViewDetails={handleViewDetails}
               onEdit={handleEdit}
               onDelete={handleDeleteClick}
+              onDuplicate={handleDuplicate}
             />
           )}
         </div>
