@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Eye, Edit, Trash2, Copy } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Registro } from '@/types/hotspots';
@@ -12,17 +10,14 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 interface RegistrosTableProps {
   registros: Registro[];
   onViewDetails: (id: string) => void;
-  onEdit: (id: string) => void;
-  onDelete: (id: string, nome: string) => void;
-  onDuplicate: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string, nome: string) => void;
+  onDuplicate?: (id: string) => void;
 }
 
 const RegistrosTable: React.FC<RegistrosTableProps> = ({ 
   registros, 
-  onViewDetails, 
-  onEdit, 
-  onDelete,
-  onDuplicate
+  onViewDetails
 }) => {
   const isMobile = useIsMobile();
   
@@ -99,7 +94,6 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
               <TableHead className="hidden md:table-cell px-4 py-3 font-semibold">Estágio</TableHead>
               <TableHead className="px-4 py-3 text-center font-semibold">Qtd.</TableHead>
               <TableHead className="hidden md:table-cell px-4 py-3 font-semibold">Destinação</TableHead>
-              <TableHead className="px-4 py-3 text-right whitespace-nowrap font-semibold">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -148,69 +142,14 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
                   <TableCell className="hidden md:table-cell px-4 py-3">
                     <span className="text-sm">{registro.destinacao?.nome || '-'}</span>
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex justify-end gap-1 flex-shrink-0">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 flex-shrink-0 hover:bg-primary/10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onViewDetails(registro.id);
-                        }}
-                        title="Ver detalhes"
-                      >
-                        <Eye className="h-4 w-4 text-primary" />
-                        <span className="sr-only">Ver</span>
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 flex-shrink-0 hover:bg-amber-500/10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit(registro.id);
-                        }}
-                        title="Editar registro"
-                      >
-                        <Edit className="h-4 w-4 text-amber-600" />
-                        <span className="sr-only">Editar</span>
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 flex-shrink-0 hover:bg-blue-500/10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDuplicate(registro.id);
-                        }}
-                        title="Duplicar registro"
-                      >
-                        <Copy className="h-4 w-4 text-blue-600" />
-                        <span className="sr-only">Duplicar</span>
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 flex-shrink-0 hover:bg-red-500/10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(registro.id, registro.especie?.nome_popular || 'este registro');
-                        }}
-                        title="Excluir registro"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-600" />
-                        <span className="sr-only">Excluir</span>
-                      </Button>
-                    </div>
-                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={isMobile ? 5 : 11} className="text-center py-12">
+                <TableCell colSpan={isMobile ? 5 : 10} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
                     <p className="text-muted-foreground text-sm">Nenhum registro encontrado com os filtros atuais.</p>
+                    <p className="text-muted-foreground text-xs">Clique em uma linha para ver os detalhes do registro</p>
                   </div>
                 </TableCell>
               </TableRow>
