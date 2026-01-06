@@ -72,6 +72,7 @@ const Registros = () => {
   
   const loadDimensionCache = async () => {
     try {
+      console.log('🔄 Carregando cache de dimensões...');
       const [regioesRes, origensRes, destinacoesRes, estadosSaudeRes, estagiosVidaRes, desfechosRes, especiesRes] = await Promise.all([
         supabase.from('dim_regiao_administrativa').select('id, nome'),
         supabase.from('dim_origem').select('id, nome'),
@@ -82,6 +83,22 @@ const Registros = () => {
         supabase.from('dim_especies_fauna').select('*')
       ]);
       
+      // Verificar erros
+      const errors = [
+        regioesRes.error && `Regiões: ${regioesRes.error.message}`,
+        origensRes.error && `Origens: ${origensRes.error.message}`,
+        destinacoesRes.error && `Destinações: ${destinacoesRes.error.message}`,
+        estadosSaudeRes.error && `Estados de Saúde: ${estadosSaudeRes.error.message}`,
+        estagiosVidaRes.error && `Estágios de Vida: ${estagiosVidaRes.error.message}`,
+        desfechosRes.error && `Desfechos: ${desfechosRes.error.message}`,
+        especiesRes.error && `Espécies: ${especiesRes.error.message}`
+      ].filter(Boolean);
+      
+      if (errors.length > 0) {
+        console.error('❌ Erros ao carregar dimensões:', errors);
+        toast.error(`Erro ao carregar algumas dimensões: ${errors.join(', ')}`);
+      }
+      
       setDimensionCache({
         regioes: new Map((regioesRes.data || []).map(r => [r.id, r])),
         origens: new Map((origensRes.data || []).map(r => [r.id, r])),
@@ -91,15 +108,31 @@ const Registros = () => {
         desfechos: new Map((desfechosRes.data || []).map(r => [r.id, r])),
         especies: new Map((especiesRes.data || []).map(e => [e.id, e]))
       });
+      
+      console.log('✅ Cache de dimensões carregado:', {
+        regioes: regioesRes.data?.length || 0,
+        origens: origensRes.data?.length || 0,
+        destinacoes: destinacoesRes.data?.length || 0,
+        estadosSaude: estadosSaudeRes.data?.length || 0,
+        estagiosVida: estagiosVidaRes.data?.length || 0,
+        desfechos: desfechosRes.data?.length || 0,
+        especies: especiesRes.data?.length || 0
+      });
     } catch (error) {
-      console.error('Erro ao carregar cache de dimensões:', error);
+      console.error('❌ Erro ao carregar cache de dimensões:', error);
+      toast.error('Erro ao carregar dados de dimensões. Verifique o console para mais detalhes.');
     }
   };
   
   const fetchRegistros = async () => {
-    if (!dimensionCache) return;
+    if (!dimensionCache) {
+      console.log('⏳ Aguardando cache de dimensões...');
+      return;
+    }
     
     setIsLoading(true);
+    console.log('🔄 Buscando registros...', { filterAno });
+    
     try {
       const allRegistros: Registro[] = [];
       
@@ -124,9 +157,13 @@ const Registros = () => {
         }
       }
       
+      console.log('📊 Tabelas a buscar:', tabelas);
+      
       // Buscar dados de todas as tabelas em paralelo com limite inicial
       const promises = tabelas.map(async (tabela) => {
         try {
+          console.log(`🔍 Buscando de ${tabela}...`);
+          
           // Para fat_registros_de_resgate e 2025, usar joins otimizados
           if (tabela === 'fat_registros_de_resgate' || tabela === 'fat_resgates_diarios_2025') {
             let query = supabaseAny
@@ -172,10 +209,12 @@ const Registros = () => {
             const { data, error } = await query;
             
             if (error) {
-              console.warn(`Erro ao buscar de ${tabela}:`, error);
+              console.error(`❌ Erro ao buscar de ${tabela}:`, error);
+              toast.error(`Erro ao buscar de ${tabela}: ${error.message}`);
               return [];
             }
             
+            console.log(`✅ ${tabela}: ${data?.length || 0} registros encontrados`);
             return data || [];
           } else {
             // Para tabelas históricas, buscar apenas campos essenciais
@@ -199,9 +238,12 @@ const Registros = () => {
             const { data, error } = await query;
             
             if (error) {
-              console.warn(`Erro ao buscar de ${tabela}:`, error);
+              console.error(`❌ Erro ao buscar de ${tabela}:`, error);
+              toast.error(`Erro ao buscar de ${tabela}: ${error.message}`);
               return [];
             }
+            
+            console.log(`✅ ${tabela}: ${data?.length || 0} registros encontrados`);
             
             // Enriquecer dados com cache de dimensões
             if (data && data.length > 0) {
@@ -210,8 +252,9 @@ const Registros = () => {
             
             return [];
           }
-        } catch (err) {
-          console.warn(`Erro ao buscar de ${tabela}:`, err);
+        } catch (err: any) {
+          console.error(`❌ Erro ao buscar de ${tabela}:`, err);
+          toast.error(`Erro ao buscar de ${tabela}: ${err?.message || 'Erro desconhecido'}`);
           return [];
         }
       });
@@ -220,9 +263,10 @@ const Registros = () => {
       const results = await Promise.all(promises);
       
       // Combinar todos os resultados
-      results.forEach(registros => {
+      results.forEach((registros, index) => {
         if (Array.isArray(registros)) {
           allRegistros.push(...registros);
+          console.log(`📦 ${tabelas[index]}: ${registros.length} registros adicionados`);
         }
       });
       
@@ -246,8 +290,16 @@ const Registros = () => {
       
       setRegistros(normalizedRegistros);
       console.log(`✅ Total de registros carregados: ${normalizedRegistros.length}`);
-    } catch (error) {
-      console.error('Erro ao buscar registros:', error);
+      
+      if (normalizedRegistros.length === 0) {
+        console.warn('⚠️ Nenhum registro encontrado. Verifique:');
+        console.warn('  1. Se as políticas RLS estão corretas');
+        console.warn('  2. Se o usuário está autenticado');
+        console.warn('  3. Se há dados nas tabelas');
+        toast.warning('Nenhum registro encontrado. Verifique os filtros ou as políticas de acesso.');
+      }
+    } catch (error: any) {
+      console.error('❌ Erro ao buscar registros:', error);
       toast.error(handleSupabaseError(error, 'carregar os registros'));
     } finally {
       setIsLoading(false);
