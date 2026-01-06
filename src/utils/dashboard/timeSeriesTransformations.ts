@@ -33,15 +33,33 @@ export const transformTimeSeriesData = (registros: Registro[]): TimeSeriesItem[]
       
       // Increment counts based on origem ou tipo_registro
       const origemNome = registro.origem?.nome;
-      const tipoRegistro = registro.tipo_registro;
+      const tipoRegistro = (registro as any).tipo_registro;
       
-      if (origemNome === 'Resgate de Fauna' || tipoRegistro === 'resgate' || tipoRegistro === 'historico' || !origemNome) {
-        currentCount.resgates += 1;
-      } else if (origemNome === 'Apreensão' || origemNome === 'Ação Policial') {
-        currentCount.apreensoes += 1;
+      // Para dados históricos (2020-2024), usar quantidade_resgates ao invés de contar 1
+      const isHistorical = tipoRegistro === 'historico' || tipoRegistro === 'agregado' || 
+                          (registro as any).quantidade_resgates !== undefined;
+      
+      let quantidade = 1;
+      if (isHistorical) {
+        // Para dados históricos, usar quantidade_resgates ou quantidade
+        quantidade = Number((registro as any).quantidade_resgates) || 
+                     Number((registro as any).quantidade) || 
+                     Number((registro as any).quantidade_total) || 
+                     1;
+      } else {
+        // Para dados atuais, usar quantidade_total ou quantidade
+        quantidade = Number((registro as any).quantidade_total) || 
+                     Number((registro as any).quantidade) || 
+                     1;
       }
       
-      currentCount.total += 1;
+      if (origemNome === 'Resgate de Fauna' || tipoRegistro === 'resgate' || tipoRegistro === 'historico' || tipoRegistro === 'agregado' || !origemNome) {
+        currentCount.resgates += quantidade;
+      } else if (origemNome === 'Apreensão' || origemNome === 'Ação Policial') {
+        currentCount.apreensoes += quantidade;
+      }
+      
+      currentCount.total += quantidade;
     } catch (error) {
       console.warn('Error processing date for time series:', error, registro);
       // Continue processando outros registros

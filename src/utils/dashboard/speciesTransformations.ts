@@ -9,11 +9,21 @@ export const transformMostRescuedSpeciesData = (resgates: Registro[]): EspecieQu
   
   const especiesResgateMap = new Map<string, number>();
   resgates.forEach(reg => {
-    if (reg?.especie?.nome_popular) {
-      const nomePopular = reg.especie.nome_popular || 'Espécie não identificada';
-      const nomeCientifico = reg.especie.nome_cientifico || '';
+    // Para dados históricos, pode ter nome_popular diretamente no registro
+    const nomePopular = reg?.especie?.nome_popular || (reg as any).nome_popular || 'Espécie não identificada';
+    const nomeCientifico = reg?.especie?.nome_cientifico || (reg as any).nome_cientifico || '';
+    
+    if (nomePopular && nomePopular !== 'Espécie não identificada') {
       const chave = nomeCientifico ? `${nomePopular} (${nomeCientifico})` : nomePopular;
-      const quantidade = reg.quantidade_total ?? reg.quantidade ?? 1;
+      
+      // Para dados históricos, usar quantidade_resgates; para atuais, usar quantidade_total
+      const isHistorical = (reg as any).tipo_registro === 'historico' || 
+                          (reg as any).quantidade_resgates !== undefined;
+      
+      const quantidade = isHistorical 
+        ? ((reg as any).quantidade_resgates ?? (reg as any).quantidade ?? (reg as any).quantidade_total ?? 1)
+        : (reg.quantidade_total ?? reg.quantidade ?? 1);
+      
       const qtdNum = typeof quantidade === 'number' && !isNaN(quantidade) ? quantidade : 1;
       especiesResgateMap.set(chave, (especiesResgateMap.get(chave) || 0) + qtdNum);
     }
