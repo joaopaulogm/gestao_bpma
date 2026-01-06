@@ -834,9 +834,6 @@ const Registros = () => {
             <RegistrosTable
               registros={filteredRegistros}
               onViewDetails={handleViewDetails}
-              onEdit={handleEdit}
-              onDelete={handleDeleteClick}
-              onDuplicate={handleDuplicate}
             />
           )}
         </div>
