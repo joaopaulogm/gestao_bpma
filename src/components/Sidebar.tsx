@@ -64,11 +64,11 @@ const Sidebar = () => {
   };
 
   const linkClasses = (path: string, indented = false) => cn(
-    "flex items-center gap-3 py-2.5 px-3 rounded-lg transition-all duration-200",
+    "flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all duration-150 min-h-[44px]", // Apple touch target
     indented && "ml-3",
     isActive(path) 
-      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium" 
-      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm" 
+      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-[0.98]"
   );
 
   const sidebarContent = (
@@ -255,7 +255,7 @@ const Sidebar = () => {
         {/* Mobile drawer */}
         <aside 
           className={cn(
-            "fixed top-0 left-0 h-screen bg-sidebar text-sidebar-foreground z-50 flex flex-col border-r border-sidebar-border transition-transform duration-300 w-72",
+            "fixed top-0 left-0 h-screen bg-sidebar text-sidebar-foreground z-50 flex flex-col border-r border-sidebar-border transition-transform duration-250 ease-out w-72 shadow-lg",
             isMobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -269,7 +269,7 @@ const Sidebar = () => {
   return (
     <aside 
       className={cn(
-        "h-screen bg-sidebar text-sidebar-foreground transition-all duration-300 flex flex-col border-r border-sidebar-border",
+        "h-screen bg-sidebar text-sidebar-foreground transition-all duration-250 ease-out flex flex-col border-r border-sidebar-border",
         isOpen ? "w-64" : "w-20"
       )}
     >

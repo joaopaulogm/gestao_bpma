@@ -42,13 +42,15 @@ const HomeCard: React.FC<HomeCardProps> = ({ title, icon: Icon, to }) => {
   return (
     <Link 
       to={to}
-      className="flex flex-col items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 aspect-square rounded-xl 
-        bg-primary backdrop-blur-md border-2 border-accent/40
-        hover:scale-105 hover:border-accent hover:shadow-[0_0_25px_rgba(255,204,0,0.5)] 
-        transition-all duration-300 shadow-lg active:scale-95"
+      className="flex flex-col items-center justify-center gap-3 p-4 sm:p-5 aspect-square rounded-xl 
+        bg-card border border-border shadow-sm
+        hover:shadow-md hover:-translate-y-1
+        transition-all duration-250 active:scale-[0.97] min-h-[120px]"
     >
-      <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-accent" />
-      <span className="text-[10px] sm:text-xs font-medium text-center text-primary-foreground leading-tight line-clamp-2">{title}</span>
+      <div className="p-3 rounded-xl bg-primary/10">
+        <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+      </div>
+      <span className="text-xs sm:text-sm font-medium text-center text-foreground leading-tight line-clamp-2">{title}</span>
     </Link>
   );
 };
@@ -61,17 +63,17 @@ const Index = () => {
     <div className="p-4 sm:p-6 md:p-10 min-h-screen">
       {/* Header */}
       <div className="text-center mb-6 sm:mb-8">
-        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-primary flex items-center justify-center mx-auto mb-3 sm:mb-4 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,204,0,0.6)] cursor-pointer overflow-hidden">
-          <img src={logoBpma} alt="Logo BPMA" className="h-32 w-32 sm:h-40 sm:w-40 object-contain" />
+        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-card border border-border shadow-sm flex items-center justify-center mx-auto mb-4 sm:mb-5 transition-all duration-250 hover:shadow-md overflow-hidden">
+          <img src={logoBpma} alt="Logo BPMA" className="h-20 w-20 sm:h-28 sm:w-28 object-contain" />
         </div>
-        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-2 sm:mb-3">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-4">
           <CheckeredDivider />
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground whitespace-nowrap">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground whitespace-nowrap tracking-tight">
             Gestão - BPMA
           </h1>
           <CheckeredDivider />
         </div>
-        <p className="text-muted-foreground text-sm sm:text-base px-4">
+        <p className="text-muted-foreground text-base sm:text-lg px-4">
           Sistema de gestão de ocorrências e dados ambientais
         </p>
       </div>

@@ -388,6 +388,24 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_indicador_bpma: {
+        Row: {
+          categoria: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          categoria?: string | null
+          id: string
+          nome: string
+        }
+        Update: {
+          categoria?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       dim_itens_apreensao: {
         Row: {
           "Bem Apreendido": string
@@ -451,6 +469,30 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_tempo: {
+        Row: {
+          ano: number
+          id: number
+          inicio_mes: string
+          mes: number
+          mes_abreviacao: string
+        }
+        Insert: {
+          ano: number
+          id: number
+          inicio_mes: string
+          mes: number
+          mes_abreviacao: string
+        }
+        Update: {
+          ano?: number
+          id?: number
+          inicio_mes?: string
+          mes?: number
+          mes_abreviacao?: string
+        }
+        Relationships: []
+      }
       dim_tipo_de_area: {
         Row: {
           created_at: string
@@ -486,6 +528,91 @@ export type Database = {
           "Tipo de Crime"?: string | null
         }
         Relationships: []
+      }
+      fact_indicador_mensal_bpma: {
+        Row: {
+          indicador_id: string
+          tempo_id: number
+          valor: number
+        }
+        Insert: {
+          indicador_id: string
+          tempo_id: number
+          valor: number
+        }
+        Update: {
+          indicador_id?: string
+          tempo_id?: number
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fact_indicador_mensal_bpma_indicador_id_fkey"
+            columns: ["indicador_id"]
+            isOneToOne: false
+            referencedRelation: "dim_indicador_bpma"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_indicador_mensal_bpma_tempo_id_fkey"
+            columns: ["tempo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_tempo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fact_resgate_fauna_especie_mensal: {
+        Row: {
+          id: string
+          id_especie_fauna: string | null
+          id_regiao_administrativa: string | null
+          nome_cientifico: string
+          nome_popular: string | null
+          quantidade: number
+          tempo_id: number
+        }
+        Insert: {
+          id?: string
+          id_especie_fauna?: string | null
+          id_regiao_administrativa?: string | null
+          nome_cientifico: string
+          nome_popular?: string | null
+          quantidade: number
+          tempo_id: number
+        }
+        Update: {
+          id?: string
+          id_especie_fauna?: string | null
+          id_regiao_administrativa?: string | null
+          nome_cientifico?: string
+          nome_popular?: string | null
+          quantidade?: number
+          tempo_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fact_resgate_fauna_especie_mensal_id_especie_fauna_fkey"
+            columns: ["id_especie_fauna"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_resgate_fauna_especie_mensal_id_regiao_administrativa_fkey"
+            columns: ["id_regiao_administrativa"]
+            isOneToOne: false
+            referencedRelation: "dim_regiao_administrativa"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_resgate_fauna_especie_mensal_tempo_id_fkey"
+            columns: ["tempo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_tempo"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fat_abono: {
         Row: {
@@ -2348,6 +2475,7 @@ export type Database = {
       }
     }
     Functions: {
+      exec_sql: { Args: { sql_query: string }; Returns: undefined }
       fn_nome_cientifico_prefix: { Args: { nome: string }; Returns: string }
       has_role: {
         Args: {
