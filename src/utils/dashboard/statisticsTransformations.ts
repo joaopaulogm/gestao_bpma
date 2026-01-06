@@ -14,11 +14,22 @@ export const transformQuantityStatistics = (registros: Registro[]) => {
     };
   }
 
-  // Usamos agora o campo quantidade_total, com fallback para quantidade
+  // Verificar se são dados históricos
+  const isHistorical = registros.length > 0 && (
+    (registros[0] as any).tipo_registro === 'historico' ||
+    (registros[0] as any).quantidade_resgates !== undefined
+  );
+
+  // Para dados históricos, usar quantidade_resgates; para atuais, usar quantidade_total
   const quantities = registros
     .filter(r => r) // Filtrar registros nulos/undefined
     .map(r => {
-      const qtd = r.quantidade_total ?? r.quantidade ?? 0;
+      let qtd = 0;
+      if (isHistorical) {
+        qtd = (r as any).quantidade_resgates ?? (r as any).quantidade ?? (r as any).quantidade_total ?? 0;
+      } else {
+        qtd = (r as Registro).quantidade_total ?? (r as Registro).quantidade ?? 0;
+      }
       return typeof qtd === 'number' && !isNaN(qtd) ? qtd : 0;
     })
     .filter(q => q > 0) // Filtrar quantidades inválidas

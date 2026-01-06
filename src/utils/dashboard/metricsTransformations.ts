@@ -16,14 +16,35 @@ export const transformDashboardMetrics = (
   const validApreensoes = Array.isArray(apreensoes) ? apreensoes.filter(r => r) : [];
   const validAtropelados = Array.isArray(animaisAtropelados) ? animaisAtropelados.filter(r => r) : [];
   
-  // Calculate total specimens count (using quantidade_total when available)
+  // Verificar se são dados históricos (2020-2024)
+  const isHistorical = validRegistros.length > 0 && (
+    (validRegistros[0] as any).tipo_registro === 'historico' ||
+    (validRegistros[0] as any).quantidade_resgates !== undefined
+  );
+
+  // Calculate total specimens count
+  // Para dados históricos, usar quantidade_resgates; para atuais, usar quantidade_total
   const totalSpecimens = validRegistros.reduce(
     (sum, reg) => {
-      const qtd = reg.quantidade_total ?? reg.quantidade ?? 0;
+      let qtd = 0;
+      if (isHistorical) {
+        qtd = (reg as any).quantidade_resgates ?? (reg as any).quantidade ?? (reg as any).quantidade_total ?? 0;
+      } else {
+        qtd = reg.quantidade_total ?? reg.quantidade ?? 0;
+      }
       return sum + (typeof qtd === 'number' && !isNaN(qtd) ? qtd : 0);
     },
     0
   );
+
+  // Calculate total resgates
+  // Para dados históricos, somar quantidade_resgates; para atuais, contar registros
+  const totalResgatesCount = isHistorical
+    ? validResgates.reduce((sum, reg) => {
+        const qtd = (reg as any).quantidade_resgates ?? (reg as any).quantidade ?? (reg as any).quantidade_total ?? 1;
+        return sum + (typeof qtd === 'number' && !isNaN(qtd) ? qtd : 1);
+      }, 0)
+    : validResgates.length;
 
   // Calculate average specimens per occurrence
   const avgSpecimensPerOccurrence = validRegistros.length > 0
@@ -31,10 +52,13 @@ export const transformDashboardMetrics = (
     : 0;
 
   // Count unique species
+  // Para dados históricos, pode ter nome_cientifico diretamente no registro
   const uniqueSpecies = new Set(
     validRegistros
-      .filter(reg => reg?.especie?.nome_cientifico)
-      .map(reg => reg.especie!.nome_cientifico)
+      .map(reg => {
+        // Tentar de várias formas: especie.nome_cientifico ou nome_cientifico direto
+        return reg?.especie?.nome_cientifico || (reg as any).nome_cientifico || null;
+      })
       .filter(Boolean)
   ).size;
 
@@ -48,7 +72,7 @@ export const transformDashboardMetrics = (
     },
     {
       title: 'Total de Resgates',
-      value: validResgates.length,
+      value: totalResgatesCount,
       iconType: 'Clipboard',
       iconColor: 'text-green-500'
     },
