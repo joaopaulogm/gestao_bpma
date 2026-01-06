@@ -217,12 +217,13 @@ const Registros = () => {
             console.log(`✅ ${tabela}: ${data?.length || 0} registros encontrados`);
             return data || [];
           } else {
-            // Para tabelas históricas, buscar apenas campos essenciais
+            // Para tabelas históricas (2020-2024), buscar apenas campos que existem
+            // Essas tabelas têm estrutura diferente: data_ocorrencia, nome_popular, nome_cientifico, etc.
             const campoData = 'data_ocorrencia';
             
             let query = supabaseAny
               .from(tabela)
-              .select('id, data_ocorrencia, regiao_administrativa_id, origem_id, destinacao_id, estado_saude_id, estagio_vida_id, desfecho_id, especie_id, quantidade_resgates, quantidade_total, quantidade_adulto, quantidade_filhote, latitude_origem, longitude_origem, atropelamento, nome_popular, nome_cientifico, classe_taxonomica')
+              .select('id, data_ocorrencia, especie_id, quantidade_resgates, quantidade_solturas, quantidade_obitos, quantidade_feridos, quantidade_filhotes, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
               .order(campoData, { ascending: false })
               .limit(1000); // Limite inicial
             
@@ -321,25 +322,8 @@ const Registros = () => {
         enriched.data = reg.data_ocorrencia;
       }
       
-      // Enriquecer com relacionamentos usando cache
-      if (reg.regiao_administrativa_id) {
-        enriched.regiao_administrativa = cache.regioes.get(reg.regiao_administrativa_id) || null;
-      }
-      if (reg.origem_id) {
-        enriched.origem = cache.origens.get(reg.origem_id) || null;
-      }
-      if (reg.destinacao_id) {
-        enriched.destinacao = cache.destinacoes.get(reg.destinacao_id) || null;
-      }
-      if (reg.estado_saude_id) {
-        enriched.estado_saude = cache.estadosSaude.get(reg.estado_saude_id) || null;
-      }
-      if (reg.estagio_vida_id) {
-        enriched.estagio_vida = cache.estagiosVida.get(reg.estagio_vida_id) || null;
-      }
-      if (reg.desfecho_id) {
-        enriched.desfecho = cache.desfechos.get(reg.desfecho_id) || null;
-      }
+      // Para tabelas históricas, não temos IDs de dimensões, então criamos objetos básicos
+      // Enriquecer espécie
       if (reg.especie_id) {
         enriched.especie = cache.especies.get(reg.especie_id) || null;
       } else if (reg.nome_cientifico) {
@@ -352,6 +336,7 @@ const Registros = () => {
         } else {
           // Criar objeto espécie básico se não encontrado
           enriched.especie = {
+            id: null,
             nome_popular: reg.nome_popular || '',
             nome_cientifico: reg.nome_cientifico || '',
             classe_taxonomica: reg.classe_taxonomica || ''
@@ -359,10 +344,29 @@ const Registros = () => {
         }
       }
       
-      // Mapear quantidade se necessário
-      if (reg.quantidade_resgates !== undefined && !reg.quantidade) {
-        enriched.quantidade = reg.quantidade_resgates;
+      // Para dados históricos, não temos essas dimensões, então criamos valores padrão
+      enriched.regiao_administrativa = null;
+      enriched.origem = { id: null, nome: 'Resgate de Fauna' };
+      enriched.destinacao = null;
+      enriched.estado_saude = null;
+      enriched.estagio_vida = null;
+      enriched.desfecho = null;
+      
+      // Mapear quantidade - tabelas históricas usam quantidade_resgates
+      if (reg.quantidade_resgates !== undefined) {
+        enriched.quantidade = Number(reg.quantidade_resgates) || 0;
+        enriched.quantidade_total = Number(reg.quantidade_resgates) || 0;
+        // Estimar quantidade_adulto e quantidade_filhote
+        enriched.quantidade_adulto = Number(reg.quantidade_resgates) - (Number(reg.quantidade_filhotes) || 0);
+        enriched.quantidade_filhote = Number(reg.quantidade_filhotes) || 0;
+      } else if (!reg.quantidade) {
+        enriched.quantidade = 0;
       }
+      
+      // Campos que não existem em tabelas históricas
+      enriched.latitude_origem = null;
+      enriched.longitude_origem = null;
+      enriched.atropelamento = null;
       
       return enriched;
     });
