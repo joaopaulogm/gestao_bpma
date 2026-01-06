@@ -829,13 +829,15 @@ const Registros = () => {
           {isLoading ? (
             <RegistrosLoading />
           ) : (
-            <RegistrosTable
-              registros={filteredRegistros}
-              onViewDetails={handleViewDetails}
-              onEdit={handleEdit}
-              onDelete={handleDeleteClick}
-              onDuplicate={handleDuplicate}
-            />
+            <div className="w-full overflow-x-auto">
+              <RegistrosTable
+                registros={filteredRegistros}
+                onViewDetails={handleViewDetails}
+                onEdit={handleEdit}
+                onDelete={handleDeleteClick}
+                onDuplicate={handleDuplicate}
+              />
+            </div>
           )}
         </div>
         
