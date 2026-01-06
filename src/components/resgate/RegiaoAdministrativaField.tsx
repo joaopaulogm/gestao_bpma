@@ -10,7 +10,7 @@ interface RegiaoAdministrativaFieldProps {
   regioes: string[];
 }
 
-const RegiaoAdministrativaField: React.FC<RegiaoAdministrativaFieldProps> = ({ 
+const RegiaoAdministrativaField = ({ 
   regioes, 
   value, 
   onChange,

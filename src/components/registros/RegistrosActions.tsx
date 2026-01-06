@@ -9,7 +9,7 @@ interface RegistrosActionsProps {
   onExportCSV: () => void;
 }
 
-const RegistrosActions: React.FC<RegistrosActionsProps> = ({
+const RegistrosActions = ({
   searchTerm,
   onSearchChange,
   onToggleFilters,

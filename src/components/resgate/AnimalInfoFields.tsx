@@ -33,7 +33,7 @@ interface AnimalInfoFieldsProps {
   isEvadido?: boolean;
 }
 
-const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
+const AnimalInfoFields = ({
   estadoSaude,
   atropelamento,
   estagioVida,

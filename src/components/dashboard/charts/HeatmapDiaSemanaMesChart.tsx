@@ -11,7 +11,7 @@ interface HeatmapDiaSemanaMesChartProps {
   year: number;
 }
 
-const HeatmapDiaSemanaMesChart: React.FC<HeatmapDiaSemanaMesChartProps> = ({ data, year }) => {
+const HeatmapDiaSemanaMesChart = ({ data, year }: HeatmapDiaSemanaMesChartProps) => {
   const registros = data.rawData || [];
   
   const heatmapData = useMemo(() => {

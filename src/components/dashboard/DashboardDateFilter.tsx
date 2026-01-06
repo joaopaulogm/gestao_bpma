@@ -19,7 +19,7 @@ interface DashboardDateFilterProps {
   onFilterChange: (year: number, month: number | null) => void;
 }
 
-const DashboardDateFilter: React.FC<DashboardDateFilterProps> = ({ 
+const DashboardDateFilter = ({ 
   year, 
   month, 
   onFilterChange 

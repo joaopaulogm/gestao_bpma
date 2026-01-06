@@ -24,7 +24,7 @@ interface DashboardTypeFilterProps {
   }) => void;
 }
 
-const DashboardTypeFilter: React.FC<DashboardTypeFilterProps> = ({
+const DashboardTypeFilter = ({
   origem,
   classeTaxonomica,
   classesDisponiveis,

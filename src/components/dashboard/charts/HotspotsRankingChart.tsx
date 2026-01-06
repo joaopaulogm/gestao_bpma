@@ -7,7 +7,7 @@ interface HotspotsRankingChartProps {
   data: DashboardData;
 }
 
-const HotspotsRankingChart: React.FC<HotspotsRankingChartProps> = ({ data }) => {
+const HotspotsRankingChart = ({ data }: HotspotsRankingChartProps) => {
   const registros = data.rawData || [];
   
   const hotspots = useMemo(() => {
