@@ -66,9 +66,15 @@ const Index = () => {
       <div className="text-center mb-6 sm:mb-8">
         <div className="flex items-center justify-center mx-auto mb-4 sm:mb-5">
           <div 
-            className="relative transition-all duration-300 hover:scale-105 hover:drop-shadow-2xl"
+            className="relative transition-all duration-300 hover:scale-105"
             style={{
-              filter: 'drop-shadow(0 4px 6px rgba(7, 29, 73, 0.3)) drop-shadow(0 10px 15px rgba(7, 29, 73, 0.2)) drop-shadow(0 0 20px rgba(7, 29, 73, 0.1))',
+              filter: `
+                drop-shadow(0 2px 4px rgba(7, 29, 73, 0.4))
+                drop-shadow(0 4px 8px rgba(7, 29, 73, 0.3))
+                drop-shadow(0 8px 16px rgba(7, 29, 73, 0.2))
+                drop-shadow(0 16px 32px rgba(7, 29, 73, 0.15))
+                drop-shadow(0 0 0 1px rgba(7, 29, 73, 0.1))
+              `,
             }}
           >
             <img 
@@ -76,16 +82,28 @@ const Index = () => {
               alt="Logo BPMA" 
               className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 object-contain relative z-10"
               style={{
-                filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))',
+                filter: `
+                  drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15))
+                  drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))
+                `,
               }}
             />
-            {/* Efeito de brilho sutil */}
+            {/* Efeito de brilho sutil e auto-relevo */}
             <div 
-              className="absolute inset-0 rounded-full opacity-20 blur-xl"
+              className="absolute inset-0 rounded-full opacity-30 blur-2xl pointer-events-none"
               style={{
-                background: 'radial-gradient(circle, rgba(7, 29, 73, 0.4) 0%, transparent 70%)',
-                transform: 'scale(1.2)',
+                background: 'radial-gradient(circle at 50% 50%, rgba(7, 29, 73, 0.5) 0%, rgba(7, 29, 73, 0.2) 40%, transparent 70%)',
+                transform: 'scale(1.3)',
                 zIndex: 0,
+              }}
+            />
+            {/* Efeito de luz superior para auto-relevo */}
+            <div 
+              className="absolute inset-0 rounded-full opacity-40 blur-sm pointer-events-none"
+              style={{
+                background: 'radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 50%)',
+                transform: 'scale(1.1)',
+                zIndex: 1,
               }}
             />
           </div>
