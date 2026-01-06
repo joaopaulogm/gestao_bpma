@@ -70,87 +70,136 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
     }
   };
 
+  const handleRowClick = (e: React.MouseEvent, registroId: string) => {
+    // Não abrir detalhes se clicou em um botão ou link
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a')) {
+      return;
+    }
+    onViewDetails(registroId);
+  };
+
   return (
     <div className="w-full">
-      <div className="w-full overflow-x-auto rounded-lg border">
+      <div className="w-full overflow-x-auto rounded-lg border border-border bg-card">
         <Table className="w-full table-auto">
           <TableHeader>
-            <TableRow>
-              <TableHead className="px-2 whitespace-nowrap">Data</TableHead>
-              <TableHead className="px-2 whitespace-nowrap">Região</TableHead>
-              <TableHead className="px-2 whitespace-nowrap">Tipo</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="px-4 py-3 whitespace-nowrap font-semibold">Data</TableHead>
+              <TableHead className="px-4 py-3 whitespace-nowrap font-semibold">Região</TableHead>
+              <TableHead className="px-4 py-3 whitespace-nowrap font-semibold">Tipo</TableHead>
               {!isMobile && (
                 <>
-                  <TableHead className="px-2">Espécie</TableHead>
-                  <TableHead className="hidden lg:table-cell px-2">Nome Científico</TableHead>
+                  <TableHead className="px-4 py-3 font-semibold">Espécie</TableHead>
+                  <TableHead className="hidden lg:table-cell px-4 py-3 font-semibold">Nome Científico</TableHead>
                 </>
               )}
-              <TableHead className="hidden sm:table-cell px-2">Classe</TableHead>
-              <TableHead className="hidden sm:table-cell px-2">Estado</TableHead>
-              <TableHead className="hidden md:table-cell px-2">Estágio</TableHead>
-              <TableHead className="px-2 text-center">Qtd.</TableHead>
-              <TableHead className="hidden md:table-cell px-2">Destinação</TableHead>
-              <TableHead className="px-2 text-right whitespace-nowrap">Ações</TableHead>
+              <TableHead className="hidden sm:table-cell px-4 py-3 font-semibold">Classe</TableHead>
+              <TableHead className="hidden sm:table-cell px-4 py-3 font-semibold">Estado</TableHead>
+              <TableHead className="hidden md:table-cell px-4 py-3 font-semibold">Estágio</TableHead>
+              <TableHead className="px-4 py-3 text-center font-semibold">Qtd.</TableHead>
+              <TableHead className="hidden md:table-cell px-4 py-3 font-semibold">Destinação</TableHead>
+              <TableHead className="px-4 py-3 text-right whitespace-nowrap font-semibold">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {registros.length > 0 ? (
               registros.map((registro) => (
-                <TableRow key={registro.id} className="hover:bg-muted/50">
-                  <TableCell className="px-2 whitespace-nowrap">{formatDateTime(registro.data)}</TableCell>
-                  <TableCell className="px-2">{registro.regiao_administrativa?.nome || '-'}</TableCell>
-                  <TableCell className="px-2 whitespace-nowrap">{registro.origem?.nome || '-'}</TableCell>
+                <TableRow 
+                  key={registro.id} 
+                  className="hover:bg-primary/5 cursor-pointer transition-colors border-b border-border/50"
+                  onClick={(e) => handleRowClick(e, registro.id)}
+                >
+                  <TableCell className="px-4 py-3 whitespace-nowrap">
+                    <span className="text-sm font-medium">{formatDateTime(registro.data)}</span>
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    <span className="text-sm">{registro.regiao_administrativa?.nome || '-'}</span>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 whitespace-nowrap">
+                    <span className="text-sm">{registro.origem?.nome || '-'}</span>
+                  </TableCell>
                   {!isMobile && (
                     <>
-                      <TableCell className="px-2">{registro.especie?.nome_popular || '-'}</TableCell>
-                      <TableCell className="hidden lg:table-cell px-2 italic">{registro.especie?.nome_cientifico || '-'}</TableCell>
+                      <TableCell className="px-4 py-3">
+                        <span className="text-sm font-medium text-primary hover:underline">
+                          {registro.especie?.nome_popular || '-'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell px-4 py-3">
+                        <span className="text-sm italic text-muted-foreground">
+                          {registro.especie?.nome_cientifico || '-'}
+                        </span>
+                      </TableCell>
                     </>
                   )}
-                  <TableCell className="hidden sm:table-cell px-2">{registro.especie?.classe_taxonomica || '-'}</TableCell>
-                  <TableCell className="hidden sm:table-cell px-2">{registro.estado_saude?.nome || '-'}</TableCell>
-                  <TableCell className="hidden md:table-cell px-2">{registro.estagio_vida?.nome || '-'}</TableCell>
-                  <TableCell className="px-2 text-center">{registro.quantidade}</TableCell>
-                  <TableCell className="hidden md:table-cell px-2">{registro.destinacao?.nome || '-'}</TableCell>
-                  <TableCell className="px-2 text-right">
+                  <TableCell className="hidden sm:table-cell px-4 py-3">
+                    <span className="text-sm">{registro.especie?.classe_taxonomica || '-'}</span>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell px-4 py-3">
+                    <span className="text-sm">{registro.estado_saude?.nome || '-'}</span>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell px-4 py-3">
+                    <span className="text-sm">{registro.estagio_vida?.nome || '-'}</span>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-center">
+                    <span className="text-sm font-semibold">{registro.quantidade}</span>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell px-4 py-3">
+                    <span className="text-sm">{registro.destinacao?.nome || '-'}</span>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-1 flex-shrink-0">
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-7 w-7 p-0 flex-shrink-0"
-                        onClick={() => onViewDetails(registro.id)}
+                        className="h-8 w-8 p-0 flex-shrink-0 hover:bg-primary/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewDetails(registro.id);
+                        }}
                         title="Ver detalhes"
                       >
-                        <Eye className="h-3.5 w-3.5 text-fauna-blue" />
+                        <Eye className="h-4 w-4 text-primary" />
                         <span className="sr-only">Ver</span>
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-7 w-7 p-0 flex-shrink-0"
-                        onClick={() => onEdit(registro.id)}
+                        className="h-8 w-8 p-0 flex-shrink-0 hover:bg-amber-500/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(registro.id);
+                        }}
                         title="Editar registro"
                       >
-                        <Edit className="h-3.5 w-3.5 text-amber-500" />
+                        <Edit className="h-4 w-4 text-amber-600" />
                         <span className="sr-only">Editar</span>
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-7 w-7 p-0 flex-shrink-0"
-                        onClick={() => onDuplicate(registro.id)}
+                        className="h-8 w-8 p-0 flex-shrink-0 hover:bg-blue-500/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDuplicate(registro.id);
+                        }}
                         title="Duplicar registro"
                       >
-                        <Copy className="h-3.5 w-3.5 text-blue-500" />
+                        <Copy className="h-4 w-4 text-blue-600" />
                         <span className="sr-only">Duplicar</span>
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-7 w-7 p-0 flex-shrink-0"
-                        onClick={() => onDelete(registro.id, registro.especie?.nome_popular || 'este registro')}
+                        className="h-8 w-8 p-0 flex-shrink-0 hover:bg-red-500/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(registro.id, registro.especie?.nome_popular || 'este registro');
+                        }}
                         title="Excluir registro"
                       >
-                        <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                        <Trash2 className="h-4 w-4 text-red-600" />
                         <span className="sr-only">Excluir</span>
                       </Button>
                     </div>
@@ -159,8 +208,10 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={isMobile ? 5 : 11} className="text-center py-8">
-                  Nenhum registro encontrado com os filtros atuais.
+                <TableCell colSpan={isMobile ? 5 : 11} className="text-center py-12">
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-muted-foreground text-sm">Nenhum registro encontrado com os filtros atuais.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
