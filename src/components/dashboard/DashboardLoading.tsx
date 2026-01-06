@@ -10,7 +10,7 @@ interface DashboardLoadingProps {
 const DashboardLoading = ({ 
   onRefresh,
   isError = false
-}) => {
+}: DashboardLoadingProps) => {
   if (isError) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">

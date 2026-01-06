@@ -269,7 +269,7 @@
 .dashboard-card:hover {
   background: hsl(var(--card));
   border-color: hsl(var(--border));
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Level 3 elevation */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Level 3 elevation on hover */
   transform: translateY(-1px);
 }
 
