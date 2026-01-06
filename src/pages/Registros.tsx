@@ -357,51 +357,87 @@ const Registros = () => {
         enriched.data = reg.data_ocorrencia;
       }
       
-      // Para tabelas históricas, não temos IDs de dimensões, então criamos objetos básicos
-      // Enriquecer espécie
-      if (reg.especie_id) {
-        enriched.especie = cache.especies.get(reg.especie_id) || null;
-      } else if (reg.nome_cientifico) {
-        // Tentar encontrar espécie pelo nome científico no cache
-        const especie = Array.from(cache.especies.values()).find(
-          e => e.nome_cientifico?.toLowerCase() === reg.nome_cientifico?.toLowerCase()
-        );
-        if (especie) {
-          enriched.especie = especie;
-        } else {
-          // Criar objeto espécie básico se não encontrado
-          enriched.especie = {
-            id: null,
-            nome_popular: reg.nome_popular || '',
-            nome_cientifico: reg.nome_cientifico || '',
-            classe_taxonomica: reg.classe_taxonomica || ''
-          };
+      // Verificar se é dado histórico (sem IDs de dimensões) ou dado atual (com IDs)
+      const isHistorical = !reg.regiao_administrativa_id && !reg.origem_id && reg.data_ocorrencia;
+      
+      if (isHistorical) {
+        // Para tabelas históricas (2020-2024), não temos IDs de dimensões
+        // Enriquecer espécie
+        if (reg.especie_id) {
+          enriched.especie = cache.especies.get(reg.especie_id) || null;
+        } else if (reg.nome_cientifico) {
+          // Tentar encontrar espécie pelo nome científico no cache
+          const especie = Array.from(cache.especies.values()).find(
+            e => e.nome_cientifico?.toLowerCase() === reg.nome_cientifico?.toLowerCase()
+          );
+          if (especie) {
+            enriched.especie = especie;
+          } else {
+            // Criar objeto espécie básico se não encontrado
+            enriched.especie = {
+              id: null,
+              nome_popular: reg.nome_popular || '',
+              nome_cientifico: reg.nome_cientifico || '',
+              classe_taxonomica: reg.classe_taxonomica || ''
+            };
+          }
+        }
+        
+        // Para dados históricos, não temos essas dimensões, então criamos valores padrão
+        enriched.regiao_administrativa = null;
+        enriched.origem = { id: null, nome: 'Resgate de Fauna' };
+        enriched.destinacao = null;
+        enriched.estado_saude = null;
+        enriched.estagio_vida = null;
+        enriched.desfecho = null;
+        
+        // Mapear quantidade - tabelas históricas usam quantidade_resgates
+        if (reg.quantidade_resgates !== undefined) {
+          enriched.quantidade = Number(reg.quantidade_resgates) || 0;
+          enriched.quantidade_total = Number(reg.quantidade_resgates) || 0;
+          // Estimar quantidade_adulto e quantidade_filhote
+          enriched.quantidade_adulto = Number(reg.quantidade_resgates) - (Number(reg.quantidade_filhotes) || 0);
+          enriched.quantidade_filhote = Number(reg.quantidade_filhotes) || 0;
+        } else if (!reg.quantidade) {
+          enriched.quantidade = 0;
+        }
+        
+        // Campos que não existem em tabelas históricas
+        enriched.latitude_origem = null;
+        enriched.longitude_origem = null;
+        enriched.atropelamento = null;
+      } else {
+        // Para dados atuais (fat_registros_de_resgate, fat_resgates_diarios_2025)
+        // Enriquecer com relacionamentos usando cache
+        if (reg.regiao_administrativa_id) {
+          enriched.regiao_administrativa = cache.regioes.get(reg.regiao_administrativa_id) || null;
+        }
+        if (reg.origem_id) {
+          enriched.origem = cache.origens.get(reg.origem_id) || null;
+        }
+        if (reg.destinacao_id) {
+          enriched.destinacao = cache.destinacoes.get(reg.destinacao_id) || null;
+        }
+        if (reg.estado_saude_id) {
+          enriched.estado_saude = cache.estadosSaude.get(reg.estado_saude_id) || null;
+        }
+        if (reg.estagio_vida_id) {
+          enriched.estagio_vida = cache.estagiosVida.get(reg.estagio_vida_id) || null;
+        }
+        if (reg.desfecho_id) {
+          enriched.desfecho = cache.desfechos.get(reg.desfecho_id) || null;
+        }
+        if (reg.especie_id) {
+          enriched.especie = cache.especies.get(reg.especie_id) || null;
+        }
+        
+        // Garantir que quantidade está definida
+        if (!enriched.quantidade && enriched.quantidade_total) {
+          enriched.quantidade = enriched.quantidade_total;
+        } else if (!enriched.quantidade) {
+          enriched.quantidade = (enriched.quantidade_adulto || 0) + (enriched.quantidade_filhote || 0);
         }
       }
-      
-      // Para dados históricos, não temos essas dimensões, então criamos valores padrão
-      enriched.regiao_administrativa = null;
-      enriched.origem = { id: null, nome: 'Resgate de Fauna' };
-      enriched.destinacao = null;
-      enriched.estado_saude = null;
-      enriched.estagio_vida = null;
-      enriched.desfecho = null;
-      
-      // Mapear quantidade - tabelas históricas usam quantidade_resgates
-      if (reg.quantidade_resgates !== undefined) {
-        enriched.quantidade = Number(reg.quantidade_resgates) || 0;
-        enriched.quantidade_total = Number(reg.quantidade_resgates) || 0;
-        // Estimar quantidade_adulto e quantidade_filhote
-        enriched.quantidade_adulto = Number(reg.quantidade_resgates) - (Number(reg.quantidade_filhotes) || 0);
-        enriched.quantidade_filhote = Number(reg.quantidade_filhotes) || 0;
-      } else if (!reg.quantidade) {
-        enriched.quantidade = 0;
-      }
-      
-      // Campos que não existem em tabelas históricas
-      enriched.latitude_origem = null;
-      enriched.longitude_origem = null;
-      enriched.atropelamento = null;
       
       return enriched;
     });
