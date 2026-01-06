@@ -64,8 +64,31 @@ const Index = () => {
     <div className="p-4 sm:p-6 md:p-10 min-h-screen">
       {/* Header */}
       <div className="text-center mb-6 sm:mb-8">
-        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-card border border-border shadow-sm flex items-center justify-center mx-auto mb-4 sm:mb-5 transition-all duration-200 hover:shadow-md overflow-hidden">
-          <img src={logoBpma} alt="Logo BPMA" className="h-20 w-20 sm:h-28 sm:w-28 object-contain" />
+        <div className="flex items-center justify-center mx-auto mb-4 sm:mb-5">
+          <div 
+            className="relative transition-all duration-300 hover:scale-105 hover:drop-shadow-2xl"
+            style={{
+              filter: 'drop-shadow(0 4px 6px rgba(7, 29, 73, 0.3)) drop-shadow(0 10px 15px rgba(7, 29, 73, 0.2)) drop-shadow(0 0 20px rgba(7, 29, 73, 0.1))',
+            }}
+          >
+            <img 
+              src={logoBpma} 
+              alt="Logo BPMA" 
+              className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 object-contain relative z-10"
+              style={{
+                filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))',
+              }}
+            />
+            {/* Efeito de brilho sutil */}
+            <div 
+              className="absolute inset-0 rounded-full opacity-20 blur-xl"
+              style={{
+                background: 'radial-gradient(circle, rgba(7, 29, 73, 0.4) 0%, transparent 70%)',
+                transform: 'scale(1.2)',
+                zIndex: 0,
+              }}
+            />
+          </div>
         </div>
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-4">
           <CheckeredDivider />
