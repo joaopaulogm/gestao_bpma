@@ -19,6 +19,7 @@ export interface WeekdayDistribution {
 /**
  * Calcula estatísticas de resgates para tabelas históricas (2020-2024)
  * Esses dados usam campos agregados: quantidade_resgates, quantidade_solturas, etc.
+ * Para 2021-2024, também pode usar dados das novas tabelas BPMA (agregados ou por espécie)
  */
 export const transformHistoricalRescueStatistics = (registros: any[]): RescueStatistics => {
   if (!Array.isArray(registros) || registros.length === 0) {
@@ -32,26 +33,70 @@ export const transformHistoricalRescueStatistics = (registros: any[]): RescueSta
     };
   }
 
-  // Somar campos agregados das tabelas históricas
-  const totalResgates = registros.reduce((acc, r) => {
-    const qtd = Number(r.quantidade_resgates) || 0;
-    return acc + qtd;
-  }, 0);
+  // Verificar se são dados agregados das novas tabelas BPMA
+  const temDadosAgregados = registros.some((r: any) => r.tipo_registro === 'agregado' || r.natureza);
+  const temDadosPorEspecie = registros.some((r: any) => 
+    r.tipo_registro === 'historico' && 
+    (r.quantidade_resgates !== undefined || r.quantidade !== undefined)
+  );
 
-  const totalSolturas = registros.reduce((acc, r) => {
-    const qtd = Number(r.quantidade_solturas) || 0;
-    return acc + qtd;
-  }, 0);
+  let totalResgates = 0;
+  let totalSolturas = 0;
+  let totalFilhotes = 0;
+  let totalObitos = 0;
 
-  const totalFilhotes = registros.reduce((acc, r) => {
-    const qtd = Number(r.quantidade_filhotes) || 0;
-    return acc + qtd;
-  }, 0);
+  if (temDadosPorEspecie) {
+    // Usar dados por espécie (mais detalhados) - prioridade
+    totalResgates = registros.reduce((acc, r) => {
+      const qtd = Number(r.quantidade_resgates) || Number(r.quantidade) || Number(r.quantidade_total) || 0;
+      return acc + qtd;
+    }, 0);
 
-  const totalObitos = registros.reduce((acc, r) => {
-    const qtd = Number(r.quantidade_obitos) || 0;
-    return acc + qtd;
-  }, 0);
+    totalSolturas = registros.reduce((acc, r) => {
+      const qtd = Number(r.quantidade_solturas) || Number(r.quantidade_soltura) || 0;
+      return acc + qtd;
+    }, 0);
+
+    totalFilhotes = registros.reduce((acc, r) => {
+      const qtd = Number(r.quantidade_filhotes) || Number(r.quantidade_filhote) || 0;
+      return acc + qtd;
+    }, 0);
+
+    totalObitos = registros.reduce((acc, r) => {
+      const qtd = Number(r.quantidade_obitos) || Number(r.quantidade_obito) || 0;
+      return acc + qtd;
+    }, 0);
+  } else if (temDadosAgregados) {
+    // Usar dados agregados das novas tabelas BPMA
+    // Os dados já vêm consolidados por mês com todas as naturezas
+    registros.forEach((r: any) => {
+      totalResgates += Number(r.quantidade) || Number(r.quantidade_total) || 0;
+      totalSolturas += Number(r.quantidade_solturas) || 0;
+      totalFilhotes += Number(r.quantidade_filhotes) || Number(r.quantidade_filhote) || 0;
+      totalObitos += Number(r.quantidade_obitos) || 0;
+    });
+  } else {
+    // Fallback: usar campos padrão das tabelas históricas antigas
+    totalResgates = registros.reduce((acc, r) => {
+      const qtd = Number(r.quantidade_resgates) || 0;
+      return acc + qtd;
+    }, 0);
+
+    totalSolturas = registros.reduce((acc, r) => {
+      const qtd = Number(r.quantidade_solturas) || 0;
+      return acc + qtd;
+    }, 0);
+
+    totalFilhotes = registros.reduce((acc, r) => {
+      const qtd = Number(r.quantidade_filhotes) || 0;
+      return acc + qtd;
+    }, 0);
+
+    totalObitos = registros.reduce((acc, r) => {
+      const qtd = Number(r.quantidade_obitos) || 0;
+      return acc + qtd;
+    }, 0);
+  }
 
   // Agrupar por data para encontrar o recorde diário
   const resgatesPorData = new Map<string, number>();
@@ -59,7 +104,11 @@ export const transformHistoricalRescueStatistics = (registros: any[]): RescueSta
   registros.forEach(r => {
     const data = r.data_ocorrencia || r.data || '';
     if (data) {
-      const qtd = Number(r.quantidade_resgates) || 1;
+      // Para dados agregados, usar quantidade_total; para por espécie, usar quantidade_resgates
+      const qtd = Number(r.quantidade_resgates) || 
+                  Number(r.quantidade) || 
+                  Number(r.quantidade_total) || 
+                  1;
       resgatesPorData.set(data, (resgatesPorData.get(data) || 0) + qtd);
     }
   });
