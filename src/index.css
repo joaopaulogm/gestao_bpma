@@ -61,7 +61,7 @@
     --sidebar-foreground: 0 0% 15%;
     --sidebar-primary: 220 83% 16%; /* Navy Blue #071d49 - usado quando NÃO ativo */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-active: 220 83% 50%; /* Light Blue - usado quando ATIVO */
+    --sidebar-active: 220 83% 16%; /* Navy Blue #071d49 - usado quando ATIVO */
     --sidebar-active-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 95%; /* Hover state */
     --sidebar-accent-foreground: 0 0% 15%;
@@ -109,7 +109,7 @@
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 220 83% 16%; /* Navy Blue #071d49 - usado quando NÃO ativo */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-active: 220 83% 50%; /* Light Blue - usado quando ATIVO */
+    --sidebar-active: 220 83% 16%; /* Navy Blue #071d49 - usado quando ATIVO */
     --sidebar-active-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 18%;
     --sidebar-accent-foreground: 0 0% 95%;
