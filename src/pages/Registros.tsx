@@ -116,6 +116,9 @@ const Registros = () => {
           tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025'];
         } else if (ano >= 2020 && ano <= 2024) {
           tabelas = [`fat_resgates_diarios_${ano}`];
+        } else if (ano >= 2026) {
+          // Para 2026 ou anos futuros, buscar apenas em fat_registros_de_resgate
+          tabelas = ['fat_registros_de_resgate'];
         } else {
           tabelas = ['fat_registros_de_resgate'];
         }
@@ -161,7 +164,9 @@ const Registros = () => {
               const ano = parseInt(filterAno);
               const startDate = `${ano}-01-01`;
               const endDate = `${ano}-12-31`;
+              // Aplicar filtro de data corretamente
               query = query.gte('data', startDate).lte('data', endDate);
+              console.log(`🔍 Aplicando filtro de ano ${ano}: ${startDate} a ${endDate}`);
             }
             
             const { data, error } = await query;
@@ -181,6 +186,15 @@ const Registros = () => {
               .select('id, data_ocorrencia, regiao_administrativa_id, origem_id, destinacao_id, estado_saude_id, estagio_vida_id, desfecho_id, especie_id, quantidade_resgates, quantidade_total, quantidade_adulto, quantidade_filhote, latitude_origem, longitude_origem, atropelamento, nome_popular, nome_cientifico, classe_taxonomica')
               .order(campoData, { ascending: false })
               .limit(1000); // Limite inicial
+            
+            // Aplicar filtro de ano se especificado (para tabelas históricas)
+            if (filterAno !== 'all') {
+              const ano = parseInt(filterAno);
+              const startDate = `${ano}-01-01`;
+              const endDate = `${ano}-12-31`;
+              query = query.gte(campoData, startDate).lte(campoData, endDate);
+              console.log(`🔍 Aplicando filtro de ano ${ano} em ${tabela}: ${startDate} a ${endDate}`);
+            }
             
             const { data, error } = await query;
             
@@ -334,9 +348,16 @@ const Registros = () => {
     
     // Filtro por ano
     const matchesAno = filterAno === 'all' || (() => {
-      const registroDate = registro.data ? new Date(registro.data) : null;
-      if (!registroDate) return false;
-      return registroDate.getFullYear().toString() === filterAno;
+      if (!registro.data) return false;
+      try {
+        const registroDate = new Date(registro.data);
+        if (isNaN(registroDate.getTime())) return false;
+        const anoRegistro = registroDate.getFullYear();
+        const anoFiltro = parseInt(filterAno);
+        return anoRegistro === anoFiltro;
+      } catch {
+        return false;
+      }
     })();
     
     // Filtro por mês
