@@ -131,8 +131,8 @@ const DashboardAdvancedKPIs: React.FC<DashboardAdvancedKPIsProps> = ({ data, yea
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-6">
       {/* Resgates no Mês Atual */}
       <div className="relative overflow-hidden rounded-2xl p-5 bg-card border border-border/50 hover:border-border hover:shadow-md transition-all duration-300">
-        <div className="absolute top-4 right-4 p-2 rounded-full bg-blue-50">
-          <Calendar className="h-4 w-4 text-blue-600" />
+        <div className="absolute top-4 right-4 p-2 rounded-full bg-primary/10">
+          <Calendar className="h-4 w-4 text-primary" />
         </div>
         <p className="text-sm font-medium mb-3 pr-10 text-muted-foreground">
           Resgates no Mês Atual

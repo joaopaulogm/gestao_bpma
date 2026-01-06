@@ -35,7 +35,7 @@ interface TeamMembersDialogProps {
 
 const teamColors: Record<TeamType, string> = {
   'Alfa': 'bg-red-500/20 text-red-400 border-red-500/30',
-  'Bravo': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  'Bravo': 'bg-primary/20 text-primary/80 border-primary/30',
   'Charlie': 'bg-green-500/20 text-green-400 border-green-500/30',
   'Delta': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
 };
@@ -188,7 +188,7 @@ export const TeamMembersDialog: React.FC<TeamMembersDialogProps> = ({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
+                          className="h-8 w-8 text-primary hover:text-primary/80 hover:bg-primary/10"
                           onClick={() => setTransferingMembro(membro.id)}
                           title="Transferir para outra equipe"
                           disabled={saving}
