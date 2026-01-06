@@ -36,6 +36,15 @@ const Registros = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [dimensionCache, setDimensionCache] = useState<{
+    regioes: Map<string, any>;
+    origens: Map<string, any>;
+    destinacoes: Map<string, any>;
+    estadosSaude: Map<string, any>;
+    estagiosVida: Map<string, any>;
+    desfechos: Map<string, any>;
+    especies: Map<string, any>;
+  } | null>(null);
   const navigate = useNavigate();
   
   const { 
@@ -49,44 +58,113 @@ const Registros = () => {
     setRegistros(prevRegistros => prevRegistros.filter(r => r.id !== deletedId));
   });
   
+  // Carregar cache de dimensões uma vez
   useEffect(() => {
-    fetchRegistros();
+    loadDimensionCache();
   }, []);
   
+  // Carregar registros quando cache estiver pronto ou quando filtros mudarem
+  useEffect(() => {
+    if (dimensionCache) {
+      fetchRegistros();
+    }
+  }, [dimensionCache, filterAno]);
+  
+  const loadDimensionCache = async () => {
+    try {
+      const [regioesRes, origensRes, destinacoesRes, estadosSaudeRes, estagiosVidaRes, desfechosRes, especiesRes] = await Promise.all([
+        supabase.from('dim_regiao_administrativa').select('id, nome'),
+        supabase.from('dim_origem').select('id, nome'),
+        supabase.from('dim_destinacao').select('id, nome'),
+        supabase.from('dim_estado_saude').select('id, nome'),
+        supabase.from('dim_estagio_vida').select('id, nome'),
+        supabase.from('dim_desfecho').select('id, nome, tipo'),
+        supabase.from('dim_especies_fauna').select('*')
+      ]);
+      
+      setDimensionCache({
+        regioes: new Map((regioesRes.data || []).map(r => [r.id, r])),
+        origens: new Map((origensRes.data || []).map(r => [r.id, r])),
+        destinacoes: new Map((destinacoesRes.data || []).map(r => [r.id, r])),
+        estadosSaude: new Map((estadosSaudeRes.data || []).map(r => [r.id, r])),
+        estagiosVida: new Map((estagiosVidaRes.data || []).map(r => [r.id, r])),
+        desfechos: new Map((desfechosRes.data || []).map(r => [r.id, r])),
+        especies: new Map((especiesRes.data || []).map(e => [e.id, e]))
+      });
+    } catch (error) {
+      console.error('Erro ao carregar cache de dimensões:', error);
+    }
+  };
+  
   const fetchRegistros = async () => {
+    if (!dimensionCache) return;
+    
     setIsLoading(true);
     try {
       const allRegistros: Registro[] = [];
       
-      // Lista de todas as tabelas a serem consultadas
-      const tabelas = [
-        'fat_registros_de_resgate',
-        'fat_resgates_diarios_2020',
-        'fat_resgates_diarios_2021',
-        'fat_resgates_diarios_2022',
-        'fat_resgates_diarios_2023',
-        'fat_resgates_diarios_2024',
-        'fat_resgates_diarios_2025'
-      ];
+      // Determinar quais tabelas buscar baseado no filtro de ano
+      let tabelas: string[] = [];
       
-      // Buscar dados de todas as tabelas em paralelo
+      if (filterAno === 'all') {
+        // Se não há filtro de ano, carregar apenas as mais recentes (2024 e 2025) inicialmente
+        tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025', 'fat_resgates_diarios_2024'];
+      } else {
+        const ano = parseInt(filterAno);
+        // Carregar apenas a tabela do ano selecionado
+        if (ano === 2025) {
+          tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025'];
+        } else if (ano >= 2020 && ano <= 2024) {
+          tabelas = [`fat_resgates_diarios_${ano}`];
+        } else {
+          tabelas = ['fat_registros_de_resgate'];
+        }
+      }
+      
+      // Buscar dados de todas as tabelas em paralelo com limite inicial
       const promises = tabelas.map(async (tabela) => {
         try {
-          // Para fat_registros_de_resgate, usar joins
+          // Para fat_registros_de_resgate e 2025, usar joins otimizados
           if (tabela === 'fat_registros_de_resgate' || tabela === 'fat_resgates_diarios_2025') {
-            const { data, error } = await supabaseAny
+            let query = supabaseAny
               .from(tabela)
               .select(`
-                *,
+                id,
+                data,
+                regiao_administrativa_id,
+                origem_id,
+                destinacao_id,
+                estado_saude_id,
+                estagio_vida_id,
+                desfecho_id,
+                especie_id,
+                quantidade,
+                quantidade_total,
+                quantidade_adulto,
+                quantidade_filhote,
+                latitude_origem,
+                longitude_origem,
+                atropelamento,
                 regiao_administrativa:dim_regiao_administrativa(nome),
                 origem:dim_origem(nome),
                 destinacao:dim_destinacao(nome),
                 estado_saude:dim_estado_saude(nome),
                 estagio_vida:dim_estagio_vida(nome),
                 desfecho:dim_desfecho(nome, tipo),
-                especie:dim_especies_fauna(*)
+                especie:dim_especies_fauna(id, nome_popular, nome_cientifico, classe_taxonomica)
               `)
-              .order('data', { ascending: false });
+              .order('data', { ascending: false })
+              .limit(1000); // Limite inicial para performance
+            
+            // Aplicar filtro de ano se especificado
+            if (filterAno !== 'all') {
+              const ano = parseInt(filterAno);
+              const startDate = `${ano}-01-01`;
+              const endDate = `${ano}-12-31`;
+              query = query.gte('data', startDate).lte('data', endDate);
+            }
+            
+            const { data, error } = await query;
             
             if (error) {
               console.warn(`Erro ao buscar de ${tabela}:`, error);
@@ -95,27 +173,25 @@ const Registros = () => {
             
             return data || [];
           } else {
-            // Para tabelas fat_resgates_diarios_*, buscar sem joins primeiro
-            // e depois enriquecer os dados manualmente
-            // Usar cast para evitar erros de TypeScript com tabelas não tipadas
-            const supabaseAny = supabase as any;
+            // Para tabelas históricas, buscar apenas campos essenciais
+            const campoData = 'data_ocorrencia';
             
-            // Para 2025 usar 'data', para outras usar 'data_ocorrencia'
-            const campoData = tabela === 'fat_resgates_diarios_2025' ? 'data' : 'data_ocorrencia';
-            
-            const { data, error } = await supabaseAny
+            let query = supabaseAny
               .from(tabela)
-              .select('*')
-              .order(campoData, { ascending: false });
+              .select('id, data_ocorrencia, regiao_administrativa_id, origem_id, destinacao_id, estado_saude_id, estagio_vida_id, desfecho_id, especie_id, quantidade_resgates, quantidade_total, quantidade_adulto, quantidade_filhote, latitude_origem, longitude_origem, atropelamento, nome_popular, nome_cientifico, classe_taxonomica')
+              .order(campoData, { ascending: false })
+              .limit(1000); // Limite inicial
+            
+            const { data, error } = await query;
             
             if (error) {
               console.warn(`Erro ao buscar de ${tabela}:`, error);
               return [];
             }
             
-            // Enriquecer dados com relacionamentos
+            // Enriquecer dados com cache de dimensões
             if (data && data.length > 0) {
-              return await enrichHistoricalData(data);
+              return enrichHistoricalDataFast(data, dimensionCache);
             }
             
             return [];
@@ -136,11 +212,10 @@ const Registros = () => {
         }
       });
       
-      // Normalizar campo de data (algumas tabelas usam 'data', outras 'data_ocorrencia')
+      // Normalizar campo de data
       const normalizedRegistros = allRegistros.map((reg: any) => {
         const normalized = { ...reg };
         
-        // Se não tem 'data' mas tem 'data_ocorrencia', usar 'data_ocorrencia'
         if (!normalized.data && normalized.data_ocorrencia) {
           normalized.data = normalized.data_ocorrencia;
         }
@@ -165,68 +240,56 @@ const Registros = () => {
     }
   };
   
-  // Função para enriquecer dados históricos com relacionamentos
-  const enrichHistoricalData = async (registros: any[]): Promise<Registro[]> => {
-    if (!registros || registros.length === 0) return [];
+  // Função otimizada para enriquecer dados históricos usando cache
+  const enrichHistoricalDataFast = (registros: any[], cache: typeof dimensionCache): Registro[] => {
+    if (!registros || registros.length === 0 || !cache) return [];
     
-    // Buscar todas as dimensões de uma vez
-    const [regioesRes, origensRes, destinacoesRes, estadosSaudeRes, estagiosVidaRes, desfechosRes, especiesRes] = await Promise.all([
-      supabase.from('dim_regiao_administrativa').select('id, nome'),
-      supabase.from('dim_origem').select('id, nome'),
-      supabase.from('dim_destinacao').select('id, nome'),
-      supabase.from('dim_estado_saude').select('id, nome'),
-      supabase.from('dim_estagio_vida').select('id, nome'),
-      supabase.from('dim_desfecho').select('id, nome, tipo'),
-      supabase.from('dim_especies_fauna').select('*')
-    ]);
-    
-    const regioes = new Map((regioesRes.data || []).map(r => [r.id, r]));
-    const origens = new Map((origensRes.data || []).map(r => [r.id, r]));
-    const destinacoes = new Map((destinacoesRes.data || []).map(r => [r.id, r]));
-    const estadosSaude = new Map((estadosSaudeRes.data || []).map(r => [r.id, r]));
-    const estagiosVida = new Map((estagiosVidaRes.data || []).map(r => [r.id, r]));
-    const desfechos = new Map((desfechosRes.data || []).map(r => [r.id, r]));
-    const especies = new Map((especiesRes.data || []).map(e => [e.id, e]));
-    
-    // Enriquecer cada registro
+    // Enriquecer cada registro usando cache
     return registros.map(reg => {
       const enriched: any = { ...reg };
       
-      // Normalizar campo de data (algumas tabelas usam 'data', outras 'data_ocorrencia')
+      // Normalizar campo de data
       if (reg.data) {
         enriched.data = reg.data;
       } else if (reg.data_ocorrencia) {
         enriched.data = reg.data_ocorrencia;
       }
       
-      // Enriquecer com relacionamentos se existirem IDs
+      // Enriquecer com relacionamentos usando cache
       if (reg.regiao_administrativa_id) {
-        enriched.regiao_administrativa = regioes.get(reg.regiao_administrativa_id) || null;
+        enriched.regiao_administrativa = cache.regioes.get(reg.regiao_administrativa_id) || null;
       }
       if (reg.origem_id) {
-        enriched.origem = origens.get(reg.origem_id) || null;
+        enriched.origem = cache.origens.get(reg.origem_id) || null;
       }
       if (reg.destinacao_id) {
-        enriched.destinacao = destinacoes.get(reg.destinacao_id) || null;
+        enriched.destinacao = cache.destinacoes.get(reg.destinacao_id) || null;
       }
       if (reg.estado_saude_id) {
-        enriched.estado_saude = estadosSaude.get(reg.estado_saude_id) || null;
+        enriched.estado_saude = cache.estadosSaude.get(reg.estado_saude_id) || null;
       }
       if (reg.estagio_vida_id) {
-        enriched.estagio_vida = estagiosVida.get(reg.estagio_vida_id) || null;
+        enriched.estagio_vida = cache.estagiosVida.get(reg.estagio_vida_id) || null;
       }
       if (reg.desfecho_id) {
-        enriched.desfecho = desfechos.get(reg.desfecho_id) || null;
+        enriched.desfecho = cache.desfechos.get(reg.desfecho_id) || null;
       }
       if (reg.especie_id) {
-        enriched.especie = especies.get(reg.especie_id) || null;
+        enriched.especie = cache.especies.get(reg.especie_id) || null;
       } else if (reg.nome_cientifico) {
-        // Tentar encontrar espécie pelo nome científico
-        const especie = Array.from(especies.values()).find(
+        // Tentar encontrar espécie pelo nome científico no cache
+        const especie = Array.from(cache.especies.values()).find(
           e => e.nome_cientifico?.toLowerCase() === reg.nome_cientifico?.toLowerCase()
         );
         if (especie) {
           enriched.especie = especie;
+        } else {
+          // Criar objeto espécie básico se não encontrado
+          enriched.especie = {
+            nome_popular: reg.nome_popular || '',
+            nome_cientifico: reg.nome_cientifico || '',
+            classe_taxonomica: reg.classe_taxonomica || ''
+          };
         }
       }
       
