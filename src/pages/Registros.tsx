@@ -166,56 +166,91 @@ const Registros = () => {
           
           // Para fat_registros_de_resgate e 2025, usar joins otimizados
           if (tabela === 'fat_registros_de_resgate' || tabela === 'fat_resgates_diarios_2025') {
-            let query = supabaseAny
-              .from(tabela)
-              .select(`
-                id,
-                data,
-                regiao_administrativa_id,
-                origem_id,
-                destinacao_id,
-                estado_saude_id,
-                estagio_vida_id,
-                desfecho_id,
-                especie_id,
-                quantidade,
-                quantidade_total,
-                quantidade_adulto,
-                quantidade_filhote,
-                latitude_origem,
-                longitude_origem,
-                atropelamento,
-                regiao_administrativa:dim_regiao_administrativa(nome),
-                origem:dim_origem(nome),
-                destinacao:dim_destinacao(nome),
-                estado_saude:dim_estado_saude(nome),
-                estagio_vida:dim_estagio_vida(nome),
-                desfecho:dim_desfecho(nome, tipo),
-                especie:dim_especies_fauna(id, nome_popular, nome_cientifico, classe_taxonomica)
-              `)
-              .order('data', { ascending: false })
-              .limit(1000); // Limite inicial para performance
-            
-            // Aplicar filtro de ano se especificado
-            if (filterAno !== 'all') {
-              const ano = parseInt(filterAno);
-              const startDate = `${ano}-01-01`;
-              const endDate = `${ano}-12-31`;
-              // Aplicar filtro de data corretamente
-              query = query.gte('data', startDate).lte('data', endDate);
-              console.log(`🔍 Aplicando filtro de ano ${ano}: ${startDate} a ${endDate}`);
-            }
-            
-            const { data, error } = await query;
-            
-            if (error) {
-              console.error(`❌ Erro ao buscar de ${tabela}:`, error);
-              toast.error(`Erro ao buscar de ${tabela}: ${error.message}`);
+            try {
+              // Primeiro, tentar com joins (mais eficiente)
+              let query = supabaseAny
+                .from(tabela)
+                .select(`
+                  id,
+                  data,
+                  regiao_administrativa_id,
+                  origem_id,
+                  destinacao_id,
+                  estado_saude_id,
+                  estagio_vida_id,
+                  desfecho_id,
+                  especie_id,
+                  quantidade,
+                  quantidade_total,
+                  quantidade_adulto,
+                  quantidade_filhote,
+                  latitude_origem,
+                  longitude_origem,
+                  atropelamento,
+                  regiao_administrativa:dim_regiao_administrativa(nome),
+                  origem:dim_origem(nome),
+                  destinacao:dim_destinacao(nome),
+                  estado_saude:dim_estado_saude(nome),
+                  estagio_vida:dim_estagio_vida(nome),
+                  desfecho:dim_desfecho(nome, tipo),
+                  especie:dim_especies_fauna(id, nome_popular, nome_cientifico, classe_taxonomica)
+                `)
+                .order('data', { ascending: false })
+                .limit(1000); // Limite inicial para performance
+              
+              // Aplicar filtro de ano se especificado
+              if (filterAno !== 'all') {
+                const ano = parseInt(filterAno);
+                const startDate = `${ano}-01-01`;
+                const endDate = `${ano}-12-31`;
+                // Aplicar filtro de data corretamente
+                query = query.gte('data', startDate).lte('data', endDate);
+                console.log(`🔍 Aplicando filtro de ano ${ano}: ${startDate} a ${endDate}`);
+              }
+              
+              const { data, error } = await query;
+              
+              if (error) {
+                console.warn(`⚠️ Erro com joins em ${tabela}, tentando sem joins:`, error);
+                // Se falhar com joins, tentar sem joins e enriquecer depois
+                let querySimple = supabaseAny
+                  .from(tabela)
+                  .select('id, data, regiao_administrativa_id, origem_id, destinacao_id, estado_saude_id, estagio_vida_id, desfecho_id, especie_id, quantidade, quantidade_total, quantidade_adulto, quantidade_filhote, latitude_origem, longitude_origem, atropelamento')
+                  .order('data', { ascending: false })
+                  .limit(1000);
+                
+                if (filterAno !== 'all') {
+                  const ano = parseInt(filterAno);
+                  const startDate = `${ano}-01-01`;
+                  const endDate = `${ano}-12-31`;
+                  querySimple = querySimple.gte('data', startDate).lte('data', endDate);
+                }
+                
+                const { data: dataSimple, error: errorSimple } = await querySimple;
+                
+                if (errorSimple) {
+                  console.error(`❌ Erro ao buscar de ${tabela} (sem joins):`, errorSimple);
+                  toast.error(`Erro ao buscar de ${tabela}: ${errorSimple.message}`);
+                  return [];
+                }
+                
+                // Enriquecer dados sem joins usando cache
+                if (dataSimple && dataSimple.length > 0) {
+                  const enriched = enrichHistoricalDataFast(dataSimple, dimensionCache);
+                  console.log(`✅ ${tabela}: ${enriched.length} registros encontrados (sem joins)`);
+                  return enriched;
+                }
+                
+                return [];
+              }
+              
+              console.log(`✅ ${tabela}: ${data?.length || 0} registros encontrados`);
+              return data || [];
+            } catch (err: any) {
+              console.error(`❌ Erro inesperado ao buscar de ${tabela}:`, err);
+              toast.error(`Erro ao buscar de ${tabela}: ${err?.message || 'Erro desconhecido'}`);
               return [];
             }
-            
-            console.log(`✅ ${tabela}: ${data?.length || 0} registros encontrados`);
-            return data || [];
           } else {
             // Para tabelas históricas (2020-2024), buscar apenas campos que existem
             // Essas tabelas têm estrutura diferente: data_ocorrencia, nome_popular, nome_cientifico, etc.
