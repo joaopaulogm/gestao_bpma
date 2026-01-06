@@ -24,6 +24,15 @@ const Registros = () => {
   const [filterEstado, setFilterEstado] = useState('all');
   const [filterDestinacao, setFilterDestinacao] = useState('all');
   const [filterClasse, setFilterClasse] = useState('all');
+  const [filterData, setFilterData] = useState<Date | undefined>(undefined);
+  const [filterAno, setFilterAno] = useState('all');
+  const [filterMes, setFilterMes] = useState('all');
+  const [filterEspecie, setFilterEspecie] = useState('all');
+  const [filterNomeCientifico, setFilterNomeCientifico] = useState('');
+  const [filterEstagio, setFilterEstagio] = useState('all');
+  const [filterQuantidadeMin, setFilterQuantidadeMin] = useState('');
+  const [filterQuantidadeMax, setFilterQuantidadeMax] = useState('');
+  const [filterRegiao, setFilterRegiao] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -231,24 +240,95 @@ const Registros = () => {
   };
   
   const filteredRegistros = registros.filter(registro => {
+    // Busca por texto
     const matchesSearch = searchTerm === '' || 
       registro.regiao_administrativa?.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       registro.especie?.nome_popular.toLowerCase().includes(searchTerm.toLowerCase()) ||
       registro.especie?.nome_cientifico.toLowerCase().includes(searchTerm.toLowerCase());
     
+    // Filtro por tipo
     const matchesTipo = filterTipo === 'all' || 
       registro.origem?.nome === filterTipo;
-      
+    
+    // Filtro por estado de saúde
     const matchesEstado = filterEstado === 'all' || 
       registro.estado_saude?.nome === filterEstado;
-      
+    
+    // Filtro por destinação
     const matchesDestinacao = filterDestinacao === 'all' || 
       registro.destinacao?.nome === filterDestinacao;
-      
+    
+    // Filtro por classe taxonômica
     const matchesClasse = filterClasse === 'all' || 
       registro.especie?.classe_taxonomica === filterClasse;
     
-    return matchesSearch && matchesTipo && matchesEstado && matchesDestinacao && matchesClasse;
+    // Filtro por data específica
+    const matchesData = !filterData || (() => {
+      const registroDate = registro.data ? new Date(registro.data) : null;
+      if (!registroDate) return false;
+      return registroDate.toDateString() === filterData.toDateString();
+    })();
+    
+    // Filtro por ano
+    const matchesAno = filterAno === 'all' || (() => {
+      const registroDate = registro.data ? new Date(registro.data) : null;
+      if (!registroDate) return false;
+      return registroDate.getFullYear().toString() === filterAno;
+    })();
+    
+    // Filtro por mês
+    const matchesMes = filterMes === 'all' || (() => {
+      const registroDate = registro.data ? new Date(registro.data) : null;
+      if (!registroDate) return false;
+      return (registroDate.getMonth() + 1).toString() === filterMes;
+    })();
+    
+    // Filtro por espécie
+    const matchesEspecie = filterEspecie === 'all' || 
+      registro.especie?.id === filterEspecie ||
+      (registro as any).especie_id === filterEspecie;
+    
+    // Filtro por nome científico
+    const matchesNomeCientifico = filterNomeCientifico === '' || 
+      registro.especie?.nome_cientifico?.toLowerCase().includes(filterNomeCientifico.toLowerCase()) ||
+      (registro as any).nome_cientifico?.toLowerCase().includes(filterNomeCientifico.toLowerCase());
+    
+    // Filtro por estágio de vida
+    const matchesEstagio = filterEstagio === 'all' || 
+      registro.estagio_vida?.id === filterEstagio ||
+      (registro as any).estagio_vida_id === filterEstagio;
+    
+    // Filtro por quantidade
+    const matchesQuantidade = (() => {
+      const quantidade = Number(registro.quantidade) || 
+                        Number(registro.quantidade_total) || 
+                        Number((registro as any).quantidade_resgates) || 
+                        0;
+      
+      const min = filterQuantidadeMin ? Number(filterQuantidadeMin) : 0;
+      const max = filterQuantidadeMax ? Number(filterQuantidadeMax) : Infinity;
+      
+      return quantidade >= min && quantidade <= max;
+    })();
+    
+    // Filtro por região
+    const matchesRegiao = filterRegiao === 'all' || 
+      registro.regiao_administrativa?.id === filterRegiao ||
+      (registro as any).regiao_administrativa_id === filterRegiao;
+    
+    return matchesSearch && 
+           matchesTipo && 
+           matchesEstado && 
+           matchesDestinacao && 
+           matchesClasse &&
+           matchesData &&
+           matchesAno &&
+           matchesMes &&
+           matchesEspecie &&
+           matchesNomeCientifico &&
+           matchesEstagio &&
+           matchesQuantidade &&
+           matchesRegiao;
   });
 
   const handleViewDetails = (id: string) => {
@@ -360,6 +440,24 @@ const Registros = () => {
             setFilterDestinacao={setFilterDestinacao}
             filterClasse={filterClasse}
             setFilterClasse={setFilterClasse}
+            filterData={filterData}
+            setFilterData={setFilterData}
+            filterAno={filterAno}
+            setFilterAno={setFilterAno}
+            filterMes={filterMes}
+            setFilterMes={setFilterMes}
+            filterEspecie={filterEspecie}
+            setFilterEspecie={setFilterEspecie}
+            filterNomeCientifico={filterNomeCientifico}
+            setFilterNomeCientifico={setFilterNomeCientifico}
+            filterEstagio={filterEstagio}
+            setFilterEstagio={setFilterEstagio}
+            filterQuantidadeMin={filterQuantidadeMin}
+            setFilterQuantidadeMin={setFilterQuantidadeMin}
+            filterQuantidadeMax={filterQuantidadeMax}
+            setFilterQuantidadeMax={setFilterQuantidadeMax}
+            filterRegiao={filterRegiao}
+            setFilterRegiao={setFilterRegiao}
           />
         )}
         
