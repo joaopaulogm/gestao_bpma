@@ -59,8 +59,10 @@
     /* Sidebar - Apple style with subtle background */
     --sidebar-background: 0 0% 98%; /* Light gray */
     --sidebar-foreground: 0 0% 15%;
-    --sidebar-primary: 220 83% 16%; /* Navy Blue */
+    --sidebar-primary: 220 83% 16%; /* Navy Blue #071d49 - usado quando NÃO ativo */
     --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-active: 220 83% 50%; /* Light Blue - usado quando ATIVO */
+    --sidebar-active-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 95%; /* Hover state */
     --sidebar-accent-foreground: 0 0% 15%;
     --sidebar-border: 0 0% 90%; /* Subtle border */
@@ -105,8 +107,10 @@
 
     --sidebar-background: 0 0% 11%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 220 83% 16%;
+    --sidebar-primary: 220 83% 16%; /* Navy Blue #071d49 - usado quando NÃO ativo */
     --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-active: 220 83% 50%; /* Light Blue - usado quando ATIVO */
+    --sidebar-active-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 18%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 30%;

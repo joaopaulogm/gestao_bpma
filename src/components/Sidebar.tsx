@@ -67,8 +67,8 @@ const Sidebar = () => {
     "flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all duration-150 min-h-[44px]", // Apple touch target
     indented && "ml-3",
     isActive(path) 
-      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm" 
-      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-[0.98]"
+      ? "bg-sidebar-active text-sidebar-active-foreground font-medium shadow-sm" 
+      : "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-[0.98]"
   );
 
   const sidebarContent = (
