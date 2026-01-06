@@ -825,19 +825,19 @@ const Registros = () => {
           />
         )}
         
-        <div className="border border-fauna-border rounded-lg shadow-sm overflow-hidden w-full">
+        <div className="w-full">
           {isLoading ? (
-            <RegistrosLoading />
-          ) : (
-            <div className="w-full overflow-x-auto">
-              <RegistrosTable
-                registros={filteredRegistros}
-                onViewDetails={handleViewDetails}
-                onEdit={handleEdit}
-                onDelete={handleDeleteClick}
-                onDuplicate={handleDuplicate}
-              />
+            <div className="border border-fauna-border rounded-lg shadow-sm overflow-hidden">
+              <RegistrosLoading />
             </div>
+          ) : (
+            <RegistrosTable
+              registros={filteredRegistros}
+              onViewDetails={handleViewDetails}
+              onEdit={handleEdit}
+              onDelete={handleDeleteClick}
+              onDuplicate={handleDuplicate}
+            />
           )}
         </div>
         
