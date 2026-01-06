@@ -404,7 +404,7 @@ const FaunaCadastrada = () => {
                             href={`https://pt.wikipedia.org/wiki/${encodeURIComponent(especie.nome_cientifico || especie.nome_popular)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="ml-2 text-blue-500 hover:underline"
+                            className="ml-2 text-primary hover:underline"
                           >
                             <ExternalLink className="h-3 w-3 inline" />
                           </a>

@@ -44,7 +44,7 @@ export const transformDashboardMetrics = (
       title: 'Total de Registros',
       value: validRegistros.length,
       iconType: 'FileText',
-      iconColor: 'text-blue-500'
+      iconColor: 'text-primary'
     },
     {
       title: 'Total de Resgates',

@@ -100,8 +100,8 @@ const tipoConfig: Record<string, { icon: React.ReactNode; color: string; bgColor
   },
   licenca: { 
     icon: <Activity className="h-4 w-4" />, 
-    color: 'text-blue-600', 
-    bgColor: 'bg-blue-500/10 border-blue-200',
+    color: 'text-primary', 
+    bgColor: 'bg-primary/10 border-primary/30',
     label: 'Licença Médica' 
   },
   restricao: { 
@@ -116,7 +116,7 @@ const restricaoLabels: Record<string, { label: string; color: string }> = {
   'PO': { label: 'Policiamento Ostensivo', color: 'bg-red-500/15 text-red-600 border-red-200' },
   'PA': { label: 'Porte de Arma', color: 'bg-orange-500/15 text-orange-600 border-orange-200' },
   'SN': { label: 'Serviço Noturno', color: 'bg-purple-500/15 text-purple-600 border-purple-200' },
-  'EF': { label: 'Educação Física', color: 'bg-blue-500/15 text-blue-600 border-blue-200' },
+  'EF': { label: 'Educação Física', color: 'bg-primary/15 text-primary border-primary/30' },
 };
 
 const Afastamentos: React.FC = () => {
@@ -399,14 +399,14 @@ const Afastamentos: React.FC = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-100">
+          <Card className="bg-gradient-to-br from-primary/5 to-white border-primary/20">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-blue-500/10">
-                  <Activity className="h-5 w-5 text-blue-600" />
+                <div className="p-2 rounded-xl bg-primary/10">
+                  <Activity className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-blue-600">{stats.totalLicencas}</p>
+                  <p className="text-2xl font-bold text-primary">{stats.totalLicencas}</p>
                   <p className="text-xs text-muted-foreground">Licenças Médicas</p>
                 </div>
               </div>
@@ -549,7 +549,7 @@ const Afastamentos: React.FC = () => {
                                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
                                   )}
                                   {temLicenca && (
-                                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                    <div className="w-2 h-2 rounded-full bg-primary" />
                                   )}
                                   {temRestricao && (
                                     <div className="w-2 h-2 rounded-full bg-orange-500" />
@@ -590,7 +590,7 @@ const Afastamentos: React.FC = () => {
                 <div className="flex flex-wrap gap-4 justify-center">
                   {Object.entries(tipoConfig).map(([tipo, config]) => (
                     <div key={tipo} className="flex items-center gap-2 text-sm">
-                      <div className={`w-3 h-3 rounded-full ${tipo === 'ferias' ? 'bg-emerald-500' : tipo === 'licenca' ? 'bg-blue-500' : 'bg-orange-500'}`} />
+                      <div className={`w-3 h-3 rounded-full ${tipo === 'ferias' ? 'bg-emerald-500' : tipo === 'licenca' ? 'bg-primary' : 'bg-orange-500'}`} />
                       <span className="text-muted-foreground">{config.label}</span>
                     </div>
                   ))}

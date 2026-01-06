@@ -115,7 +115,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
             {hasFilters && (
               <Badge 
                 variant="secondary" 
-                className="ml-1 bg-blue-100 text-blue-700 hover:bg-blue-200"
+                className="ml-1 bg-primary/20 text-primary hover:bg-primary/30"
               >
                 {[
                   filters.classeTaxonomica,
@@ -315,7 +315,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
             </Badge>
           )}
           {filters.especie && (
-            <Badge variant="outline" className="flex items-center gap-1 bg-blue-50 text-blue-700 border-blue-200">
+            <Badge variant="outline" className="flex items-center gap-1 bg-primary/10 text-primary border-primary/30">
               Espécie: {especies.find(e => e.id === filters.especie)?.nome_popular || filters.especie}
               <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => onFilterChange({ especie: null })} />
             </Badge>

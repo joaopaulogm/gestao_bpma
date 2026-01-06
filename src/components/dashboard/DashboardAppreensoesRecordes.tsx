@@ -65,30 +65,30 @@ const DashboardAppreensoesRecordes: React.FC<DashboardAppreensoesRecordesProps> 
     >
       <div className="grid grid-cols-1 gap-4 h-auto pb-4">
         {recordeMaiorQuantidade && (
-          <Card className="bg-blue-50 border-blue-200">
+          <Card className="bg-primary/10 border-primary/30">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-medium text-blue-700">
+                <CardTitle className="text-base font-medium text-primary">
                   Maior Número de Animais
                 </CardTitle>
-                <Award className="h-5 w-5 text-blue-500" />
+                <Award className="h-5 w-5 text-primary" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col space-y-1">
-                <span className="text-2xl font-bold text-blue-800">
+                <span className="text-2xl font-bold text-primary">
                   {recordeMaiorQuantidade.quantidade_total || recordeMaiorQuantidade.quantidade || 0} {(recordeMaiorQuantidade.quantidade_total || recordeMaiorQuantidade.quantidade || 0) > 1 ? 'animais' : 'animal'}
                 </span>
-                <span className="text-sm text-blue-800">
+                <span className="text-sm text-primary">
                   {recordeMaiorQuantidade.especie?.nome_popular} ({recordeMaiorQuantidade.especie?.nome_cientifico})
                 </span>
                 <div className="flex items-center mt-1">
-                  <Calendar className="h-3.5 w-3.5 text-blue-600 mr-1" />
-                  <span className="text-xs text-blue-600">
+                  <Calendar className="h-3.5 w-3.5 text-primary mr-1" />
+                  <span className="text-xs text-primary">
                     {format(parseISO(recordeMaiorQuantidade.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                   </span>
                 </div>
-                <Badge variant="outline" className="mt-1 w-fit bg-blue-100 text-blue-700 border-blue-200">
+                <Badge variant="outline" className="mt-1 w-fit bg-primary/20 text-primary border-primary/30">
                   {recordeMaiorQuantidade.origem?.nome}
                 </Badge>
               </div>

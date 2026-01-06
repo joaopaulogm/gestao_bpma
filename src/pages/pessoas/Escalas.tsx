@@ -12,7 +12,7 @@ import { useCampanhaData, TeamType, UnitType } from '@/hooks/useCampanhaData';
 
 const teamColors: Record<TeamType, string> = {
   'Alfa': 'bg-red-500/20 text-red-400 border-red-500/30',
-  'Bravo': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  'Bravo': 'bg-primary/20 text-primary/80 border-primary/30',
   'Charlie': 'bg-green-500/20 text-green-400 border-green-500/30',
   'Delta': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
 };

@@ -90,7 +90,7 @@ const GRUPAMENTOS_ORDER = [
 
 const GRUPAMENTO_CONFIG: Record<string, { icon: React.ReactNode; color: string; bgColor: string }> = {
   GOC: { icon: <Shield className="h-5 w-5" />, color: "from-emerald-600 to-emerald-800", bgColor: "bg-emerald-600" },
-  GTA: { icon: <Car className="h-5 w-5" />, color: "from-blue-600 to-blue-800", bgColor: "bg-blue-600" },
+  GTA: { icon: <Car className="h-5 w-5" />, color: "from-primary to-primary", bgColor: "bg-primary" },
   LACUSTRE: { icon: <Anchor className="h-5 w-5" />, color: "from-cyan-600 to-cyan-800", bgColor: "bg-cyan-600" },
   "RPA AMBIENTAL": { icon: <Shield className="h-5 w-5" />, color: "from-green-600 to-green-800", bgColor: "bg-green-600" },
   GUARDA: { icon: <Radio className="h-5 w-5" />, color: "from-amber-600 to-amber-800", bgColor: "bg-amber-600" },

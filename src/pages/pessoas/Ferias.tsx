@@ -356,14 +356,14 @@ const Ferias: React.FC = () => {
 
         {/* Stats Cards - Mobile Grid 2x2 */}
         <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6 sm:mb-8">
-          <Card className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background border-blue-100 dark:border-blue-900/30">
+          <Card className="bg-gradient-to-br from-primary/5 to-white dark:from-primary/20 dark:to-background border-primary/20 dark:border-primary/30">
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-blue-500/10">
-                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-primary/10">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-600">{totalPoliciais}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-primary">{totalPoliciais}</p>
                   <p className="text-[10px] sm:text-xs text-muted-foreground">Total Policiais</p>
                 </div>
               </div>

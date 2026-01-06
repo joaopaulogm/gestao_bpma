@@ -60,7 +60,7 @@ const HeatmapFilterPanel = ({
               aria-label="Filtrar por Apreensões"
             />
             <Label htmlFor="apreensoes" className="flex items-center gap-2 text-sm">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <div className="w-3 h-3 rounded-full bg-primary"></div>
               Apreensões
             </Label>
           </div>
@@ -171,7 +171,7 @@ const HeatmapFilterPanel = ({
                     aria-label="Filtrar por Apreensões"
                   />
                   <Label htmlFor="apreensoes-mobile" className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-primary"></div>
                     Apreensões
                   </Label>
                 </div>

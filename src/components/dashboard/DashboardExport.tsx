@@ -51,7 +51,7 @@ const DashboardExport = ({ data, year, month, isLoading }: DashboardExportProps)
         variant="outline" 
         onClick={handleExportExcel}
         disabled={isLoading || !data}
-        className="flex items-center gap-2 bg-white border-blue-200 text-blue-700 hover:bg-blue-50"
+        className="flex items-center gap-2 bg-white border-primary/30 text-primary hover:bg-primary/10"
       >
         <FileSpreadsheet size={16} />
         Exportar XLSX

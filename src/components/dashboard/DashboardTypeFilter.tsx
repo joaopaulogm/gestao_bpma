@@ -55,7 +55,7 @@ const DashboardTypeFilter = ({
             {hasFilters && (
               <Badge 
                 variant="secondary" 
-                className="ml-1 bg-blue-100 text-blue-700 hover:bg-blue-200"
+                className="ml-1 bg-primary/20 text-primary hover:bg-primary/30"
               >
                 {(origem !== null ? 1 : 0) + (classeTaxonomica !== null ? 1 : 0)}
               </Badge>
@@ -138,7 +138,7 @@ const DashboardTypeFilter = ({
           {origem && (
             <Badge 
               variant="outline" 
-              className="flex items-center gap-1 bg-blue-50 text-blue-700 border-blue-200"
+              className="flex items-center gap-1 bg-primary/10 text-primary border-primary/30"
             >
               Origem: {origem}
               <X 

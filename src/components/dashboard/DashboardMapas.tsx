@@ -121,7 +121,7 @@ const DashboardMapas = ({ dataOrigem, dataSoltura, data }: DashboardMapasProps) 
                   className={`mt-1 ${
                     point.tipo === 'Resgate de Fauna' ? 'bg-green-50 text-green-700 border-green-200' :
                     point.tipo === 'Apreensão' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                    'bg-blue-50 text-blue-700 border-blue-200'
+                    'bg-primary/10 text-primary border-primary/30'
                   }`}
                 >
                   {point.tipo}
@@ -150,7 +150,7 @@ const DashboardMapas = ({ dataOrigem, dataSoltura, data }: DashboardMapasProps) 
           </TabsTrigger>
           <TabsTrigger 
             value="soltura" 
-            className="data-[state=active]:bg-white data-[state=active]:text-blue-600"
+            className="data-[state=active]:bg-white data-[state=active]:text-primary"
           >
             Mapa de Soltura
           </TabsTrigger>
@@ -225,7 +225,7 @@ const DashboardMapas = ({ dataOrigem, dataSoltura, data }: DashboardMapasProps) 
                 
                 <div className="flex flex-wrap gap-3 mt-4 justify-center">
                   <div className="flex items-center text-xs">
-                    <div className="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
+                    <div className="w-3 h-3 rounded-full bg-primary mr-1"></div>
                     <span>Local de Soltura</span>
                   </div>
                 </div>

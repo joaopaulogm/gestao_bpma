@@ -48,7 +48,7 @@ const mesesNome = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', '
 
 const postoColors: Record<string, string> = {
   'ST': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  '1º SGT': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  '1º SGT': 'bg-primary/20 text-primary/80 border-primary/30',
   '2º SGT': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
   '3º SGT': 'bg-teal-500/20 text-teal-400 border-teal-500/30',
   'CB': 'bg-green-500/20 text-green-400 border-green-500/30',
@@ -56,7 +56,7 @@ const postoColors: Record<string, string> = {
 };
 
 const mesColors = [
-  'from-blue-500/20 to-blue-600/10',
+  'from-primary/20 to-primary/10',
   'from-purple-500/20 to-purple-600/10',
   'from-pink-500/20 to-pink-600/10',
   'from-rose-500/20 to-rose-600/10',
@@ -346,9 +346,9 @@ const Abono: React.FC = () => {
             <p className="text-xs text-muted-foreground">Ano</p>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
           <CardContent className="p-4 text-center">
-            <Users className="h-5 w-5 text-blue-500 mx-auto mb-2" />
+            <Users className="h-5 w-5 text-primary mx-auto mb-2" />
             <p className="text-2xl font-bold text-foreground">{totalMilitares}</p>
             <p className="text-xs text-muted-foreground">Militares</p>
           </CardContent>
@@ -481,7 +481,7 @@ const Abono: React.FC = () => {
                                     e.stopPropagation();
                                     handleTransferClick(militar, mesData.numero);
                                   }}
-                                  className="h-8 gap-1 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10"
+                                  className="h-8 gap-1 text-primary hover:text-primary/80 hover:bg-primary/10"
                                 >
                                   <ArrowRightLeft className="h-4 w-4" />
                                   Transferir

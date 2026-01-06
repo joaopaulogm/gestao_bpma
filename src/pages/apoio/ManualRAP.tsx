@@ -63,8 +63,8 @@ const ManualRAP: React.FC = () => {
             <AccordionItem value="endereco" className="border rounded-lg overflow-hidden">
               <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10">
-                    <MapPin className="h-4 w-4 text-blue-500" />
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <MapPin className="h-4 w-4 text-primary" />
                   </div>
                   <span className="font-semibold">1. Preenchimento dos Campos de Endereço</span>
                 </div>
