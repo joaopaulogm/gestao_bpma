@@ -1,12 +1,9 @@
-
-import React from 'react';
-
 interface RegistrosSummaryProps {
   filteredCount: number;
   totalCount: number;
 }
 
-const RegistrosSummary: React.FC<RegistrosSummaryProps> = ({ 
+const RegistrosSummary = ({ 
   filteredCount, 
   totalCount 
 }) => {

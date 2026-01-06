@@ -1,6 +1,3 @@
-
-import React from 'react';
-
 interface DetailsFieldProps {
   label: string;
   value: string | number | null;

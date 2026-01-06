@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Clipboard, 
@@ -32,13 +31,15 @@ const CheckeredDivider = () => {
   );
 };
 
+import type { ElementType } from 'react';
+
 interface HomeCardProps {
   title: string;
-  icon: React.ElementType;
+  icon: ElementType;
   to: string;
 }
 
-const HomeCard: React.FC<HomeCardProps> = ({ title, icon: Icon, to }) => {
+const HomeCard = ({ title, icon: Icon, to }: HomeCardProps) => {
   return (
     <Link 
       to={to}

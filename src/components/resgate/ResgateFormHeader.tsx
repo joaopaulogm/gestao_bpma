@@ -1,12 +1,9 @@
-
-import React from 'react';
-
 interface ResgateFormHeaderProps {
   isSubmitting?: boolean;
   isEditing?: boolean;
 }
 
-const ResgateFormHeader: React.FC<ResgateFormHeaderProps> = ({ 
+const ResgateFormHeader = ({ 
   isEditing = false, 
   isSubmitting = false 
 }) => {

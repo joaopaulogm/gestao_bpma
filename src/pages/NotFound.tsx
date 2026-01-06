@@ -1,5 +1,4 @@
 
-import React from "react";
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Home, ArrowLeft } from "lucide-react";

@@ -1,5 +1,3 @@
-
-import React from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
@@ -9,7 +7,7 @@ interface DashboardLoadingProps {
   isError?: boolean;
 }
 
-const DashboardLoading: React.FC<DashboardLoadingProps> = ({ 
+const DashboardLoading = ({ 
   onRefresh,
   isError = false
 }) => {
