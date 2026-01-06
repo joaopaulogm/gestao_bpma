@@ -6,7 +6,7 @@ import { useDashboardDataFetching } from './useDashboardDataFetching';
  * Main dashboard data hook that combines filter state and data fetching
  */
 export const useDashboardData = () => {
-  const { filters, updateFilters, resetFilters } = useFilterState(2025); // Default to year 2025
+  const { filters, updateFilters, resetFilters } = useFilterState(2026); // Default to year 2026
   const { data, isLoading, error, refetch } = useDashboardDataFetching(filters);
 
   return {
