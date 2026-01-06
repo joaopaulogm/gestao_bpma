@@ -181,6 +181,7 @@ const enrichDataWithRelations = async (registros: any[]): Promise<any[]> => {
 
 /**
  * Busca dados agregados das novas tabelas BPMA (2021-2024)
+ * Retorna dados de todas as naturezas (Resgate, Solturas, Óbitos, Feridos, Filhotes, etc.)
  */
 const fetchBpmaAgregados = async (
   filters: FilterState
@@ -201,8 +202,17 @@ const fetchBpmaAgregados = async (
       query = query.eq('mes', filters.month + 1);
     }
     
-    // Filtrar apenas resgates de fauna
-    query = query.eq('natureza', 'Resgate de Fauna Silvestre');
+    // Buscar todas as naturezas relevantes
+    const naturezasRelevantes = [
+      'Resgate de Fauna Silvestre',
+      'Solturas',
+      'Óbitos',
+      'Feridos',
+      'Filhotes',
+      'Atropelamento'
+    ];
+    
+    query = query.in('natureza', naturezasRelevantes);
     
     const { data, error } = await query;
     
@@ -212,25 +222,82 @@ const fetchBpmaAgregados = async (
     }
     
     // Converter dados agregados para formato de registros individuais
-    // Criar um registro "sintético" para cada mês com os dados agregados
-    return (data || []).map((item: any) => ({
-      id: `bpma-${item.ano}-${item.mes}`,
-      data: new Date(item.ano, item.mes - 1, 1).toISOString().split('T')[0],
-      quantidade: item.quantidade,
-      quantidade_total: item.quantidade,
-      quantidade_adulto: 0,
-      quantidade_filhote: 0,
-      atropelamento: null,
-      regiao_administrativa: null,
-      origem: { nome: 'Resgate de Fauna' },
-      destinacao: null,
-      estado_saude: null,
-      estagio_vida: null,
-      desfecho: null,
-      especie: null,
-      tipo_registro: 'agregado',
-      natureza: item.natureza
-    }));
+    // Criar registros "sintéticos" para cada natureza e mês
+    const registrosAgregados: any[] = [];
+    
+    (data || []).forEach((item: any) => {
+      // Criar um registro para cada natureza
+      registrosAgregados.push({
+        id: `bpma-${item.ano}-${item.mes}-${item.natureza}`,
+        data: new Date(item.ano, item.mes - 1, 1).toISOString().split('T')[0],
+        quantidade: item.natureza === 'Resgate de Fauna Silvestre' ? item.quantidade : 0,
+        quantidade_total: item.natureza === 'Resgate de Fauna Silvestre' ? item.quantidade : 0,
+        quantidade_solturas: item.natureza === 'Solturas' ? item.quantidade : 0,
+        quantidade_obitos: item.natureza === 'Óbitos' ? item.quantidade : 0,
+        quantidade_feridos: item.natureza === 'Feridos' ? item.quantidade : 0,
+        quantidade_filhotes: item.natureza === 'Filhotes' ? item.quantidade : 0,
+        quantidade_adulto: 0,
+        quantidade_filhote: item.natureza === 'Filhotes' ? item.quantidade : 0,
+        atropelamento: item.natureza === 'Atropelamento' ? 'Sim' : null,
+        regiao_administrativa: null,
+        origem: { nome: 'Resgate de Fauna' },
+        destinacao: null,
+        estado_saude: null,
+        estagio_vida: null,
+        desfecho: null,
+        especie: null,
+        tipo_registro: 'agregado',
+        natureza: item.natureza,
+        mes: item.mes,
+        ano: item.ano
+      });
+    });
+    
+    // Agrupar por mês para consolidar os dados
+    const consolidadoPorMes = new Map<string, any>();
+    
+    registrosAgregados.forEach((reg: any) => {
+      const chave = `${reg.ano}-${reg.mes}`;
+      if (!consolidadoPorMes.has(chave)) {
+        consolidadoPorMes.set(chave, {
+          id: `bpma-${chave}`,
+          data: reg.data,
+          quantidade: 0,
+          quantidade_total: 0,
+          quantidade_solturas: 0,
+          quantidade_obitos: 0,
+          quantidade_feridos: 0,
+          quantidade_filhotes: 0,
+          quantidade_filhote: 0,
+          quantidade_adulto: 0,
+          atropelamento: null,
+          regiao_administrativa: null,
+          origem: { nome: 'Resgate de Fauna' },
+          destinacao: null,
+          estado_saude: null,
+          estagio_vida: null,
+          desfecho: null,
+          especie: null,
+          tipo_registro: 'agregado',
+          mes: reg.mes,
+          ano: reg.ano
+        });
+      }
+      
+      const consolidado = consolidadoPorMes.get(chave)!;
+      consolidado.quantidade += reg.quantidade;
+      consolidado.quantidade_total += reg.quantidade_total;
+      consolidado.quantidade_solturas += reg.quantidade_solturas;
+      consolidado.quantidade_obitos += reg.quantidade_obitos;
+      consolidado.quantidade_feridos += reg.quantidade_feridos;
+      consolidado.quantidade_filhotes += reg.quantidade_filhotes;
+      consolidado.quantidade_filhote += reg.quantidade_filhote;
+      if (reg.atropelamento === 'Sim') {
+        consolidado.atropelamento = 'Sim';
+      }
+    });
+    
+    return Array.from(consolidadoPorMes.values());
   } catch (err: any) {
     console.warn('⚠️ [Dashboard] Erro ao buscar dados agregados:', err);
     return [];

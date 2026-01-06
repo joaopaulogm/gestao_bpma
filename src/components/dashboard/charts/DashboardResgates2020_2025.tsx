@@ -52,12 +52,16 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
 
   // Calcular estatísticas
   const estatisticas = useMemo(() => {
-    // Verificar se os dados vêm de tabelas históricas
-    // Pode ter quantidade_resgates diretamente ou tipo_registro === 'historico'
+    // Verificar se os dados vêm de tabelas históricas ou agregados
     const isHistoricalData = registros.length > 0 && (
       'quantidade_resgates' in (registros[0] as any) ||
       (registros[0] as any).tipo_registro === 'historico' ||
       (registros[0] as any).data_ocorrencia !== undefined
+    );
+    
+    const isAgregado = registros.length > 0 && (
+      (registros[0] as any).tipo_registro === 'agregado' ||
+      (registros[0] as any).natureza !== undefined
     );
     
     let totalResgates = 0;
@@ -71,8 +75,42 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
     // Para gráfico de atropelamentos por espécie
     const atropelamentosPorEspecie = new Map<string, number>();
     
-    if (isHistoricalData) {
-      // Dados das tabelas históricas (fat_resgates_diarios_2020-2025)
+    // Para 2021-2024, buscar dados das novas tabelas BPMA
+    if (year >= 2021 && year <= 2024) {
+      // Separar dados agregados e dados por espécie
+      const dadosAgregados = registros.filter((r: any) => r.tipo_registro === 'agregado');
+      const dadosPorEspecie = registros.filter((r: any) => r.tipo_registro !== 'agregado' && r.tipo_registro !== 'resgate');
+      
+      // Se temos dados por espécie, usar eles (mais detalhados)
+      if (dadosPorEspecie.length > 0) {
+        dadosPorEspecie.forEach((r: any) => {
+          const qtdResgates = Number(r.quantidade_resgates) || Number(r.quantidade) || Number(r.quantidade_total) || 0;
+          const qtdSolturas = Number(r.quantidade_solturas) || Number(r.quantidade_soltura) || 0;
+          const qtdFilhotes = Number(r.quantidade_filhotes) || Number(r.quantidade_filhote) || 0;
+          const qtdObitos = Number(r.quantidade_obitos) || Number(r.quantidade_obito) || 0;
+          const qtdFeridos = Number(r.quantidade_feridos) || Number(r.quantidade_ferido) || 0;
+          
+          totalResgates += qtdResgates;
+          solturas += qtdSolturas > 0 ? qtdSolturas : Math.max(0, qtdResgates - qtdObitos - qtdFeridos);
+          filhotes += qtdFilhotes;
+          adultos += Math.max(0, qtdResgates - qtdFilhotes);
+          obitos += qtdObitos > 0 ? qtdObitos : Math.max(0, qtdResgates - qtdFeridos - (qtdSolturas > 0 ? qtdSolturas : 0));
+          feridos += qtdFeridos;
+        });
+      } else if (dadosAgregados.length > 0) {
+        // Se só temos dados agregados, usar bpma_fato_mensal via query direta
+        // Por enquanto, somar os dados agregados que temos
+        dadosAgregados.forEach((r: any) => {
+          if (r.natureza === 'Resgate de Fauna Silvestre') {
+            totalResgates += Number(r.quantidade) || 0;
+          }
+        });
+        // Para dados agregados, não temos detalhes de solturas, filhotes, etc. por registro
+        // Seria necessário buscar de bpma_fato_mensal diretamente
+      }
+      atropelamentos = 0; // Dados de atropelamento não disponíveis nas novas tabelas agregadas
+    } else if (isHistoricalData) {
+      // Dados das tabelas históricas (2020 ou outros anos)
       // SOMAR AS QUANTIDADES (não contar registros)
       registros.forEach((r: any) => {
         const qtdResgates = Number(r.quantidade_resgates) || 0;
@@ -113,10 +151,6 @@ const DashboardResgates2020_2025: React.FC<DashboardResgates2020_2025Props> = ({
         
         // Feridos = soma de quantidade_feridos
         feridos += qtdFeridos;
-        
-        // Para atropelamentos em dados históricos, não há campo específico
-        // Mas podemos tentar inferir de outras formas se necessário
-        // Por enquanto, não há dados de atropelamento nas tabelas históricas
       });
       
       // Atropelamentos não disponível em dados históricos
