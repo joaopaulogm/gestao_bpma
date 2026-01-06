@@ -225,14 +225,14 @@ const Escalas: React.FC = () => {
                 key={unidade}
                 className={`${
                   isAdmin 
-                    ? (works ? 'border-slate-500/30' : 'border-border/30 opacity-50')
+                    ? (works ? 'border-primary/30' : 'border-border/30 opacity-50')
                     : team ? 'border-primary/30' : ''
                 }`}
               >
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <div className={`p-2 rounded-lg ${
-                      isAdmin ? 'bg-slate-500/10' : 'bg-primary/10'
+                      isAdmin ? 'bg-primary/10' : 'bg-primary/10'
                     }`}>
                       {unitIcons[unidade]}
                     </div>
@@ -243,7 +243,7 @@ const Escalas: React.FC = () => {
                   {isAdmin ? (
                     <div className="text-center py-4">
                       {works ? (
-                        <Badge className="bg-slate-500/20 text-slate-400 border-slate-500/30">
+                        <Badge className="bg-primary/20 text-primary/80 border-primary/30">
                           Expediente Normal
                         </Badge>
                       ) : (

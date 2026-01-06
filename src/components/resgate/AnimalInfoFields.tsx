@@ -218,7 +218,7 @@ const AnimalInfoFields: React.FC<AnimalInfoFieldsProps> = ({
           name="quantidade"
           type="number"
           value={quantidade.toString()}
-          className="text-center bg-slate-50"
+          className="text-center bg-muted"
           readOnly
         />
       </FormField>

@@ -48,8 +48,8 @@ const DashboardTypeFilter: React.FC<DashboardTypeFilterProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className={`flex items-center gap-2 border-slate-200 ${
-              hasFilters ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white'
+            className={`flex items-center gap-2 border-border ${
+              hasFilters ? 'bg-primary/10 text-primary border-primary/30' : 'bg-background'
             }`}
           >
             <Filter className="h-4 w-4" />
@@ -82,7 +82,7 @@ const DashboardTypeFilter: React.FC<DashboardTypeFilterProps> = ({
             </div>
             
             <div className="space-y-2">
-              <h5 className="text-sm font-medium text-slate-700">Origem</h5>
+              <h5 className="text-sm font-medium text-foreground">Origem</h5>
               <Select
                 value={origem || "all"}
                 onValueChange={(value) => onFilterChange({
@@ -101,7 +101,7 @@ const DashboardTypeFilter: React.FC<DashboardTypeFilterProps> = ({
             </div>
             
             <div className="space-y-2">
-              <h5 className="text-sm font-medium text-slate-700">Classe Taxonômica</h5>
+              <h5 className="text-sm font-medium text-foreground">Classe Taxonômica</h5>
               <Select
                 value={classeTaxonomica || "all"}
                 onValueChange={(value) => onFilterChange({

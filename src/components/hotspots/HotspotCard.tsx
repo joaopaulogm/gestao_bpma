@@ -28,8 +28,8 @@ const HotspotCard = ({ region, index }: HotspotCardProps) => {
         <h3 className="text-lg font-medium text-fauna-blue mb-2">
           {getTitle(index)}
         </h3>
-        <p className="text-sm text-gray-700">{region.regiao}</p>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-foreground">{region.regiao}</p>
+        <p className="text-sm text-muted-foreground mt-1">
           {region.contagem} {region.contagem === 1 ? 'ocorrência registrada' : 'ocorrências registradas'}
         </p>
       </CardContent>

@@ -56,7 +56,7 @@ const DashboardTabsPrincipal: React.FC<DashboardTabsPrincipalProps> = ({
       onValueChange={setActiveMainTab}
       className="space-y-6"
     >
-      <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto bg-slate-50 p-1.5 rounded-xl shadow-sm">
+      <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto bg-muted/30 p-1.5 rounded-xl shadow-sm">
         <TabsTrigger 
           value="resgates" 
           className="data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm font-medium"

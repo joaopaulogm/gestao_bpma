@@ -127,7 +127,7 @@ const DashboardMapas = ({ dataOrigem, dataSoltura, data }: DashboardMapasProps) 
                   {point.tipo}
                 </Badge>
                 <p className="mt-1">Quantidade: {point.quantidade}</p>
-                <p className="mt-1 text-gray-500">
+                <p className="mt-1 text-muted-foreground">
                   Coordenadas: {lat.toFixed(6)}, {lng.toFixed(6)}
                 </p>
               </div>
@@ -141,7 +141,7 @@ const DashboardMapas = ({ dataOrigem, dataSoltura, data }: DashboardMapasProps) 
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2 w-full max-w-xl mx-auto bg-slate-50 p-1 rounded-xl">
+        <TabsList className="grid grid-cols-2 w-full max-w-xl mx-auto bg-muted/30 p-1 rounded-xl">
           <TabsTrigger 
             value="origem" 
             className="data-[state=active]:bg-white data-[state=active]:text-amber-600"
@@ -161,8 +161,8 @@ const DashboardMapas = ({ dataOrigem, dataSoltura, data }: DashboardMapasProps) 
             {validDataOrigem.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                 <AlertTriangle className="h-10 w-10 text-amber-500 mb-4" />
-                <h3 className="text-lg font-medium text-slate-700">Sem dados de localização</h3>
-                <p className="text-sm text-slate-500 mt-2 max-w-md">
+                <h3 className="text-lg font-medium text-foreground">Sem dados de localização</h3>
+                <p className="text-sm text-muted-foreground mt-2 max-w-md">
                   Não há coordenadas geográficas válidas para exibir no mapa.
                 </p>
               </div>
@@ -202,8 +202,8 @@ const DashboardMapas = ({ dataOrigem, dataSoltura, data }: DashboardMapasProps) 
             {validDataSoltura.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                 <AlertTriangle className="h-10 w-10 text-amber-500 mb-4" />
-                <h3 className="text-lg font-medium text-slate-700">Sem dados de soltura</h3>
-                <p className="text-sm text-slate-500 mt-2 max-w-md">
+                <h3 className="text-lg font-medium text-foreground">Sem dados de soltura</h3>
+                <p className="text-sm text-muted-foreground mt-2 max-w-md">
                   Não há coordenadas geográficas de soltura válidas para exibir no mapa.
                 </p>
               </div>

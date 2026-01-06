@@ -231,7 +231,7 @@ const Relatorios = () => {
                   <div className="border border-fauna-border rounded-lg p-4 flex justify-between items-center">
                     <div>
                       <h3 className="font-medium">Relatório de Ocorrências</h3>
-                      <p className="text-sm text-gray-500">Gerado em 10/08/2023 - PDF</p>
+                      <p className="text-sm text-muted-foreground">Gerado em 10/08/2023 - PDF</p>
                     </div>
                     <Button variant="ghost" size="sm" className="gap-1">
                       <Download className="h-4 w-4 text-fauna-blue" />
@@ -242,7 +242,7 @@ const Relatorios = () => {
                   <div className="border border-fauna-border rounded-lg p-4 flex justify-between items-center">
                     <div>
                       <h3 className="font-medium">Estatísticas Gerais</h3>
-                      <p className="text-sm text-gray-500">Gerado em 05/08/2023 - Excel</p>
+                      <p className="text-sm text-muted-foreground">Gerado em 05/08/2023 - Excel</p>
                     </div>
                     <Button variant="ghost" size="sm" className="gap-1">
                       <Download className="h-4 w-4 text-fauna-blue" />
@@ -253,7 +253,7 @@ const Relatorios = () => {
                   <div className="border border-fauna-border rounded-lg p-4 flex justify-between items-center">
                     <div>
                       <h3 className="font-medium">Espécies Ameaçadas</h3>
-                      <p className="text-sm text-gray-500">Gerado em 01/08/2023 - PDF</p>
+                      <p className="text-sm text-muted-foreground">Gerado em 01/08/2023 - PDF</p>
                     </div>
                     <Button variant="ghost" size="sm" className="gap-1">
                       <Download className="h-4 w-4 text-fauna-blue" />
@@ -264,7 +264,7 @@ const Relatorios = () => {
                   <div className="border border-fauna-border rounded-lg p-4 flex justify-between items-center">
                     <div>
                       <h3 className="font-medium">Relatório de Ocorrências por Localidade</h3>
-                      <p className="text-sm text-gray-500">Gerado em 25/07/2023 - CSV</p>
+                      <p className="text-sm text-muted-foreground">Gerado em 25/07/2023 - CSV</p>
                     </div>
                     <Button variant="ghost" size="sm" className="gap-1">
                       <Download className="h-4 w-4 text-fauna-blue" />

@@ -60,7 +60,7 @@ const MESES_ABREV: Record<string, number> = {
 const MESES_NUM_TO_ABREV = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
 const mesConfig: Record<number, { bg: string; icon: React.ReactNode; color: string }> = {
-  1: { bg: 'from-slate-500 to-slate-600', icon: <CalendarDays className="h-5 w-5" />, color: 'slate' },
+  1: { bg: 'from-primary/80 to-primary', icon: <CalendarDays className="h-5 w-5" />, color: 'primary' },
   2: { bg: 'from-violet-500 to-violet-600', icon: <CalendarDays className="h-5 w-5" />, color: 'violet' },
   3: { bg: 'from-emerald-500 to-emerald-600', icon: <CalendarDays className="h-5 w-5" />, color: 'emerald' },
   4: { bg: 'from-rose-500 to-rose-600', icon: <CalendarDays className="h-5 w-5" />, color: 'rose' },

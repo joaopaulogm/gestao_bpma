@@ -155,8 +155,8 @@ const RankingOcorrencias: React.FC = () => {
 
   const getMedalColor = (index: number) => {
     switch (index) {
-      case 0: return 'text-yellow-500';
-      case 1: return 'text-gray-400';
+      case 0: return 'text-accent';
+      case 1: return 'text-muted-foreground';
       case 2: return 'text-amber-600';
       default: return 'text-muted-foreground';
     }

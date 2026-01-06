@@ -252,7 +252,7 @@ const Campanha: React.FC = () => {
                 key={unidade} 
                 className={`flex flex-col ${
                   isAdmin 
-                    ? (works ? 'border-slate-500/30' : 'border-border/30 opacity-50')
+                    ? (works ? 'border-primary/30' : 'border-border/30 opacity-50')
                     : team ? `border-${team === 'Alfa' ? 'red' : team === 'Bravo' ? 'blue' : team === 'Charlie' ? 'green' : 'purple'}-500/30` : ''
                 }`}
               >
@@ -261,7 +261,7 @@ const Campanha: React.FC = () => {
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="flex-shrink-0">{unitIcons[unidade]}</span>
                       <span className="truncate">{unidade}</span>
-                      {hasAlt && <Edit2 className="h-4 w-4 text-amber-500 flex-shrink-0" />}
+                      {hasAlt && <Edit2 className="h-4 w-4 text-accent flex-shrink-0" />}
                     </div>
                     {!isAdmin && editMode && (
                       <Button
@@ -279,7 +279,7 @@ const Campanha: React.FC = () => {
                   {isAdmin ? (
                     <div className="text-center py-4">
                       {works ? (
-                        <Badge className="bg-slate-500/20 text-slate-400 border-slate-500/30">
+                        <Badge className="bg-primary/20 text-primary/80 border-primary/30">
                           Expediente Normal
                         </Badge>
                       ) : (
@@ -411,7 +411,7 @@ const Campanha: React.FC = () => {
                       )}
                       {isAdmin ? (
                         works ? (
-                          <Badge variant="outline" className="text-xs bg-slate-500/20 text-slate-400">
+                          <Badge variant="outline" className="text-xs bg-primary/20 text-primary/80">
                             ADM
                           </Badge>
                         ) : (
@@ -591,7 +591,7 @@ const Campanha: React.FC = () => {
                 Equipe {team}
               </Badge>
             ))}
-            <Badge variant="outline" className="bg-slate-500/20 text-slate-400 border-slate-500/30 text-sm">
+            <Badge variant="outline" className="bg-primary/20 text-primary/80 border-primary/30 text-sm">
               Administrativo (Seg-Sex)
             </Badge>
             <Badge variant="outline" className="bg-red-500/20 text-red-400 border-red-500/30 text-sm">

@@ -12,7 +12,7 @@ const RegistrosSummary: React.FC<RegistrosSummaryProps> = ({
 }) => {
   return (
     <div className="flex justify-between items-center">
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-muted-foreground">
         Mostrando {filteredCount} de {totalCount} registros
       </div>
     </div>

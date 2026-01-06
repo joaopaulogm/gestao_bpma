@@ -52,7 +52,7 @@ const postoColors: Record<string, string> = {
   '2º SGT': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
   '3º SGT': 'bg-teal-500/20 text-teal-400 border-teal-500/30',
   'CB': 'bg-green-500/20 text-green-400 border-green-500/30',
-  'SD': 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+  'SD': 'bg-primary/20 text-primary/80 border-primary/30',
 };
 
 const mesColors = [

@@ -97,10 +97,10 @@ const GRUPAMENTO_CONFIG: Record<string, { icon: React.ReactNode; color: string; 
   ARMEIRO: { icon: <Shield className="h-5 w-5" />, color: "from-red-600 to-red-800", bgColor: "bg-red-600" },
   "OFICIAIS OPERACIONAIS": { icon: <UserCog className="h-5 w-5" />, color: "from-violet-600 to-violet-800", bgColor: "bg-violet-600" },
   OFICIAIS: { icon: <UserCog className="h-5 w-5" />, color: "from-purple-600 to-purple-800", bgColor: "bg-purple-600" },
-  EXPEDIENTE: { icon: <Building className="h-5 w-5" />, color: "from-slate-600 to-slate-800", bgColor: "bg-slate-600" },
+  EXPEDIENTE: { icon: <Building className="h-5 w-5" />, color: "from-primary/80 to-primary", bgColor: "bg-primary" },
   COMISSÕES: { icon: <Users className="h-5 w-5" />, color: "from-teal-600 to-teal-800", bgColor: "bg-teal-600" },
   MANUTENÇÃO: { icon: <Wrench className="h-5 w-5" />, color: "from-orange-600 to-orange-800", bgColor: "bg-orange-600" },
-  MOTORISTAS: { icon: <Car className="h-5 w-5" />, color: "from-zinc-600 to-zinc-800", bgColor: "bg-zinc-600" },
+  MOTORISTAS: { icon: <Car className="h-5 w-5" />, color: "from-primary/70 to-primary/90", bgColor: "bg-primary/80" },
   "INSTRUÇÕES E CURSO": { icon: <GraduationCap className="h-5 w-5" />, color: "from-indigo-600 to-indigo-800", bgColor: "bg-indigo-600" },
   PREALG: { icon: <Users className="h-5 w-5" />, color: "from-lime-600 to-lime-800", bgColor: "bg-lime-600" },
 };

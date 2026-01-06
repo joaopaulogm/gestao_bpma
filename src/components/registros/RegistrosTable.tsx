@@ -94,7 +94,7 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
         <TableBody>
           {registros.length > 0 ? (
             registros.map((registro) => (
-              <TableRow key={registro.id} className="hover:bg-gray-50">
+              <TableRow key={registro.id} className="hover:bg-muted/50">
                 <TableCell className="px-1 md:px-2 whitespace-nowrap">{formatDateTime(registro.data)}</TableCell>
                 <TableCell className="px-1 md:px-2 truncate max-w-[100px] md:max-w-[130px]">{registro.regiao_administrativa?.nome || '-'}</TableCell>
                 <TableCell className="px-1 md:px-2 whitespace-nowrap">{registro.origem?.nome || '-'}</TableCell>

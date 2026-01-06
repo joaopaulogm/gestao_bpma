@@ -41,7 +41,7 @@ const DashboardResgates: React.FC<DashboardResgatesProps> = ({
         onValueChange={handleYearChange}
         className="space-y-4"
       >
-        <TabsList className="grid grid-cols-7 w-full bg-slate-50 p-1 rounded-xl shadow-sm overflow-x-auto">
+        <TabsList className="grid grid-cols-7 w-full bg-muted/30 p-1 rounded-xl shadow-sm overflow-x-auto">
           {years.map((year) => (
             <TabsTrigger 
               key={year}
@@ -103,7 +103,7 @@ const DashboardResgatesAno: React.FC<DashboardResgatesAnoProps> = ({
       onValueChange={setActiveViewTab}
       className="space-y-6"
     >
-      <TabsList className="grid grid-cols-6 w-full max-w-5xl mx-auto bg-slate-50 p-1 rounded-xl shadow-sm">
+      <TabsList className="grid grid-cols-6 w-full max-w-5xl mx-auto bg-muted/30 p-1 rounded-xl shadow-sm">
         <TabsTrigger 
           value="geral" 
           className="data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm"

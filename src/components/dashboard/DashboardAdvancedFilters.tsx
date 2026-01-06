@@ -106,8 +106,8 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className={`flex items-center gap-2 border-slate-200 ${
-              hasFilters ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white'
+            className={`flex items-center gap-2 border-border ${
+              hasFilters ? 'bg-primary/10 text-primary border-primary/30' : 'bg-background'
             }`}
           >
             <Filter className="h-4 w-4" />
@@ -150,7 +150,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
             <div className="space-y-3">
               {/* Classe Taxonômica */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Classe Taxonômica</h5>
+                <h5 className="text-sm font-medium text-foreground">Classe Taxonômica</h5>
                 <Select
                   value={filters.classeTaxonomica || "all"}
                   onValueChange={(value) => onFilterChange({
@@ -173,7 +173,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
 
               {/* Espécie */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Espécie</h5>
+                <h5 className="text-sm font-medium text-foreground">Espécie</h5>
                 <Select
                   value={filters.especie || "all"}
                   onValueChange={(value) => onFilterChange({
@@ -196,7 +196,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
 
               {/* Região Administrativa */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Região Administrativa</h5>
+                <h5 className="text-sm font-medium text-foreground">Região Administrativa</h5>
                 <Select
                   value={filters.regiaoAdministrativa || "all"}
                   onValueChange={(value) => onFilterChange({
@@ -219,7 +219,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
 
               {/* Desfecho */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Desfecho</h5>
+                <h5 className="text-sm font-medium text-foreground">Desfecho</h5>
                 <Select
                   value={filters.desfecho || "all"}
                   onValueChange={(value) => onFilterChange({
@@ -242,7 +242,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
 
               {/* Tipo de Registro */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Tipo de Registro</h5>
+                <h5 className="text-sm font-medium text-foreground">Tipo de Registro</h5>
                 <Select
                   value={filters.tipoRegistro || "all"}
                   onValueChange={(value) => onFilterChange({
@@ -263,7 +263,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
 
               {/* Exótica */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Espécie Exótica</h5>
+                <h5 className="text-sm font-medium text-foreground">Espécie Exótica</h5>
                 <Select
                   value={filters.exotica === null ? "all" : filters.exotica ? "true" : "false"}
                   onValueChange={(value) => onFilterChange({
@@ -283,7 +283,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
 
               {/* Ameaçada */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Espécie Ameaçada</h5>
+                <h5 className="text-sm font-medium text-foreground">Espécie Ameaçada</h5>
                 <Select
                   value={filters.ameacada === null ? "all" : filters.ameacada ? "true" : "false"}
                   onValueChange={(value) => onFilterChange({
