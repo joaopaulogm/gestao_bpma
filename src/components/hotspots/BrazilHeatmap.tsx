@@ -34,7 +34,7 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) {
-      console.log('Map initialization skipped - container or token not ready:', !!mapContainer.current, !!mapboxToken);
+      // Map initialization skipped - container or token not ready
       return;
     }
 
@@ -43,7 +43,7 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
       return;
     }
 
-    console.log('Initializing Mapbox map with token:', mapboxToken);
+    // Initializing Mapbox map
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
