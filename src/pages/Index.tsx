@@ -46,7 +46,7 @@ const HomeCard = ({ title, icon: Icon, to }: HomeCardProps) => {
       className="flex flex-col items-center justify-center gap-3 p-4 sm:p-5 aspect-square rounded-xl 
         bg-card border border-border shadow-sm
         hover:shadow-md hover:-translate-y-1
-        transition-all duration-250 active:scale-[0.97] min-h-[120px]"
+        transition-all duration-200 active:scale-[0.97] min-h-[120px]"
     >
       <div className="p-3 rounded-xl bg-primary/10">
         <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
@@ -64,7 +64,7 @@ const Index = () => {
     <div className="p-4 sm:p-6 md:p-10 min-h-screen">
       {/* Header */}
       <div className="text-center mb-6 sm:mb-8">
-        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-card border border-border shadow-sm flex items-center justify-center mx-auto mb-4 sm:mb-5 transition-all duration-250 hover:shadow-md overflow-hidden">
+        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-card border border-border shadow-sm flex items-center justify-center mx-auto mb-4 sm:mb-5 transition-all duration-200 hover:shadow-md overflow-hidden">
           <img src={logoBpma} alt="Logo BPMA" className="h-20 w-20 sm:h-28 sm:w-28 object-contain" />
         </div>
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-4">

@@ -255,7 +255,7 @@ const Sidebar = () => {
         {/* Mobile drawer */}
         <aside 
           className={cn(
-            "fixed top-0 left-0 h-screen bg-sidebar text-sidebar-foreground z-50 flex flex-col border-r border-sidebar-border transition-transform duration-250 ease-out w-72 shadow-lg",
+            "fixed top-0 left-0 h-screen bg-sidebar text-sidebar-foreground z-50 flex flex-col border-r border-sidebar-border transition-transform duration-200 ease-out w-72 shadow-lg",
             isMobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -269,7 +269,7 @@ const Sidebar = () => {
   return (
     <aside 
       className={cn(
-        "h-screen bg-sidebar text-sidebar-foreground transition-all duration-250 ease-out flex flex-col border-r border-sidebar-border",
+        "h-screen bg-sidebar text-sidebar-foreground transition-all duration-200 ease-out flex flex-col border-r border-sidebar-border",
         isOpen ? "w-64" : "w-20"
       )}
     >

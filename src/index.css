@@ -259,7 +259,7 @@
 
 /* Apple HIG - Dashboard Card Styles */
 .dashboard-card {
-  @apply rounded-xl transition-all duration-250;
+  @apply rounded-xl transition-all duration-200;
   background: hsl(var(--card));
   border: 0.5px solid hsl(var(--border));
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Level 2 elevation */
