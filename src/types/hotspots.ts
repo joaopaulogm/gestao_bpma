@@ -45,12 +45,12 @@ export interface Registro {
   desfecho_id: string | null;
   tipo_area_id: string | null;
   // Joined dimension data (populated by joins)
-  regiao_administrativa?: { nome: string } | null;
-  origem?: { nome: string } | null;
-  destinacao?: { nome: string } | null;
-  estado_saude?: { nome: string } | null;
-  estagio_vida?: { nome: string } | null;
-  desfecho?: { nome: string; tipo: string } | null;
+  regiao_administrativa?: { id: string; nome: string } | null;
+  origem?: { id: string; nome: string } | null;
+  destinacao?: { id: string; nome: string } | null;
+  estado_saude?: { id: string; nome: string } | null;
+  estagio_vida?: { id: string; nome: string } | null;
+  desfecho?: { id: string; nome: string; tipo: string } | null;
   especie?: {
     id: string;
     classe_taxonomica: string;
