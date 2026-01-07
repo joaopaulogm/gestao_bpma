@@ -589,6 +589,38 @@ export type Database = {
         }
         Relationships: []
       }
+      efetivo_roles: {
+        Row: {
+          created_at: string | null
+          efetivo_id: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          efetivo_id: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          efetivo_id?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "efetivo_roles_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fact_indicador_mensal_bpma: {
         Row: {
           indicador_id: string

@@ -112,12 +112,12 @@ const GerenciarPermissoes: React.FC = () => {
 
       if (error) throw error;
       
-      // Fetch user_roles and map by user_id (using efetivo id as user_id for this context)
+      // Fetch efetivo_roles (pré-configuração de roles)
       const { data: roles } = await supabase
-        .from('user_roles')
+        .from('efetivo_roles')
         .select('*');
       
-      const rolesMap = new Map(roles?.map(r => [r.user_id, { role: r.role, roleId: r.id }]) || []);
+      const rolesMap = new Map(roles?.map(r => [r.efetivo_id, { role: r.role as AppRole, roleId: r.id }]) || []);
       
       const efetivoWithRoles: EfetivoWithRole[] = (data || []).map(e => ({
         ...e,
@@ -215,7 +215,7 @@ const GerenciarPermissoes: React.FC = () => {
       if (role === 'remove' && currentRoleId) {
         // Remove role
         const { error } = await supabase
-          .from('user_roles')
+          .from('efetivo_roles')
           .delete()
           .eq('id', currentRoleId);
         if (error) throw error;
@@ -223,7 +223,7 @@ const GerenciarPermissoes: React.FC = () => {
       } else if (currentRoleId && role !== 'remove') {
         // Update existing role
         const { error } = await supabase
-          .from('user_roles')
+          .from('efetivo_roles')
           .update({ role: role as AppRole })
           .eq('id', currentRoleId);
         if (error) throw error;
@@ -231,16 +231,15 @@ const GerenciarPermissoes: React.FC = () => {
       } else if (!currentRoleId && role !== 'remove') {
         // Create new role
         const { error } = await supabase
-          .from('user_roles')
+          .from('efetivo_roles')
           .insert({
-            user_id: efetivoId,
+            efetivo_id: efetivoId,
             role: role as AppRole,
           });
         if (error) throw error;
         toast.success('Nível de acesso definido');
       }
       fetchEfetivo();
-      fetchUserRoles();
     } catch (error: any) {
       console.error('Error setting efetivo role:', error);
       toast.error('Erro ao definir nível de acesso');
