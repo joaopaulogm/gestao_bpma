@@ -43,6 +43,8 @@ const IdentificarEspecie = lazy(() => import(/* webpackChunkName: "identificar-e
 const ManualRAP = lazy(() => import(/* webpackChunkName: "manual-rap" */ '@/pages/apoio/ManualRAP'));
 const RankingOcorrencias = lazy(() => import(/* webpackChunkName: "ranking" */ '@/pages/RankingOcorrencias'));
 const UploadSchemas = lazy(() => import(/* webpackChunkName: "upload-schemas" */ '@/pages/UploadSchemas'));
+const CrimesComuns = lazy(() => import(/* webpackChunkName: "crimes-comuns" */ '@/pages/CrimesComuns'));
+const AtividadesPrevencao = lazy(() => import(/* webpackChunkName: "atividades-prevencao" */ '@/pages/AtividadesPrevencao'));
 
 const queryClient = new QueryClient();
 
@@ -96,6 +98,8 @@ function App() {
               <Route path="/secao-operacional/flora-cadastro" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/flora-cadastro/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/flora-cadastrada" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/crimes-comuns" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><CrimesComuns /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/atividades-prevencao" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><AtividadesPrevencao /></SidebarLayout></ProtectedRoute>} />
               
               {/* Seção Pessoas */}
               <Route path="/secao-pessoas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><SecaoPessoas /></SidebarLayout></ProtectedRoute>} />
