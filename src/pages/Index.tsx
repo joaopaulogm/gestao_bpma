@@ -9,7 +9,9 @@ import {
   Briefcase,
   Users,
   Wrench,
-  Settings
+  Settings,
+  Gavel,
+  HeartHandshake
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import logoBpma from '@/assets/logo-bpma.svg';
@@ -142,6 +144,8 @@ const Index = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                 <HomeCard title="Resgate de Fauna" icon={Clipboard} to="/resgate-cadastro" />
                 <HomeCard title="Crimes Ambientais" icon={Shield} to="/crimes-ambientais" />
+                <HomeCard title="Crimes Comuns" icon={Gavel} to="/crimes-comuns" />
+                <HomeCard title="Atividades de Prevenção" icon={HeartHandshake} to="/atividades-prevencao" />
                 <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
                 <HomeCard title="Ranking de Ocorrências" icon={Trophy} to="/ranking" />
               </div>
