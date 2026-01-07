@@ -53,6 +53,24 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_desfecho_crime_comum: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       dim_destinacao: {
         Row: {
           created_at: string | null
@@ -493,6 +511,30 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_tipo_atividade_prevencao: {
+        Row: {
+          categoria: string
+          created_at: string | null
+          id: string
+          nome: string
+          ordem: number | null
+        }
+        Insert: {
+          categoria: string
+          created_at?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+        }
+        Update: {
+          categoria?: string
+          created_at?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+        }
+        Relationships: []
+      }
       dim_tipo_de_area: {
         Row: {
           created_at: string
@@ -526,6 +568,24 @@ export type Database = {
           created_at?: string
           id_tipo_de_crime?: string
           "Tipo de Crime"?: string | null
+        }
+        Relationships: []
+      }
+      dim_tipo_penal: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
         }
         Relationships: []
       }
@@ -648,6 +708,57 @@ export type Database = {
             columns: ["efetivo_id"]
             isOneToOne: false
             referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_atividades_prevencao: {
+        Row: {
+          created_at: string | null
+          data: string
+          id: string
+          latitude: string | null
+          longitude: string | null
+          observacoes: string | null
+          quantidade_publico: number | null
+          regiao_administrativa_id: string | null
+          tipo_atividade_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data: string
+          id?: string
+          latitude?: string | null
+          longitude?: string | null
+          observacoes?: string | null
+          quantidade_publico?: number | null
+          regiao_administrativa_id?: string | null
+          tipo_atividade_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: string
+          id?: string
+          latitude?: string | null
+          longitude?: string | null
+          observacoes?: string | null
+          quantidade_publico?: number | null
+          regiao_administrativa_id?: string | null
+          tipo_atividade_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_atividades_prevencao_regiao_administrativa_id_fkey"
+            columns: ["regiao_administrativa_id"]
+            isOneToOne: false
+            referencedRelation: "dim_regiao_administrativa"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_atividades_prevencao_tipo_atividade_id_fkey"
+            columns: ["tipo_atividade_id"]
+            isOneToOne: false
+            referencedRelation: "dim_tipo_atividade_prevencao"
             referencedColumns: ["id"]
           },
         ]
@@ -888,6 +999,89 @@ export type Database = {
             columns: ["id_ocorrencia"]
             isOneToOne: false
             referencedRelation: "fat_registros_de_crime"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_crimes_comuns: {
+        Row: {
+          created_at: string | null
+          data: string
+          desfecho_id: string | null
+          id: string
+          latitude: string
+          longitude: string
+          observacoes: string | null
+          qtd_detidos_maior: number | null
+          qtd_detidos_menor: number | null
+          qtd_liberados_maior: number | null
+          qtd_liberados_menor: number | null
+          regiao_administrativa_id: string | null
+          situacao_autor: string | null
+          tipo_area_id: string | null
+          tipo_penal_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data: string
+          desfecho_id?: string | null
+          id?: string
+          latitude: string
+          longitude: string
+          observacoes?: string | null
+          qtd_detidos_maior?: number | null
+          qtd_detidos_menor?: number | null
+          qtd_liberados_maior?: number | null
+          qtd_liberados_menor?: number | null
+          regiao_administrativa_id?: string | null
+          situacao_autor?: string | null
+          tipo_area_id?: string | null
+          tipo_penal_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: string
+          desfecho_id?: string | null
+          id?: string
+          latitude?: string
+          longitude?: string
+          observacoes?: string | null
+          qtd_detidos_maior?: number | null
+          qtd_detidos_menor?: number | null
+          qtd_liberados_maior?: number | null
+          qtd_liberados_menor?: number | null
+          regiao_administrativa_id?: string | null
+          situacao_autor?: string | null
+          tipo_area_id?: string | null
+          tipo_penal_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_crimes_comuns_desfecho_id_fkey"
+            columns: ["desfecho_id"]
+            isOneToOne: false
+            referencedRelation: "dim_desfecho_crime_comum"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_crimes_comuns_regiao_administrativa_id_fkey"
+            columns: ["regiao_administrativa_id"]
+            isOneToOne: false
+            referencedRelation: "dim_regiao_administrativa"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_crimes_comuns_tipo_area_id_fkey"
+            columns: ["tipo_area_id"]
+            isOneToOne: false
+            referencedRelation: "dim_tipo_de_area"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_crimes_comuns_tipo_penal_id_fkey"
+            columns: ["tipo_penal_id"]
+            isOneToOne: false
+            referencedRelation: "dim_tipo_penal"
             referencedColumns: ["id"]
           },
         ]
@@ -2477,13 +2671,15 @@ export type Database = {
     Functions: {
       exec_sql: { Args: { sql_query: string }; Returns: undefined }
       fn_nome_cientifico_prefix: { Args: { nome: string }; Returns: string }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      has_role:
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
+        | { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_allowed_user: { Args: { check_email: string }; Returns: boolean }
       make_slug: { Args: { txt: string }; Returns: string }
       show_limit: { Args: never; Returns: number }

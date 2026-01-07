@@ -477,7 +477,7 @@ const RegistroDetalhes = () => {
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
         onClose={handleDeleteCancel}
-        onConfirm={handleDeleteConfirmWithTable}
+        onConfirm={handleDeleteConfirm}
         itemName={registroToDelete?.nome || ''}
       />
     </Layout>

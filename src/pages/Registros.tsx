@@ -792,6 +792,8 @@ const Registros = () => {
           onSearchChange={setSearchTerm}
           onToggleFilters={() => setShowFilters(!showFilters)}
           onExportCSV={handleExportCSV}
+          onExportPDF={handleExportPDF}
+          onExportXLSX={handleExportXLSX}
         />
         
         {showFilters && (
