@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { PlusCircle, List, BarChart, MapPin, Table, FileText, Package, Leaf, Gavel, Shield } from 'lucide-react';
+import { PlusCircle, List, BarChart, MapPin, Table, FileText, Package, Leaf } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Briefcase } from 'lucide-react';
 
@@ -15,8 +15,6 @@ const menuItems = [
   { title: 'Bens Apreendidos', description: 'Gerenciar apreensões', icon: Package, path: '/secao-operacional/bens-apreendidos' },
   { title: 'Cadastrar Flora', description: 'Registrar espécies de flora', icon: Leaf, path: '/secao-operacional/flora-cadastro' },
   { title: 'Flora Cadastrada', description: 'Listar espécies de flora', icon: List, path: '/secao-operacional/flora-cadastrada' },
-  { title: 'Crimes Comuns', description: 'Código Penal e Contravenções', icon: Gavel, path: '/secao-operacional/crimes-comuns' },
-  { title: 'Prevenção e Programas', description: 'Atividades comunitárias', icon: Shield, path: '/secao-operacional/atividades-prevencao' },
 ];
 
 const SecaoOperacional: React.FC = () => {
