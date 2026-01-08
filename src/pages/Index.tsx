@@ -45,30 +45,15 @@ const HomeCard = ({ title, icon: Icon, to }: HomeCardProps) => {
   return (
     <Link 
       to={to}
-      className="group relative flex flex-col items-center justify-center rounded-xl 
+      className="flex flex-col items-center justify-center gap-3 p-4 sm:p-5 aspect-square rounded-xl 
         bg-primary border border-primary/50 shadow-sm
-        hover:bg-primary/80 hover:backdrop-blur-xl hover:shadow-[0_0_30px_rgba(255,204,0,0.4)]
-        hover:-translate-y-1 hover:scale-105
-        transition-all duration-300 ease-out active:scale-[0.97]
-        w-16 h-16 sm:w-20 sm:h-20
-        hover:w-28 hover:h-28 sm:hover:w-32 sm:hover:h-32"
+        hover:shadow-[0_0_25px_rgba(255,204,0,0.5)] hover:-translate-y-1
+        transition-all duration-200 active:scale-[0.97] min-h-[120px]"
     >
-      {/* Glass effect overlay on hover */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/10 to-transparent 
-        opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-      
-      <div className="p-2.5 sm:p-3 rounded-xl bg-accent/10 transition-all duration-300">
+      <div className="p-3 rounded-xl bg-accent/10">
         <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-accent" />
       </div>
-      
-      {/* Text appears on hover */}
-      <span className="text-[10px] sm:text-xs font-medium text-center text-primary-foreground 
-        leading-tight px-2 max-w-full
-        opacity-0 max-h-0 overflow-hidden
-        group-hover:opacity-100 group-hover:max-h-12 group-hover:mt-2
-        transition-all duration-300 ease-out">
-        {title}
-      </span>
+      <span className="text-xs sm:text-sm font-medium text-center text-primary-foreground leading-tight line-clamp-2">{title}</span>
     </Link>
   );
 };
@@ -146,7 +131,7 @@ const Index = () => {
           </div>
           
           {!isAuthenticated ? (
-            <div className="flex flex-wrap gap-4 sm:gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
               <HomeCard 
                 title="Fazer Login" 
                 icon={LogIn} 
@@ -156,7 +141,7 @@ const Index = () => {
           ) : (
             <>
               {/* Operador level - all authenticated users */}
-              <div className="flex flex-wrap gap-4 sm:gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                 <HomeCard title="Resgate de Fauna" icon={Clipboard} to="/resgate-cadastro" />
                 <HomeCard title="Crimes Ambientais" icon={Shield} to="/crimes-ambientais" />
                 <HomeCard title="Crimes Comuns" icon={Gavel} to="/crimes-comuns" />
@@ -172,7 +157,7 @@ const Index = () => {
                     <Settings className="h-4 w-4" />
                     <span className="text-xs sm:text-sm">Seções Administrativas</span>
                   </div>
-                  <div className="flex flex-wrap gap-4 sm:gap-5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                     {hasAccess(['secao_operacional']) && (
                       <HomeCard title="Seção Operacional" icon={Briefcase} to="/secao-operacional" />
                     )}
