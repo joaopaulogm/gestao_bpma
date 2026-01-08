@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import logoBpma from '@/assets/logo-bpma.png';
 
-const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16'];
+const COLORS = ['#071d49', '#ffcc00', '#3b82f6', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#22c55e'];
 
 const MONTHS = [
   { value: '1', label: 'Janeiro' },
@@ -204,9 +204,9 @@ const DashboardPublico = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#071d49] mx-auto mb-4"></div>
           <p className="text-lg text-muted-foreground">Carregando dados...</p>
         </div>
       </div>
@@ -214,23 +214,25 @@ const DashboardPublico = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-green-200 dark:border-gray-700 sticky top-0 z-50">
+      <header className="bg-[#071d49] text-white sticky top-0 z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
-              <img src={logoBpma} alt="BPMA" className="h-12 w-auto" />
+              <div className="bg-white rounded-full p-2">
+                <img src={logoBpma} alt="BPMA" className="h-10 w-auto" />
+              </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-green-800 dark:text-green-400">
+                <h1 className="text-xl sm:text-2xl font-bold text-white">
                   Dashboard de Fauna
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-white/80">
                   Batalhão de Polícia Militar Ambiental - DF
                 </p>
               </div>
             </div>
-            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+            <Badge className="bg-[#ffcc00] text-[#071d49] border-0 font-semibold">
               <Activity className="h-3 w-3 mr-1" />
               Dados Públicos
             </Badge>
@@ -240,10 +242,10 @@ const DashboardPublico = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
-        <Card className="mb-6 border-green-200 dark:border-gray-700">
+        <Card className="mb-6 glass-card">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Filter className="h-5 w-5 text-green-600" />
+            <CardTitle className="flex items-center gap-2 text-lg text-[#071d49]">
+              <Filter className="h-5 w-5 text-[#ffcc00]" />
               Filtros
             </CardTitle>
           </CardHeader>
@@ -319,7 +321,7 @@ const DashboardPublico = () => {
               {hasFilters && (
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-2 text-sm text-green-700 hover:text-green-900 hover:bg-green-100 rounded-md transition-colors"
+                  className="px-4 py-2 text-sm text-[#071d49] hover:bg-[#071d49]/10 rounded-md transition-colors font-medium"
                 >
                   Limpar filtros
                 </button>
@@ -376,21 +378,21 @@ const DashboardPublico = () => {
 
         {/* Charts Tabs */}
         <Tabs defaultValue="especies" className="space-y-6">
-          <TabsList className="bg-white/80 dark:bg-gray-800/80 border border-green-200 dark:border-gray-700">
-            <TabsTrigger value="especies">Espécies</TabsTrigger>
-            <TabsTrigger value="destinacao">Destinação</TabsTrigger>
-            <TabsTrigger value="classes">Classes</TabsTrigger>
-            <TabsTrigger value="temporal">Temporal</TabsTrigger>
-            <TabsTrigger value="regioes">Regiões</TabsTrigger>
+          <TabsList className="bg-[#071d49]/10 border border-[#071d49]/20">
+            <TabsTrigger value="especies" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Espécies</TabsTrigger>
+            <TabsTrigger value="destinacao" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Destinação</TabsTrigger>
+            <TabsTrigger value="classes" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Classes</TabsTrigger>
+            <TabsTrigger value="temporal" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Temporal</TabsTrigger>
+            <TabsTrigger value="regioes" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Regiões</TabsTrigger>
           </TabsList>
 
           {/* Species Tab */}
           <TabsContent value="especies">
             <div className="grid lg:grid-cols-2 gap-6">
-              <Card className="border-green-200 dark:border-gray-700">
+              <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Bird className="h-5 w-5 text-green-600" />
+                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                    <Bird className="h-5 w-5 text-[#ffcc00]" />
                     Espécies Mais Resgatadas
                   </CardTitle>
                 </CardHeader>
@@ -405,16 +407,16 @@ const DashboardPublico = () => {
                       <XAxis type="number" />
                       <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
                       <Tooltip />
-                      <Bar dataKey="quantidade" fill="#22c55e" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="quantidade" fill="#071d49" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
 
-              <Card className="border-green-200 dark:border-gray-700">
+              <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Car className="h-5 w-5 text-orange-600" />
+                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                    <Car className="h-5 w-5 text-[#ff0000]" />
                     Espécies Mais Atropeladas
                   </CardTitle>
                 </CardHeader>
@@ -440,10 +442,10 @@ const DashboardPublico = () => {
           {/* Destination Tab */}
           <TabsContent value="destinacao">
             <div className="grid lg:grid-cols-2 gap-6">
-              <Card className="border-green-200 dark:border-gray-700">
+              <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-blue-600" />
+                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                    <MapPin className="h-5 w-5 text-[#ffcc00]" />
                     Distribuição por Destinação
                   </CardTitle>
                 </CardHeader>
@@ -471,10 +473,10 @@ const DashboardPublico = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-green-200 dark:border-gray-700">
+              <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-purple-600" />
+                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                    <Activity className="h-5 w-5 text-[#ffcc00]" />
                     Distribuição por Desfecho
                   </CardTitle>
                 </CardHeader>
@@ -485,7 +487,7 @@ const DashboardPublico = () => {
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-45} textAnchor="end" height={80} />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="value" fill="#071d49" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -496,10 +498,10 @@ const DashboardPublico = () => {
           {/* Classes Tab */}
           <TabsContent value="classes">
             <div className="grid lg:grid-cols-2 gap-6">
-              <Card className="border-green-200 dark:border-gray-700">
+              <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <PawPrint className="h-5 w-5 text-green-600" />
+                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                    <PawPrint className="h-5 w-5 text-[#ffcc00]" />
                     Distribuição por Classe Taxonômica
                   </CardTitle>
                 </CardHeader>
@@ -527,10 +529,10 @@ const DashboardPublico = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-green-200 dark:border-gray-700">
+              <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <HeartPulse className="h-5 w-5 text-red-600" />
+                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                    <HeartPulse className="h-5 w-5 text-[#ff0000]" />
                     Estado de Saúde dos Animais
                   </CardTitle>
                 </CardHeader>
@@ -541,7 +543,7 @@ const DashboardPublico = () => {
                       <XAxis dataKey="estado" tick={{ fontSize: 11 }} />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="quantidade" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="quantidade" fill="#ff0000" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -551,10 +553,10 @@ const DashboardPublico = () => {
 
           {/* Temporal Tab */}
           <TabsContent value="temporal">
-            <Card className="border-green-200 dark:border-gray-700">
+            <Card className="glass-card">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                  <TrendingUp className="h-5 w-5 text-[#ffcc00]" />
                   Evolução Mensal de Resgates
                 </CardTitle>
               </CardHeader>
@@ -568,10 +570,10 @@ const DashboardPublico = () => {
                     <Line
                       type="monotone"
                       dataKey="value"
-                      stroke="#22c55e"
+                      stroke="#071d49"
                       strokeWidth={3}
-                      dot={{ fill: '#22c55e', strokeWidth: 2 }}
-                      activeDot={{ r: 8 }}
+                      dot={{ fill: '#ffcc00', strokeWidth: 2, stroke: '#071d49' }}
+                      activeDot={{ r: 8, fill: '#ffcc00' }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -581,10 +583,10 @@ const DashboardPublico = () => {
 
           {/* Regions Tab */}
           <TabsContent value="regioes">
-            <Card className="border-green-200 dark:border-gray-700">
+            <Card className="glass-card">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-green-600" />
+                <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                  <MapPin className="h-5 w-5 text-[#ffcc00]" />
                   Resgates por Região Administrativa
                 </CardTitle>
               </CardHeader>
@@ -599,7 +601,7 @@ const DashboardPublico = () => {
                     <XAxis type="number" />
                     <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 11 }} />
                     <Tooltip />
-                    <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="value" fill="#071d49" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -608,8 +610,8 @@ const DashboardPublico = () => {
         </Tabs>
 
         {/* Footer */}
-        <footer className="mt-12 pt-8 border-t border-green-200 dark:border-gray-700 text-center">
-          <p className="text-sm text-muted-foreground">
+        <footer className="mt-12 pt-8 border-t border-[#071d49]/20 text-center">
+          <p className="text-sm text-[#071d49]">
             © {new Date().getFullYear()} Batalhão de Polícia Militar Ambiental - Distrito Federal
           </p>
           <p className="text-xs text-muted-foreground mt-1">
@@ -631,22 +633,22 @@ interface MetricCardProps {
 
 const MetricCard = ({ icon, label, value, color }: MetricCardProps) => {
   const colorClasses = {
-    green: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-    blue: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-    red: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    orange: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-    yellow: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    purple: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+    green: 'bg-[#071d49] text-[#ffcc00]',
+    blue: 'bg-[#071d49] text-[#ffcc00]',
+    emerald: 'bg-[#071d49] text-[#ffcc00]',
+    red: 'bg-[#ff0000] text-white',
+    orange: 'bg-[#ff0000] text-white',
+    yellow: 'bg-[#ffcc00] text-[#071d49]',
+    purple: 'bg-[#071d49] text-[#ffcc00]',
   };
 
   return (
-    <Card className="border-green-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
+    <Card className="glass-card hover:shadow-lg transition-shadow">
       <CardContent className="p-4">
         <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${colorClasses[color]}`}>
           {icon}
         </div>
-        <p className="text-2xl font-bold text-foreground">{value.toLocaleString('pt-BR')}</p>
+        <p className="text-2xl font-bold text-[#071d49]">{value.toLocaleString('pt-BR')}</p>
         <p className="text-xs text-muted-foreground mt-1">{label}</p>
       </CardContent>
     </Card>
