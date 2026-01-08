@@ -8,15 +8,19 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
       <input
         type={type}
         className={cn(
-          "flex h-11 w-full rounded-xl border border-primary/15 bg-background/80 backdrop-blur-sm px-4 py-2 text-base ring-offset-background",
-          "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
-          "placeholder:text-muted-foreground/70",
+          "flex h-10 sm:h-11 w-full rounded-lg border border-input bg-background/80",
+          "shadow-sm shadow-black/5",
+          "px-4 py-2 text-sm text-foreground",
           "transition-all duration-200",
-          "focus-visible:outline-none focus-visible:bg-background/95 focus-visible:border-primary/40",
-          "focus-visible:ring-2 focus-visible:ring-primary/10 focus-visible:ring-offset-0",
+          "placeholder:text-muted-foreground/70",
+          "focus-visible:border-ring focus-visible:outline-none",
+          "focus-visible:ring-[3px] focus-visible:ring-ring/20",
           "hover:border-primary/25 hover:bg-background/90",
           "disabled:cursor-not-allowed disabled:opacity-50",
-          "md:text-sm",
+          type === "search" &&
+            "[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none",
+          type === "file" &&
+            "p-0 pr-3 italic text-muted-foreground/70 file:me-3 file:h-full file:border-0 file:border-r file:border-solid file:border-input file:bg-transparent file:px-3 file:text-sm file:font-medium file:not-italic file:text-foreground",
           className
         )}
         ref={ref}
