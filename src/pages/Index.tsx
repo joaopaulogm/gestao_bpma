@@ -45,15 +45,15 @@ const HomeCard = ({ title, icon: Icon, to }: HomeCardProps) => {
   return (
     <Link 
       to={to}
-      className="flex flex-col items-center justify-center gap-3 p-4 sm:p-5 aspect-square rounded-xl 
+      className="flex flex-col items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 md:p-5 aspect-square rounded-xl 
         bg-primary border border-primary/50 shadow-sm
         hover:shadow-[0_0_25px_rgba(255,204,0,0.5)] hover:-translate-y-1
-        transition-all duration-200 active:scale-[0.97] min-h-[120px]"
+        transition-all duration-200 active:scale-[0.97] min-h-[100px] sm:min-h-[120px]"
     >
-      <div className="p-3 rounded-xl bg-accent/10">
-        <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-accent" />
+      <div className="p-2 sm:p-3 rounded-xl bg-accent/10 shrink-0">
+        <Icon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 text-accent" />
       </div>
-      <span className="text-xs sm:text-sm font-medium text-center text-primary-foreground leading-tight line-clamp-2">{title}</span>
+      <span className="text-[10px] sm:text-xs md:text-sm font-medium text-center text-primary-foreground leading-tight break-words hyphens-auto px-1">{title}</span>
     </Link>
   );
 };
