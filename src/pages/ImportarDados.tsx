@@ -180,8 +180,8 @@ const ImportarDados = () => {
       const estagioAdultoId = await buscarIdPorNome('dim_estagio_vida', 'Adulto');
       const estagioFilhoteId = await buscarIdPorNome('dim_estagio_vida', 'Filhote');
       const destinacaoSolturaId = await buscarIdPorNome('dim_destinacao', 'Soltura');
-      const desfechoObitoId = await buscarIdPorNome('dim_desfecho', 'Óbito');
-      const desfechoSolturaId = await buscarIdPorNome('dim_desfecho', 'Soltura no Local');
+      const desfechoObitoId = await buscarIdPorNome('dim_desfecho_resgates', 'Óbito');
+      const desfechoSolturaId = await buscarIdPorNome('dim_desfecho_resgates', 'Soltura no Local');
       
       const speciesCache = new Map<string, string>();
       

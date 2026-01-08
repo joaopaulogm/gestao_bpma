@@ -219,9 +219,9 @@ export const useResgateFormSubmitEdit = (
         buscarIdPorNome('dim_estagio_vida', data.estagioVida),
         buscarIdPorNome('dim_destinacao', data.destinacao),
         data.desfechoApreensao 
-          ? buscarIdPorNome('dim_desfecho', data.desfechoApreensao)
+          ? buscarIdPorNome('dim_desfecho_crime_ambientais', data.desfechoApreensao)
           : data.desfechoResgate 
-            ? buscarIdPorNome('dim_desfecho', data.desfechoResgate)
+            ? buscarIdPorNome('dim_desfecho_resgates', data.desfechoResgate)
             : Promise.resolve(null)
       ]);
 

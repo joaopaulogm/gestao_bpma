@@ -237,7 +237,7 @@ const CrimesAmbientaisCadastro = () => {
         supabase.from('dim_tipo_de_area').select('id, "Tipo de Área"'),
         supabase.from('dim_tipo_de_crime').select('id_tipo_de_crime, "Tipo de Crime"'),
         supabase.from('dim_enquadramento').select('id_enquadramento, id_tipo_de_crime, "Enquadramento"'),
-        supabase.from('dim_desfecho').select('id, nome, tipo'),
+        supabase.from('dim_desfecho_crime_ambientais').select('id, nome, tipo'),
         supabase.from('dim_especies_fauna').select('*').order('nome_popular'),
         supabase.from('dim_especies_flora').select('*').order('"Nome Popular"'),
         supabase.from('dim_estado_saude').select('id, nome'),

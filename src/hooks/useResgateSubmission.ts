@@ -195,9 +195,9 @@ export const useResgateSubmission = () => {
         buscarIdPorNome('dim_regiao_administrativa', data.regiaoAdministrativa),
         buscarIdPorNome('dim_origem', data.origem),
         data.desfechoApreensao 
-          ? buscarIdPorNome('dim_desfecho', data.desfechoApreensao)
+          ? buscarIdPorNome('dim_desfecho_crime_ambientais', data.desfechoApreensao)
           : data.desfechoResgate 
-            ? buscarIdPorNome('dim_desfecho', data.desfechoResgate)
+            ? buscarIdPorNome('dim_desfecho_resgates', data.desfechoResgate)
             : Promise.resolve(null)
       ]);
 

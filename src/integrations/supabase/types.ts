@@ -32,7 +32,7 @@ export type Database = {
         }
         Relationships: []
       }
-      dim_desfecho: {
+      dim_desfecho_crime_ambientais: {
         Row: {
           created_at: string | null
           id: string
@@ -68,6 +68,27 @@ export type Database = {
           created_at?: string | null
           id?: string
           nome?: string
+        }
+        Relationships: []
+      }
+      dim_desfecho_resgates: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+          tipo?: string
         }
         Relationships: []
       }
@@ -1495,7 +1516,7 @@ export type Database = {
             foreignKeyName: "fat_registros_de_crime_desfecho_id_fkey"
             columns: ["desfecho_id"]
             isOneToOne: false
-            referencedRelation: "dim_desfecho"
+            referencedRelation: "dim_desfecho_resgates"
             referencedColumns: ["id"]
           },
           {
@@ -1601,14 +1622,14 @@ export type Database = {
             foreignKeyName: "fat_registros_de_resgate_desfecho_id_fkey"
             columns: ["desfecho_id"]
             isOneToOne: false
-            referencedRelation: "dim_desfecho"
+            referencedRelation: "dim_desfecho_resgates"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fat_registros_de_resgate_desfecho_id_fkey1"
             columns: ["desfecho_id"]
             isOneToOne: false
-            referencedRelation: "dim_desfecho"
+            referencedRelation: "dim_desfecho_resgates"
             referencedColumns: ["id"]
           },
           {
@@ -2187,7 +2208,7 @@ export type Database = {
             foreignKeyName: "fk_registros_desfecho"
             columns: ["desfecho_id"]
             isOneToOne: false
-            referencedRelation: "dim_desfecho"
+            referencedRelation: "dim_desfecho_resgates"
             referencedColumns: ["id"]
           },
           {
@@ -2236,7 +2257,7 @@ export type Database = {
             foreignKeyName: "fk_resgates_2025_desfecho"
             columns: ["desfecho_id"]
             isOneToOne: false
-            referencedRelation: "dim_desfecho"
+            referencedRelation: "dim_desfecho_resgates"
             referencedColumns: ["id"]
           },
           {
