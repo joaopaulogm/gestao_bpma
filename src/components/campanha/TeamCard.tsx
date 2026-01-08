@@ -2,7 +2,6 @@ import React from 'react';
 import { TeamForDay, MemberStatus, STATUS_COLORS } from '@/hooks/useCampanhaCalendar';
 import { MemberStatusRow } from './MemberStatusRow';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Users, Shield, Target, Anchor, Plane, Navigation } from 'lucide-react';
 
 const unitIcons: Record<string, React.ReactNode> = {
@@ -77,29 +76,27 @@ export const TeamCard: React.FC<TeamCardProps> = ({
         </div>
       </div>
 
-      {/* Members list */}
-      <ScrollArea className="max-h-[300px]">
-        <div className="p-3 space-y-2">
-          {filteredMembros.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-4">
-              Nenhum membro {statusFilters.length > 0 ? 'com os filtros selecionados' : 'cadastrado'}
-            </p>
-          ) : (
-            filteredMembros.map((member) => (
-              <MemberStatusRow
-                key={member.id}
-                member={member}
-                onClick={onMemberClick ? () => onMemberClick(member.id) : undefined}
-                onRemoveVolunteer={
-                  member.isVolunteer && onRemoveVolunteer 
-                    ? () => onRemoveVolunteer(member.efetivo_id) 
-                    : undefined
-                }
-              />
-            ))
-          )}
-        </div>
-      </ScrollArea>
+      {/* Members list - sem limite de altura para mostrar todos */}
+      <div className="p-3 space-y-1.5">
+        {filteredMembros.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-4">
+            Nenhum membro {statusFilters.length > 0 ? 'com os filtros selecionados' : 'cadastrado'}
+          </p>
+        ) : (
+          filteredMembros.map((member) => (
+            <MemberStatusRow
+              key={member.id}
+              member={member}
+              onClick={onMemberClick ? () => onMemberClick(member.id) : undefined}
+              onRemoveVolunteer={
+                member.isVolunteer && onRemoveVolunteer 
+                  ? () => onRemoveVolunteer(member.efetivo_id) 
+                  : undefined
+              }
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 };
