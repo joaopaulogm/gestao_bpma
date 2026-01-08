@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -106,24 +106,15 @@ export const DayDetailDrawer: React.FC<DayDetailDrawerProps> = ({
 
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-xl p-0">
-          <SheetHeader className="p-4 border-b bg-muted/30">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-xl">
-                {format(date, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </SheetTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onOpenChange(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </SheetHeader>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b bg-muted/30">
+            <DialogTitle className="text-xl">
+              {format(date, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            </DialogTitle>
+          </DialogHeader>
 
-          <ScrollArea className="h-[calc(100vh-80px)]">
+          <ScrollArea className="max-h-[calc(90vh-80px)]">
             <div className="p-4 space-y-4">
               {/* Status tiles */}
               <div className="grid grid-cols-3 gap-2">
@@ -218,8 +209,8 @@ export const DayDetailDrawer: React.FC<DayDetailDrawerProps> = ({
               </div>
             </div>
           </ScrollArea>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       <VolunteerModal
         open={showVolunteerModal}
