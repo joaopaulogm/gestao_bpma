@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, startOfWeek, endOfWeek, isSameMonth, isWeekend, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useCampanhaData, TeamType, UnitType } from '@/hooks/useCampanhaData';
+import { useCampanhaData, TeamType, UnitType, AdminSectionType } from '@/hooks/useCampanhaData';
 import { EditTeamDialog } from '@/components/campanha/EditTeamDialog';
 import { TeamMembersDialog } from '@/components/campanha/TeamMembersDialog';
 
@@ -40,7 +40,6 @@ const unitIcons: Record<UnitType, React.ReactNode> = {
   'GOC': <Users className="h-4 w-4" />,
   'Lacustre': <Anchor className="h-4 w-4" />,
   'GTA': <Plane className="h-4 w-4" />,
-  'Administrativo': <Building2 className="h-4 w-4" />,
 };
 
 type ViewMode = 'day' | 'week' | 'month' | 'year';
@@ -70,10 +69,12 @@ const Campanha: React.FC = () => {
     efetivo,
     TEAMS,
     UNITS,
+    ADMIN_SECTIONS,
     getTeamForDate,
     isFeriado,
     administrativoTrabalha,
     getMembrosForTeam,
+    getMembrosForAdminSection,
     saveAlteracao,
     removeAlteracao,
     addMembro,
@@ -181,7 +182,7 @@ const Campanha: React.FC = () => {
               const isCurrentMonth = isSameMonth(day, currentDate);
               const isHoliday = isFeriado(day);
               const isWeekendDay = isWeekend(day);
-              const hasAlt = UNITS.some(u => u !== 'Administrativo' && hasAlteracao(day, u));
+              const hasAlt = UNITS.some(u => hasAlteracao(day, u));
               
               return (
                 <div
@@ -209,7 +210,7 @@ const Campanha: React.FC = () => {
                   
                   {isCurrentMonth && (
                     <div className="space-y-0.5">
-                      {UNITS.filter(u => u !== 'Administrativo').slice(0, 4).map((unidade) => {
+                      {UNITS.slice(0, 4).map((unidade) => {
                         const team = getTeamForDate(day, unidade);
                         return team ? (
                           <Badge 
@@ -235,9 +236,10 @@ const Campanha: React.FC = () => {
   // Render day view with edit and members
   const renderDayView = () => {
     const isHoliday = isFeriado(currentDate);
+    const works = administrativoTrabalha(currentDate);
     
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         {isHoliday && (
           <Card className="border-red-500/30 bg-red-500/10">
             <CardContent className="p-4 text-center">
@@ -246,59 +248,56 @@ const Campanha: React.FC = () => {
           </Card>
         )}
         
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {UNITS.map((unidade) => {
-            const team = getTeamForDate(currentDate, unidade);
-            const isAdmin = unidade === 'Administrativo';
-            const works = isAdmin ? administrativoTrabalha(currentDate) : true;
-            const teamMembros = isAdmin ? getMembrosForTeam(null, unidade) : (team ? getMembrosForTeam(team, unidade) : []);
-            const hasAlt = hasAlteracao(currentDate, unidade);
-            
-            return (
-              <Card 
-                key={unidade} 
-                className={`flex flex-col ${
-                  isAdmin 
-                    ? (works ? 'border-primary/30' : 'border-border/30 opacity-50')
-                    : team ? teamBorderColors[team] : ''
-                }`}
-              >
-                <CardHeader className="pb-2 flex-shrink-0">
-                  <CardTitle className="flex items-center justify-between text-base">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="flex-shrink-0">{unitIcons[unidade]}</span>
-                      <span className="truncate">{unidade}</span>
-                      {hasAlt && <Edit2 className="h-4 w-4 text-accent flex-shrink-0" />}
-                    </div>
-                    {!isAdmin && editMode && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex-shrink-0 ml-2"
-                        onClick={() => openEditDialog(currentDate, unidade)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 flex-1 min-h-0">
-                  {isAdmin ? (
-                    <>
-                      <div className="text-center py-2">
-                        {works ? (
-                          <Badge className="bg-primary/20 text-primary/80 border-primary/30">
-                            Expediente Normal
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-muted-foreground">
-                            {isHoliday ? 'Feriado' : 'Fim de Semana'}
-                          </Badge>
-                        )}
+        {/* Unidades Operacionais */}
+        <div>
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Unidades Operacionais
+          </h3>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {UNITS.map((unidade) => {
+              const team = getTeamForDate(currentDate, unidade);
+              const teamMembros = team ? getMembrosForTeam(team, unidade) : [];
+              const hasAlt = hasAlteracao(currentDate, unidade);
+              
+              return (
+                <Card 
+                  key={unidade} 
+                  className={`flex flex-col ${team ? teamBorderColors[team] : ''}`}
+                >
+                  <CardHeader className="pb-2 flex-shrink-0">
+                    <CardTitle className="flex items-center justify-between text-base">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="flex-shrink-0">{unitIcons[unidade]}</span>
+                        <span className="truncate">{unidade}</span>
+                        {hasAlt && <Edit2 className="h-4 w-4 text-accent flex-shrink-0" />}
                       </div>
-                      
-                      {/* Membros do Administrativo */}
-                      {works && (
+                      {editMode && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex-shrink-0 ml-2"
+                          onClick={() => openEditDialog(currentDate, unidade)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 flex-1 min-h-0">
+                    {team && (
+                      <>
+                        <div className="text-center">
+                          <Badge 
+                            variant="outline" 
+                            className={`text-lg px-4 py-2 ${teamColors[team]} cursor-pointer`}
+                            onClick={() => openMembersDialog(team, unidade)}
+                          >
+                            Equipe {team}
+                          </Badge>
+                        </div>
+                        
+                        {/* Team members */}
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground">Membros ({teamMembros.length}):</span>
@@ -306,7 +305,7 @@ const Campanha: React.FC = () => {
                               variant="ghost"
                               size="sm"
                               className="h-6 text-xs"
-                              onClick={() => openMembersDialog('Alfa', unidade)}
+                              onClick={() => openMembersDialog(team, unidade)}
                             >
                               <Users className="h-3 w-3 mr-1" />
                               Gerenciar
@@ -331,59 +330,85 @@ const Campanha: React.FC = () => {
                             </ScrollArea>
                           )}
                         </div>
-                      )}
-                    </>
-                  ) : team && (
-                    <>
-                      <div className="text-center">
-                        <Badge 
-                          variant="outline" 
-                          className={`text-lg px-4 py-2 ${teamColors[team]} cursor-pointer`}
-                          onClick={() => openMembersDialog(team, unidade)}
-                        >
-                          Equipe {team}
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Seções Administrativas */}
+        <div>
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Seções Administrativas
+            {!works && (
+              <Badge variant="outline" className="text-muted-foreground ml-2">
+                {isHoliday ? 'Feriado' : 'Fim de Semana'}
+              </Badge>
+            )}
+          </h3>
+          <div className={`grid gap-4 md:grid-cols-2 xl:grid-cols-3 ${!works ? 'opacity-50' : ''}`}>
+            {ADMIN_SECTIONS.map((section) => {
+              const sectionMembros = getMembrosForAdminSection(section);
+              const sectionLabel = section.replace('SEÇÃO ', '');
+              
+              return (
+                <Card 
+                  key={section} 
+                  className="flex flex-col border-primary/30"
+                >
+                  <CardHeader className="pb-2 flex-shrink-0">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Building2 className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{sectionLabel}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 flex-1 min-h-0">
+                    {works ? (
+                      <>
+                        <div className="text-center">
+                          <Badge className="bg-primary/20 text-primary/80 border-primary/30">
+                            Expediente Normal
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <span className="text-xs text-muted-foreground">Membros ({sectionMembros.length}):</span>
+                          {sectionMembros.length === 0 ? (
+                            <p className="text-xs text-muted-foreground text-center py-2">
+                              Nenhum membro cadastrado
+                            </p>
+                          ) : (
+                            <ScrollArea className="h-[150px]">
+                              <div className="space-y-1.5 pr-2">
+                                {sectionMembros.map((m) => (
+                                  <div key={m.id} className="flex items-center gap-2 text-xs p-2 rounded-lg bg-muted/30 border border-border/50">
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0 font-mono">
+                                      {m.efetivo?.posto_graduacao}
+                                    </Badge>
+                                    <span className="truncate font-medium">{m.efetivo?.nome_guerra}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-4">
+                        <Badge variant="outline" className="text-muted-foreground">
+                          {isHoliday ? 'Feriado' : 'Fim de Semana'}
                         </Badge>
                       </div>
-                      
-                      {/* Team members */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">Membros ({teamMembros.length}):</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 text-xs"
-                            onClick={() => openMembersDialog(team, unidade)}
-                          >
-                            <Users className="h-3 w-3 mr-1" />
-                            Gerenciar
-                          </Button>
-                        </div>
-                        {teamMembros.length === 0 ? (
-                          <p className="text-xs text-muted-foreground text-center py-2">
-                            Nenhum membro cadastrado
-                          </p>
-                        ) : (
-                          <ScrollArea className="h-[180px]">
-                            <div className="space-y-1.5 pr-2">
-                              {teamMembros.map((m) => (
-                                <div key={m.id} className="flex items-center gap-2 text-xs p-2 rounded-lg bg-muted/30 border border-border/50">
-                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0 font-mono">
-                                    {m.efetivo?.posto_graduacao}
-                                  </Badge>
-                                  <span className="truncate font-medium">{m.efetivo?.nome_guerra}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </ScrollArea>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       </div>
     );
@@ -425,8 +450,6 @@ const Campanha: React.FC = () => {
           </div>
           
           {UNITS.map((unidade) => {
-            const isAdmin = unidade === 'Administrativo';
-            
             return (
               <div key={unidade} className="grid grid-cols-8 gap-2 mb-2">
                 <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
@@ -435,7 +458,6 @@ const Campanha: React.FC = () => {
                 </div>
                 {days.map((day, idx) => {
                   const team = getTeamForDate(day, unidade);
-                  const works = isAdmin ? administrativoTrabalha(day) : true;
                   const hasAlt = hasAlteracao(day, unidade);
                   
                   return (
@@ -446,7 +468,7 @@ const Campanha: React.FC = () => {
                         isWeekend(day) ? 'bg-muted/30' : 'bg-card'
                       } ${editMode ? 'cursor-pointer hover:ring-2 hover:ring-primary/50' : ''}`}
                       onClick={() => {
-                        if (editMode && !isAdmin) {
+                        if (editMode) {
                           openEditDialog(day, unidade);
                         }
                       }}
@@ -454,15 +476,7 @@ const Campanha: React.FC = () => {
                       {hasAlt && (
                         <Edit2 className="absolute top-1 right-1 h-3 w-3 text-amber-500" />
                       )}
-                      {isAdmin ? (
-                        works ? (
-                          <Badge variant="outline" className="text-xs bg-primary/20 text-primary/80">
-                            ADM
-                          </Badge>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
-                        )
-                      ) : team && (
+                      {team && (
                         <Badge variant="outline" className={`text-xs ${teamColors[team]}`}>
                           {team}
                         </Badge>
