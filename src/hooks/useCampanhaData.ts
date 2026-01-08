@@ -278,10 +278,22 @@ export const useCampanhaData = (year: number) => {
   }, [isFeriado]);
 
   // Get members for a specific team and unit (uses equipes reais from dim_equipes/fat_equipe_membros)
-  const getMembrosForTeam = useCallback((teamName: TeamType, unidade: UnitType): EquipeMembro[] => {
+  const getMembrosForTeam = useCallback((teamName: TeamType | null, unidade: UnitType): EquipeMembro[] => {
     // Mapear unidade para grupamento
     const grupamento = UNIT_TO_GRUPAMENTO[unidade];
     if (!grupamento) return [];
+
+    // Para Administrativo, buscar todas as equipes do grupamento EXPEDIENTE
+    if (unidade === 'Administrativo') {
+      const equipesExpediente = equipesReais.filter((e: any) => 
+        e.grupamento?.toUpperCase() === 'EXPEDIENTE'
+      );
+      const equipesIds = equipesExpediente.map((e: any) => e.id);
+      return membrosReais.filter(m => equipesIds.includes(m.equipe_id));
+    }
+
+    // Se não tem teamName, retornar vazio
+    if (!teamName) return [];
 
     // Encontrar equipes do grupamento que tenham o nome da equipe (Alfa, Bravo, etc)
     const equipesDoGrupamento = equipesReais.filter((e: any) => 

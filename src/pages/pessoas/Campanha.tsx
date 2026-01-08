@@ -251,7 +251,7 @@ const Campanha: React.FC = () => {
             const team = getTeamForDate(currentDate, unidade);
             const isAdmin = unidade === 'Administrativo';
             const works = isAdmin ? administrativoTrabalha(currentDate) : true;
-            const teamMembros = team ? getMembrosForTeam(team, unidade) : [];
+            const teamMembros = isAdmin ? getMembrosForTeam(null, unidade) : (team ? getMembrosForTeam(team, unidade) : []);
             const hasAlt = hasAlteracao(currentDate, unidade);
             
             return (
@@ -284,17 +284,55 @@ const Campanha: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-3 flex-1 min-h-0">
                   {isAdmin ? (
-                    <div className="text-center py-4">
-                      {works ? (
-                        <Badge className="bg-primary/20 text-primary/80 border-primary/30">
-                          Expediente Normal
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-muted-foreground">
-                          {isHoliday ? 'Feriado' : 'Fim de Semana'}
-                        </Badge>
+                    <>
+                      <div className="text-center py-2">
+                        {works ? (
+                          <Badge className="bg-primary/20 text-primary/80 border-primary/30">
+                            Expediente Normal
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-muted-foreground">
+                            {isHoliday ? 'Feriado' : 'Fim de Semana'}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      {/* Membros do Administrativo */}
+                      {works && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Membros ({teamMembros.length}):</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 text-xs"
+                              onClick={() => openMembersDialog('Alfa', unidade)}
+                            >
+                              <Users className="h-3 w-3 mr-1" />
+                              Gerenciar
+                            </Button>
+                          </div>
+                          {teamMembros.length === 0 ? (
+                            <p className="text-xs text-muted-foreground text-center py-2">
+                              Nenhum membro cadastrado
+                            </p>
+                          ) : (
+                            <ScrollArea className="h-[180px]">
+                              <div className="space-y-1.5 pr-2">
+                                {teamMembros.map((m) => (
+                                  <div key={m.id} className="flex items-center gap-2 text-xs p-2 rounded-lg bg-muted/30 border border-border/50">
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0 font-mono">
+                                      {m.efetivo?.posto_graduacao}
+                                    </Badge>
+                                    <span className="truncate font-medium">{m.efetivo?.nome_guerra}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          )}
+                        </div>
                       )}
-                    </div>
+                    </>
                   ) : team && (
                     <>
                       <div className="text-center">
