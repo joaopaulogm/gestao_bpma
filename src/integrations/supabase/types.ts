@@ -2519,6 +2519,7 @@ export type Database = {
       }
       usuarios_por_login: {
         Row: {
+          auth_user_id: string | null
           contato: string | null
           cpf: number | null
           data_inclusao: string | null
@@ -2536,8 +2537,10 @@ export type Database = {
           quadro: string | null
           senha: number | null
           sexo: string | null
+          vinculado_em: string | null
         }
         Insert: {
+          auth_user_id?: string | null
           contato?: string | null
           cpf?: number | null
           data_inclusao?: string | null
@@ -2555,8 +2558,10 @@ export type Database = {
           quadro?: string | null
           senha?: number | null
           sexo?: string | null
+          vinculado_em?: string | null
         }
         Update: {
+          auth_user_id?: string | null
           contato?: string | null
           cpf?: number | null
           data_inclusao?: string | null
@@ -2574,6 +2579,7 @@ export type Database = {
           quadro?: string | null
           senha?: number | null
           sexo?: string | null
+          vinculado_em?: string | null
         }
         Relationships: []
       }
