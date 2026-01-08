@@ -220,14 +220,14 @@ const DashboardPublico = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
-              <div className="bg-white rounded-full p-2">
-                <img src={logoBpma} alt="BPMA" className="h-10 w-auto" />
+              <div className="w-12 h-12 rounded-full bg-[#071d49] border-2 border-[#ffcc00] flex items-center justify-center overflow-hidden">
+                <img src={logoBpma} alt="BPMA" className="h-10 w-10 object-contain" />
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-white">
                   Dashboard de Fauna
                 </h1>
-                <p className="text-sm text-white/80">
+                <p className="text-sm text-[#ffcc00]">
                   Batalhão de Polícia Militar Ambiental - DF
                 </p>
               </div>
