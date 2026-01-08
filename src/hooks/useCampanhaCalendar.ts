@@ -8,6 +8,21 @@ export type TeamType = 'Alfa' | 'Bravo' | 'Charlie' | 'Delta';
 export type UnitType = 'Guarda' | 'Armeiro' | 'RP Ambiental' | 'GOC' | 'Lacustre' | 'GTA';
 export type MemberStatus = 'apto' | 'impedido' | 'restricao' | 'atestado' | 'voluntario';
 
+// Unit configuration - teams and rotation
+interface UnitConfig {
+  teams: TeamType[];
+  cycleLength: number; // days in cycle (work + rest)
+}
+
+const UNIT_CONFIGS: Record<UnitType, UnitConfig> = {
+  'Guarda': { teams: ['Alfa', 'Bravo', 'Charlie', 'Delta'], cycleLength: 4 }, // 24x72
+  'Armeiro': { teams: ['Alfa', 'Bravo', 'Charlie', 'Delta'], cycleLength: 4 },
+  'RP Ambiental': { teams: ['Alfa', 'Bravo', 'Charlie', 'Delta'], cycleLength: 4 },
+  'GOC': { teams: ['Alfa', 'Bravo', 'Charlie', 'Delta'], cycleLength: 4 },
+  'Lacustre': { teams: ['Alfa', 'Bravo', 'Charlie', 'Delta'], cycleLength: 4 },
+  'GTA': { teams: ['Alfa', 'Bravo', 'Charlie'], cycleLength: 6 }, // 12x60 = 0.5 day work, 2.5 days rest = ~6 rotations
+};
+
 export interface StatusColors {
   bg: string;
   border: string;
@@ -210,6 +225,11 @@ export const useCampanhaCalendar = (year: number, month: number) => {
       return getTeamName(alteracao.equipe_nova_id);
     }
 
+    // Get unit configuration
+    const unitConfig = UNIT_CONFIGS[unidade];
+    const availableTeams = unitConfig.teams;
+    const cycleLength = unitConfig.cycleLength;
+
     // Get initial team from config or default
     const config = configs.find(c => c.unidade === unidade);
     let startTeam: TeamType;
@@ -220,15 +240,15 @@ export const useCampanhaCalendar = (year: number, month: number) => {
       startTeam = defaultInitialTeams[unidade]!;
     }
 
-    // Calculate based on rotation (24h/72h = 1 work, 3 rest)
+    // Calculate based on unit-specific rotation
     const startDate = new Date(year, 0, 1);
     const diffTime = date.getTime() - startDate.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const cyclePosition = ((diffDays % 4) + 4) % 4;
-    const startIndex = TEAMS.indexOf(startTeam);
-    const teamIndex = (startIndex + cyclePosition) % 4;
+    const cyclePosition = ((diffDays % cycleLength) + cycleLength) % cycleLength;
+    const startIndex = availableTeams.indexOf(startTeam);
+    const teamIndex = (startIndex + cyclePosition) % availableTeams.length;
     
-    return TEAMS[teamIndex];
+    return availableTeams[teamIndex];
   }, [alteracoes, configs, year, getTeamName]);
 
   // Check if it's a holiday
@@ -244,21 +264,28 @@ export const useCampanhaCalendar = (year: number, month: number) => {
     const grupamento = UNIT_TO_GRUPAMENTO[unidade];
     if (!grupamento) return [];
 
+    // Find exact team by grupamento and name (case insensitive)
+    const equipeExata = equipesReais.find((e: any) => 
+      e.grupamento?.toUpperCase() === grupamento &&
+      e.nome?.toUpperCase() === teamName.toUpperCase()
+    );
+
+    if (equipeExata) {
+      return membrosReais.filter(m => m.equipe_id === equipeExata.id);
+    }
+
+    // Fallback: find by partial match
     const equipesDoGrupamento = equipesReais.filter((e: any) => 
       e.grupamento?.toUpperCase() === grupamento &&
       e.nome?.toUpperCase().includes(teamName.toUpperCase())
     );
 
-    if (equipesDoGrupamento.length === 0) {
-      const equipesAlternativas = equipesReais.filter((e: any) => 
-        e.grupamento?.toUpperCase() === grupamento
-      );
-      const equipesIds = equipesAlternativas.map((e: any) => e.id);
+    if (equipesDoGrupamento.length > 0) {
+      const equipesIds = equipesDoGrupamento.map((e: any) => e.id);
       return membrosReais.filter(m => equipesIds.includes(m.equipe_id));
     }
 
-    const equipesIds = equipesDoGrupamento.map((e: any) => e.id);
-    return membrosReais.filter(m => equipesIds.includes(m.equipe_id));
+    return [];
   }, [equipesReais, membrosReais]);
 
   // Get volunteers for a specific date from localStorage
