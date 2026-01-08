@@ -311,25 +311,28 @@ const GerenciarPermissoes: React.FC = () => {
   );
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Shield className="h-8 w-8 text-primary" />
-        <h1 className="text-2xl font-bold text-foreground">Gerenciar Permissões</h1>
+    <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
+      <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">Gerenciar Permissões</h1>
       </div>
 
-      <Tabs defaultValue="efetivo" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="efetivo" className="flex items-center gap-2">
-            <UserCheck className="h-4 w-4" />
-            Efetivo BPMA
+      <Tabs defaultValue="efetivo" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-3 h-auto">
+          <TabsTrigger value="efetivo" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-2.5 px-1 sm:px-3">
+            <UserCheck className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline sm:inline">Efetivo</span>
+            <span className="xs:hidden sm:hidden">Efet.</span>
           </TabsTrigger>
-          <TabsTrigger value="allowed" className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            Usuários Permitidos
+          <TabsTrigger value="allowed" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-2.5 px-1 sm:px-3">
+            <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Permitidos</span>
+            <span className="sm:hidden">Perm.</span>
           </TabsTrigger>
-          <TabsTrigger value="roles" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Níveis de Acesso
+          <TabsTrigger value="roles" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-2.5 px-1 sm:px-3">
+            <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Níveis</span>
+            <span className="sm:hidden">Nív.</span>
           </TabsTrigger>
         </TabsList>
 

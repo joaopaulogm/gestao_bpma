@@ -43,7 +43,7 @@ const DashboardSummaryCards = ({ data }: DashboardSummaryCardsProps) => {
 
   // First card is highlighted (primary style), others are secondary
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
       {data.metricas.map((metric, index) => {
         const isHighlighted = index === 0;
         
@@ -51,38 +51,38 @@ const DashboardSummaryCards = ({ data }: DashboardSummaryCardsProps) => {
           <div 
             key={index} 
             className={`
-              relative overflow-hidden rounded-2xl p-5 transition-all duration-300 group
+              relative overflow-hidden rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 transition-all duration-300 group
               ${isHighlighted 
-                ? 'bg-primary text-primary-foreground shadow-lg hover:shadow-xl' 
+                ? 'bg-primary text-primary-foreground shadow-lg hover:shadow-xl col-span-2 lg:col-span-1' 
                 : 'bg-card border border-border/50 hover:border-border hover:shadow-md'
               }
             `}
           >
-            {/* Arrow icon top right */}
+            {/* Arrow icon top right - hidden on mobile for non-highlighted cards */}
             <div className={`
-              absolute top-4 right-4 p-2 rounded-full transition-colors duration-200
+              absolute top-2 sm:top-4 right-2 sm:right-4 p-1.5 sm:p-2 rounded-full transition-colors duration-200
               ${isHighlighted 
                 ? 'bg-primary-foreground/10 group-hover:bg-primary-foreground/20' 
-                : 'bg-muted group-hover:bg-muted/80'
+                : 'bg-muted group-hover:bg-muted/80 hidden sm:block'
               }
             `}>
-              <ArrowUpRight className={`h-4 w-4 ${isHighlighted ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+              <ArrowUpRight className={`h-3 w-3 sm:h-4 sm:w-4 ${isHighlighted ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
             </div>
             
             {/* Title */}
-            <p className={`text-sm font-medium mb-3 pr-10 ${isHighlighted ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+            <p className={`text-xs sm:text-sm font-medium mb-1.5 sm:mb-3 pr-6 sm:pr-10 line-clamp-1 ${isHighlighted ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
               {metric.title}
             </p>
             
             {/* Value */}
-            <p className={`text-4xl font-bold mb-3 ${isHighlighted ? 'text-primary-foreground' : 'text-foreground'}`}>
+            <p className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-1.5 sm:mb-3 ${isHighlighted ? 'text-primary-foreground' : 'text-foreground'}`}>
               {metric.value.toLocaleString('pt-BR')}
             </p>
             
             {/* Change indicator */}
             {metric.change !== undefined && (
               <div className={`
-                flex items-center gap-1.5 text-xs font-medium
+                flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-medium
                 ${isHighlighted 
                   ? 'text-primary-foreground/80' 
                   : metric.change >= 0 
@@ -91,7 +91,7 @@ const DashboardSummaryCards = ({ data }: DashboardSummaryCardsProps) => {
                 }
               `}>
                 <span className={`
-                  inline-flex items-center justify-center w-4 h-4 rounded-full
+                  inline-flex items-center justify-center w-3 h-3 sm:w-4 sm:h-4 rounded-full flex-shrink-0
                   ${isHighlighted 
                     ? 'bg-primary-foreground/20' 
                     : metric.change >= 0 
@@ -100,13 +100,14 @@ const DashboardSummaryCards = ({ data }: DashboardSummaryCardsProps) => {
                   }
                 `}>
                   {metric.change >= 0 ? (
-                    <TrendingUp className="h-2.5 w-2.5" />
+                    <TrendingUp className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
                   ) : (
-                    <TrendingDown className="h-2.5 w-2.5" />
+                    <TrendingDown className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
                   )}
                 </span>
-                <span>
-                  {metric.change >= 0 ? '+' : ''}{Math.abs(metric.change)}% vs. mês anterior
+                <span className="truncate">
+                  {metric.change >= 0 ? '+' : ''}{Math.abs(metric.change)}%
+                  <span className="hidden sm:inline"> vs. mês anterior</span>
                 </span>
               </div>
             )}
