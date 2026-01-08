@@ -216,15 +216,15 @@ const DashboardPublico = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-[#071d49] text-white sticky top-0 z-50 shadow-lg">
+      <header className="bg-[#071d49] text-white sticky top-0 z-50 shadow-lg animate-fade-in">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-[#071d49] border-2 border-[#ffcc00] flex items-center justify-center overflow-hidden">
-                <img src={logoBpma} alt="BPMA" className="h-10 w-10 object-contain" />
+              <div className="w-12 h-12 rounded-full bg-[#071d49] border-2 border-[#ffcc00] flex items-center justify-center overflow-hidden transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(255,204,0,0.6)] hover:border-[3px] animate-scale-in">
+                <img src={logoBpma} alt="BPMA" className="h-10 w-10 object-contain transition-transform duration-500 hover:rotate-[360deg]" />
               </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-white">
+              <div className="animate-fade-in" style={{ animationDelay: '0.15s' }}>
+                <h1 className="text-xl sm:text-2xl font-bold text-white transition-colors duration-300 hover:text-[#ffcc00]">
                   Dashboard de Fauna
                 </h1>
                 <p className="text-sm text-[#ffcc00]">
@@ -232,7 +232,7 @@ const DashboardPublico = () => {
                 </p>
               </div>
             </div>
-            <Badge className="bg-[#ffcc00] text-[#071d49] border-0 font-semibold">
+            <Badge className="bg-[#ffcc00] text-[#071d49] border-0 font-semibold animate-scale-in hover:scale-105 transition-transform duration-200" style={{ animationDelay: '0.2s' }}>
               <Activity className="h-3 w-3 mr-1" />
               Dados Públicos
             </Badge>
