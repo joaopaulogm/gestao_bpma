@@ -24,7 +24,6 @@ const unitIcons: Record<UnitType, React.ReactNode> = {
   'GOC': <Users className="h-5 w-5" />,
   'Lacustre': <Anchor className="h-5 w-5" />,
   'GTA': <Plane className="h-5 w-5" />,
-  'Administrativo': <Building2 className="h-5 w-5" />,
 };
 
 interface Equipe {
@@ -134,7 +133,6 @@ const Escalas: React.FC = () => {
       'GOC': ['GOC'],
       'Lacustre': ['LACUSTRE'],
       'GTA': ['GTA'],
-      'Administrativo': ['EXPEDIENTE', 'OFICIAIS', 'COMISSÕES'],
     };
 
     const grupamentos = grupamentoMap[unidade] || [];
@@ -215,44 +213,24 @@ const Escalas: React.FC = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {UNITS.map((unidade) => {
             const team = getTeamForDate(currentDate, unidade);
-            const isAdmin = unidade === 'Administrativo';
-            const works = isAdmin ? administrativoTrabalha(currentDate) : true;
             const campanhaMembers = team ? getMembrosForTeam(team, unidade) : [];
             const unitEquipes = getEquipesForUnit(unidade);
 
             return (
               <Card 
                 key={unidade}
-                className={`${
-                  isAdmin 
-                    ? (works ? 'border-primary/30' : 'border-border/30 opacity-50')
-                    : team ? 'border-primary/30' : ''
-                }`}
+                className={team ? 'border-primary/30' : ''}
               >
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <div className={`p-2 rounded-lg ${
-                      isAdmin ? 'bg-primary/10' : 'bg-primary/10'
-                    }`}>
+                    <div className="p-2 rounded-lg bg-primary/10">
                       {unitIcons[unidade]}
                     </div>
                     {unidade}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {isAdmin ? (
-                    <div className="text-center py-4">
-                      {works ? (
-                        <Badge className="bg-primary/20 text-primary/80 border-primary/30">
-                          Expediente Normal
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-muted-foreground">
-                          {isHoliday ? 'Feriado' : 'Fim de Semana'}
-                        </Badge>
-                      )}
-                    </div>
-                  ) : team && (
+                  {team && (
                     <>
                       <div className="text-center">
                         <Badge 
