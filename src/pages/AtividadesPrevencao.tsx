@@ -169,26 +169,27 @@ const AtividadesPrevencao: React.FC = () => {
   }
   
   return (
-    <Layout title="Atividades de Prevenção e Policiamento Comunitário" showBackButton>
-      <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in max-w-4xl mx-auto">
+    <Layout title="Atividades de Prevenção" showBackButton>
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 animate-fade-in max-w-4xl mx-auto">
         {/* Tabs de Categorias */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Tipo de Atividade
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Shield className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span className="truncate">Tipo de Atividade</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 w-full mb-4">
-                <TabsTrigger value="prevencao" className="gap-2">
-                  <TreePine className="h-4 w-4" />
-                  Prevenção
+              <TabsList className="grid grid-cols-2 w-full mb-4 h-auto">
+                <TabsTrigger value="prevencao" className="gap-1 sm:gap-2 py-2 sm:py-2.5 text-xs sm:text-sm">
+                  <TreePine className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span>Prevenção</span>
                 </TabsTrigger>
-                <TabsTrigger value="policiamento" className="gap-2">
-                  <Shield className="h-4 w-4" />
-                  Policiamento Comunitário
+                <TabsTrigger value="policiamento" className="gap-1 sm:gap-2 py-2 sm:py-2.5 text-xs sm:text-sm">
+                  <Shield className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="hidden xs:inline">Policiamento Com.</span>
+                  <span className="xs:hidden">Pol. Com.</span>
                 </TabsTrigger>
               </TabsList>
               
@@ -215,27 +216,27 @@ const AtividadesPrevencao: React.FC = () => {
               
               <TabsContent value="policiamento">
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Formas de Policiamento Comunitário do BPMA
                   </p>
                   
                   {/* Sub-tabs para as formas de policiamento comunitário */}
                   <Tabs value={subTab} onValueChange={setSubTab} className="w-full">
-                    <TabsList className="grid grid-cols-4 w-full">
-                      <TabsTrigger value="teatro" className="gap-1 text-xs">
-                        <Theater className="h-3 w-3" />
+                    <TabsList className="grid grid-cols-4 w-full h-auto">
+                      <TabsTrigger value="teatro" className="gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-2">
+                        <Theater className="h-3 w-3 flex-shrink-0" />
                         <span className="hidden sm:inline">Teatro</span>
                       </TabsTrigger>
-                      <TabsTrigger value="guardioes" className="gap-1 text-xs">
-                        <GraduationCap className="h-3 w-3" />
+                      <TabsTrigger value="guardioes" className="gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-2">
+                        <GraduationCap className="h-3 w-3 flex-shrink-0" />
                         <span className="hidden sm:inline">Guardiões</span>
                       </TabsTrigger>
-                      <TabsTrigger value="saber" className="gap-1 text-xs">
-                        <BookOpen className="h-3 w-3" />
-                        <span className="hidden sm:inline">Saber Cerrado</span>
+                      <TabsTrigger value="saber" className="gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-2">
+                        <BookOpen className="h-3 w-3 flex-shrink-0" />
+                        <span className="hidden sm:inline">Saber</span>
                       </TabsTrigger>
-                      <TabsTrigger value="outros" className="gap-1 text-xs">
-                        <Shield className="h-3 w-3" />
+                      <TabsTrigger value="outros" className="gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-2">
+                        <Shield className="h-3 w-3 flex-shrink-0" />
                         <span className="hidden sm:inline">Outros</span>
                       </TabsTrigger>
                     </TabsList>
@@ -341,32 +342,33 @@ const AtividadesPrevencao: React.FC = () => {
         
         {/* Informações Gerais */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Informações da Atividade
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span>Informações da Atividade</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label htmlFor="data">Data *</Label>
+                <Label htmlFor="data" className="text-sm">Data *</Label>
                 <Input
                   id="data"
                   type="date"
                   value={formData.data}
                   onChange={(e) => handleInputChange('data', e.target.value)}
                   required
+                  className="h-10 sm:h-11"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label>Região Administrativa</Label>
+                <Label className="text-sm">Região Administrativa</Label>
                 <Select
                   value={formData.regiaoAdministrativaId}
                   onValueChange={(value) => handleInputChange('regiaoAdministrativaId', value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10 sm:h-11">
                     <SelectValue placeholder="Selecione a região..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -381,13 +383,14 @@ const AtividadesPrevencao: React.FC = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="quantidadePublico">Quantidade de Público Atendido</Label>
+              <Label htmlFor="quantidadePublico" className="text-sm">Quantidade de Público Atendido</Label>
               <Input
                 id="quantidadePublico"
                 type="number"
                 min="0"
                 value={formData.quantidadePublico}
                 onChange={(e) => handleInputChange('quantidadePublico', parseInt(e.target.value) || 0)}
+                className="h-10 sm:h-11"
               />
             </div>
           </CardContent>
@@ -395,33 +398,35 @@ const AtividadesPrevencao: React.FC = () => {
         
         {/* Localização */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Localização (Opcional)
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <MapPin className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span>Localização (Opcional)</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label htmlFor="latitude">Latitude</Label>
+                <Label htmlFor="latitude" className="text-sm">Latitude</Label>
                 <Input
                   id="latitude"
                   type="text"
                   placeholder="-15.7942"
                   value={formData.latitude}
                   onChange={(e) => handleInputChange('latitude', e.target.value)}
+                  className="h-10 sm:h-11"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="longitude">Longitude</Label>
+                <Label htmlFor="longitude" className="text-sm">Longitude</Label>
                 <Input
                   id="longitude"
                   type="text"
                   placeholder="-47.8825"
                   value={formData.longitude}
                   onChange={(e) => handleInputChange('longitude', e.target.value)}
+                  className="h-10 sm:h-11"
                 />
               </div>
             </div>
@@ -430,31 +435,36 @@ const AtividadesPrevencao: React.FC = () => {
         
         {/* Observações */}
         <Card>
-          <CardHeader>
-            <CardTitle>Observações</CardTitle>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Observações</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
             <Textarea
               placeholder="Observações adicionais sobre a atividade..."
               value={formData.observacoes}
               onChange={(e) => handleInputChange('observacoes', e.target.value)}
-              rows={4}
+              rows={3}
+              className="text-sm sm:text-base"
             />
           </CardContent>
         </Card>
         
         {/* Submit Button */}
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSaving} className="gap-2">
+        <div className="flex justify-end pb-4">
+          <Button 
+            type="submit" 
+            disabled={isSaving} 
+            className="gap-2 w-full sm:w-auto h-11 sm:h-10 text-sm sm:text-base"
+          >
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Salvando...
+                <span>Salvando...</span>
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Registrar Atividade
+                <span>Registrar Atividade</span>
               </>
             )}
           </Button>
