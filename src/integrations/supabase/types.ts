@@ -2528,7 +2528,7 @@ export type Database = {
           idade: number | null
           login: string | null
           lotacao: string | null
-          matricula: number | null
+          matricula: string | null
           nome: string | null
           nome_guerra: string | null
           porte_arma: string | null
@@ -2547,7 +2547,7 @@ export type Database = {
           idade?: number | null
           login?: string | null
           lotacao?: string | null
-          matricula?: number | null
+          matricula?: string | null
           nome?: string | null
           nome_guerra?: string | null
           porte_arma?: string | null
@@ -2566,61 +2566,13 @@ export type Database = {
           idade?: number | null
           login?: string | null
           lotacao?: string | null
-          matricula?: number | null
+          matricula?: string | null
           nome?: string | null
           nome_guerra?: string | null
           porte_arma?: string | null
           post_grad?: string | null
           quadro?: string | null
           senha?: number | null
-          sexo?: string | null
-        }
-        Relationships: []
-      }
-      usuarios_por_login_staging: {
-        Row: {
-          contato: string | null
-          cpf: string | null
-          data_inclusao: string | null
-          data_nascimento: string | null
-          email: string | null
-          id: string | null
-          idade: string | null
-          login: string | null
-          lotacao: string | null
-          matricula: string | null
-          porte_arma: string | null
-          senha: string | null
-          sexo: string | null
-        }
-        Insert: {
-          contato?: string | null
-          cpf?: string | null
-          data_inclusao?: string | null
-          data_nascimento?: string | null
-          email?: string | null
-          id?: string | null
-          idade?: string | null
-          login?: string | null
-          lotacao?: string | null
-          matricula?: string | null
-          porte_arma?: string | null
-          senha?: string | null
-          sexo?: string | null
-        }
-        Update: {
-          contato?: string | null
-          cpf?: string | null
-          data_inclusao?: string | null
-          data_nascimento?: string | null
-          email?: string | null
-          id?: string | null
-          idade?: string | null
-          login?: string | null
-          lotacao?: string | null
-          matricula?: string | null
-          porte_arma?: string | null
-          senha?: string | null
           sexo?: string | null
         }
         Relationships: []
