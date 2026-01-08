@@ -1,12 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { ResgateFormData } from '@/schemas/resgateSchema';
-import { Especie } from '@/services/especieService';
+import { Especie, getFaunaImageUrl } from '@/services/especieService';
 import FormSection from './FormSection';
 import FormField from './FormField';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface EspecieSectionProps {
@@ -24,8 +22,10 @@ interface EspecieFauna {
   nome_cientifico: string;
   classe_taxonomica: string;
   ordem_taxonomica: string;
+  familia_taxonomica: string | null;
   tipo_de_fauna: string;
   estado_de_conservacao: string;
+  imagens_paths?: string[] | null;
 }
 
 const EspecieSection: React.FC<EspecieSectionProps> = ({
@@ -44,12 +44,10 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch ALL species usando paginação para garantir que todas sejam carregadas
         const PAGE_SIZE = 1000;
         let allData: EspecieFauna[] = [];
         let from = 0;
         let hasMore = true;
-        let error: any = null;
 
         while (hasMore) {
           const { data: pageData, error: pageError } = await supabase
@@ -60,7 +58,6 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
 
           if (pageError) {
             console.error('Erro ao carregar página:', pageError);
-            error = pageError;
             break;
           }
 
@@ -73,20 +70,12 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
           }
         }
 
-        const data = allData;
-
-        if (data) {
-          setEspeciesFauna(data);
-          // Extrair classes taxonômicas únicas da coluna classe_taxonomica
-          const classes = [...new Set(data.map(e => e.classe_taxonomica).filter(Boolean))].sort((a, b) => 
+        if (allData.length > 0) {
+          setEspeciesFauna(allData);
+          const classes = [...new Set(allData.map(e => e.classe_taxonomica).filter(Boolean))].sort((a, b) => 
             (a || '').localeCompare(b || '', 'pt-BR')
           ) as string[];
           setClassesTaxonomicas(classes);
-          console.log('Classes encontradas:', classes.join(', '));
-          console.log('Total espécies:', data.length);
-        }
-        if (error) {
-          console.error('Erro ao carregar espécies:', error);
         }
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
@@ -99,28 +88,14 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
 
   const getEspeciesPorClasse = (classe: string) => {
     if (!classe) return [];
-    // Filtrar espécies pela classe taxonômica selecionada (comparação case-insensitive)
     const normalize = (v?: string | null) => (v ?? '').trim().toUpperCase();
     const wanted = normalize(classe);
-    const especiesFiltradas = especiesFauna.filter(e => normalize(e.classe_taxonomica) === wanted);
-    
-    console.log(`Filtrando espécies para classe "${classe}":`, {
-      classeSelecionada: classe,
-      totalEspecies: especiesFauna.length,
-      especiesFiltradas: especiesFiltradas.length
-    });
-    
-    // Ordenar por nome popular
-    return especiesFiltradas.sort((a, b) => 
-      (a.nome_popular || '').localeCompare(b.nome_popular || '', 'pt-BR')
-    );
+    return especiesFauna
+      .filter(e => normalize(e.classe_taxonomica) === wanted)
+      .sort((a, b) => (a.nome_popular || '').localeCompare(b.nome_popular || '', 'pt-BR'));
   };
 
-  const getEspecieDetails = () => {
-    if (especieSelecionada) {
-      return especieSelecionada;
-    }
-    // Fallback: buscar nos dados locais
+  const getEspecieDetails = (): EspecieFauna | null => {
     if (formData.especieId) {
       return especiesFauna.find(e => e.id === formData.especieId) || null;
     }
@@ -161,7 +136,7 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
             <SelectTrigger className={errors.classeTaxonomica?.message ? "border-red-500" : ""}>
               <SelectValue placeholder={loading ? "Carregando..." : "Selecione a classe"} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-80">
               {classesTaxonomicas.map((classe) => (
                 <SelectItem key={classe} value={classe}>
                   {classe}
@@ -173,7 +148,7 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
 
         <FormField
           id="especieId"
-          label="Espécie (Nome Popular)"
+          label="Nome Popular"
           required={!isEvadido}
           error={errors.especieId?.message}
         >
@@ -185,7 +160,7 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
             <SelectTrigger className={errors.especieId?.message ? "border-red-500" : ""}>
               <SelectValue placeholder={!formData.classeTaxonomica ? "Selecione a classe primeiro" : "Selecione a espécie"} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-80">
               {getEspeciesPorClasse(formData.classeTaxonomica).map((especie) => (
                 <SelectItem key={especie.id} value={especie.id}>
                   {especie.nome_popular}
@@ -194,51 +169,74 @@ const EspecieSection: React.FC<EspecieSectionProps> = ({
             </SelectContent>
           </Select>
         </FormField>
-
-        <FormField
-          id="nomeCientifico"
-          label="Nome Científico"
-        >
-          <Input
-            value={selectedEspecie?.nome_cientifico || ''}
-            readOnly
-            className="bg-muted"
-          />
-        </FormField>
-
-        <FormField
-          id="ordemTaxonomica"
-          label="Ordem Taxonômica"
-        >
-          <Input
-            value={selectedEspecie?.ordem_taxonomica || ''}
-            readOnly
-            className="bg-muted"
-          />
-        </FormField>
-
-        <FormField
-          id="estadoConservacao"
-          label="Estado de Conservação"
-        >
-          <Input
-            value={selectedEspecie?.estado_de_conservacao || ''}
-            readOnly
-            className="bg-muted"
-          />
-        </FormField>
-
-        <FormField
-          id="tipoFauna"
-          label="Tipo de Fauna"
-        >
-          <Input
-            value={selectedEspecie?.tipo_de_fauna || ''}
-            readOnly
-            className="bg-muted"
-          />
-        </FormField>
       </div>
+
+      {/* Card de Detalhes da Espécie - aparece após seleção */}
+      {selectedEspecie && (
+        <div className="mt-4 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 overflow-hidden">
+          {/* Header com nome da espécie */}
+          <div className="px-4 py-3 bg-primary/10 border-b border-primary/20">
+            <h4 className="font-semibold text-primary flex items-center gap-2">
+              <ImageIcon className="h-4 w-4" />
+              {selectedEspecie.nome_popular}
+              <span className="font-normal text-muted-foreground italic text-sm">
+                ({selectedEspecie.nome_cientifico})
+              </span>
+            </h4>
+          </div>
+          
+          <div className="p-4 space-y-4">
+            {/* Informações Taxonômicas em layout elegante */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Ordem</p>
+                <p className="text-sm font-medium text-foreground">{selectedEspecie.ordem_taxonomica || '—'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Família</p>
+                <p className="text-sm font-medium text-foreground">{selectedEspecie.familia_taxonomica || '—'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Tipo</p>
+                <p className="text-sm font-medium text-foreground">{selectedEspecie.tipo_de_fauna || '—'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Conservação</p>
+                <p className="text-sm font-medium text-foreground">{selectedEspecie.estado_de_conservacao || '—'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Classe</p>
+                <p className="text-sm font-medium text-foreground">{selectedEspecie.classe_taxonomica || '—'}</p>
+              </div>
+            </div>
+
+            {/* Galeria de Fotos */}
+            {Array.isArray(selectedEspecie.imagens_paths) && selectedEspecie.imagens_paths.length > 0 && (
+              <div className="pt-3 border-t border-primary/10">
+                <p className="text-xs font-medium mb-2 text-muted-foreground uppercase tracking-wider">Fotos da Espécie</p>
+                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                  {selectedEspecie.imagens_paths.slice(0, 6).map((filename, imgIndex) => (
+                    <div 
+                      key={imgIndex} 
+                      className="aspect-square rounded-lg overflow-hidden border border-border bg-muted shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <img
+                        src={getFaunaImageUrl(filename)}
+                        alt={`${selectedEspecie.nome_popular} ${imgIndex + 1}`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/placeholder.svg';
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </FormSection>
   );
 };
