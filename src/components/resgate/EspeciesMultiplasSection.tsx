@@ -330,8 +330,8 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                 <SelectTrigger>
                   <SelectValue placeholder={loading ? "Carregando..." : "Selecione a classe"} />
                 </SelectTrigger>
-                <SelectContent className="bg-background max-h-60 overflow-y-auto z-50">
-                  <div className="p-2 sticky top-0 bg-background border-b">
+                <SelectContent className="bg-background z-[100]" position="popper" sideOffset={4}>
+                  <div className="p-2 bg-background border-b sticky top-0 z-10">
                     <Input
                       value={classeSearchById[especie.id] ?? ''}
                       onChange={(e) =>
@@ -341,6 +341,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                       onKeyDown={(e) => e.stopPropagation()}
                     />
                   </div>
+                  <div className="max-h-[200px] overflow-y-auto">
                   {loading ? (
                     <div className="p-3 text-center text-muted-foreground text-sm">
                       Carregando classes...
@@ -373,6 +374,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                       );
                     });
                   })()}
+                  </div>
                 </SelectContent>
               </Select>
             </FormField>
@@ -388,8 +390,8 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                     placeholder={!especie.classeTaxonomica ? "Selecione a classe primeiro" : "Selecione a espécie"}
                   />
                 </SelectTrigger>
-                <SelectContent className="bg-background max-h-80 overflow-y-auto z-50">
-                  <div className="p-2 sticky top-0 bg-background border-b">
+                <SelectContent className="bg-background z-[100]" position="popper" sideOffset={4}>
+                  <div className="p-2 bg-background border-b sticky top-0 z-10">
                     <Input
                       value={especieSearchById[especie.id] ?? ''}
                       onChange={(e) =>
@@ -400,40 +402,42 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                       onKeyDown={(e) => e.stopPropagation()}
                     />
                   </div>
-                  {loading ? (
-                    <div className="p-3 text-center text-muted-foreground text-sm">
-                      Carregando espécies...
-                    </div>
-                  ) : !especie.classeTaxonomica ? (
-                    <div className="p-3 text-center text-muted-foreground text-sm">
-                      Selecione uma classe primeiro
-                    </div>
-                  ) : (() => {
-                    // Calcular espécies filtradas uma única vez
-                    const especiesFiltradas = getEspeciesPorClasse(especie.classeTaxonomica);
-                    const searchTerm = (especieSearchById[especie.id] ?? '').trim().toLowerCase();
-                    const especiesComBusca = searchTerm 
-                      ? especiesFiltradas.filter((ef) =>
-                          (ef.nome_popular ?? '')
-                            .toLowerCase()
-                            .includes(searchTerm)
-                        )
-                      : especiesFiltradas;
-                    
-                    if (especiesComBusca.length === 0) {
-                      return (
-                        <div className="p-3 text-center text-muted-foreground text-sm">
-                          {searchTerm ? 'Nenhuma espécie encontrada' : 'Nenhuma espécie disponível para esta classe'}
-                        </div>
-                      );
-                    }
-                    
-                    return especiesComBusca.map((ef) => (
-                      <SelectItem key={ef.id} value={ef.id}>
-                        {ef.nome_popular}
-                      </SelectItem>
-                    ));
-                  })()}
+                  <div className="max-h-[250px] overflow-y-auto">
+                    {loading ? (
+                      <div className="p-3 text-center text-muted-foreground text-sm">
+                        Carregando espécies...
+                      </div>
+                    ) : !especie.classeTaxonomica ? (
+                      <div className="p-3 text-center text-muted-foreground text-sm">
+                        Selecione uma classe primeiro
+                      </div>
+                    ) : (() => {
+                      // Calcular espécies filtradas uma única vez
+                      const especiesFiltradas = getEspeciesPorClasse(especie.classeTaxonomica);
+                      const searchTerm = (especieSearchById[especie.id] ?? '').trim().toLowerCase();
+                      const especiesComBusca = searchTerm 
+                        ? especiesFiltradas.filter((ef) =>
+                            (ef.nome_popular ?? '')
+                              .toLowerCase()
+                              .includes(searchTerm)
+                          )
+                        : especiesFiltradas;
+                      
+                      if (especiesComBusca.length === 0) {
+                        return (
+                          <div className="p-3 text-center text-muted-foreground text-sm">
+                            {searchTerm ? 'Nenhuma espécie encontrada' : 'Nenhuma espécie disponível para esta classe'}
+                          </div>
+                        );
+                      }
+                      
+                      return especiesComBusca.map((ef) => (
+                        <SelectItem key={ef.id} value={ef.id}>
+                          {ef.nome_popular}
+                        </SelectItem>
+                      ));
+                    })()}
+                  </div>
                 </SelectContent>
               </Select>
             </FormField>
