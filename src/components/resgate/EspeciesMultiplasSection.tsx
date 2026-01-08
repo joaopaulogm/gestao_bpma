@@ -42,7 +42,8 @@ interface EspecieFauna {
   familia_taxonomica: string | null;
   tipo_de_fauna: string;
   estado_de_conservacao: string;
-  imagens_paths?: string[] | unknown | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  imagens_paths?: any;
 }
 
 interface DimensionItem {
