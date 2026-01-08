@@ -4,10 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Lock, User, Link2 } from 'lucide-react';
+import { Lock, User, Link2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { handleSupabaseError } from '@/utils/errorHandler';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface UsuarioPorLogin {
   id: string;
@@ -20,13 +21,19 @@ interface UsuarioPorLogin {
 }
 
 const Login = () => {
+  // Estado para login por credenciais (usuarios_por_login)
   const [login, setLogin] = useState('');
   const [senha, setSenha] = useState('');
+  
+  // Estado para login por email/senha (Supabase Auth)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [pendingUser, setPendingUser] = useState<UsuarioPorLogin | null>(null);
   const [showLinkAccount, setShowLinkAccount] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { login: authLogin, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
@@ -69,6 +76,22 @@ const Login = () => {
     checkPendingLink();
   }, [navigate]);
 
+  // Login com email/senha do Supabase Auth (para admins e usuários já cadastrados)
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      await authLogin(email, password);
+      navigate('/');
+    } catch (error: any) {
+      // Error já tratado no authLogin
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Login com credenciais da tabela usuarios_por_login
   const handleCredentialLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -95,7 +118,7 @@ const Login = () => {
 
       // Se já tem auth_user_id vinculado, fazer login direto com Google
       if (usuario.auth_user_id) {
-        toast.info('Use o botão "Entrar com Google" para acessar sua conta vinculada');
+        toast.info('Use o botão "Entrar com Google" ou a aba "E-mail" para acessar sua conta vinculada');
         return;
       }
 
@@ -287,50 +310,105 @@ const Login = () => {
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">primeiro acesso</span>
+              <span className="bg-card px-2 text-muted-foreground">ou</span>
             </div>
           </div>
 
-          <form onSubmit={handleCredentialLogin} className="space-y-3 sm:space-y-4">
-            <div className="space-y-2">
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  type="text"
-                  placeholder="Login (nome.sobrenome)"
-                  value={login}
-                  onChange={(e) => setLogin(e.target.value)}
-                  className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  type="password"
-                  placeholder="Senha (CPF)"
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
-                  required
-                />
-              </div>
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full h-10 sm:h-11 text-sm sm:text-base"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Verificando...' : 'Primeiro Acesso'}
-            </Button>
-          </form>
+          <Tabs defaultValue="email" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="email" className="text-xs sm:text-sm">
+                <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                E-mail
+              </TabsTrigger>
+              <TabsTrigger value="credenciais" className="text-xs sm:text-sm">
+                <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                Primeiro Acesso
+              </TabsTrigger>
+            </TabsList>
 
-          <p className="text-xs text-center text-muted-foreground">
-            Já vinculou sua conta? Use o botão "Entrar com Google" acima.
-          </p>
+            {/* Login por E-mail/Senha (Supabase Auth) */}
+            <TabsContent value="email" className="mt-4">
+              <form onSubmit={handleEmailLogin} className="space-y-3 sm:space-y-4">
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      type="email"
+                      placeholder="E-mail"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      type="password"
+                      placeholder="Senha"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full h-10 sm:h-11 text-sm sm:text-base"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Entrando...' : 'Entrar'}
+                </Button>
+              </form>
+            </TabsContent>
+
+            {/* Login por Credenciais (usuarios_por_login) */}
+            <TabsContent value="credenciais" className="mt-4">
+              <form onSubmit={handleCredentialLogin} className="space-y-3 sm:space-y-4">
+                <div className="space-y-2">
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      type="text"
+                      placeholder="Login (nome.sobrenome)"
+                      value={login}
+                      onChange={(e) => setLogin(e.target.value)}
+                      className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      type="password"
+                      placeholder="Senha (CPF)"
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value)}
+                      className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full h-10 sm:h-11 text-sm sm:text-base"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Verificando...' : 'Primeiro Acesso'}
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  Use esta opção apenas se nunca acessou o sistema antes.
+                </p>
+              </form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
         <CardFooter className="text-center text-xs sm:text-sm text-muted-foreground pt-0 px-4 sm:px-6">
           <p className="w-full">
