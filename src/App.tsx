@@ -45,6 +45,7 @@ const RankingOcorrencias = lazy(() => import(/* webpackChunkName: "ranking" */ '
 const UploadSchemas = lazy(() => import(/* webpackChunkName: "upload-schemas" */ '@/pages/UploadSchemas'));
 const CrimesComuns = lazy(() => import(/* webpackChunkName: "crimes-comuns" */ '@/pages/CrimesComuns'));
 const AtividadesPrevencao = lazy(() => import(/* webpackChunkName: "atividades-prevencao" */ '@/pages/AtividadesPrevencao'));
+const DashboardPublico = lazy(() => import(/* webpackChunkName: "dashboard-publico" */ '@/pages/DashboardPublico'));
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ function App() {
           <Suspense fallback={<PageLoading />}>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/dashboard-publico" element={<DashboardPublico />} />
               <Route path="/" element={<SidebarLayout><Index /></SidebarLayout>} />
               
               {/* Operador level - requires authentication */}
