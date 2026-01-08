@@ -770,7 +770,7 @@ const CrimesAmbientaisCadastro = () => {
               <SelectTrigger className="input-glass">
                 <SelectValue placeholder="Selecione o enquadramento" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[300px]">
                 {enquadramentosFiltrados.map(e => (
                   <SelectItem key={e.id_enquadramento} value={e.id_enquadramento}>
                     {e.Enquadramento || 'Sem descrição'}
