@@ -42,7 +42,7 @@ interface EspecieFauna {
   familia_taxonomica: string | null;
   tipo_de_fauna: string;
   estado_de_conservacao: string;
-  imagens_paths?: string[] | null;
+  imagens_paths?: string[] | unknown | null;
 }
 
 interface DimensionItem {
@@ -76,53 +76,27 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch ALL species usando paginação para garantir que todas sejam carregadas
-        const PAGE_SIZE = 1000; // Tamanho máximo recomendado do Supabase
-        let allData: EspecieFauna[] = [];
-        let from = 0;
-        let hasMore = true;
-        let error: Error | null = null;
-
-        while (hasMore) {
-          const { data: pageData, error: pageError } = await supabase
-            .from('dim_especies_fauna')
-            .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, familia_taxonomica, tipo_de_fauna, estado_de_conservacao, imagens_paths')
-            .order('nome_popular', { ascending: true })
-            .range(from, from + PAGE_SIZE - 1);
-
-          if (pageError) {
-            console.error('Erro ao carregar página:', pageError);
-            error = pageError;
-            break;
-          }
-
-          if (pageData && pageData.length > 0) {
-            allData = [...allData, ...(pageData as EspecieFauna[])];
-            from += PAGE_SIZE;
-            hasMore = pageData.length === PAGE_SIZE;
-            console.log(`Carregadas ${allData.length} espécies até agora...`);
-          } else {
-            hasMore = false;
-          }
-        }
-
-        const data = allData;
+        // Buscar todas as espécies de uma vez (são menos de 300 registros)
+        const { data: allSpecies, error } = await supabase
+          .from('dim_especies_fauna')
+          .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, familia_taxonomica, tipo_de_fauna, estado_de_conservacao, imagens_paths')
+          .order('nome_popular', { ascending: true });
 
         if (error) {
           console.error('Erro ao carregar espécies:', error);
         }
 
-        const allSpecies = (data as EspecieFauna[]) || [];
+        const speciesList = (allSpecies as EspecieFauna[]) || [];
         console.log('=== DEBUG CARREGAMENTO ESPÉCIES ===');
-        console.log('Total de espécies carregadas:', allSpecies.length);
-        console.log('Primeiras 10 espécies:', allSpecies.slice(0, 10).map(e => ({
+        console.log('Total de espécies carregadas:', speciesList.length);
+        console.log('Primeiras 10 espécies:', speciesList.slice(0, 10).map(e => ({
           nome: e.nome_popular,
           classe: e.classe_taxonomica,
           classeRaw: JSON.stringify(e.classe_taxonomica)
         })));
 
-        if (allSpecies.length > 0) {
-          setEspeciesFauna(allSpecies);
+        if (speciesList.length > 0) {
+          setEspeciesFauna(speciesList);
 
           // Extract unique classes + counts (normalized for safety)
           // Usar o valor original da primeira ocorrência para preservar acentos e formatação
@@ -130,7 +104,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
           const displayByNorm: Record<string, string> = {};
           const todasClasses: string[] = [];
 
-          allSpecies.forEach((e) => {
+          speciesList.forEach((e) => {
             const raw = (e.classe_taxonomica ?? '').trim();
             if (!raw) return;
             
@@ -155,7 +129,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
           setClassesCount(counts);
 
           console.log('=== RESUMO ===');
-          console.log('Total de espécies:', allSpecies.length);
+          console.log('Total de espécies:', speciesList.length);
           console.log('Todas as classes encontradas (com duplicatas):', [...new Set(todasClasses)]);
           console.log('Classes únicas normalizadas:', Object.keys(displayByNorm));
           console.log('Classes finais para exibição:', classes);
@@ -507,29 +481,35 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                   </div>
 
                   {/* Galeria de Fotos */}
-                  {Array.isArray(selectedEspecie.imagens_paths) && selectedEspecie.imagens_paths.length > 0 && (
-                    <div className="pt-3 border-t border-primary/10">
-                      <p className="text-xs font-medium mb-2 text-muted-foreground uppercase tracking-wider">Fotos da Espécie</p>
-                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
-                        {selectedEspecie.imagens_paths.slice(0, 6).map((filename, imgIndex) => (
-                          <div 
-                            key={imgIndex} 
-                            className="aspect-square rounded-lg overflow-hidden border border-border bg-muted shadow-sm hover:shadow-md transition-shadow"
-                          >
-                            <img
-                              src={getFaunaImageUrl(filename)}
-                              alt={`${selectedEspecie.nome_popular} ${imgIndex + 1}`}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/placeholder.svg';
-                              }}
-                            />
-                          </div>
-                        ))}
+                  {(() => {
+                    const imagensPaths = Array.isArray(selectedEspecie.imagens_paths) 
+                      ? selectedEspecie.imagens_paths as string[]
+                      : [];
+                    if (imagensPaths.length === 0) return null;
+                    return (
+                      <div className="pt-3 border-t border-primary/10">
+                        <p className="text-xs font-medium mb-2 text-muted-foreground uppercase tracking-wider">Fotos da Espécie</p>
+                        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                          {imagensPaths.slice(0, 6).map((filename, imgIndex) => (
+                            <div 
+                              key={imgIndex} 
+                              className="aspect-square rounded-lg overflow-hidden border border-border bg-muted shadow-sm hover:shadow-md transition-shadow"
+                            >
+                              <img
+                                src={getFaunaImageUrl(filename)}
+                                alt={`${selectedEspecie.nome_popular} ${imgIndex + 1}`}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = '/placeholder.svg';
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               </div>
             );
