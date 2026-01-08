@@ -124,13 +124,26 @@ const AtividadesPrevencao: React.FC = () => {
   };
   
   // Group activities by category
+  // Teatro, Guardiões e Saber Cerrado são formas de Policiamento Comunitário do BPMA
   const categorias = {
     'Prevenção': tiposAtividades.filter(t => t.categoria === 'Prevenção'),
-    'Policiamento Comunitário': tiposAtividades.filter(t => t.categoria === 'Policiamento Comunitário'),
+    'Policiamento Comunitário': tiposAtividades.filter(t => 
+      t.categoria === 'Policiamento Comunitário' || 
+      t.categoria === 'Teatro Lobo Guará' || 
+      t.categoria === 'Guardiões Ambientais' || 
+      t.categoria === 'Saber Cerrado'
+    ),
+  };
+  
+  // Subcategorias dentro de Policiamento Comunitário
+  const subcategoriasPoliciamento = {
     'Teatro Lobo Guará': tiposAtividades.filter(t => t.categoria === 'Teatro Lobo Guará'),
     'Guardiões Ambientais': tiposAtividades.filter(t => t.categoria === 'Guardiões Ambientais'),
     'Saber Cerrado': tiposAtividades.filter(t => t.categoria === 'Saber Cerrado'),
+    'Outros': tiposAtividades.filter(t => t.categoria === 'Policiamento Comunitário'),
   };
+  
+  const [subTab, setSubTab] = useState('teatro');
   
   const getCategoryIcon = (categoria: string) => {
     switch (categoria) {
@@ -168,26 +181,14 @@ const AtividadesPrevencao: React.FC = () => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 lg:grid-cols-5 w-full mb-4">
-                <TabsTrigger value="prevencao" className="gap-1 text-xs sm:text-sm">
-                  <TreePine className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Prevenção</span>
+              <TabsList className="grid grid-cols-2 w-full mb-4">
+                <TabsTrigger value="prevencao" className="gap-2">
+                  <TreePine className="h-4 w-4" />
+                  Prevenção
                 </TabsTrigger>
-                <TabsTrigger value="policiamento" className="gap-1 text-xs sm:text-sm">
-                  <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Pol. Comunitário</span>
-                </TabsTrigger>
-                <TabsTrigger value="teatro" className="gap-1 text-xs sm:text-sm">
-                  <Theater className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Teatro</span>
-                </TabsTrigger>
-                <TabsTrigger value="guardioes" className="gap-1 text-xs sm:text-sm">
-                  <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Guardiões</span>
-                </TabsTrigger>
-                <TabsTrigger value="saber" className="gap-1 text-xs sm:text-sm">
-                  <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Saber Cerrado</span>
+                <TabsTrigger value="policiamento" className="gap-2">
+                  <Shield className="h-4 w-4" />
+                  Policiamento Comunitário
                 </TabsTrigger>
               </TabsList>
               
@@ -213,86 +214,116 @@ const AtividadesPrevencao: React.FC = () => {
               </TabsContent>
               
               <TabsContent value="policiamento">
-                <div className="space-y-2">
-                  <Label>Atividade de Policiamento Comunitário</Label>
-                  <Select
-                    value={categorias['Policiamento Comunitário'].some(t => t.id === formData.tipoAtividadeId) ? formData.tipoAtividadeId : ''}
-                    onValueChange={(value) => handleInputChange('tipoAtividadeId', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a atividade..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categorias['Policiamento Comunitário'].map((atividade) => (
-                        <SelectItem key={atividade.id} value={atividade.id}>
-                          {atividade.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="teatro">
-                <div className="space-y-2">
-                  <Label>Teatro Lobo Guará</Label>
-                  <Select
-                    value={categorias['Teatro Lobo Guará'].some(t => t.id === formData.tipoAtividadeId) ? formData.tipoAtividadeId : ''}
-                    onValueChange={(value) => handleInputChange('tipoAtividadeId', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a atividade..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categorias['Teatro Lobo Guará'].map((atividade) => (
-                        <SelectItem key={atividade.id} value={atividade.id}>
-                          {atividade.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="guardioes">
-                <div className="space-y-2">
-                  <Label>Curso Guardiões Ambientais</Label>
-                  <Select
-                    value={categorias['Guardiões Ambientais'].some(t => t.id === formData.tipoAtividadeId) ? formData.tipoAtividadeId : ''}
-                    onValueChange={(value) => handleInputChange('tipoAtividadeId', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o encontro/atividade..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categorias['Guardiões Ambientais'].map((atividade) => (
-                        <SelectItem key={atividade.id} value={atividade.id}>
-                          {atividade.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="saber">
-                <div className="space-y-2">
-                  <Label>Saber Cerrado</Label>
-                  <Select
-                    value={categorias['Saber Cerrado'].some(t => t.id === formData.tipoAtividadeId) ? formData.tipoAtividadeId : ''}
-                    onValueChange={(value) => handleInputChange('tipoAtividadeId', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a atividade..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categorias['Saber Cerrado'].map((atividade) => (
-                        <SelectItem key={atividade.id} value={atividade.id}>
-                          {atividade.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Formas de Policiamento Comunitário do BPMA
+                  </p>
+                  
+                  {/* Sub-tabs para as formas de policiamento comunitário */}
+                  <Tabs value={subTab} onValueChange={setSubTab} className="w-full">
+                    <TabsList className="grid grid-cols-4 w-full">
+                      <TabsTrigger value="teatro" className="gap-1 text-xs">
+                        <Theater className="h-3 w-3" />
+                        <span className="hidden sm:inline">Teatro</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="guardioes" className="gap-1 text-xs">
+                        <GraduationCap className="h-3 w-3" />
+                        <span className="hidden sm:inline">Guardiões</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="saber" className="gap-1 text-xs">
+                        <BookOpen className="h-3 w-3" />
+                        <span className="hidden sm:inline">Saber Cerrado</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="outros" className="gap-1 text-xs">
+                        <Shield className="h-3 w-3" />
+                        <span className="hidden sm:inline">Outros</span>
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="teatro" className="mt-4">
+                      <div className="space-y-2">
+                        <Label>Teatro Lobo Guará</Label>
+                        <Select
+                          value={subcategoriasPoliciamento['Teatro Lobo Guará'].some(t => t.id === formData.tipoAtividadeId) ? formData.tipoAtividadeId : ''}
+                          onValueChange={(value) => handleInputChange('tipoAtividadeId', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a atividade..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {subcategoriasPoliciamento['Teatro Lobo Guará'].map((atividade) => (
+                              <SelectItem key={atividade.id} value={atividade.id}>
+                                {atividade.nome}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="guardioes" className="mt-4">
+                      <div className="space-y-2">
+                        <Label>Curso Guardiões Ambientais</Label>
+                        <Select
+                          value={subcategoriasPoliciamento['Guardiões Ambientais'].some(t => t.id === formData.tipoAtividadeId) ? formData.tipoAtividadeId : ''}
+                          onValueChange={(value) => handleInputChange('tipoAtividadeId', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o encontro/atividade..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {subcategoriasPoliciamento['Guardiões Ambientais'].map((atividade) => (
+                              <SelectItem key={atividade.id} value={atividade.id}>
+                                {atividade.nome}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="saber" className="mt-4">
+                      <div className="space-y-2">
+                        <Label>Saber Cerrado</Label>
+                        <Select
+                          value={subcategoriasPoliciamento['Saber Cerrado'].some(t => t.id === formData.tipoAtividadeId) ? formData.tipoAtividadeId : ''}
+                          onValueChange={(value) => handleInputChange('tipoAtividadeId', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a atividade..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {subcategoriasPoliciamento['Saber Cerrado'].map((atividade) => (
+                              <SelectItem key={atividade.id} value={atividade.id}>
+                                {atividade.nome}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="outros" className="mt-4">
+                      <div className="space-y-2">
+                        <Label>Outras Atividades de Policiamento Comunitário</Label>
+                        <Select
+                          value={subcategoriasPoliciamento['Outros'].some(t => t.id === formData.tipoAtividadeId) ? formData.tipoAtividadeId : ''}
+                          onValueChange={(value) => handleInputChange('tipoAtividadeId', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a atividade..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {subcategoriasPoliciamento['Outros'].map((atividade) => (
+                              <SelectItem key={atividade.id} value={atividade.id}>
+                                {atividade.nome}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 </div>
               </TabsContent>
             </Tabs>
