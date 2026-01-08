@@ -49,7 +49,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
         
         // Carregar desfechos
         const { data: desfechosData } = await supabase
-          .from('dim_desfecho')
+          .from('dim_desfecho_resgates')
           .select('id, nome')
           .eq('tipo', 'resgate')
           .order('nome');
