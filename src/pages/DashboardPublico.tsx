@@ -220,15 +220,15 @@ const DashboardPublico = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-[#071d49] border-2 border-[#ffcc00] flex items-center justify-center overflow-hidden transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(255,204,0,0.6)] hover:border-[3px] animate-scale-in">
-                <img src={logoBpma} alt="BPMA" className="h-10 w-10 object-contain transition-transform duration-500 hover:rotate-[360deg]" />
+              <div className="w-16 h-16 rounded-full bg-white border-3 border-[#ffcc00] flex items-center justify-center overflow-hidden transition-all duration-300 hover:scale-110 hover:shadow-[0_0_25px_rgba(255,204,0,0.7)] animate-scale-in">
+                <img src={logoBpma} alt="BPMA" className="h-14 w-14 object-contain transition-transform duration-500 hover:rotate-[360deg]" />
               </div>
               <div className="animate-fade-in" style={{ animationDelay: '0.15s' }}>
                 <h1 className="text-xl sm:text-2xl font-bold text-white transition-colors duration-300 hover:text-[#ffcc00]">
-                  Dashboard de Fauna
+                  Gestão de Dados do BPMA
                 </h1>
                 <p className="text-sm text-[#ffcc00]">
-                  Batalhão de Polícia Militar Ambiental - DF
+                  Dashboard Público de Estatísticas
                 </p>
               </div>
             </div>
