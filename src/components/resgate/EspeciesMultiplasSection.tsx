@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useCallback } from 'react';
 import FormSection from './FormSection';
 import FormField from './FormField';
@@ -7,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getFaunaImageUrl } from '@/services/especieService';
 
 export interface EspecieItem {
   id: string;
@@ -39,8 +39,10 @@ interface EspecieFauna {
   nome_cientifico: string;
   classe_taxonomica: string;
   ordem_taxonomica: string;
+  familia_taxonomica: string | null;
   tipo_de_fauna: string;
   estado_de_conservacao: string;
+  imagens_paths?: string[] | null;
 }
 
 interface DimensionItem {
@@ -84,7 +86,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
         while (hasMore) {
           const { data: pageData, error: pageError } = await supabase
             .from('dim_especies_fauna')
-            .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
+            .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, familia_taxonomica, tipo_de_fauna, estado_de_conservacao, imagens_paths')
             .order('nome_popular', { ascending: true })
             .range(from, from + PAGE_SIZE - 1);
 
@@ -460,22 +462,80 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                 </SelectContent>
               </Select>
             </FormField>
+          </div>
 
-            <FormField id={`nomeCientifico-${especie.id}`} label="Nome Científico">
-              <Input value={especie.nomeCientifico} readOnly className="bg-muted" />
-            </FormField>
+          {/* Card de Detalhes da Espécie - aparece após seleção */}
+          {especie.especieId && (() => {
+            const selectedEspecie = especiesFauna.find(ef => ef.id === especie.especieId);
+            if (!selectedEspecie) return null;
+            return (
+              <div className="md:col-span-2 mt-2 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 overflow-hidden">
+                {/* Header com nome da espécie */}
+                <div className="px-4 py-3 bg-primary/10 border-b border-primary/20">
+                  <h4 className="font-semibold text-primary flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4" />
+                    {selectedEspecie.nome_popular}
+                    <span className="font-normal text-muted-foreground italic text-sm">
+                      ({selectedEspecie.nome_cientifico})
+                    </span>
+                  </h4>
+                </div>
+                
+                <div className="p-4 space-y-4">
+                  {/* Informações Taxonômicas em layout elegante */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Ordem</p>
+                      <p className="text-sm font-medium text-foreground">{selectedEspecie.ordem_taxonomica || '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Família</p>
+                      <p className="text-sm font-medium text-foreground">{selectedEspecie.familia_taxonomica || '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Tipo</p>
+                      <p className="text-sm font-medium text-foreground">{selectedEspecie.tipo_de_fauna || '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Conservação</p>
+                      <p className="text-sm font-medium text-foreground">{selectedEspecie.estado_de_conservacao || '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Classe</p>
+                      <p className="text-sm font-medium text-foreground">{selectedEspecie.classe_taxonomica || '—'}</p>
+                    </div>
+                  </div>
 
-            <FormField id={`ordemTaxonomica-${especie.id}`} label="Ordem Taxonômica">
-              <Input value={especie.ordemTaxonomica} readOnly className="bg-muted" />
-            </FormField>
+                  {/* Galeria de Fotos */}
+                  {Array.isArray(selectedEspecie.imagens_paths) && selectedEspecie.imagens_paths.length > 0 && (
+                    <div className="pt-3 border-t border-primary/10">
+                      <p className="text-xs font-medium mb-2 text-muted-foreground uppercase tracking-wider">Fotos da Espécie</p>
+                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                        {selectedEspecie.imagens_paths.slice(0, 6).map((filename, imgIndex) => (
+                          <div 
+                            key={imgIndex} 
+                            className="aspect-square rounded-lg overflow-hidden border border-border bg-muted shadow-sm hover:shadow-md transition-shadow"
+                          >
+                            <img
+                              src={getFaunaImageUrl(filename)}
+                              alt={`${selectedEspecie.nome_popular} ${imgIndex + 1}`}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/placeholder.svg';
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
-            <FormField id={`estadoConservacao-${especie.id}`} label="Estado de Conservação">
-              <Input value={especie.estadoConservacao} readOnly className="bg-muted" />
-            </FormField>
-
-            <FormField id={`tipoFauna-${especie.id}`} label="Tipo de Fauna">
-              <Input value={especie.tipoFauna} readOnly className="bg-muted" />
-            </FormField>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             <FormField id={`estadoSaude-${especie.id}`} label="Estado de Saúde" required={!isEvadido}>
               <Select
