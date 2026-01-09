@@ -476,44 +476,47 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
         return { anos: [], anoAtual: year };
       }
 
-      // Buscar dados de espécies por mês para todos os anos
-      const especiesMensaisPromises = anosHistoricos.map(async (ano) => {
+      // Mapa para converter nome do mês para número
+      const mesParaNumero: Record<string, number> = {
+        'Janeiro': 1, 'Fevereiro': 2, 'Março': 3, 'Abril': 4,
+        'Maio': 5, 'Junho': 6, 'Julho': 7, 'Agosto': 8,
+        'Setembro': 9, 'Outubro': 10, 'Novembro': 11, 'Dezembro': 12
+      };
+
+      // Buscar dados de espécies por mês para todos os anos (2020-2024)
+      const { data: especies2020_2024, error: errorEspecies } = await supabase
+        .from('fat_resgates_diarios_2020a2024')
+        .select('"Mês", "Ano", nome_popular, quantidade_resgates');
+
+      // Buscar dados de 2025
+      const { data: especies2025, error: errorEspecies2025 } = await supabase
+        .from('fat_resgates_diarios_2025_especies')
+        .select('mes, nome_popular, quantidade_resgates');
+
+      // Processar resultados por ano
+      const especiesResults = anosHistoricos.map(ano => {
         if (ano <= 2024) {
-          const { data, error } = await supabase
-            .from('fat_resgates_diarios_2020a2024')
-            .select('Mes, nome_popular, quantidade_resgates')
-            .eq('Ano', ano);
-          
-          if (error || !data) return { ano, especies: [] };
-          
+          const dataDoAno = (especies2020_2024 || []).filter((row: any) => row.Ano === ano);
           return {
             ano,
-            especies: data.map((row: any) => ({
-              mes: row.Mes,
+            especies: dataDoAno.map((row: any) => ({
+              mes: mesParaNumero[row['Mês']] || 0,
               especie: row.nome_popular || 'Não identificado',
-              quantidade: row.quantidade_resgates || 0
-            }))
+              quantidade: Number(row.quantidade_resgates) || 0
+            })).filter((e: any) => e.mes > 0)
           };
         } else if (ano === 2025) {
-          const { data, error } = await supabase
-            .from('fat_resgates_diarios_2025_especies')
-            .select('mes, nome_popular, quantidade_resgates');
-          
-          if (error || !data) return { ano, especies: [] };
-          
           return {
             ano,
-            especies: data.map((row: any) => ({
-              mes: row.mes,
+            especies: (especies2025 || []).map((row: any) => ({
+              mes: mesParaNumero[row.mes] || 0,
               especie: row.nome_popular || 'Não identificado',
-              quantidade: row.quantidade_resgates || 0
-            }))
+              quantidade: Number(row.quantidade_resgates) || 0
+            })).filter((e: any) => e.mes > 0)
           };
         }
         return { ano, especies: [] };
       });
-
-      const especiesResults = await Promise.all(especiesMensaisPromises);
 
       // Agrupar dados por ano
       anosHistoricos.forEach(ano => {
