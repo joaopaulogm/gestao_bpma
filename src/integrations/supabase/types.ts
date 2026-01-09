@@ -2350,6 +2350,71 @@ export type Database = {
           },
         ]
       }
+      fat_resgates_diarios_2025_especies: {
+        Row: {
+          classe_taxonomica: string | null
+          criado_em: string | null
+          data_ocorrencia: string | null
+          especie_id: string | null
+          estado_de_conservacao: string | null
+          id: string
+          mes: string | null
+          nome_cientifico: string | null
+          nome_popular: string | null
+          ordem_taxonomica: string | null
+          quantidade_feridos: number | null
+          quantidade_filhotes: number | null
+          quantidade_obitos: number | null
+          quantidade_resgates: number | null
+          quantidade_solturas: number | null
+          tipo_de_fauna: string | null
+        }
+        Insert: {
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          especie_id?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          mes?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Update: {
+          classe_taxonomica?: string | null
+          criado_em?: string | null
+          data_ocorrencia?: string | null
+          especie_id?: string | null
+          estado_de_conservacao?: string | null
+          id?: string
+          mes?: string | null
+          nome_cientifico?: string | null
+          nome_popular?: string | null
+          ordem_taxonomica?: string | null
+          quantidade_feridos?: number | null
+          quantidade_filhotes?: number | null
+          quantidade_obitos?: number | null
+          quantidade_resgates?: number | null
+          quantidade_solturas?: number | null
+          tipo_de_fauna?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_resgates_diarios_2025_especies_especie_id_fkey"
+            columns: ["especie_id"]
+            isOneToOne: false
+            referencedRelation: "dim_especies_fauna"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fat_restricoes: {
         Row: {
           ano: number
