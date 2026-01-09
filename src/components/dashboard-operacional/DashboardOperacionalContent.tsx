@@ -8,6 +8,7 @@ import DashboardOperacionalKPIs from './DashboardOperacionalKPIs';
 import DashboardOperacionalCharts from './DashboardOperacionalCharts';
 import DashboardOperacionalRankings from './DashboardOperacionalRankings';
 import DashboardOperacionalIndicadores, { IndicadoresData } from './DashboardOperacionalIndicadores';
+import DashboardOperacionalOrdemPorClasse, { ClasseOrdemData } from './DashboardOperacionalOrdemPorClasse';
 
 interface DashboardOperacionalContentProps {
   year: number;
@@ -358,6 +359,101 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     staleTime: 5 * 60 * 1000
   });
 
+  // Buscar distribuição por ordem para cada classe
+  const { data: ordemPorClasseData, isLoading: loadingOrdem } = useQuery({
+    queryKey: ['dashboard-operacional-ordem-classe', year],
+    queryFn: async (): Promise<ClasseOrdemData[]> => {
+      // Usar dados da tabela histórica consolidada para 2020-2024
+      if (isHistorico && year <= 2024) {
+        const { data, error } = await supabase
+          .from('fat_resgates_diarios_2020a2024')
+          .select('classe_taxonomica, ordem_taxonomica, quantidade_resgates')
+          .eq('Ano', year);
+
+        if (error || !data) return [];
+
+        // Agrupar por classe e ordem
+        const classeOrdemMap: Record<string, Record<string, number>> = {};
+        const classeTotals: Record<string, number> = {};
+        
+        data.forEach((row: any) => {
+          const classe = row.classe_taxonomica;
+          const ordem = row.ordem_taxonomica;
+          if (!classe || !ordem) return;
+          
+          if (!classeOrdemMap[classe]) {
+            classeOrdemMap[classe] = {};
+            classeTotals[classe] = 0;
+          }
+          
+          const qtd = row.quantidade_resgates || 0;
+          classeOrdemMap[classe][ordem] = (classeOrdemMap[classe][ordem] || 0) + qtd;
+          classeTotals[classe] += qtd;
+        });
+
+        return Object.entries(classeOrdemMap)
+          .map(([classe, ordens]) => {
+            const total = classeTotals[classe];
+            const ordensArray = Object.entries(ordens)
+              .map(([ordem, quantidade]) => ({
+                ordem,
+                quantidade,
+                percentual: total > 0 ? (quantidade / total) * 100 : 0
+              }))
+              .sort((a, b) => b.quantidade - a.quantidade);
+            
+            return { classe, ordens: ordensArray, total };
+          })
+          .sort((a, b) => b.total - a.total);
+      }
+      
+      // Para 2025, usar fat_resgates_diarios_2025_especies
+      if (year === 2025) {
+        const { data, error } = await supabase
+          .from('fat_resgates_diarios_2025_especies')
+          .select('classe_taxonomica, ordem_taxonomica, quantidade_resgates');
+
+        if (error || !data) return [];
+
+        const classeOrdemMap: Record<string, Record<string, number>> = {};
+        const classeTotals: Record<string, number> = {};
+        
+        data.forEach((row: any) => {
+          const classe = row.classe_taxonomica;
+          const ordem = row.ordem_taxonomica || 'Não informado';
+          if (!classe) return;
+          
+          if (!classeOrdemMap[classe]) {
+            classeOrdemMap[classe] = {};
+            classeTotals[classe] = 0;
+          }
+          
+          const qtd = row.quantidade_resgates || 0;
+          classeOrdemMap[classe][ordem] = (classeOrdemMap[classe][ordem] || 0) + qtd;
+          classeTotals[classe] += qtd;
+        });
+
+        return Object.entries(classeOrdemMap)
+          .map(([classe, ordens]) => {
+            const total = classeTotals[classe];
+            const ordensArray = Object.entries(ordens)
+              .map(([ordem, quantidade]) => ({
+                ordem,
+                quantidade,
+                percentual: total > 0 ? (quantidade / total) * 100 : 0
+              }))
+              .sort((a, b) => b.quantidade - a.quantidade);
+            
+            return { classe, ordens: ordensArray, total };
+          })
+          .sort((a, b) => b.total - a.total);
+      }
+      
+      return [];
+    },
+    staleTime: 5 * 60 * 1000
+  });
+
   if (errorKPIs) {
     return (
       <Alert variant="destructive">
@@ -369,7 +465,7 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     );
   }
 
-  const isLoading = loadingKPIs || loadingMonthly || loadingClasse || loadingEspecies || loadingIndicadores;
+  const isLoading = loadingKPIs || loadingMonthly || loadingClasse || loadingEspecies || loadingIndicadores || loadingOrdem;
 
   if (isLoading) {
     return (
@@ -388,6 +484,9 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
 
   // Verificar se há indicadores operacionais disponíveis
   const hasIndicadores = indicadoresData && indicadoresData.atendimentosRegistrados > 0;
+  
+  // Verificar se há dados de distribuição por ordem
+  const hasOrdemData = ordemPorClasseData && ordemPorClasseData.length > 0;
 
   return (
     <div className="space-y-8">
@@ -409,6 +508,14 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
         year={year}
         isHistorico={isHistorico}
       />
+      
+      {/* Distribuição por Ordem para cada Classe */}
+      {hasOrdemData && (
+        <DashboardOperacionalOrdemPorClasse
+          data={ordemPorClasseData!}
+          year={year}
+        />
+      )}
       
       {/* Rankings de Espécies */}
       <DashboardOperacionalRankings
