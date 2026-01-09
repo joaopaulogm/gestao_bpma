@@ -1292,6 +1292,8 @@ export type Database = {
           mes_fim: number | null
           mes_inicio: number
           observacao: string | null
+          source_row_number: number | null
+          source_sheet: string | null
           tipo: string | null
           updated_at: string | null
         }
@@ -1304,6 +1306,8 @@ export type Database = {
           mes_fim?: number | null
           mes_inicio: number
           observacao?: string | null
+          source_row_number?: number | null
+          source_sheet?: string | null
           tipo?: string | null
           updated_at?: string | null
         }
@@ -1316,6 +1320,8 @@ export type Database = {
           mes_fim?: number | null
           mes_inicio?: number
           observacao?: string | null
+          source_row_number?: number | null
+          source_sheet?: string | null
           tipo?: string | null
           updated_at?: string | null
         }
