@@ -57,19 +57,20 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     queryKey: ['dashboard-operacional-kpis', year],
     queryFn: async (): Promise<YearKPIs> => {
       if (isHistorico) {
-        // Buscar dados históricos via view
-        const { data, error } = await supabase
-          .from(`fat_resgates_diarios_${year}` as any)
-          .select('quantidade_resgates, quantidade_solturas, quantidade_obitos, quantidade_feridos, quantidade_filhotes');
+        // Para anos históricos, usar a tabela de resumo mensal oficial
+        const { data: resumoData, error: resumoError } = await supabase
+          .from('fact_resumo_mensal_historico')
+          .select('resgates, solturas, obitos, feridos, filhotes')
+          .eq('ano', year);
         
-        if (error) throw error;
+        if (resumoError) throw resumoError;
 
-        const totals = (data || []).reduce((acc, row: any) => ({
-          resgates: acc.resgates + (row.quantidade_resgates || 0),
-          solturas: acc.solturas + (row.quantidade_solturas || 0),
-          obitos: acc.obitos + (row.quantidade_obitos || 0),
-          feridos: acc.feridos + (row.quantidade_feridos || 0),
-          filhotes: acc.filhotes + (row.quantidade_filhotes || 0)
+        const totals = (resumoData || []).reduce((acc, row) => ({
+          resgates: acc.resgates + (row.resgates || 0),
+          solturas: acc.solturas + (row.solturas || 0),
+          obitos: acc.obitos + (row.obitos || 0),
+          feridos: acc.feridos + (row.feridos || 0),
+          filhotes: acc.filhotes + (row.filhotes || 0)
         }), { resgates: 0, solturas: 0, obitos: 0, feridos: 0, filhotes: 0 });
 
         return {
@@ -189,11 +190,12 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     staleTime: 5 * 60 * 1000
   });
 
-  // Buscar distribuição por classe
+  // Buscar distribuição por classe (apenas para 2020-2024 que têm dados detalhados)
   const { data: classeData, isLoading: loadingClasse } = useQuery({
     queryKey: ['dashboard-operacional-classe', year],
     queryFn: async (): Promise<ClasseDistribuicao[]> => {
-      if (isHistorico) {
+      // Apenas anos 2020-2024 têm dados de classe nas tabelas fat_resgates_diarios_YYYY
+      if (isHistorico && year <= 2024) {
         const { data, error } = await supabase
           .from(`fat_resgates_diarios_${year}` as any)
           .select('classe_taxonomica, quantidade_resgates');
@@ -221,11 +223,12 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     staleTime: 5 * 60 * 1000
   });
 
-  // Buscar ranking de espécies
+  // Buscar ranking de espécies (apenas para 2020-2024 que têm dados detalhados)
   const { data: especiesRanking, isLoading: loadingEspecies } = useQuery({
     queryKey: ['dashboard-operacional-especies', year],
     queryFn: async (): Promise<EspecieRanking[]> => {
-      if (isHistorico) {
+      // Apenas anos 2020-2024 têm dados de espécie nas tabelas fat_resgates_diarios_YYYY
+      if (isHistorico && year <= 2024) {
         const { data, error } = await supabase
           .from(`fat_resgates_diarios_${year}` as any)
           .select('nome_popular, quantidade_resgates');
