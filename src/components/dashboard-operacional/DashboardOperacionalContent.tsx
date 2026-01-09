@@ -359,99 +359,100 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     staleTime: 5 * 60 * 1000
   });
 
+  // Buscar todas as espécies da dim para lookup de ordem
+  const { data: especiesDim } = useQuery({
+    queryKey: ['dim-especies-fauna-lookup'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('dim_especies_fauna')
+        .select('nome_cientifico, ordem_taxonomica, classe_taxonomica');
+      
+      if (error) return {};
+      
+      // Criar mapa de nome_cientifico -> ordem_taxonomica
+      const map: Record<string, { ordem: string; classe: string }> = {};
+      (data || []).forEach(row => {
+        if (row.nome_cientifico) {
+          const key = row.nome_cientifico.trim().toLowerCase();
+          map[key] = {
+            ordem: row.ordem_taxonomica || 'Não classificado',
+            classe: row.classe_taxonomica || 'Não classificado'
+          };
+        }
+      });
+      return map;
+    },
+    staleTime: 30 * 60 * 1000 // Cache por 30 minutos
+  });
+
   // Buscar distribuição por ordem para cada classe
   const { data: ordemPorClasseData, isLoading: loadingOrdem } = useQuery({
-    queryKey: ['dashboard-operacional-ordem-classe', year],
+    queryKey: ['dashboard-operacional-ordem-classe', year, especiesDim],
     queryFn: async (): Promise<ClasseOrdemData[]> => {
-      // Usar dados da tabela histórica consolidada para 2020-2024
+      if (!especiesDim) return [];
+      
+      // Buscar dados de resgates do ano com nome científico
+      let resgatesData: any[] = [];
+      
       if (isHistorico && year <= 2024) {
         const { data, error } = await supabase
           .from('fat_resgates_diarios_2020a2024')
-          .select('classe_taxonomica, ordem_taxonomica, quantidade_resgates')
+          .select('nome_cientifico, quantidade_resgates')
           .eq('Ano', year);
-
-        if (error || !data) return [];
-
-        // Agrupar por classe e ordem
-        const classeOrdemMap: Record<string, Record<string, number>> = {};
-        const classeTotals: Record<string, number> = {};
         
-        data.forEach((row: any) => {
-          const classe = row.classe_taxonomica;
-          const ordem = row.ordem_taxonomica;
-          if (!classe || !ordem) return;
-          
-          if (!classeOrdemMap[classe]) {
-            classeOrdemMap[classe] = {};
-            classeTotals[classe] = 0;
-          }
-          
-          const qtd = row.quantidade_resgates || 0;
-          classeOrdemMap[classe][ordem] = (classeOrdemMap[classe][ordem] || 0) + qtd;
-          classeTotals[classe] += qtd;
-        });
-
-        return Object.entries(classeOrdemMap)
-          .map(([classe, ordens]) => {
-            const total = classeTotals[classe];
-            const ordensArray = Object.entries(ordens)
-              .map(([ordem, quantidade]) => ({
-                ordem,
-                quantidade,
-                percentual: total > 0 ? (quantidade / total) * 100 : 0
-              }))
-              .sort((a, b) => b.quantidade - a.quantidade);
-            
-            return { classe, ordens: ordensArray, total };
-          })
-          .sort((a, b) => b.total - a.total);
-      }
-      
-      // Para 2025, usar fat_resgates_diarios_2025_especies
-      if (year === 2025) {
+        if (!error && data) resgatesData = data;
+      } else if (year === 2025) {
         const { data, error } = await supabase
           .from('fat_resgates_diarios_2025_especies')
-          .select('classe_taxonomica, ordem_taxonomica, quantidade_resgates');
-
-        if (error || !data) return [];
-
-        const classeOrdemMap: Record<string, Record<string, number>> = {};
-        const classeTotals: Record<string, number> = {};
+          .select('nome_cientifico, quantidade_resgates');
         
-        data.forEach((row: any) => {
-          const classe = row.classe_taxonomica;
-          const ordem = row.ordem_taxonomica || 'Não informado';
-          if (!classe) return;
-          
-          if (!classeOrdemMap[classe]) {
-            classeOrdemMap[classe] = {};
-            classeTotals[classe] = 0;
-          }
-          
-          const qtd = row.quantidade_resgates || 0;
-          classeOrdemMap[classe][ordem] = (classeOrdemMap[classe][ordem] || 0) + qtd;
-          classeTotals[classe] += qtd;
-        });
-
-        return Object.entries(classeOrdemMap)
-          .map(([classe, ordens]) => {
-            const total = classeTotals[classe];
-            const ordensArray = Object.entries(ordens)
-              .map(([ordem, quantidade]) => ({
-                ordem,
-                quantidade,
-                percentual: total > 0 ? (quantidade / total) * 100 : 0
-              }))
-              .sort((a, b) => b.quantidade - a.quantidade);
-            
-            return { classe, ordens: ordensArray, total };
-          })
-          .sort((a, b) => b.total - a.total);
+        if (!error && data) resgatesData = data;
       }
+
+      if (resgatesData.length === 0) return [];
+
+      // Agrupar por classe e ordem usando dim_especies_fauna
+      const classeOrdemMap: Record<string, Record<string, number>> = {};
+      const classeTotals: Record<string, number> = {};
       
-      return [];
+      resgatesData.forEach((row: any) => {
+        const nomeCientifico = row.nome_cientifico?.trim().toLowerCase();
+        const qtd = row.quantidade_resgates || 0;
+        
+        if (!nomeCientifico || qtd === 0) return;
+        
+        // Buscar ordem e classe na dim_especies_fauna
+        const especieInfo = especiesDim[nomeCientifico];
+        const classe = especieInfo?.classe || 'Não classificado';
+        const ordem = especieInfo?.ordem || 'Não classificado';
+        
+        if (!classeOrdemMap[classe]) {
+          classeOrdemMap[classe] = {};
+          classeTotals[classe] = 0;
+        }
+        
+        classeOrdemMap[classe][ordem] = (classeOrdemMap[classe][ordem] || 0) + qtd;
+        classeTotals[classe] += qtd;
+      });
+
+      return Object.entries(classeOrdemMap)
+        .filter(([classe]) => classe !== 'Não classificado')
+        .map(([classe, ordens]) => {
+          const total = classeTotals[classe];
+          const ordensArray = Object.entries(ordens)
+            .map(([ordem, quantidade]) => ({
+              ordem,
+              quantidade,
+              percentual: total > 0 ? (quantidade / total) * 100 : 0
+            }))
+            .sort((a, b) => b.quantidade - a.quantidade);
+          
+          return { classe, ordens: ordensArray, total };
+        })
+        .sort((a, b) => b.total - a.total);
     },
-    staleTime: 5 * 60 * 1000
+    staleTime: 5 * 60 * 1000,
+    enabled: !!especiesDim
   });
 
   if (errorKPIs) {
