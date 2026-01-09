@@ -675,6 +675,45 @@ export type Database = {
           },
         ]
       }
+      fact_recordes_apreensao: {
+        Row: {
+          ano: number
+          created_at: string | null
+          data_ocorrencia: string
+          descricao: string | null
+          especie_nome_cientifico: string | null
+          especie_nome_popular: string
+          id: string
+          mes: number
+          quantidade: number
+          tipo_crime: string | null
+        }
+        Insert: {
+          ano: number
+          created_at?: string | null
+          data_ocorrencia: string
+          descricao?: string | null
+          especie_nome_cientifico?: string | null
+          especie_nome_popular: string
+          id?: string
+          mes: number
+          quantidade: number
+          tipo_crime?: string | null
+        }
+        Update: {
+          ano?: number
+          created_at?: string | null
+          data_ocorrencia?: string
+          descricao?: string | null
+          especie_nome_cientifico?: string | null
+          especie_nome_popular?: string
+          id?: string
+          mes?: number
+          quantidade?: number
+          tipo_crime?: string | null
+        }
+        Relationships: []
+      }
       fact_resgate_fauna_especie_mensal: {
         Row: {
           id: string

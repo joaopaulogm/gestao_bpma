@@ -10,6 +10,7 @@ import DashboardOperacionalRankings from './DashboardOperacionalRankings';
 import DashboardOperacionalIndicadores, { IndicadoresData } from './DashboardOperacionalIndicadores';
 import DashboardOperacionalOrdemPorClasse, { ClasseOrdemData } from './DashboardOperacionalOrdemPorClasse';
 import DashboardOperacionalSazonalidade, { SazonalidadeHistorico, SazonalidadeData } from './DashboardOperacionalSazonalidade';
+import DashboardOperacionalRecordes, { RecordeApreensao } from './DashboardOperacionalRecordes';
 
 interface DashboardOperacionalContentProps {
   year: number;
@@ -543,6 +544,25 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     staleTime: 10 * 60 * 1000
   });
 
+  // Buscar recordes de apreensão
+  const { data: recordesApreensao, isLoading: loadingRecordes } = useQuery({
+    queryKey: ['dashboard-operacional-recordes'],
+    queryFn: async (): Promise<RecordeApreensao[]> => {
+      const { data, error } = await supabase
+        .from('fact_recordes_apreensao')
+        .select('*')
+        .order('quantidade', { ascending: false });
+      
+      if (error) {
+        console.error('Erro ao buscar recordes:', error);
+        return [];
+      }
+      
+      return data || [];
+    },
+    staleTime: 10 * 60 * 1000
+  });
+
   if (errorKPIs) {
     return (
       <Alert variant="destructive">
@@ -554,7 +574,7 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     );
   }
 
-  const isLoading = loadingKPIs || loadingMonthly || loadingClasse || loadingEspecies || loadingIndicadores || loadingOrdem || loadingSazonalidade;
+  const isLoading = loadingKPIs || loadingMonthly || loadingClasse || loadingEspecies || loadingIndicadores || loadingOrdem || loadingSazonalidade || loadingRecordes;
 
   if (isLoading) {
     return (
@@ -580,11 +600,19 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
   // Verificar se há dados de sazonalidade
   const hasSazonalidadeData = sazonalidadeData && sazonalidadeData.anos.length > 0;
 
+  // Verificar se há recordes de apreensão
+  const hasRecordes = recordesApreensao && recordesApreensao.length > 0;
+
   return (
     <div className="space-y-8">
       {/* Indicadores Operacionais (se disponíveis) */}
       {hasIndicadores && (
         <DashboardOperacionalIndicadores data={indicadoresData!} year={year} />
+      )}
+      
+      {/* Recordes de Apreensão */}
+      {hasRecordes && (
+        <DashboardOperacionalRecordes recordes={recordesApreensao!} year={year} />
       )}
       
       {/* KPIs de Fauna */}
