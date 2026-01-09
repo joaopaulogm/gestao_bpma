@@ -7,6 +7,7 @@ import { AlertCircle } from 'lucide-react';
 import DashboardOperacionalKPIs from './DashboardOperacionalKPIs';
 import DashboardOperacionalCharts from './DashboardOperacionalCharts';
 import DashboardOperacionalRankings from './DashboardOperacionalRankings';
+import DashboardOperacionalIndicadores, { IndicadoresData } from './DashboardOperacionalIndicadores';
 
 interface DashboardOperacionalContentProps {
   year: number;
@@ -51,6 +52,65 @@ const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'O
 
 const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = ({ year }) => {
   const isHistorico = year <= 2025;
+
+  // Buscar indicadores operacionais de fact_indicador_mensal_bpma
+  const { data: indicadoresData, isLoading: loadingIndicadores } = useQuery({
+    queryKey: ['dashboard-operacional-indicadores', year],
+    queryFn: async (): Promise<IndicadoresData> => {
+      // Primeiro, buscar os tempo_ids do ano
+      const { data: tempoData, error: tempoError } = await supabase
+        .from('dim_tempo')
+        .select('id')
+        .eq('ano', year);
+
+      if (tempoError || !tempoData?.length) {
+        console.error('Erro ao buscar tempo:', tempoError);
+        return getEmptyIndicadores();
+      }
+
+      const tempoIds = tempoData.map(t => t.id);
+
+      // Buscar indicadores filtrados pelos tempo_ids
+      const { data, error } = await supabase
+        .from('fact_indicador_mensal_bpma')
+        .select('indicador_id, valor')
+        .in('tempo_id', tempoIds);
+
+      if (error) {
+        console.error('Erro ao buscar indicadores:', error);
+        return getEmptyIndicadores();
+      }
+
+      // Agregar por indicador
+      const aggregated: Record<string, number> = {};
+      (data || []).forEach((row: any) => {
+        const id = row.indicador_id;
+        aggregated[id] = (aggregated[id] || 0) + (row.valor || 0);
+      });
+
+      return {
+        atendimentosRegistrados: aggregated['atendimentos_registrados'] || 0,
+        tcoPMDF: aggregated['termos_circunstanciados_de_ocorrencia_pmdf'] || 0,
+        tcoOutras: aggregated['termos_circunstanciados_outras'] || 0,
+        emApuracao: aggregated['em_apuracao'] || 0,
+        flagrantes: aggregated['flagrantes'] || 0,
+        paai: aggregated['paai'] || 0,
+        apreensaoArma: aggregated['apreensao_de_arma_de_fogo_eou_municao'] || 0,
+        crimesContraFauna: aggregated['crimes_contra_a_fauna'] || 0,
+        crimesContraFlora: aggregated['crimes_contra_a_flora'] || 0,
+        outrosCrimesAmbientais: aggregated['outros_crimes_ambientais'] || 0,
+        corteArvores: aggregated['corte_de_arvores'] || 0,
+        crimeAPP: aggregated['crime_contra_as_areas_de_protecao_permanente'] || 0,
+        crimeUC: aggregated['crimes_contra_as_unidades_de_conservacao'] || 0,
+        crimeLicenciamento: aggregated['crime_contra_o_licenciamento_ambiental'] || 0,
+        crimeRecursosHidricos: aggregated['crime_contra_os_recursos_hidricos'] || 0,
+        crimeRecursosPesqueiros: aggregated['crime_contra_os_recursos_pesqueiros'] || 0,
+        crimeAdmAmbiental: aggregated['crimes_contra_a_administracao_ambiental'] || 0,
+        parcelamentoIrregular: aggregated['parcelamento_irregular_do_solo'] || 0,
+      };
+    },
+    staleTime: 5 * 60 * 1000
+  });
 
   // Buscar KPIs do ano
   const { data: kpis, isLoading: loadingKPIs, error: errorKPIs } = useQuery({
@@ -190,11 +250,11 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     staleTime: 5 * 60 * 1000
   });
 
-  // Buscar distribuição por classe (apenas para 2020-2024 que têm dados detalhados)
+  // Buscar distribuição por classe
   const { data: classeData, isLoading: loadingClasse } = useQuery({
     queryKey: ['dashboard-operacional-classe', year],
     queryFn: async (): Promise<ClasseDistribuicao[]> => {
-      // Apenas anos 2020-2024 têm dados de classe nas tabelas fat_resgates_diarios_YYYY
+      // Anos 2020-2024 têm dados de classe nas tabelas fat_resgates_diarios_YYYY
       if (isHistorico && year <= 2024) {
         const { data, error } = await supabase
           .from(`fat_resgates_diarios_${year}` as any)
@@ -218,16 +278,42 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
           }))
           .sort((a, b) => b.quantidade - a.quantidade);
       }
+      
+      // 2025 usa fat_resgates_diarios_2025_especies
+      if (year === 2025) {
+        const { data, error } = await supabase
+          .from('fat_resgates_diarios_2025_especies')
+          .select('classe_taxonomica, quantidade_resgates');
+
+        if (error) return [];
+
+        const byClasse: Record<string, number> = {};
+        let total = 0;
+        (data || []).forEach((row: any) => {
+          const classe = row.classe_taxonomica || 'Não informado';
+          byClasse[classe] = (byClasse[classe] || 0) + (row.quantidade_resgates || 0);
+          total += row.quantidade_resgates || 0;
+        });
+
+        return Object.entries(byClasse)
+          .map(([classe, quantidade]) => ({
+            classe,
+            quantidade,
+            percentual: total > 0 ? (quantidade / total) * 100 : 0
+          }))
+          .sort((a, b) => b.quantidade - a.quantidade);
+      }
+      
       return [];
     },
     staleTime: 5 * 60 * 1000
   });
 
-  // Buscar ranking de espécies (apenas para 2020-2024 que têm dados detalhados)
+  // Buscar ranking de espécies
   const { data: especiesRanking, isLoading: loadingEspecies } = useQuery({
     queryKey: ['dashboard-operacional-especies', year],
     queryFn: async (): Promise<EspecieRanking[]> => {
-      // Apenas anos 2020-2024 têm dados de espécie nas tabelas fat_resgates_diarios_YYYY
+      // Anos 2020-2024 têm dados de espécie nas tabelas fat_resgates_diarios_YYYY
       if (isHistorico && year <= 2024) {
         const { data, error } = await supabase
           .from(`fat_resgates_diarios_${year}` as any)
@@ -246,6 +332,27 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
           .sort((a, b) => b.quantidade - a.quantidade)
           .slice(0, 15);
       }
+      
+      // 2025 usa fat_resgates_diarios_2025_especies
+      if (year === 2025) {
+        const { data, error } = await supabase
+          .from('fat_resgates_diarios_2025_especies')
+          .select('nome_popular, quantidade_resgates');
+
+        if (error) return [];
+
+        const byEspecie: Record<string, number> = {};
+        (data || []).forEach((row: any) => {
+          const nome = row.nome_popular || 'Não identificado';
+          byEspecie[nome] = (byEspecie[nome] || 0) + (row.quantidade_resgates || 0);
+        });
+
+        return Object.entries(byEspecie)
+          .map(([nome, quantidade]) => ({ nome, quantidade }))
+          .sort((a, b) => b.quantidade - a.quantidade)
+          .slice(0, 15);
+      }
+      
       return [];
     },
     staleTime: 5 * 60 * 1000
@@ -262,13 +369,13 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     );
   }
 
-  const isLoading = loadingKPIs || loadingMonthly || loadingClasse || loadingEspecies;
+  const isLoading = loadingKPIs || loadingMonthly || loadingClasse || loadingEspecies || loadingIndicadores;
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28" />)}
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} className="h-24" />)}
         </div>
         <Skeleton className="h-80" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -279,15 +386,31 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     );
   }
 
+  // Verificar se há indicadores operacionais disponíveis
+  const hasIndicadores = indicadoresData && indicadoresData.atendimentosRegistrados > 0;
+
   return (
-    <div className="space-y-6">
-      <DashboardOperacionalKPIs kpis={kpis!} year={year} />
+    <div className="space-y-8">
+      {/* Indicadores Operacionais (se disponíveis) */}
+      {hasIndicadores && (
+        <DashboardOperacionalIndicadores data={indicadoresData!} year={year} />
+      )}
+      
+      {/* KPIs de Fauna */}
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold">Resgate de Fauna Silvestre - {year}</h3>
+        <DashboardOperacionalKPIs kpis={kpis!} year={year} />
+      </div>
+      
+      {/* Gráficos de Fauna */}
       <DashboardOperacionalCharts
         monthlyData={monthlyData || []}
         classeData={classeData || []}
         year={year}
         isHistorico={isHistorico}
       />
+      
+      {/* Rankings de Espécies */}
       <DashboardOperacionalRankings
         especiesRanking={especiesRanking || []}
         year={year}
@@ -296,5 +419,28 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     </div>
   );
 };
+
+function getEmptyIndicadores(): IndicadoresData {
+  return {
+    atendimentosRegistrados: 0,
+    tcoPMDF: 0,
+    tcoOutras: 0,
+    emApuracao: 0,
+    flagrantes: 0,
+    paai: 0,
+    apreensaoArma: 0,
+    crimesContraFauna: 0,
+    crimesContraFlora: 0,
+    outrosCrimesAmbientais: 0,
+    corteArvores: 0,
+    crimeAPP: 0,
+    crimeUC: 0,
+    crimeLicenciamento: 0,
+    crimeRecursosHidricos: 0,
+    crimeRecursosPesqueiros: 0,
+    crimeAdmAmbiental: 0,
+    parcelamentoIrregular: 0,
+  };
+}
 
 export default DashboardOperacionalContent;
