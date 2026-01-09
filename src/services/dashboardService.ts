@@ -425,18 +425,48 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
       todosRegistros = dadosPorEspecie.length > 0 ? dadosPorEspecie : dadosAgregados;
       console.log(`✅ [Dashboard] Total de registros para ${ano}:`, todosRegistros.length);
     }
-    // Para 2025, usar fat_resgates_diarios_2025 e fat_registros_de_resgate
+    // Para 2025, usar fat_resgates_diarios_2025_especies (dados históricos) e fat_registros_de_resgate (novos registros)
     else if (ano === 2025) {
       console.log(`📊 [Dashboard] Buscando dados de 2025...`);
-      const { data: data2025, error: error2025 } = await fetchDataWithoutJoins('fat_resgates_diarios_2025', filters);
-      const { data: dataRegistros, error: errorRegistros } = await fetchDataWithoutJoins('fat_registros_de_resgate', filters);
       
-      if (!error2025 && data2025) {
-        todosRegistros = [...todosRegistros, ...data2025];
+      // Buscar dados por espécie (importados da planilha)
+      const { data: dataEspecies, error: errorEspecies } = await fetchDataWithoutJoins('fat_resgates_diarios_2025_especies', filters);
+      
+      if (!errorEspecies && dataEspecies) {
+        const especiesNormalizadas = dataEspecies.map((h: any) => ({
+          id: h.id,
+          data: h.data_ocorrencia,
+          quantidade: h.quantidade_resgates || 0,
+          quantidade_total: h.quantidade_resgates || 0,
+          quantidade_adulto: 0,
+          quantidade_filhote: h.quantidade_filhotes || 0,
+          quantidade_soltura: h.quantidade_solturas || 0,
+          quantidade_obito: h.quantidade_obitos || 0,
+          quantidade_ferido: h.quantidade_feridos || 0,
+          atropelamento: null,
+          regiao_administrativa: null,
+          origem: { nome: 'Resgate de Fauna' },
+          destinacao: null,
+          estado_saude: null,
+          estagio_vida: null,
+          desfecho: null,
+          especie: {
+            nome_popular: h.nome_popular || '',
+            nome_cientifico: h.nome_cientifico || '',
+            classe_taxonomica: h.classe_taxonomica || '',
+            tipo_de_fauna: h.tipo_de_fauna || ''
+          },
+          tipo_registro: 'historico'
+        }));
+        todosRegistros = [...todosRegistros, ...especiesNormalizadas];
       }
+      
+      // Também buscar novos registros cadastrados
+      const { data: dataRegistros, error: errorRegistros } = await fetchDataWithoutJoins('fat_registros_de_resgate', filters);
       if (!errorRegistros && dataRegistros) {
         todosRegistros = [...todosRegistros, ...dataRegistros];
       }
+      
       console.log(`✅ [Dashboard] Dados carregados para 2025:`, todosRegistros.length, 'registros');
     }
     // Para 2026+, usar fat_registros_de_resgate
