@@ -1329,6 +1329,62 @@ export type Database = {
           },
         ]
       }
+      fat_ferias_parcelas: {
+        Row: {
+          data_fim: string | null
+          data_inicio: string | null
+          dias: number | null
+          fat_ferias_id: string
+          id: string
+          lancado_campanha: boolean | null
+          lancado_livro: boolean | null
+          lancado_sgpol: boolean | null
+          mes: string | null
+          parcela_num: number
+          source_row_number: number | null
+          source_sheet: string | null
+          updated_at: string
+        }
+        Insert: {
+          data_fim?: string | null
+          data_inicio?: string | null
+          dias?: number | null
+          fat_ferias_id: string
+          id?: string
+          lancado_campanha?: boolean | null
+          lancado_livro?: boolean | null
+          lancado_sgpol?: boolean | null
+          mes?: string | null
+          parcela_num: number
+          source_row_number?: number | null
+          source_sheet?: string | null
+          updated_at?: string
+        }
+        Update: {
+          data_fim?: string | null
+          data_inicio?: string | null
+          dias?: number | null
+          fat_ferias_id?: string
+          id?: string
+          lancado_campanha?: boolean | null
+          lancado_livro?: boolean | null
+          lancado_sgpol?: boolean | null
+          mes?: string | null
+          parcela_num?: number
+          source_row_number?: number | null
+          source_sheet?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_ferias_parcelas_fat_ferias_id_fkey"
+            columns: ["fat_ferias_id"]
+            isOneToOne: false
+            referencedRelation: "fat_ferias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fat_licencas_medicas: {
         Row: {
           ano: number
@@ -2522,6 +2578,129 @@ export type Database = {
           mensagem?: string | null
           status?: string | null
           tipo?: string | null
+        }
+        Relationships: []
+      }
+      stg_ferias_2026_pracas: {
+        Row: {
+          ano_gozo: number | null
+          ano_referencia: number | null
+          cod_grad: number | null
+          loaded_at: string
+          matricula: string | null
+          mes_previsto: string | null
+          mes_reprogramado: string | null
+          nome_completo: string | null
+          p1_campanha: boolean | null
+          p1_dias: number | null
+          p1_fim: string | null
+          p1_inicio: string | null
+          p1_livro: boolean | null
+          p1_mes_num: number | null
+          p1_sgpol: boolean | null
+          p2_campanha: boolean | null
+          p2_dias: number | null
+          p2_fim: string | null
+          p2_inicio: string | null
+          p2_livro: boolean | null
+          p2_mes_num: number | null
+          p2_sgpol: boolean | null
+          p3_campanha: boolean | null
+          p3_dias: number | null
+          p3_fim: string | null
+          p3_inicio: string | null
+          p3_livro: boolean | null
+          p3_mes_num: number | null
+          p3_sgpol: boolean | null
+          parc1_mes: string | null
+          parc2_mes: string | null
+          parc3_mes: string | null
+          posto_graduacao: string | null
+          sei: string | null
+          source_row_number: number
+          source_sheet: string
+          total_dias: number | null
+          upm: string | null
+        }
+        Insert: {
+          ano_gozo?: number | null
+          ano_referencia?: number | null
+          cod_grad?: number | null
+          loaded_at?: string
+          matricula?: string | null
+          mes_previsto?: string | null
+          mes_reprogramado?: string | null
+          nome_completo?: string | null
+          p1_campanha?: boolean | null
+          p1_dias?: number | null
+          p1_fim?: string | null
+          p1_inicio?: string | null
+          p1_livro?: boolean | null
+          p1_mes_num?: number | null
+          p1_sgpol?: boolean | null
+          p2_campanha?: boolean | null
+          p2_dias?: number | null
+          p2_fim?: string | null
+          p2_inicio?: string | null
+          p2_livro?: boolean | null
+          p2_mes_num?: number | null
+          p2_sgpol?: boolean | null
+          p3_campanha?: boolean | null
+          p3_dias?: number | null
+          p3_fim?: string | null
+          p3_inicio?: string | null
+          p3_livro?: boolean | null
+          p3_mes_num?: number | null
+          p3_sgpol?: boolean | null
+          parc1_mes?: string | null
+          parc2_mes?: string | null
+          parc3_mes?: string | null
+          posto_graduacao?: string | null
+          sei?: string | null
+          source_row_number: number
+          source_sheet: string
+          total_dias?: number | null
+          upm?: string | null
+        }
+        Update: {
+          ano_gozo?: number | null
+          ano_referencia?: number | null
+          cod_grad?: number | null
+          loaded_at?: string
+          matricula?: string | null
+          mes_previsto?: string | null
+          mes_reprogramado?: string | null
+          nome_completo?: string | null
+          p1_campanha?: boolean | null
+          p1_dias?: number | null
+          p1_fim?: string | null
+          p1_inicio?: string | null
+          p1_livro?: boolean | null
+          p1_mes_num?: number | null
+          p1_sgpol?: boolean | null
+          p2_campanha?: boolean | null
+          p2_dias?: number | null
+          p2_fim?: string | null
+          p2_inicio?: string | null
+          p2_livro?: boolean | null
+          p2_mes_num?: number | null
+          p2_sgpol?: boolean | null
+          p3_campanha?: boolean | null
+          p3_dias?: number | null
+          p3_fim?: string | null
+          p3_inicio?: string | null
+          p3_livro?: boolean | null
+          p3_mes_num?: number | null
+          p3_sgpol?: boolean | null
+          parc1_mes?: string | null
+          parc2_mes?: string | null
+          parc3_mes?: string | null
+          posto_graduacao?: string | null
+          sei?: string | null
+          source_row_number?: number
+          source_sheet?: string
+          total_dias?: number | null
+          upm?: string | null
         }
         Relationships: []
       }
