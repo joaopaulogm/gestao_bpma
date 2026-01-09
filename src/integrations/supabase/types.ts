@@ -727,6 +727,45 @@ export type Database = {
           },
         ]
       }
+      fact_resumo_mensal_historico: {
+        Row: {
+          ano: number
+          atropelamentos: number
+          created_at: string | null
+          feridos: number
+          filhotes: number
+          id: string
+          mes: number
+          obitos: number
+          resgates: number
+          solturas: number
+        }
+        Insert: {
+          ano: number
+          atropelamentos?: number
+          created_at?: string | null
+          feridos?: number
+          filhotes?: number
+          id?: string
+          mes: number
+          obitos?: number
+          resgates?: number
+          solturas?: number
+        }
+        Update: {
+          ano?: number
+          atropelamentos?: number
+          created_at?: string | null
+          feridos?: number
+          filhotes?: number
+          id?: string
+          mes?: number
+          obitos?: number
+          resgates?: number
+          solturas?: number
+        }
+        Relationships: []
+      }
       fat_abono: {
         Row: {
           ano: number

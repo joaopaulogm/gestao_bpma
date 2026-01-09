@@ -33,6 +33,7 @@ export interface MonthlyData {
   resgates: number;
   solturas: number;
   obitos: number;
+  feridos: number;
 }
 
 export interface ClasseDistribuicao {
@@ -132,36 +133,34 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     staleTime: 5 * 60 * 1000
   });
 
-  // Buscar série mensal
+  // Buscar série mensal da tabela de resumo oficial
   const { data: monthlyData, isLoading: loadingMonthly } = useQuery({
     queryKey: ['dashboard-operacional-monthly', year],
     queryFn: async (): Promise<MonthlyData[]> => {
       if (isHistorico) {
+        // Usar tabela de resumo mensal com dados oficiais
         const { data, error } = await supabase
-          .from(`fat_resgates_diarios_${year}` as any)
-          .select('data_ocorrencia, quantidade_resgates, quantidade_solturas, quantidade_obitos');
+          .from('fact_resumo_mensal_historico')
+          .select('mes, resgates, solturas, obitos, feridos')
+          .eq('ano', year)
+          .order('mes');
 
-        if (error) {
-          console.warn('Erro ao buscar dados mensais:', error);
-          return MESES.map((mesNome, i) => ({ mes: i + 1, mesNome, resgates: 0, solturas: 0, obitos: 0 }));
+        if (error || !data || data.length === 0) {
+          console.warn('Erro ou dados não encontrados no resumo mensal:', error);
+          return MESES.map((mesNome, i) => ({ mes: i + 1, mesNome, resgates: 0, solturas: 0, obitos: 0, feridos: 0 }));
         }
 
-        const byMonth: Record<number, { resgates: number; solturas: number; obitos: number }> = {};
-        (data || []).forEach((row: any) => {
-          const month = new Date(row.data_ocorrencia).getMonth() + 1;
-          if (!byMonth[month]) byMonth[month] = { resgates: 0, solturas: 0, obitos: 0 };
-          byMonth[month].resgates += row.quantidade_resgates || 0;
-          byMonth[month].solturas += row.quantidade_solturas || 0;
-          byMonth[month].obitos += row.quantidade_obitos || 0;
+        return MESES.map((mesNome, i) => {
+          const row = data.find(d => d.mes === i + 1);
+          return {
+            mes: i + 1,
+            mesNome,
+            resgates: row?.resgates || 0,
+            solturas: row?.solturas || 0,
+            obitos: row?.obitos || 0,
+            feridos: row?.feridos || 0
+          };
         });
-
-        return MESES.map((mesNome, i) => ({
-          mes: i + 1,
-          mesNome,
-          resgates: byMonth[i + 1]?.resgates || 0,
-          solturas: byMonth[i + 1]?.solturas || 0,
-          obitos: byMonth[i + 1]?.obitos || 0
-        }));
       } else {
         const startDate = `${year}-01-01`;
         const endDate = `${year}-12-31`;
@@ -182,7 +181,8 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
           mesNome,
           resgates: byMonth[i + 1] || 0,
           solturas: 0,
-          obitos: 0
+          obitos: 0,
+          feridos: 0
         }));
       }
     },
