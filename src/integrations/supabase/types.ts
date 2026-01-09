@@ -2606,12 +2606,19 @@ export type Database = {
       }
     }
     Views: {
+      vw_anos_disponiveis: {
+        Row: {
+          ano: number | null
+          fonte: string | null
+          tem_crime_ambiental: boolean | null
+          tem_resgate: boolean | null
+        }
+        Relationships: []
+      }
       vw_distribuicao_classe_historico: {
         Row: {
           ano: number | null
           classe_taxonomica: string | null
-          registros: number | null
-          total_obitos: number | null
           total_resgates: number | null
           total_solturas: number | null
         }
@@ -2623,6 +2630,50 @@ export type Database = {
           especies_unicas: number | null
           estado_de_conservacao: string | null
           total_resgates: number | null
+        }
+        Relationships: []
+      }
+      vw_kpis_anuais_historico: {
+        Row: {
+          ano: number | null
+          riqueza_especies: number | null
+          taxa_mortalidade: number | null
+          taxa_soltura: number | null
+          total_animais_resgatados: number | null
+          total_feridos: number | null
+          total_filhotes: number | null
+          total_obitos: number | null
+          total_ocorrencias: number | null
+          total_solturas: number | null
+        }
+        Relationships: []
+      }
+      vw_ranking_especies_historico: {
+        Row: {
+          ano: number | null
+          classe_taxonomica: string | null
+          especie_id: string | null
+          nome_cientifico: string | null
+          nome_popular_norm: string | null
+          total_resgates: number | null
+        }
+        Relationships: []
+      }
+      vw_resgates_basicos_union: {
+        Row: {
+          ano: number | null
+          classe_taxonomica: string | null
+          data: string | null
+          especie_id: string | null
+          mes_texto: string | null
+          nome_cientifico: string | null
+          nome_popular_norm: string | null
+          nome_popular_raw: string | null
+          total_feridos: number | null
+          total_filhotes: number | null
+          total_obitos: number | null
+          total_resgates: number | null
+          total_solturas: number | null
         }
         Relationships: []
       }
@@ -2678,6 +2729,16 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_serie_mensal_historico: {
+        Row: {
+          ano: number | null
+          mes: number | null
+          total_obitos: number | null
+          total_resgates: number | null
+          total_solturas: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       exec_sql: { Args: { sql_query: string }; Returns: undefined }
@@ -2693,6 +2754,7 @@ export type Database = {
         | { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_allowed_user: { Args: { check_email: string }; Returns: boolean }
       make_slug: { Args: { txt: string }; Returns: string }
+      normalize_text: { Args: { input_text: string }; Returns: string }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       slugify: { Args: { input: string }; Returns: string }
