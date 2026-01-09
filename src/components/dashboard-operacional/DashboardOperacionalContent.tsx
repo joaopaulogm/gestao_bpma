@@ -9,6 +9,7 @@ import DashboardOperacionalCharts from './DashboardOperacionalCharts';
 import DashboardOperacionalRankings from './DashboardOperacionalRankings';
 import DashboardOperacionalIndicadores, { IndicadoresData } from './DashboardOperacionalIndicadores';
 import DashboardOperacionalOrdemPorClasse, { ClasseOrdemData } from './DashboardOperacionalOrdemPorClasse';
+import DashboardOperacionalSazonalidade, { SazonalidadeHistorico, SazonalidadeData } from './DashboardOperacionalSazonalidade';
 
 interface DashboardOperacionalContentProps {
   year: number;
@@ -455,6 +456,90 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     enabled: !!especiesDim
   });
 
+  // Buscar dados de sazonalidade para todos os anos (2020-2025)
+  const { data: sazonalidadeData, isLoading: loadingSazonalidade } = useQuery({
+    queryKey: ['dashboard-operacional-sazonalidade', year],
+    queryFn: async (): Promise<SazonalidadeHistorico> => {
+      const anosHistoricos = [2020, 2021, 2022, 2023, 2024, 2025];
+      const anosData: SazonalidadeData[] = [];
+
+      // Buscar dados mensais de todos os anos
+      const { data: resumoData, error: resumoError } = await supabase
+        .from('fact_resumo_mensal_historico')
+        .select('ano, mes, resgates, solturas, feridos')
+        .in('ano', anosHistoricos)
+        .order('ano')
+        .order('mes');
+
+      if (resumoError) {
+        console.error('Erro ao buscar resumo mensal:', resumoError);
+        return { anos: [], anoAtual: year };
+      }
+
+      // Buscar dados de espécies por mês para todos os anos
+      const especiesMensaisPromises = anosHistoricos.map(async (ano) => {
+        if (ano <= 2024) {
+          const { data, error } = await supabase
+            .from('fat_resgates_diarios_2020a2024')
+            .select('Mes, nome_popular, quantidade_resgates')
+            .eq('Ano', ano);
+          
+          if (error || !data) return { ano, especies: [] };
+          
+          return {
+            ano,
+            especies: data.map((row: any) => ({
+              mes: row.Mes,
+              especie: row.nome_popular || 'Não identificado',
+              quantidade: row.quantidade_resgates || 0
+            }))
+          };
+        } else if (ano === 2025) {
+          const { data, error } = await supabase
+            .from('fat_resgates_diarios_2025_especies')
+            .select('mes, nome_popular, quantidade_resgates');
+          
+          if (error || !data) return { ano, especies: [] };
+          
+          return {
+            ano,
+            especies: data.map((row: any) => ({
+              mes: row.mes,
+              especie: row.nome_popular || 'Não identificado',
+              quantidade: row.quantidade_resgates || 0
+            }))
+          };
+        }
+        return { ano, especies: [] };
+      });
+
+      const especiesResults = await Promise.all(especiesMensaisPromises);
+
+      // Agrupar dados por ano
+      anosHistoricos.forEach(ano => {
+        const mensalDoAno = (resumoData || [])
+          .filter(r => r.ano === ano)
+          .map(r => ({
+            mes: r.mes,
+            resgates: r.resgates || 0,
+            feridos: r.feridos || 0,
+            solturas: r.solturas || 0
+          }));
+
+        const especiesDoAno = especiesResults.find(e => e.ano === ano)?.especies || [];
+
+        anosData.push({
+          mensal: mensalDoAno,
+          especiesMensais: especiesDoAno,
+          ano
+        });
+      });
+
+      return { anos: anosData, anoAtual: year };
+    },
+    staleTime: 10 * 60 * 1000
+  });
+
   if (errorKPIs) {
     return (
       <Alert variant="destructive">
@@ -466,7 +551,7 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     );
   }
 
-  const isLoading = loadingKPIs || loadingMonthly || loadingClasse || loadingEspecies || loadingIndicadores || loadingOrdem;
+  const isLoading = loadingKPIs || loadingMonthly || loadingClasse || loadingEspecies || loadingIndicadores || loadingOrdem || loadingSazonalidade;
 
   if (isLoading) {
     return (
@@ -489,6 +574,9 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
   // Verificar se há dados de distribuição por ordem
   const hasOrdemData = ordemPorClasseData && ordemPorClasseData.length > 0;
 
+  // Verificar se há dados de sazonalidade
+  const hasSazonalidadeData = sazonalidadeData && sazonalidadeData.anos.length > 0;
+
   return (
     <div className="space-y-8">
       {/* Indicadores Operacionais (se disponíveis) */}
@@ -509,6 +597,11 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
         year={year}
         isHistorico={isHistorico}
       />
+      
+      {/* Análise de Sazonalidade - Comparativo entre anos */}
+      {hasSazonalidadeData && (
+        <DashboardOperacionalSazonalidade dados={sazonalidadeData!} />
+      )}
       
       {/* Distribuição por Ordem para cada Classe */}
       {hasOrdemData && (
