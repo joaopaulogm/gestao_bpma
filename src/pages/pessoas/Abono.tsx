@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { NovoAbonoDialog } from '@/components/abono/NovoAbonoDialog';
+import { deleteAbono, upsertAbono } from '@/lib/adminPessoasApi';
 
 interface Militar {
   id: string;
@@ -204,20 +205,21 @@ const Abono: React.FC = () => {
 
   const handleRemoveMilitar = async (militar: Militar, mesNumero: number) => {
     try {
-      const { error } = await supabase
-        .from('fat_abono')
-        .delete()
-        .eq('efetivo_id', militar.id)
-        .eq('mes', mesNumero)
-        .eq('ano', selectedYear);
+      const result = await deleteAbono({
+        efetivo_id: militar.id,
+        mes: mesNumero,
+        ano: selectedYear,
+      });
 
-      if (error) throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao remover militar');
+      }
       
       toast.success(`${militar.nome_guerra || militar.nome} removido do mês ${mesesNome[mesNumero - 1]}`);
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao remover:', error);
-      toast.error('Erro ao remover militar');
+      toast.error(error.message || 'Erro ao remover militar');
     }
   };
 
@@ -228,23 +230,26 @@ const Abono: React.FC = () => {
     
     try {
       // Remove from old month
-      await supabase
-        .from('fat_abono')
-        .delete()
-        .eq('efetivo_id', selectedMilitar.id)
-        .eq('mes', fromMonth)
-        .eq('ano', selectedYear);
+      const deleteResult = await deleteAbono({
+        efetivo_id: selectedMilitar.id,
+        mes: fromMonth,
+        ano: selectedYear,
+      });
+
+      if (!deleteResult.ok) {
+        throw new Error(deleteResult.error || 'Erro ao remover do mês anterior');
+      }
 
       // Add to new month
-      const { error } = await supabase
-        .from('fat_abono')
-        .insert({
-          efetivo_id: selectedMilitar.id,
-          mes: toMonthNum,
-          ano: selectedYear,
-        });
+      const insertResult = await upsertAbono({
+        efetivo_id: selectedMilitar.id,
+        mes: toMonthNum,
+        ano: selectedYear,
+      });
 
-      if (error) throw error;
+      if (!insertResult.ok) {
+        throw new Error(insertResult.error || 'Erro ao adicionar ao novo mês');
+      }
       
       toast.success(`${selectedMilitar.nome_guerra || selectedMilitar.nome} transferido para ${mesesNome[toMonthNum - 1]}`);
       setTransferDialogOpen(false);
@@ -252,9 +257,9 @@ const Abono: React.FC = () => {
       setFromMonth(null);
       setToMonth('');
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao transferir:', error);
-      toast.error('Erro ao transferir militar');
+      toast.error(error.message || 'Erro ao transferir militar');
     }
   };
 

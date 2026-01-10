@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { updateFerias } from '@/lib/adminPessoasApi';
 
 interface FeriasData {
   id: string;
@@ -285,24 +286,24 @@ const Ferias: React.FC = () => {
         ? sortedParcelas.map((p, i) => `${i + 1}ª: ${MESES_NUM_TO_ABREV[p.mes - 1]}(${p.dias}d)`).join(', ')
         : null;
       
-      const { error } = await supabase
-        .from('fat_ferias')
-        .update({
-          mes_inicio: sortedParcelas[0].mes,
-          dias: sortedParcelas[0].dias,
-          tipo: sortedParcelas.length > 1 ? 'PARCELADA' : 'INTEGRAL',
-          observacao: observacaoStr
-        })
-        .eq('id', editingPolicial.id);
+      const result = await updateFerias({
+        id: editingPolicial.id,
+        mes_inicio: sortedParcelas[0].mes,
+        dias: sortedParcelas[0].dias,
+        tipo: sortedParcelas.length > 1 ? 'PARCELADA' : 'INTEGRAL',
+        observacao: observacaoStr || undefined,
+      });
 
-      if (error) throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao salvar alterações');
+      }
       
       toast.success('Férias atualizadas com sucesso');
       setEditDialogOpen(false);
       fetchFerias();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar:', error);
-      toast.error('Erro ao salvar alterações');
+      toast.error(error.message || 'Erro ao salvar alterações');
     } finally {
       setSaving(false);
     }

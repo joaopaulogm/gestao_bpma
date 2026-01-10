@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { upsertAbono } from '@/lib/adminPessoasApi';
 
 interface Militar {
   id: string;
@@ -152,15 +153,15 @@ export const NovoAbonoDialog: React.FC<NovoAbonoDialogProps> = ({ selectedYear, 
     
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('fat_abono')
-        .insert({
-          efetivo_id: selectedMilitar.id,
-          mes: parseInt(selectedMes),
-          ano: selectedYear,
-        });
+      const result = await upsertAbono({
+        efetivo_id: selectedMilitar.id,
+        mes: parseInt(selectedMes),
+        ano: selectedYear,
+      });
 
-      if (error) throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao cadastrar abono');
+      }
       
       toast.success(`Abono cadastrado para ${selectedMilitar.nome_guerra} em ${mesesNome[parseInt(selectedMes) - 1]}`);
       setOpen(false);
@@ -168,7 +169,7 @@ export const NovoAbonoDialog: React.FC<NovoAbonoDialogProps> = ({ selectedYear, 
       onSuccess();
     } catch (error: any) {
       console.error('Erro ao cadastrar abono:', error);
-      toast.error('Erro ao cadastrar abono');
+      toast.error(error.message || 'Erro ao cadastrar abono');
     } finally {
       setSubmitting(false);
     }

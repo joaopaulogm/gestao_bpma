@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { insertEquipe, updateEquipe, deleteEquipe, upsertEquipeMembro, deleteEquipeMembrosBulk } from "@/lib/adminPessoasApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -435,12 +436,14 @@ const Equipes: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (!confirm("Deseja realmente excluir esta equipe?")) return;
     try {
-      const { error } = await supabase.from("dim_equipes").delete().eq("id", id);
-      if (error) throw error;
+      const result = await deleteEquipe({ id });
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao excluir equipe');
+      }
       toast.success("Equipe excluída");
       fetchEquipes();
-    } catch (error) {
-      toast.error("Erro ao excluir equipe");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao excluir equipe");
     }
   };
 
@@ -455,52 +458,60 @@ const Equipes: React.FC = () => {
       let equipeId = editingEquipe?.id;
 
       if (editingEquipe) {
-        const { error } = await supabase
-          .from("dim_equipes")
-          .update({
-            nome: formData.nome,
-            grupamento: formData.grupamento,
-            escala: formData.escala || null,
-            servico: formData.servico || null,
-          })
-          .eq("id", editingEquipe.id);
+        const updateResult = await updateEquipe({
+          id: editingEquipe.id,
+          nome: formData.nome,
+          grupamento: formData.grupamento,
+          escala: formData.escala || null,
+          servico: formData.servico || null,
+        });
 
-        if (error) throw error;
-        await supabase.from("fat_equipe_membros").delete().eq("equipe_id", editingEquipe.id);
+        if (!updateResult.ok) {
+          throw new Error(updateResult.error || 'Erro ao atualizar equipe');
+        }
+
+        // Delete existing membros
+        const deleteResult = await deleteEquipeMembrosBulk({ equipe_id: editingEquipe.id });
+        if (!deleteResult.ok) {
+          throw new Error(deleteResult.error || 'Erro ao remover membros existentes');
+        }
       } else {
-        const { data, error } = await supabase
-          .from("dim_equipes")
-          .insert({
-            nome: formData.nome,
-            grupamento: formData.grupamento,
-            escala: formData.escala || null,
-            servico: formData.servico || null,
-          })
-          .select()
-          .single();
+        const insertResult = await insertEquipe({
+          nome: formData.nome,
+          grupamento: formData.grupamento,
+          escala: formData.escala || null,
+          servico: formData.servico || null,
+        });
 
-        if (error) throw error;
-        equipeId = data.id;
+        if (!insertResult.ok) {
+          throw new Error(insertResult.error || 'Erro ao criar equipe');
+        }
+
+        equipeId = insertResult.data?.id;
       }
 
+      // Add membros
       if (selectedMembros.length > 0 && equipeId) {
-        const { error: membrosError } = await supabase.from("fat_equipe_membros").insert(
-          selectedMembros.map((m) => ({
+        for (const membro of selectedMembros) {
+          const membroResult = await upsertEquipeMembro({
             equipe_id: equipeId,
-            efetivo_id: m.efetivo_id,
-            funcao: m.funcao,
-          })),
-        );
+            efetivo_id: membro.efetivo_id,
+            funcao: membro.funcao,
+          });
 
-        if (membrosError) throw membrosError;
+          if (!membroResult.ok) {
+            console.warn(`Erro ao adicionar membro ${membro.efetivo_id}:`, membroResult.error);
+          }
+        }
       }
 
       toast.success(editingEquipe ? "Equipe atualizada" : "Equipe cadastrada");
       resetForm();
       fetchEquipes();
       setActiveTab("cadastradas");
-    } catch (error) {
-      toast.error("Erro ao salvar equipe");
+    } catch (error: any) {
+      console.error("Erro ao salvar equipe:", error);
+      toast.error(error.message || "Erro ao salvar equipe");
     }
   };
 

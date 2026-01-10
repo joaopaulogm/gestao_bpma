@@ -42,6 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { upsertRestricao, upsertLicenca, insertFerias } from '@/lib/adminPessoasApi';
 
 interface Efetivo {
   id: string;
@@ -192,7 +193,7 @@ export const NovoAfastamentoDialog: React.FC<NovoAfastamentoDialogProps> = ({ an
   const onSubmitFerias = async (data: z.infer<typeof feriasSchema>) => {
     setLoading(true);
     try {
-      const { error } = await supabase.from('fat_ferias').insert({
+      const result = await insertFerias({
         efetivo_id: data.efetivo_id,
         ano: data.ano,
         mes_inicio: parseInt(data.mes_inicio),
@@ -200,15 +201,17 @@ export const NovoAfastamentoDialog: React.FC<NovoAfastamentoDialogProps> = ({ an
         tipo: data.tipo,
       });
 
-      if (error) throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao cadastrar férias');
+      }
 
       toast.success('Férias cadastradas com sucesso!');
       feriasForm.reset();
       setOpen(false);
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao cadastrar férias:', error);
-      toast.error('Erro ao cadastrar férias');
+      toast.error(error.message || 'Erro ao cadastrar férias');
     } finally {
       setLoading(false);
     }
@@ -217,26 +220,27 @@ export const NovoAfastamentoDialog: React.FC<NovoAfastamentoDialogProps> = ({ an
   const onSubmitLicenca = async (data: z.infer<typeof licencaSchema>) => {
     setLoading(true);
     try {
-      const { error } = await supabase.from('fat_licencas_medicas').insert({
+      const result = await upsertLicenca({
         efetivo_id: data.efetivo_id,
-        ano: data.ano,
         data_inicio: format(data.data_inicio, 'yyyy-MM-dd'),
         data_fim: data.data_fim ? format(data.data_fim, 'yyyy-MM-dd') : null,
-        dias: data.dias,
+        dias: data.dias || null,
         tipo: data.tipo,
         cid: data.cid || null,
         observacao: data.observacao || null,
       });
 
-      if (error) throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao cadastrar licença');
+      }
 
       toast.success('Licença cadastrada com sucesso!');
       licencaForm.reset();
       setOpen(false);
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao cadastrar licença:', error);
-      toast.error('Erro ao cadastrar licença');
+      toast.error(error.message || 'Erro ao cadastrar licença');
     } finally {
       setLoading(false);
     }
@@ -245,24 +249,25 @@ export const NovoAfastamentoDialog: React.FC<NovoAfastamentoDialogProps> = ({ an
   const onSubmitRestricao = async (data: z.infer<typeof restricaoSchema>) => {
     setLoading(true);
     try {
-      const { error } = await supabase.from('fat_restricoes').insert({
+      const result = await upsertRestricao({
         efetivo_id: data.efetivo_id,
-        ano: data.ano,
+        tipo_restricao: data.tipo_restricao,
         data_inicio: format(data.data_inicio, 'yyyy-MM-dd'),
         data_fim: data.data_fim ? format(data.data_fim, 'yyyy-MM-dd') : null,
-        tipo_restricao: data.tipo_restricao,
         observacao: data.observacao || null,
       });
 
-      if (error) throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao cadastrar restrição');
+      }
 
       toast.success('Restrição cadastrada com sucesso!');
       restricaoForm.reset();
       setOpen(false);
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao cadastrar restrição:', error);
-      toast.error('Erro ao cadastrar restrição');
+      toast.error(error.message || 'Erro ao cadastrar restrição');
     } finally {
       setLoading(false);
     }

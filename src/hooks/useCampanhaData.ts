@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { insertCampanhaAlteracao, deleteCampanhaAlteracao, upsertCampanhaMembro, deleteCampanhaMembro, updateCampanhaMembro } from '@/lib/adminPessoasApi';
 
 export type TeamType = 'Alfa' | 'Bravo' | 'Charlie' | 'Delta';
 export type UnitType = 'Guarda' | 'Armeiro' | 'RP Ambiental' | 'GOC' | 'Lacustre' | 'GTA' | 'Administrativo';
@@ -322,29 +323,24 @@ export const useCampanhaData = (year: number) => {
     const originalTeamId = originalTeam ? getTeamId(originalTeam) : null;
 
     try {
-      const { data: user } = await supabase.auth.getUser();
-      
-      const { error } = await supabase
-        .from('fat_campanha_alteracoes')
-        .upsert({
-          data: dateStr,
-          unidade,
-          equipe_original_id: originalTeamId,
-          equipe_nova_id: novaEquipeId,
-          motivo,
-          created_by: user.user?.id,
-        }, {
-          onConflict: 'data,unidade',
-        });
+      const result = await insertCampanhaAlteracao({
+        data: dateStr,
+        unidade,
+        equipe_original_id: originalTeamId || null,
+        equipe_nova_id: novaEquipeId,
+        motivo: motivo || undefined,
+      });
 
-      if (error) throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao salvar alteração');
+      }
 
       await fetchData();
       toast.success('Alteração salva com sucesso');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar alteração:', error);
-      toast.error('Erro ao salvar alteração');
+      toast.error(error.message || 'Erro ao salvar alteração');
       return false;
     }
   }, [getTeamId, getTeamForDate, fetchData]);
@@ -354,20 +350,21 @@ export const useCampanhaData = (year: number) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     
     try {
-      const { error } = await supabase
-        .from('fat_campanha_alteracoes')
-        .delete()
-        .eq('data', dateStr)
-        .eq('unidade', unidade);
+      const result = await deleteCampanhaAlteracao({
+        data: dateStr,
+        unidade,
+      });
 
-      if (error) throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao remover alteração');
+      }
 
       await fetchData();
       toast.success('Alteração removida');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao remover alteração:', error);
-      toast.error('Erro ao remover alteração');
+      toast.error(error.message || 'Erro ao remover alteração');
       return false;
     }
   }, [fetchData]);
@@ -386,26 +383,24 @@ export const useCampanhaData = (year: number) => {
     }
 
     try {
-      const { error } = await supabase
-        .from('fat_campanha_membros')
-        .upsert({
-          equipe_id: equipeId,
-          efetivo_id: efetivoId,
-          unidade,
-          ano: year,
-          funcao,
-        }, {
-          onConflict: 'efetivo_id,unidade,ano',
-        });
+      const result = await upsertCampanhaMembro({
+        equipe_id: equipeId,
+        efetivo_id: efetivoId,
+        unidade,
+        ano: year,
+        funcao: funcao || undefined,
+      });
 
-      if (error) throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao adicionar membro');
+      }
 
       await fetchData();
       toast.success('Membro adicionado');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao adicionar membro:', error);
-      toast.error('Erro ao adicionar membro');
+      toast.error(error.message || 'Erro ao adicionar membro');
       return false;
     }
   }, [getTeamId, year, fetchData]);
@@ -413,19 +408,18 @@ export const useCampanhaData = (year: number) => {
   // Remove a member from a team
   const removeMembro = useCallback(async (membroId: string) => {
     try {
-      const { error } = await supabase
-        .from('fat_campanha_membros')
-        .delete()
-        .eq('id', membroId);
+      const result = await deleteCampanhaMembro({ id: membroId });
 
-      if (error) throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao remover membro');
+      }
 
       await fetchData();
       toast.success('Membro removido');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao remover membro:', error);
-      toast.error('Erro ao remover membro');
+      toast.error(error.message || 'Erro ao remover membro');
       return false;
     }
   }, [fetchData]);
@@ -442,19 +436,21 @@ export const useCampanhaData = (year: number) => {
     }
 
     try {
-      const { error } = await supabase
-        .from('fat_campanha_membros')
-        .update({ equipe_id: novaEquipeId })
-        .eq('id', membroId);
+      const result = await updateCampanhaMembro({
+        id: membroId,
+        equipe_id: novaEquipeId,
+      });
 
-      if (error) throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao transferir membro');
+      }
 
       await fetchData();
       toast.success('Membro transferido');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao atualizar membro:', error);
-      toast.error('Erro ao transferir membro');
+      toast.error(error.message || 'Erro ao transferir membro');
       return false;
     }
   }, [getTeamId, fetchData]);

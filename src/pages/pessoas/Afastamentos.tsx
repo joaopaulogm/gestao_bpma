@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, isWithinInterval, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { deleteFerias, deleteLicenca, deleteRestricao } from '@/lib/adminPessoasApi';
 interface Ferias {
   id: string;
   efetivo_id: string;
@@ -295,28 +296,27 @@ const Afastamentos: React.FC = () => {
     
     setDeleting(true);
     try {
-      let error;
+      let result;
       
       if (itemToDelete.tipo === 'ferias') {
-        const result = await supabase.from('fat_ferias').delete().eq('id', itemToDelete.id);
-        error = result.error;
+        result = await deleteFerias({ id: itemToDelete.id });
       } else if (itemToDelete.tipo === 'licenca') {
-        const result = await supabase.from('fat_licencas_medicas').delete().eq('id', itemToDelete.id);
-        error = result.error;
+        result = await deleteLicenca({ id: itemToDelete.id });
       } else {
-        const result = await supabase.from('fat_restricoes').delete().eq('id', itemToDelete.id);
-        error = result.error;
+        result = await deleteRestricao({ id: itemToDelete.id });
       }
       
-      if (error) throw error;
+      if (!result.ok) {
+        throw new Error(result.error || 'Erro ao excluir afastamento');
+      }
       
       toast.success('Afastamento excluído com sucesso');
       setDeleteDialogOpen(false);
       setItemToDelete(null);
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao excluir:', error);
-      toast.error('Erro ao excluir afastamento');
+      toast.error(error.message || 'Erro ao excluir afastamento');
     } finally {
       setDeleting(false);
     }
