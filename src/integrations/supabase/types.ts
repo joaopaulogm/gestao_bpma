@@ -113,6 +113,7 @@ export type Database = {
       dim_efetivo: {
         Row: {
           antiguidade: number | null
+          ativo: boolean
           created_at: string
           id: string
           lotacao: string
@@ -126,6 +127,7 @@ export type Database = {
         }
         Insert: {
           antiguidade?: number | null
+          ativo?: boolean
           created_at?: string
           id?: string
           lotacao?: string
@@ -139,6 +141,7 @@ export type Database = {
         }
         Update: {
           antiguidade?: number | null
+          ativo?: boolean
           created_at?: string
           id?: string
           lotacao?: string
@@ -1426,6 +1429,13 @@ export type Database = {
             columns: ["fat_ferias_id"]
             isOneToOne: false
             referencedRelation: "fat_ferias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_ferias_parcelas_fat_ferias_id_fkey"
+            columns: ["fat_ferias_id"]
+            isOneToOne: false
+            referencedRelation: "vw_ferias_completo"
             referencedColumns: ["id"]
           },
         ]
@@ -2961,6 +2971,30 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_ferias_completo: {
+        Row: {
+          ano: number | null
+          created_at: string | null
+          dias: number | null
+          efetivo_id: string | null
+          id: string | null
+          mes_fim: number | null
+          mes_inicio: number | null
+          observacao: string | null
+          parcelas: Json | null
+          tipo: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_ferias_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vw_kpis_anuais_historico: {
         Row: {
           ano: number | null
@@ -3090,6 +3124,20 @@ export type Database = {
       sync_imagens_fauna: { Args: never; Returns: undefined }
       sync_imagens_flora: { Args: never; Returns: undefined }
       unaccent: { Args: { "": string }; Returns: string }
+      upsert_ferias_com_parcelas: {
+        Args: {
+          p_ano: number
+          p_dias?: number
+          p_efetivo_id: string
+          p_mes_fim?: number
+          p_mes_inicio?: number
+          p_observacao?: string
+          p_parcelas?: Json
+          p_substituir_parcelas?: boolean
+          p_tipo: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role:
