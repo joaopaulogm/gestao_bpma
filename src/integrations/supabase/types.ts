@@ -2636,6 +2636,39 @@ export type Database = {
         }
         Relationships: []
       }
+      stg_dm_xlsx: {
+        Row: {
+          ano: number | null
+          cid: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          hospital: string | null
+          matricula: string | null
+          nome: string | null
+          upm: string | null
+        }
+        Insert: {
+          ano?: number | null
+          cid?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          hospital?: string | null
+          matricula?: string | null
+          nome?: string | null
+          upm?: string | null
+        }
+        Update: {
+          ano?: number | null
+          cid?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          hospital?: string | null
+          matricula?: string | null
+          nome?: string | null
+          upm?: string | null
+        }
+        Relationships: []
+      }
       stg_ferias_2026_pracas: {
         Row: {
           ano_gozo: number | null
