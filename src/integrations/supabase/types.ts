@@ -1446,6 +1446,7 @@ export type Database = {
           cid: string | null
           created_at: string | null
           data_fim: string | null
+          data_fim_norm: string | null
           data_inicio: string
           dias: number | null
           efetivo_id: string | null
@@ -1459,6 +1460,7 @@ export type Database = {
           cid?: string | null
           created_at?: string | null
           data_fim?: string | null
+          data_fim_norm?: string | null
           data_inicio: string
           dias?: number | null
           efetivo_id?: string | null
@@ -1472,6 +1474,7 @@ export type Database = {
           cid?: string | null
           created_at?: string | null
           data_fim?: string | null
+          data_fim_norm?: string | null
           data_inicio?: string
           dias?: number | null
           efetivo_id?: string | null
@@ -2531,6 +2534,7 @@ export type Database = {
           ano: number
           created_at: string | null
           data_fim: string | null
+          data_fim_norm: string | null
           data_inicio: string
           efetivo_id: string | null
           id: string
@@ -2542,6 +2546,7 @@ export type Database = {
           ano?: number
           created_at?: string | null
           data_fim?: string | null
+          data_fim_norm?: string | null
           data_inicio: string
           efetivo_id?: string | null
           id?: string
@@ -2553,6 +2558,7 @@ export type Database = {
           ano?: number
           created_at?: string | null
           data_fim?: string | null
+          data_fim_norm?: string | null
           data_inicio?: string
           efetivo_id?: string | null
           id?: string
@@ -3138,6 +3144,7 @@ export type Database = {
     Functions: {
       exec_sql: { Args: { sql_query: string }; Returns: undefined }
       fn_nome_cientifico_prefix: { Args: { nome: string }; Returns: string }
+      get_current_user_efetivo_id: { Args: never; Returns: string }
       has_role:
         | {
             Args: {
@@ -3147,8 +3154,11 @@ export type Database = {
             Returns: boolean
           }
         | { Args: { _role: string; _user_id: string }; Returns: boolean }
+      is_admin: { Args: never; Returns: boolean }
       is_allowed_user: { Args: { check_email: string }; Returns: boolean }
+      jsonb_array_union_unique: { Args: { a: Json; b: Json }; Returns: Json }
       make_slug: { Args: { txt: string }; Returns: string }
+      norm_txt: { Args: { t: string }; Returns: string }
       normalize_text: { Args: { input_text: string }; Returns: string }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
