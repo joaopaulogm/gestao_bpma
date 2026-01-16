@@ -546,10 +546,15 @@ export const useCampanhaCalendar = (year: number, month: number) => {
 
   // Calculate vacation quota for the selected month
   const vacationQuota = useMemo(() => {
-    const marked = ferias.reduce((acc, f) => {
-      // Simple MVP: count days only for mes_inicio
-      if (f.mes_inicio === month + 1) { // month is 0-indexed
-        return acc + (f.dias || 0);
+    // Map month number to abbreviation
+    const monthAbbreviations = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+    const currentMonthAbbrev = monthAbbreviations[month]; // month is 0-indexed
+    
+    // Count days from parcelas that fall in the current month
+    const marked = feriasParcelas.reduce((acc, p) => {
+      // Check if parcela is for current month by abbreviation
+      if (p.mes?.toUpperCase() === currentMonthAbbrev) {
+        return acc + (p.dias || 0);
       }
       return acc;
     }, 0);
@@ -560,7 +565,7 @@ export const useCampanhaCalendar = (year: number, month: number) => {
       balance: VACATION_QUOTA_PER_MONTH - marked,
       isOverLimit: marked > VACATION_QUOTA_PER_MONTH,
     };
-  }, [ferias, month]);
+  }, [feriasParcelas, month]);
 
   // Save alteration
   const saveAlteracao = useCallback(async (
