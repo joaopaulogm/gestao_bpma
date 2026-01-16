@@ -549,28 +549,24 @@ export const useCampanhaCalendar = (year: number, month: number) => {
     // Map month number to abbreviation
     const monthAbbreviations = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
     const currentMonthAbbrev = monthAbbreviations[month]; // month is 0-indexed
-    const currentMonth = month + 1; // 1-indexed for comparison with mes_inicio
 
-    // Track which férias IDs have parcelas with dates in this month
-    const feriasWithDatedParcelas = new Set<string>();
-    
-    // Count MARCADOS: days from parcelas with specific data_inicio/data_fim in this month
-    const marked = feriasParcelas.reduce((acc, p) => {
-      if (p.mes?.toUpperCase() === currentMonthAbbrev && p.data_inicio && p.data_fim) {
-        feriasWithDatedParcelas.add(p.fat_ferias_id);
+    // Filter parcelas for current month
+    const parcelasDoMes = feriasParcelas.filter(p => 
+      p.mes?.toUpperCase() === currentMonthAbbrev
+    );
+
+    // MARCADOS: parcelas do mês COM data_inicio E data_fim definidas
+    const marked = parcelasDoMes.reduce((acc, p) => {
+      if (p.data_inicio && p.data_fim) {
         return acc + (p.dias || 0);
       }
       return acc;
     }, 0);
 
-    // Count PREVISTO: days from férias that have mes_inicio in this month but NO dated parcelas
-    const previsto = ferias.reduce((acc, f) => {
-      // Check if this férias is for the current month
-      const isForCurrentMonth = f.mes_inicio === currentMonth || 
-        (f.mes_fim && currentMonth >= f.mes_inicio && currentMonth <= f.mes_fim);
-      
-      if (isForCurrentMonth && !feriasWithDatedParcelas.has(f.id)) {
-        return acc + (f.dias || 0);
+    // PREVISTO: parcelas do mês SEM data_inicio OU SEM data_fim (previsão sem período definido)
+    const previsto = parcelasDoMes.reduce((acc, p) => {
+      if (!p.data_inicio || !p.data_fim) {
+        return acc + (p.dias || 0);
       }
       return acc;
     }, 0);
@@ -585,7 +581,7 @@ export const useCampanhaCalendar = (year: number, month: number) => {
       saldoReal: total - VACATION_QUOTA_PER_MONTH,
       isOverLimit: total > VACATION_QUOTA_PER_MONTH,
     };
-  }, [ferias, feriasParcelas, month]);
+  }, [feriasParcelas, month]);
 
   // Save alteration
   const saveAlteracao = useCallback(async (
