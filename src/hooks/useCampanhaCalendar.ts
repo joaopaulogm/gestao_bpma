@@ -566,15 +566,14 @@ export const useCampanhaCalendar = (year: number, month: number) => {
       return acc;
     }, 0);
 
-    const total = previsto + marked;
+    const saldo = VACATION_QUOTA_PER_MONTH - previsto;
 
     return {
       limit: VACATION_QUOTA_PER_MONTH,
       previsto,
       marked,
-      saldoBruto: VACATION_QUOTA_PER_MONTH - previsto - marked,
-      saldoReal: total - VACATION_QUOTA_PER_MONTH,
-      isOverLimit: total > VACATION_QUOTA_PER_MONTH,
+      saldo,
+      isOverLimit: previsto > VACATION_QUOTA_PER_MONTH,
     };
   }, [feriasParcelas, month]);
 
