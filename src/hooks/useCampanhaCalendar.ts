@@ -193,6 +193,43 @@ export const useCampanhaCalendar = (year: number, month: number) => {
     fetchData();
   }, [fetchData]);
 
+  // Realtime subscription for férias, abono, licenças e restrições
+  useEffect(() => {
+    const channel = supabase
+      .channel('campanha-calendar-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_ferias' }, () => {
+        console.log('[Campanha] fat_ferias changed, refetching...');
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_ferias_parcelas' }, () => {
+        console.log('[Campanha] fat_ferias_parcelas changed, refetching...');
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_abono' }, () => {
+        console.log('[Campanha] fat_abono changed, refetching...');
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_licencas_medicas' }, () => {
+        console.log('[Campanha] fat_licencas_medicas changed, refetching...');
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_restricoes' }, () => {
+        console.log('[Campanha] fat_restricoes changed, refetching...');
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dim_equipes_campanha' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_campanha_membros' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_campanha_alteracoes' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_campanha_config' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_equipe_membros' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dim_efetivo' }, () => fetchData())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData]);
+
   // Get team name by ID
   const getTeamName = useCallback((teamId: string): TeamType | null => {
     const equipe = equipes.find(e => e.id === teamId);
