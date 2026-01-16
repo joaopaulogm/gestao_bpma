@@ -26,6 +26,7 @@ import {
   Star,
   Search,
   X,
+  Calendar,
 } from 'lucide-react';
 
 interface DayDetailDrawerProps {
@@ -147,6 +148,12 @@ export const DayDetailDrawer: React.FC<DayDetailDrawerProps> = ({
                   value={counts.voluntario} 
                   status="voluntario" 
                   icon={<Star className="h-4 w-4" />} 
+                />
+                <StatTile 
+                  label="Previsão" 
+                  value={counts.previsao} 
+                  status="previsao" 
+                  icon={<Calendar className="h-4 w-4" />} 
                 />
               </div>
 

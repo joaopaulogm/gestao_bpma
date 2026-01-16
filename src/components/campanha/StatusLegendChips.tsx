@@ -6,7 +6,7 @@ interface StatusLegendChipsProps {
   onToggleFilter: (status: MemberStatus) => void;
 }
 
-const STATUS_ORDER: MemberStatus[] = ['apto', 'impedido', 'restricao', 'atestado', 'voluntario'];
+const STATUS_ORDER: MemberStatus[] = ['apto', 'impedido', 'restricao', 'atestado', 'voluntario', 'previsao'];
 
 export const StatusLegendChips: React.FC<StatusLegendChipsProps> = ({
   activeFilters,
