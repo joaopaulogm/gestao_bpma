@@ -3165,12 +3165,29 @@ export type Database = {
       is_allowed_user: { Args: { check_email: string }; Returns: boolean }
       jsonb_array_union_unique: { Args: { a: Json; b: Json }; Returns: Json }
       make_slug: { Args: { txt: string }; Returns: string }
+      month_to_int: { Args: { m: string }; Returns: number }
       norm_txt: { Args: { t: string }; Returns: string }
       normalize_text: { Args: { input_text: string }; Returns: string }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       slugify: { Args: { input: string }; Returns: string }
       slugify_pt: { Args: { input: string }; Returns: string }
+      sync_ferias_2026_from_stg: {
+        Args: { p_source_sheet?: string }
+        Returns: Json
+      }
+      sync_ferias_2026_pai_from_stg: {
+        Args: { p_source_sheet?: string }
+        Returns: Json
+      }
+      sync_ferias_2026_parcelas_cleanup_from_stg: {
+        Args: { p_source_sheet?: string }
+        Returns: Json
+      }
+      sync_ferias_2026_parcelas_from_stg: {
+        Args: { p_source_sheet?: string }
+        Returns: Json
+      }
       sync_imagens_fauna: { Args: never; Returns: undefined }
       sync_imagens_flora: { Args: never; Returns: undefined }
       unaccent: { Args: { "": string }; Returns: string }

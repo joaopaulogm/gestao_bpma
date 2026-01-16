@@ -555,17 +555,12 @@ export const useCampanhaCalendar = (year: number, month: number) => {
       p.mes?.toUpperCase() === currentMonthAbbrev
     );
 
-    // MARCADOS: parcelas do mês COM data_inicio E data_fim definidas
+    // PREVISTO: total de dias das parcelas planejadas para o mês
+    const previsto = parcelasDoMes.reduce((acc, p) => acc + (p.dias || 0), 0);
+
+    // MARCADOS: parcelas do mês COM data_inicio E data_fim já registradas
     const marked = parcelasDoMes.reduce((acc, p) => {
       if (p.data_inicio && p.data_fim) {
-        return acc + (p.dias || 0);
-      }
-      return acc;
-    }, 0);
-
-    // PREVISTO: parcelas do mês SEM data_inicio OU SEM data_fim (previsão sem período definido)
-    const previsto = parcelasDoMes.reduce((acc, p) => {
-      if (!p.data_inicio || !p.data_fim) {
         return acc + (p.dias || 0);
       }
       return acc;
