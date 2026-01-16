@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -2986,9 +2986,6 @@ export type Database = {
       vw_anos_disponiveis: {
         Row: {
           ano: number | null
-          fonte: string | null
-          tem_crime_ambiental: boolean | null
-          tem_resgate: boolean | null
         }
         Relationships: []
       }
@@ -2996,17 +2993,7 @@ export type Database = {
         Row: {
           ano: number | null
           classe_taxonomica: string | null
-          total_resgates: number | null
-          total_solturas: number | null
-        }
-        Relationships: []
-      }
-      vw_distribuicao_conservacao_historico: {
-        Row: {
-          ano: number | null
-          especies_unicas: number | null
-          estado_de_conservacao: string | null
-          total_resgates: number | null
+          total: number | null
         }
         Relationships: []
       }
@@ -3017,10 +3004,14 @@ export type Database = {
           dias: number | null
           efetivo_id: string | null
           id: string | null
+          lotacao: string | null
+          matricula: string | null
           mes_fim: number | null
           mes_inicio: number | null
+          nome: string | null
+          nome_guerra: string | null
           observacao: string | null
-          parcelas: Json | null
+          posto_graduacao: string | null
           tipo: string | null
           updated_at: string | null
         }
@@ -3037,14 +3028,9 @@ export type Database = {
       vw_kpis_anuais_historico: {
         Row: {
           ano: number | null
-          riqueza_especies: number | null
-          taxa_mortalidade: number | null
-          taxa_soltura: number | null
-          total_animais_resgatados: number | null
-          total_feridos: number | null
-          total_filhotes: number | null
+          total_atropelamentos: number | null
           total_obitos: number | null
-          total_ocorrencias: number | null
+          total_resgates: number | null
           total_solturas: number | null
         }
         Relationships: []
@@ -3052,11 +3038,9 @@ export type Database = {
       vw_ranking_especies_historico: {
         Row: {
           ano: number | null
-          classe_taxonomica: string | null
-          especie_id: string | null
           nome_cientifico: string | null
-          nome_popular_norm: string | null
-          total_resgates: number | null
+          nome_popular: string | null
+          total: number | null
         }
         Relationships: []
       }
@@ -3133,10 +3117,33 @@ export type Database = {
       vw_serie_mensal_historico: {
         Row: {
           ano: number | null
+          atropelamentos: number | null
+          feridos: number | null
+          filhotes: number | null
           mes: number | null
-          total_obitos: number | null
-          total_resgates: number | null
-          total_solturas: number | null
+          obitos: number | null
+          resgates: number | null
+          solturas: number | null
+        }
+        Insert: {
+          ano?: number | null
+          atropelamentos?: number | null
+          feridos?: number | null
+          filhotes?: number | null
+          mes?: number | null
+          obitos?: number | null
+          resgates?: number | null
+          solturas?: number | null
+        }
+        Update: {
+          ano?: number | null
+          atropelamentos?: number | null
+          feridos?: number | null
+          filhotes?: number | null
+          mes?: number | null
+          obitos?: number | null
+          resgates?: number | null
+          solturas?: number | null
         }
         Relationships: []
       }
