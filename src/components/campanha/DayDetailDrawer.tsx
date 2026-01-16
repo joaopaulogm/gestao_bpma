@@ -35,7 +35,7 @@ interface DayDetailDrawerProps {
   date: Date | null;
   teams: TeamForDay[];
   counts: DayCounts;
-  vacationQuota: { limit: number; previsto: number; marked: number; saldoBruto: number; saldoReal: number; isOverLimit: boolean };
+  vacationQuota: { limit: number; previsto: number; marked: number; saldo: number; isOverLimit: boolean };
   efetivo: EfetivoData[];
   onSaveVolunteer: (volunteer: VolunteerEntry) => void;
   onRemoveVolunteer: (efetivoId: string) => void;

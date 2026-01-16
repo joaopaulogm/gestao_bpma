@@ -5,8 +5,7 @@ interface VacationQuota {
   limit: number;
   previsto: number;
   marked: number;
-  saldoBruto: number;
-  saldoReal: number;
+  saldo: number;
   isOverLimit: boolean;
 }
 
@@ -29,11 +28,11 @@ export const MonthlyVacationQuotaCard: React.FC<MonthlyVacationQuotaCardProps> =
           Cota: {total}/{quota.limit} dias
           {quota.isOverLimit ? (
             <span className="text-red-500 font-medium ml-1">
-              (excedente: +{quota.saldoReal})
+              (excedente: {Math.abs(quota.saldo)})
             </span>
           ) : (
             <span className="text-blue-500 font-medium ml-1">
-              (saldo: {quota.saldoBruto})
+              (saldo: {quota.saldo})
             </span>
           )}
         </span>
@@ -65,15 +64,9 @@ export const MonthlyVacationQuotaCard: React.FC<MonthlyVacationQuotaCardProps> =
         </div>
         <div className="h-px bg-border my-2" />
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Saldo Bruto</span>
-          <span className={`font-semibold ${quota.saldoBruto >= 0 ? 'text-blue-500' : 'text-red-500'}`}>
-            {quota.saldoBruto >= 0 ? '+' : ''}{quota.saldoBruto} dias
-          </span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Saldo Real</span>
-          <span className={`font-semibold ${quota.saldoReal <= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            {quota.saldoReal > 0 ? '+' : ''}{quota.saldoReal} dias
+          <span className="text-muted-foreground">Saldo disponível</span>
+          <span className={`font-semibold ${quota.saldo >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            {quota.saldo} dias
           </span>
         </div>
       </div>
