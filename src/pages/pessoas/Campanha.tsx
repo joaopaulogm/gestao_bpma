@@ -73,7 +73,7 @@ const Campanha: React.FC = () => {
   }, [selectedDay, getTeamsForDay]);
 
   const selectedDayCounts = useMemo(() => {
-    if (!selectedDay) return { apto: 0, impedido: 0, restricao: 0, atestado: 0, voluntario: 0, total: 0 };
+    if (!selectedDay) return { apto: 0, impedido: 0, restricao: 0, atestado: 0, voluntario: 0, previsao: 0, total: 0 };
     return getDayCounts(selectedDay);
   }, [selectedDay, getDayCounts]);
 

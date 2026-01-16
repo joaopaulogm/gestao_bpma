@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 // Types
 export type TeamType = 'Alfa' | 'Bravo' | 'Charlie' | 'Delta';
 export type UnitType = 'Guarda' | 'Armeiro' | 'RP Ambiental' | 'GOC' | 'Lacustre' | 'GTA';
-export type MemberStatus = 'apto' | 'impedido' | 'restricao' | 'atestado' | 'voluntario';
+export type MemberStatus = 'apto' | 'impedido' | 'restricao' | 'atestado' | 'voluntario' | 'previsao';
 
 // Unit configuration - teams and rotation
 interface UnitConfig {
@@ -36,6 +36,7 @@ export const STATUS_COLORS: Record<MemberStatus, StatusColors> = {
   restricao: { bg: 'bg-orange-50', border: 'border-orange-500', text: 'text-orange-700', dot: 'bg-orange-500' },
   atestado: { bg: 'bg-purple-50', border: 'border-purple-500', text: 'text-purple-700', dot: 'bg-purple-500' },
   voluntario: { bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-700', dot: 'bg-blue-500' },
+  previsao: { bg: 'bg-amber-50', border: 'border-amber-500', text: 'text-amber-700', dot: 'bg-amber-500' },
 };
 
 export const STATUS_LABELS: Record<MemberStatus, string> = {
@@ -44,6 +45,7 @@ export const STATUS_LABELS: Record<MemberStatus, string> = {
   restricao: 'Restrição',
   atestado: 'Atestado',
   voluntario: 'Voluntário',
+  previsao: 'Previsão',
 };
 
 export interface EquipeCampanha {
@@ -82,6 +84,7 @@ export interface DayCounts {
   restricao: number;
   atestado: number;
   voluntario: number;
+  previsao: number;
   total: number;
 }
 
@@ -134,6 +137,7 @@ export const useCampanhaCalendar = (year: number, month: number) => {
   const [equipesReais, setEquipesReais] = useState<any[]>([]);
   const [membrosReais, setMembrosReais] = useState<any[]>([]);
   const [ferias, setFerias] = useState<any[]>([]);
+  const [feriasParcelas, setFeriasParcelas] = useState<any[]>([]);
   const [abonos, setAbonos] = useState<any[]>([]);
   const [licencas, setLicencas] = useState<any[]>([]);
   const [restricoes, setRestricoes] = useState<any[]>([]);
@@ -151,6 +155,7 @@ export const useCampanhaCalendar = (year: number, month: number) => {
         { data: equipesReaisData },
         { data: membrosReaisData },
         { data: feriasData },
+        { data: feriasParcelasData },
         { data: abonosData },
         { data: licencasData },
         { data: restricoesData },
@@ -166,6 +171,7 @@ export const useCampanhaCalendar = (year: number, month: number) => {
           equipe:dim_equipes(id, nome, grupamento)
         `),
         supabase.from('fat_ferias').select('*').eq('ano', year),
+        supabase.from('fat_ferias_parcelas').select('*, fat_ferias!inner(efetivo_id, ano)'),
         supabase.from('fat_abono').select('*').eq('ano', year),
         supabase.from('fat_licencas_medicas').select('*').eq('ano', year),
         supabase.from('fat_restricoes').select('*').eq('ano', year),
@@ -178,6 +184,7 @@ export const useCampanhaCalendar = (year: number, month: number) => {
       setEquipesReais(equipesReaisData || []);
       setMembrosReais(membrosReaisData || []);
       setFerias(feriasData || []);
+      setFeriasParcelas(feriasParcelasData || []);
       setAbonos(abonosData || []);
       setLicencas(licencasData || []);
       setRestricoes(restricoesData || []);
@@ -378,22 +385,26 @@ export const useCampanhaCalendar = (year: number, month: number) => {
     const dateMonth = getMonth(date) + 1; // 1-indexed
     const dateStr = format(date, 'yyyy-MM-dd');
 
-    // Priority 1: Impedido (férias, abono)
-    // Check férias
-    const feriaRecord = ferias.find(f => {
-      if (f.efetivo_id !== efetivoId) return false;
-      const mesInicio = f.mes_inicio;
-      const mesFim = f.mes_fim || f.mes_inicio;
-      return dateMonth >= mesInicio && dateMonth <= mesFim;
+    // Priority 1: Check férias parcelas with specific dates (impedido)
+    const parcelaRecord = feriasParcelas.find(p => {
+      // Check if efetivo_id matches (fat_ferias relationship)
+      if (p.fat_ferias?.efetivo_id !== efetivoId) return false;
+      if (!p.data_inicio || !p.data_fim) return false;
+      
+      try {
+        const inicio = parseISO(p.data_inicio);
+        const fim = parseISO(p.data_fim);
+        return isWithinInterval(date, { start: inicio, end: fim });
+      } catch {
+        return false;
+      }
     });
-    if (feriaRecord) {
-      return { status: 'impedido', reason: 'Férias', returnDate: feriaRecord.mes_fim ? `Mês ${feriaRecord.mes_fim}` : undefined };
-    }
-
-    // Check abono
-    const abonoRecord = abonos.find(a => a.efetivo_id === efetivoId && a.mes === dateMonth);
-    if (abonoRecord) {
-      return { status: 'impedido', reason: 'Abono', returnDate: undefined };
+    if (parcelaRecord) {
+      return { 
+        status: 'impedido', 
+        reason: 'Férias', 
+        returnDate: parcelaRecord.data_fim 
+      };
     }
 
     // Priority 2: Atestado (licença médica)
@@ -433,9 +444,38 @@ export const useCampanhaCalendar = (year: number, month: number) => {
       return { status: 'voluntario', reason: 'Extra remunerado' };
     }
 
-    // Priority 5: Apto
+    // Priority 5: Check férias previsão (without specific dates - only month indication)
+    const feriaRecord = ferias.find(f => {
+      if (f.efetivo_id !== efetivoId) return false;
+      const mesInicio = f.mes_inicio;
+      const mesFim = f.mes_fim || f.mes_inicio;
+      return dateMonth >= mesInicio && dateMonth <= mesFim;
+    });
+    
+    // Only mark as previsão if there are NO parcelas with dates for this férias
+    if (feriaRecord) {
+      const hasParcelas = feriasParcelas.some(p => 
+        p.fat_ferias_id === feriaRecord.id && p.data_inicio && p.data_fim
+      );
+      if (!hasParcelas) {
+        return { 
+          status: 'previsao', 
+          reason: 'Férias (previsão)', 
+          returnDate: feriaRecord.mes_fim ? `Mês ${feriaRecord.mes_fim}` : undefined 
+        };
+      }
+    }
+
+    // Priority 6: Check abono previsão (without specific dates)
+    const abonoRecord = abonos.find(a => a.efetivo_id === efetivoId && a.mes === dateMonth);
+    if (abonoRecord) {
+      // If abono has no specific date, mark as previsão
+      return { status: 'previsao', reason: 'Abono (previsão)', returnDate: undefined };
+    }
+
+    // Priority 7: Apto
     return { status: 'apto' };
-  }, [ferias, abonos, licencas, restricoes, getVolunteersForDate]);
+  }, [ferias, feriasParcelas, abonos, licencas, restricoes, getVolunteersForDate]);
 
   // Get all teams for a specific day with member statuses
   const getTeamsForDay = useCallback((date: Date): TeamForDay[] => {
@@ -479,6 +519,7 @@ export const useCampanhaCalendar = (year: number, month: number) => {
         restricao: membros.filter(m => m.status === 'restricao').length,
         atestado: membros.filter(m => m.status === 'atestado').length,
         voluntario: membros.filter(m => m.status === 'voluntario').length,
+        previsao: membros.filter(m => m.status === 'previsao').length,
       };
 
       return { unidade, equipe, membros, counts };
@@ -488,7 +529,7 @@ export const useCampanhaCalendar = (year: number, month: number) => {
   // Get counts for a specific day (for calendar view)
   const getDayCounts = useCallback((date: Date): DayCounts => {
     const teams = getTeamsForDay(date);
-    const counts: DayCounts = { apto: 0, impedido: 0, restricao: 0, atestado: 0, voluntario: 0, total: 0 };
+    const counts: DayCounts = { apto: 0, impedido: 0, restricao: 0, atestado: 0, voluntario: 0, previsao: 0, total: 0 };
     
     teams.forEach(team => {
       counts.apto += team.counts.apto;
@@ -496,9 +537,10 @@ export const useCampanhaCalendar = (year: number, month: number) => {
       counts.restricao += team.counts.restricao;
       counts.atestado += team.counts.atestado;
       counts.voluntario += team.counts.voluntario;
+      counts.previsao += team.counts.previsao;
     });
     
-    counts.total = counts.apto + counts.impedido + counts.restricao + counts.atestado + counts.voluntario;
+    counts.total = counts.apto + counts.impedido + counts.restricao + counts.atestado + counts.voluntario + counts.previsao;
     return counts;
   }, [getTeamsForDay]);
 

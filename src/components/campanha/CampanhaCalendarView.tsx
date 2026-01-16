@@ -127,6 +127,9 @@ export const CampanhaCalendarView: React.FC<CampanhaCalendarViewProps> = ({
       {counts.voluntario > 0 && (
         <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS.voluntario.dot}`} title={`${counts.voluntario} voluntários`} />
       )}
+      {counts.previsao > 0 && (
+        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS.previsao.dot}`} title={`${counts.previsao} previsão`} />
+      )}
     </div>
   );
 
@@ -150,7 +153,7 @@ export const CampanhaCalendarView: React.FC<CampanhaCalendarViewProps> = ({
               const isHoliday = isFeriado(day);
               const isWeekendDay = isWeekend(day);
               const isTodayDate = isToday(day);
-              const counts = isCurrentMonth ? getDayCounts(day) : { apto: 0, impedido: 0, restricao: 0, atestado: 0, voluntario: 0, total: 0 };
+              const counts = isCurrentMonth ? getDayCounts(day) : { apto: 0, impedido: 0, restricao: 0, atestado: 0, voluntario: 0, previsao: 0, total: 0 };
 
               return (
                 <button
