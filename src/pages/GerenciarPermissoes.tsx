@@ -405,12 +405,10 @@ const GerenciarPermissoes: React.FC = () => {
                             {member.lotacao}
                           </TableCell>
                           <TableCell className="font-mono text-xs text-muted-foreground">
-                            {member.authUserId ? (
+                            {member.authUserId && (
                               <span className="truncate max-w-[120px] inline-block" title={member.authUserId}>
                                 {member.authUserId.slice(0, 8)}...
                               </span>
-                            ) : (
-                              <span className="text-muted-foreground/50 italic">—</span>
                             )}
                           </TableCell>
                           <TableCell>
