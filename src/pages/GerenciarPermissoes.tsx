@@ -38,6 +38,7 @@ interface Efetivo {
 interface EfetivoWithRole extends Efetivo {
   role?: AppRole;
   roleId?: string;
+  authUserId?: string | null;
 }
 
 const ROLE_LABELS: Record<AppRole, string> = {
@@ -117,12 +118,19 @@ const GerenciarPermissoes: React.FC = () => {
         .from('efetivo_roles')
         .select('*');
       
+      // Fetch usuarios_por_login para obter auth_user_id
+      const { data: usuarios } = await supabase
+        .from('usuarios_por_login')
+        .select('matricula, auth_user_id');
+      
       const rolesMap = new Map(roles?.map(r => [r.efetivo_id, { role: r.role as AppRole, roleId: r.id }]) || []);
+      const authUserMap = new Map(usuarios?.map(u => [u.matricula, u.auth_user_id]) || []);
       
       const efetivoWithRoles: EfetivoWithRole[] = (data || []).map(e => ({
         ...e,
         role: rolesMap.get(e.id)?.role,
         roleId: rolesMap.get(e.id)?.roleId,
+        authUserId: authUserMap.get(e.matricula),
       }));
       
       setEfetivo(efetivoWithRoles);
@@ -377,6 +385,7 @@ const GerenciarPermissoes: React.FC = () => {
                         <TableHead>Nome de Guerra</TableHead>
                         <TableHead>Matrícula</TableHead>
                         <TableHead>Lotação</TableHead>
+                        <TableHead>ID do Usuário</TableHead>
                         <TableHead className="w-64">Nível de Acesso</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -394,6 +403,15 @@ const GerenciarPermissoes: React.FC = () => {
                           </TableCell>
                           <TableCell className="text-muted-foreground text-sm">
                             {member.lotacao}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs text-muted-foreground">
+                            {member.authUserId ? (
+                              <span className="truncate max-w-[120px] inline-block" title={member.authUserId}>
+                                {member.authUserId.slice(0, 8)}...
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground/50 italic">—</span>
+                            )}
                           </TableCell>
                           <TableCell>
                             <Select 
