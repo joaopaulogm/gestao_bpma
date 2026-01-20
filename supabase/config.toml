@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.get-google-maps-token]
 verify_jwt = false
+
+[functions.process-raps-folder]
+verify_jwt = false
