@@ -390,9 +390,7 @@ const GerenciarPermissoes: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredEfetivo
-                        .filter((member) => member.authUserId)
-                        .map((member) => (
+                      {filteredEfetivo.map((member) => (
                         <TableRow key={member.id}>
                           <TableCell className="font-medium text-sm">
                             {member.posto_graduacao}
