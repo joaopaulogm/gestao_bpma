@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { PlusCircle, List, BarChart, MapPin, Table, FileText, Package, Leaf } from 'lucide-react';
+import { PlusCircle, List, BarChart, MapPin, Table, FileText, Package, Leaf, FolderSearch } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Briefcase } from 'lucide-react';
 
@@ -15,6 +15,7 @@ const menuItems = [
   { title: 'Bens Apreendidos', description: 'Gerenciar apreensões', icon: Package, path: '/secao-operacional/bens-apreendidos' },
   { title: 'Cadastrar Flora', description: 'Registrar espécies de flora', icon: Leaf, path: '/secao-operacional/flora-cadastro' },
   { title: 'Flora Cadastrada', description: 'Listar espécies de flora', icon: List, path: '/secao-operacional/flora-cadastrada' },
+  { title: 'Monitorar RAPs', description: 'Processar RAPs automaticamente', icon: FolderSearch, path: '/secao-operacional/monitorar-raps' },
 ];
 
 const SecaoOperacional: React.FC = () => {
