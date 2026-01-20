@@ -15,7 +15,7 @@ const getAllowedOrigin = (requestOrigin: string | null): string => {
   }
   
   // Fallback for Lovable preview domains
-  if (requestOrigin && requestOrigin.includes('.lovable.app')) {
+  if (requestOrigin && (requestOrigin.includes('.lovable.app') || requestOrigin.includes('.lovableproject.com'))) {
     return requestOrigin;
   }
   
