@@ -29,7 +29,7 @@ const Hotspots = () => {
             latitude_origem,
             longitude_origem,
             data,
-            regiao_administrativa:dim_regiao_administrativa(nome),
+            regiao_administrativa:dim_regiao_administrativa!fk_resgates_2025_regiao(nome),
             origem:dim_origem(nome),
             especie:dim_especies_fauna(nome_popular)
           `)
