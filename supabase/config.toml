@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.buscar-imagens-especies]
 verify_jwt = false
+
+[functions.parse-rap]
+verify_jwt = false
+
+[functions.get-google-maps-token]
+verify_jwt = false
