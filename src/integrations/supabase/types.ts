@@ -2642,6 +2642,42 @@ export type Database = {
         }
         Relationships: []
       }
+      rap_processados: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          drive_file_id: string
+          drive_file_name: string
+          extracted_data: Json | null
+          form_type: string | null
+          id: string
+          processed_at: string | null
+          rap_numero: string | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          drive_file_id: string
+          drive_file_name: string
+          extracted_data?: Json | null
+          form_type?: string | null
+          id?: string
+          processed_at?: string | null
+          rap_numero?: string | null
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          drive_file_id?: string
+          drive_file_name?: string
+          extracted_data?: Json | null
+          form_type?: string | null
+          id?: string
+          processed_at?: string | null
+          rap_numero?: string | null
+        }
+        Relationships: []
+      }
       stg_dm_xlsx: {
         Row: {
           ano: number | null
