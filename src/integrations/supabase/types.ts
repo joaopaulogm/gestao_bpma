@@ -812,27 +812,36 @@ export type Database = {
         Row: {
           ano: number
           created_at: string | null
+          data_fim: string | null
+          data_inicio: string | null
           efetivo_id: string | null
           id: string
           mes: number
+          minuta_observacao: string | null
           observacao: string | null
           updated_at: string | null
         }
         Insert: {
           ano?: number
           created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
           efetivo_id?: string | null
           id?: string
           mes: number
+          minuta_observacao?: string | null
           observacao?: string | null
           updated_at?: string | null
         }
         Update: {
           ano?: number
           created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
           efetivo_id?: string | null
           id?: string
           mes?: number
+          minuta_observacao?: string | null
           observacao?: string | null
           updated_at?: string | null
         }
@@ -1333,6 +1342,9 @@ export type Database = {
           id: string
           mes_fim: number | null
           mes_inicio: number
+          minuta_data_fim: string | null
+          minuta_data_inicio: string | null
+          minuta_observacao: string | null
           observacao: string | null
           source_row_number: number | null
           source_sheet: string | null
@@ -1347,6 +1359,9 @@ export type Database = {
           id?: string
           mes_fim?: number | null
           mes_inicio: number
+          minuta_data_fim?: string | null
+          minuta_data_inicio?: string | null
+          minuta_observacao?: string | null
           observacao?: string | null
           source_row_number?: number | null
           source_sheet?: string | null
@@ -1361,6 +1376,9 @@ export type Database = {
           id?: string
           mes_fim?: number | null
           mes_inicio?: number
+          minuta_data_fim?: string | null
+          minuta_data_inicio?: string | null
+          minuta_observacao?: string | null
           observacao?: string | null
           source_row_number?: number | null
           source_sheet?: string | null
