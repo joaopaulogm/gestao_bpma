@@ -400,7 +400,7 @@ const CrimesAmbientaisCadastro = () => {
         .insert({
           data,
           horario_acionamento: horarioAcionamento || null,
-          horario_termino: horarioTermino || null,
+          horario_desfecho: horarioTermino || null,
           regiao_administrativa_id: regiaoId,
           tipo_area_id: tipoAreaId || null,
           area_protegida: areaProtegida,
@@ -637,7 +637,7 @@ const CrimesAmbientaisCadastro = () => {
 
           <div className="space-y-2">
             <Label htmlFor="horarioAcionamento" className="text-sm font-medium">
-              Horário de Acionamento
+              Horário do Acionamento/Início
             </Label>
             <Input
               id="horarioAcionamento"
@@ -650,7 +650,7 @@ const CrimesAmbientaisCadastro = () => {
 
           <div className="space-y-2">
             <Label htmlFor="horarioTermino" className="text-sm font-medium">
-              Horário de Término
+              Horário do Desfecho
             </Label>
             <Input
               id="horarioTermino"

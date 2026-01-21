@@ -31,8 +31,6 @@ interface DimensionItem {
 interface TipoPenal {
   id: string;
   nome: string;
-  codigo: string | null;
-  descricao: string | null;
 }
 
 interface DesfechoCrimeComum {
@@ -203,7 +201,7 @@ const CrimesComuns = () => {
         .insert({
           data,
           horario_acionamento: horarioAcionamento || null,
-          horario_termino: horarioTermino || null,
+          horario_desfecho: horarioTermino || null,
           regiao_administrativa_id: regiaoId,
           tipo_area_id: tipoAreaId || null,
           latitude,
@@ -247,7 +245,8 @@ const CrimesComuns = () => {
         }));
 
         if (bensRecords.length > 0) {
-          const { error: bensError } = await supabase
+          const supabaseAny = supabase as any;
+          const { error: bensError } = await supabaseAny
             .from('fat_ocorrencia_apreensao_crime_comum')
             .insert(bensRecords);
           if (bensError) throw bensError;
@@ -260,7 +259,8 @@ const CrimesComuns = () => {
           registro_id: ocorrenciaId,
           efetivo_id: m.efetivo_id
         }));
-        const { error: equipeError } = await supabase
+        const supabaseAny = supabase as any;
+        const { error: equipeError } = await supabaseAny
           .from('fat_equipe_crime_comum')
           .insert(equipeRecords);
         if (equipeError) {
@@ -346,7 +346,7 @@ const CrimesComuns = () => {
 
           <div className="space-y-2">
             <Label htmlFor="horarioAcionamento" className="text-sm font-medium">
-              Horário de Acionamento
+              Horário do Acionamento/Início
             </Label>
             <Input
               id="horarioAcionamento"
@@ -359,7 +359,7 @@ const CrimesComuns = () => {
 
           <div className="space-y-2">
             <Label htmlFor="horarioTermino" className="text-sm font-medium">
-              Horário de Término
+              Horário do Desfecho
             </Label>
             <Input
               id="horarioTermino"
@@ -487,7 +487,7 @@ const CrimesComuns = () => {
               <SelectContent>
                 {tiposPenais.map(t => (
                   <SelectItem key={t.id} value={t.id}>
-                    {t.codigo ? `${t.codigo} - ${t.nome}` : t.nome}
+                    {t.nome}
                   </SelectItem>
                 ))}
               </SelectContent>
