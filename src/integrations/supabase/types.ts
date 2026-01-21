@@ -1142,6 +1142,8 @@ export type Database = {
           doc_irregular: boolean | null
           enquadramento_id: string | null
           estruturas_encontradas: string | null
+          horario_acionamento: string | null
+          horario_termino: string | null
           id: string
           intensidade_percebida: string | null
           latitude: string
@@ -1188,6 +1190,8 @@ export type Database = {
           doc_irregular?: boolean | null
           enquadramento_id?: string | null
           estruturas_encontradas?: string | null
+          horario_acionamento?: string | null
+          horario_termino?: string | null
           id?: string
           intensidade_percebida?: string | null
           latitude: string
@@ -1234,6 +1238,8 @@ export type Database = {
           doc_irregular?: boolean | null
           enquadramento_id?: string | null
           estruturas_encontradas?: string | null
+          horario_acionamento?: string | null
+          horario_termino?: string | null
           id?: string
           intensidade_percebida?: string | null
           latitude?: string
@@ -1299,6 +1305,8 @@ export type Database = {
           estado_saude_id: string | null
           estagio_vida_id: string | null
           hora_guarda_ceapa: string | null
+          horario_acionamento: string | null
+          horario_termino: string | null
           id: string
           latitude_origem: string
           latitude_soltura: string | null
@@ -1326,6 +1334,8 @@ export type Database = {
           estado_saude_id?: string | null
           estagio_vida_id?: string | null
           hora_guarda_ceapa?: string | null
+          horario_acionamento?: string | null
+          horario_termino?: string | null
           id?: string
           latitude_origem: string
           latitude_soltura?: string | null
@@ -1353,6 +1363,8 @@ export type Database = {
           estado_saude_id?: string | null
           estagio_vida_id?: string | null
           hora_guarda_ceapa?: string | null
+          horario_acionamento?: string | null
+          horario_termino?: string | null
           id?: string
           latitude_origem?: string
           latitude_soltura?: string | null

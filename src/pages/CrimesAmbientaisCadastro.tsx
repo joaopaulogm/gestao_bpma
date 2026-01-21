@@ -115,6 +115,8 @@ const CrimesAmbientaisCadastro = () => {
   
   // Form state - Informações Gerais
   const [data, setData] = useState('');
+  const [horarioAcionamento, setHorarioAcionamento] = useState('');
+  const [horarioTermino, setHorarioTermino] = useState('');
   const [regiaoId, setRegiaoId] = useState('');
   const [tipoAreaId, setTipoAreaId] = useState('');
   const [areaProtegida, setAreaProtegida] = useState(false);
@@ -374,6 +376,8 @@ const CrimesAmbientaisCadastro = () => {
         .from('fat_registros_de_crime')
         .insert({
           data,
+          horario_acionamento: horarioAcionamento || null,
+          horario_termino: horarioTermino || null,
           regiao_administrativa_id: regiaoId,
           tipo_area_id: tipoAreaId || null,
           area_protegida: areaProtegida,
@@ -512,6 +516,8 @@ const CrimesAmbientaisCadastro = () => {
 
   const resetForm = () => {
     setData('');
+    setHorarioAcionamento('');
+    setHorarioTermino('');
     setRegiaoId('');
     setTipoAreaId('');
     setAreaProtegida(false);
@@ -602,6 +608,32 @@ const CrimesAmbientaisCadastro = () => {
               value={data}
               onChange={(e) => setData(e.target.value)}
               required
+              className="input-glass"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="horarioAcionamento" className="text-sm font-medium">
+              Horário de Acionamento
+            </Label>
+            <Input
+              id="horarioAcionamento"
+              type="time"
+              value={horarioAcionamento}
+              onChange={(e) => setHorarioAcionamento(e.target.value)}
+              className="input-glass"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="horarioTermino" className="text-sm font-medium">
+              Horário de Término
+            </Label>
+            <Input
+              id="horarioTermino"
+              type="time"
+              value={horarioTermino}
+              onChange={(e) => setHorarioTermino(e.target.value)}
               className="input-glass"
             />
           </div>

@@ -3,6 +3,8 @@ import { ResgateFormData } from '@/schemas/resgateSchema';
 
 export const defaultResgateForm: ResgateFormData = {
   data: '',
+  horarioAcionamento: '',
+  horarioTermino: '',
   regiaoAdministrativa: '',
   origem: '',
   desfechoResgate: '',

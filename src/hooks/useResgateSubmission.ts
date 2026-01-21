@@ -124,6 +124,8 @@ const prepararDadosParaInsercao = async (
   // Tabelas modernas (2025+ e fat_registros_de_resgate)
   return {
     data: dataFormatada,
+    horario_acionamento: data.horarioAcionamento || null,
+    horario_termino: data.horarioTermino || null,
     especie_id: especie.especieId || null,
     regiao_administrativa_id: regiaoId,
     origem_id: origemId,

@@ -152,6 +152,13 @@ const Sidebar = () => {
                 </li>
                 
                 <li>
+                  <Link to="/crimes-comuns" className={linkClasses('/crimes-comuns', true)}>
+                    <Shield className="h-5 w-5 flex-shrink-0" />
+                    {(isOpen || isMobile) && <span className="truncate">Crimes Comuns</span>}
+                  </Link>
+                </li>
+                
+                <li>
                   <Link to="/material-apoio" className={linkClasses('/material-apoio', true)}>
                     <BookOpen className="h-5 w-5 flex-shrink-0" />
                     {(isOpen || isMobile) && <span className="truncate">Material de Apoio</span>}

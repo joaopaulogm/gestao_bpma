@@ -125,6 +125,8 @@ const prepararDadosParaAtualizacao = async (
   // Tabelas modernas (2025+ e fat_registros_de_resgate)
   return {
     data: dataFormatada,
+    horario_acionamento: data.horarioAcionamento || null,
+    horario_termino: data.horarioTermino || null,
     especie_id: especieSelecionada?.id || originalRegistro.especie_id,
     regiao_administrativa_id: regiaoId,
     origem_id: origemId,

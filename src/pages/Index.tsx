@@ -142,6 +142,7 @@ const Index = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                 <HomeCard title="Resgate de Fauna" icon={Clipboard} to="/resgate-cadastro" />
                 <HomeCard title="Crimes Ambientais" icon={Shield} to="/crimes-ambientais" />
+                <HomeCard title="Crimes Comuns" icon={Shield} to="/crimes-comuns" />
                 <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
                 <HomeCard title="Ranking de Ocorrências" icon={Trophy} to="/ranking" />
               </div>
