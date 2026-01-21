@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Gift, ArrowLeft, Search, Calendar, Users, ChevronLeft, ChevronRight, Loader2, Check, X, AlertCircle, Edit2, RefreshCw
+import { Gift, ArrowLeft, Search, Calendar, Users, ChevronLeft, ChevronRight, Loader2, Check, X, AlertCircle, Edit2, RefreshCw, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -16,9 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { MonthlyAbonoQuotaCard } from '@/components/abono/MonthlyAbonoQuotaCard';
 import { AbonoQuota } from '@/components/abono/AbonoQuotaCard';
 import { EditarParcelasDialog } from '@/components/abono/EditarParcelasDialog';
 
@@ -72,6 +75,9 @@ const Abono: React.FC = () => {
   // Estado para edição
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedMilitar, setSelectedMilitar] = useState<MilitarAbono | null>(null);
+  
+  // Estado para colapsar a cota
+  const [cotaExpanded, setCotaExpanded] = useState(false);
 
   const LIMITE_MENSAL = 80;
 
@@ -313,6 +319,50 @@ const Abono: React.FC = () => {
     return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}`;
   };
 
+  // Formatar parcelas para exibição consolidada
+  const formatParcelasConsolidadas = (militar: MilitarAbono) => {
+    const parcelas: { num: number; inicio: string; fim: string; dias: number }[] = [];
+    
+    if (militar.parcela1_inicio && militar.parcela1_fim) {
+      const dias = militar.parcela1_dias || calcularDias(militar.parcela1_inicio, militar.parcela1_fim);
+      parcelas.push({ num: 1, inicio: militar.parcela1_inicio, fim: militar.parcela1_fim, dias });
+    }
+    if (militar.parcela2_inicio && militar.parcela2_fim) {
+      const dias = militar.parcela2_dias || calcularDias(militar.parcela2_inicio, militar.parcela2_fim);
+      parcelas.push({ num: 2, inicio: militar.parcela2_inicio, fim: militar.parcela2_fim, dias });
+    }
+    if (militar.parcela3_inicio && militar.parcela3_fim) {
+      const dias = militar.parcela3_dias || calcularDias(militar.parcela3_inicio, militar.parcela3_fim);
+      parcelas.push({ num: 3, inicio: militar.parcela3_inicio, fim: militar.parcela3_fim, dias });
+    }
+
+    if (parcelas.length === 0) return '-';
+
+    const totalDias = parcelas.reduce((acc, p) => acc + p.dias, 0);
+    const resta = 5 - totalDias;
+
+    if (parcelas.length === 1 && totalDias >= 5) {
+      return `Única ${formatDate(parcelas[0].inicio)} - ${formatDate(parcelas[0].fim)}`;
+    }
+
+    const parcelasStr = parcelas.map((p, idx) => {
+      const label = parcelas.length === 1 ? '' : `${idx + 1}ª `;
+      return `${label}${formatDate(p.inicio)} - ${formatDate(p.fim)}`;
+    }).join(' | ');
+
+    if (resta > 0) {
+      return `${parcelasStr} | Resta ${resta}`;
+    }
+
+    return parcelasStr;
+  };
+
+  const calcularDias = (inicio: string, fim: string) => {
+    const inicioDate = new Date(inicio);
+    const fimDate = new Date(fim);
+    return Math.ceil((fimDate.getTime() - inicioDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  };
+
   const handleEditClick = (militar: MilitarAbono) => {
     setSelectedMilitar(militar);
     setEditDialogOpen(true);
@@ -326,61 +376,8 @@ const Abono: React.FC = () => {
     setSelectedMes(prev => prev === 12 ? 1 : prev + 1);
   };
 
-  // Render tabela mobile
-  const renderMilitarCardMobile = (militar: MilitarAbono) => (
-    <div key={militar.id} className="p-3 border-b last:border-b-0 space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className={`${postoColors[militar.posto] || 'bg-muted'} text-xs`}>
-            {militar.posto}
-          </Badge>
-          <span className="font-medium text-sm">{militar.nome_guerra}</span>
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-7 w-7 p-0">
-          <Edit2 className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-      
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span>{militar.matricula}</span>
-        <span>•</span>
-        <Badge variant="outline" className="text-[10px] h-4">
-          {militar.tipo === 'previsto' ? `Prev: ${mesesAbrev[(militar.mes_previsao || militar.mes) - 1]}` : 
-           militar.mes_reprogramado ? `Reprog: ${mesesAbrev[(militar.mes_previsao || militar.mes) - 1]} → ${mesesAbrev[militar.mes_reprogramado - 1]}` : 
-           `Mês: ${mesesAbrev[militar.mes - 1]}`}
-        </Badge>
-      </div>
-      
-      <div className="grid grid-cols-3 gap-2 text-xs">
-        <div className="space-y-0.5">
-          <span className="text-muted-foreground">1ª Parcela</span>
-          <div className="font-medium">{militar.parcela1_inicio ? `${formatDate(militar.parcela1_inicio)}` : '-'}</div>
-          {militar.parcela1_inicio && (
-            <div className="flex gap-0.5">
-              <Badge variant={militar.parcela1_sgpol ? "default" : "outline"} className="text-[8px] h-3 px-0.5">SG</Badge>
-              <Badge variant={militar.parcela1_campanha ? "secondary" : "outline"} className="text-[8px] h-3 px-0.5">CP</Badge>
-            </div>
-          )}
-        </div>
-        <div className="space-y-0.5">
-          <span className="text-muted-foreground">2ª Parcela</span>
-          <div className="font-medium">{militar.parcela2_inicio ? `${formatDate(militar.parcela2_inicio)}` : '-'}</div>
-          {militar.parcela2_inicio && (
-            <div className="flex gap-0.5">
-              <Badge variant={militar.parcela2_sgpol ? "default" : "outline"} className="text-[8px] h-3 px-0.5">SG</Badge>
-              <Badge variant={militar.parcela2_campanha ? "secondary" : "outline"} className="text-[8px] h-3 px-0.5">CP</Badge>
-            </div>
-          )}
-        </div>
-        <div className="space-y-0.5">
-          <span className="text-muted-foreground">3ª Parcela</span>
-          <div className="font-medium">{militar.parcela3_inicio ? `${formatDate(militar.parcela3_inicio)}` : '-'}</div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderMilitaresTable = (militares: MilitarAbono[], showPrevisaoColumn: boolean = false) => (
+  // Tabela para Previstos (sem colunas de parcelas)
+  const renderPrevistosTable = (militares: MilitarAbono[]) => (
     <>
       {/* Desktop Table */}
       <div className="hidden md:block overflow-x-auto">
@@ -390,12 +387,7 @@ const Abono: React.FC = () => {
               <TableHead className="w-[80px]">Posto</TableHead>
               <TableHead className="min-w-[120px]">Nome</TableHead>
               <TableHead className="w-[90px]">Matrícula</TableHead>
-              {showPrevisaoColumn && (
-                <TableHead className="w-[130px] text-center">Previsão/Reprog.</TableHead>
-              )}
-              <TableHead className="text-center min-w-[100px]">1ª Parcela</TableHead>
-              <TableHead className="text-center min-w-[100px]">2ª Parcela</TableHead>
-              <TableHead className="text-center min-w-[80px]">3ª Parcela</TableHead>
+              <TableHead className="w-[130px] text-center">Previsão/Reprog.</TableHead>
               <TableHead className="w-[60px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -409,69 +401,18 @@ const Abono: React.FC = () => {
                 </TableCell>
                 <TableCell className="font-medium text-sm">{militar.nome_guerra}</TableCell>
                 <TableCell className="text-muted-foreground text-sm">{militar.matricula}</TableCell>
-                {showPrevisaoColumn && (
-                  <TableCell className="text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      {militar.mes_reprogramado && militar.mes_reprogramado !== (militar.mes_previsao || militar.mes) ? (
-                        <>
-                          <Badge variant="outline" className="text-[10px] h-5 bg-amber-500/10 text-amber-600 border-amber-500/30">
-                            {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]} → {mesesAbrev[militar.mes_reprogramado - 1]}
-                          </Badge>
-                        </>
-                      ) : (
-                        <Badge variant="secondary" className="text-[10px] h-5">
-                          Prev: {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                )}
                 <TableCell className="text-center">
-                  {militar.parcela1_inicio ? (
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-xs font-medium">
-                        {formatDate(militar.parcela1_inicio)} - {formatDate(militar.parcela1_fim)}
-                      </span>
-                      <div className="flex gap-0.5">
-                        <Badge variant={militar.parcela1_sgpol ? "default" : "outline"} className="text-[9px] h-4 px-1">
-                          {militar.parcela1_sgpol ? <Check className="h-2 w-2" /> : <X className="h-2 w-2" />}
-                        </Badge>
-                        <Badge variant={militar.parcela1_campanha ? "secondary" : "outline"} className="text-[9px] h-4 px-1">
-                          {militar.parcela1_campanha ? <Check className="h-2 w-2" /> : <X className="h-2 w-2" />}
-                        </Badge>
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">-</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-center">
-                  {militar.parcela2_inicio ? (
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-xs font-medium">
-                        {formatDate(militar.parcela2_inicio)} - {formatDate(militar.parcela2_fim)}
-                      </span>
-                      <div className="flex gap-0.5">
-                        <Badge variant={militar.parcela2_sgpol ? "default" : "outline"} className="text-[9px] h-4 px-1">
-                          {militar.parcela2_sgpol ? <Check className="h-2 w-2" /> : <X className="h-2 w-2" />}
-                        </Badge>
-                        <Badge variant={militar.parcela2_campanha ? "secondary" : "outline"} className="text-[9px] h-4 px-1">
-                          {militar.parcela2_campanha ? <Check className="h-2 w-2" /> : <X className="h-2 w-2" />}
-                        </Badge>
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">-</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-center">
-                  {militar.parcela3_inicio ? (
-                    <span className="text-xs font-medium">
-                      {formatDate(militar.parcela3_inicio)}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">-</span>
-                  )}
+                  <div className="flex flex-col items-center gap-0.5">
+                    {militar.mes_reprogramado && militar.mes_reprogramado !== (militar.mes_previsao || militar.mes) ? (
+                      <Badge variant="outline" className="text-[10px] h-5 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                        {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]} → {mesesAbrev[militar.mes_reprogramado - 1]}
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-[10px] h-5">
+                        Prev: {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]}
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-7 w-7 p-0">
@@ -486,7 +427,116 @@ const Abono: React.FC = () => {
       
       {/* Mobile Cards */}
       <div className="md:hidden">
-        {militares.map(militar => renderMilitarCardMobile(militar))}
+        {militares.map(militar => (
+          <div key={militar.id} className="p-3 border-b last:border-b-0 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={`${postoColors[militar.posto] || 'bg-muted'} text-xs`}>
+                  {militar.posto}
+                </Badge>
+                <span className="font-medium text-sm">{militar.nome_guerra}</span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-7 w-7 p-0">
+                <Edit2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>{militar.matricula}</span>
+              <span>•</span>
+              <Badge variant="outline" className="text-[10px] h-4">
+                Prev: {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]}
+              </Badge>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+
+  // Tabela para Marcados/Reprogramados (com coluna Parcelas consolidada)
+  const renderMarcadosTable = (militares: MilitarAbono[]) => (
+    <>
+      {/* Desktop Table */}
+      <div className="hidden md:block overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[80px]">Posto</TableHead>
+              <TableHead className="min-w-[120px]">Nome</TableHead>
+              <TableHead className="w-[90px]">Matrícula</TableHead>
+              <TableHead className="w-[130px] text-center">Previsão/Reprog.</TableHead>
+              <TableHead className="min-w-[200px]">Parcelas</TableHead>
+              <TableHead className="w-[60px]">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {militares.map((militar) => (
+              <TableRow key={militar.id}>
+                <TableCell>
+                  <Badge variant="outline" className={`${postoColors[militar.posto] || 'bg-muted'} text-xs`}>
+                    {militar.posto}
+                  </Badge>
+                </TableCell>
+                <TableCell className="font-medium text-sm">{militar.nome_guerra}</TableCell>
+                <TableCell className="text-muted-foreground text-sm">{militar.matricula}</TableCell>
+                <TableCell className="text-center">
+                  <div className="flex flex-col items-center gap-0.5">
+                    {militar.mes_reprogramado && militar.mes_reprogramado !== (militar.mes_previsao || militar.mes) ? (
+                      <Badge variant="outline" className="text-[10px] h-5 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                        {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]} → {mesesAbrev[militar.mes_reprogramado - 1]}
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-[10px] h-5">
+                        Prev: {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]}
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className="text-xs font-medium">
+                    {formatParcelasConsolidadas(militar)}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-7 w-7 p-0">
+                    <Edit2 className="h-3.5 w-3.5" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {/* Mobile Cards */}
+      <div className="md:hidden">
+        {militares.map(militar => (
+          <div key={militar.id} className="p-3 border-b last:border-b-0 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={`${postoColors[militar.posto] || 'bg-muted'} text-xs`}>
+                  {militar.posto}
+                </Badge>
+                <span className="font-medium text-sm">{militar.nome_guerra}</span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-7 w-7 p-0">
+                <Edit2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>{militar.matricula}</span>
+              <span>•</span>
+              <Badge variant="outline" className="text-[10px] h-4">
+                {militar.mes_reprogramado ? `Reprog: ${mesesAbrev[(militar.mes_previsao || militar.mes) - 1]} → ${mesesAbrev[militar.mes_reprogramado - 1]}` : 
+                 `Mês: ${mesesAbrev[militar.mes - 1]}`}
+              </Badge>
+            </div>
+            <div className="text-xs">
+              <span className="text-muted-foreground">Parcelas: </span>
+              <span className="font-medium">{formatParcelasConsolidadas(militar)}</span>
+            </div>
+          </div>
+        ))}
       </div>
     </>
   );
@@ -631,7 +681,7 @@ const Abono: React.FC = () => {
                       </div>
                     ) : (
                       <div className="overflow-x-auto">
-                        {renderMilitaresTable(filteredPrevistos, true)}
+                        {renderPrevistosTable(filteredPrevistos)}
                       </div>
                     )}
                   </CardContent>
@@ -654,7 +704,7 @@ const Abono: React.FC = () => {
                       </div>
                     ) : (
                       <div className="overflow-x-auto">
-                        {renderMilitaresTable(filteredMarcados, true)}
+                        {renderMarcadosTable(filteredMarcados)}
                       </div>
                     )}
                   </CardContent>
@@ -664,31 +714,77 @@ const Abono: React.FC = () => {
 
             {/* Sidebar com cotas - visível apenas em desktop */}
             <div className="hidden lg:flex flex-col gap-3 min-h-0 overflow-hidden">
-              {/* Card de cota do mês selecionado */}
-              <div className="flex-shrink-0">
-                <MonthlyAbonoQuotaCard 
-                  quota={quotaMesSelecionado} 
-                  mesNome={mesesNome[selectedMes - 1]} 
-                />
-              </div>
-              
-              {/* Resumo anual */}
-              <Card className="border-primary/20 flex-shrink-0">
-                <CardHeader className="py-2 px-3">
-                  <CardTitle className="text-xs font-medium">Resumo {selectedYear}</CardTitle>
-                </CardHeader>
-                <CardContent className="px-3 pb-3 space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Total de policiais</span>
-                    <span className="font-semibold">{abonoData.length}</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Dias previstos</span>
-                    <span className="font-semibold text-amber-600">{abonoData.length * 5}</span>
-                  </div>
-                </CardContent>
-              </Card>
-
+              {/* Card de cota do mês selecionado - colapsável */}
+              <Collapsible open={cotaExpanded} onOpenChange={setCotaExpanded}>
+                <Card className="bg-white border border-border shadow-sm">
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="py-2 px-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <CardTitle className="flex items-center justify-between text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center">
+                            <Gift className="h-3 w-3 text-amber-500" />
+                          </div>
+                          <span>Cota de Abono - {mesesNome[selectedMes - 1]}</span>
+                        </div>
+                        {cotaExpanded ? (
+                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="px-3 pb-3 space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Limite mensal</span>
+                        <span className="font-medium">{quotaMesSelecionado.limite} dias</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Previsão</span>
+                        <span className="font-medium text-amber-600">{quotaMesSelecionado.previsto} dias</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Marcados</span>
+                        <span className="font-medium text-primary">{quotaMesSelecionado.marcados} dias</span>
+                      </div>
+                      <div className="h-px bg-border my-2" />
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Saldo disponível</span>
+                        <span className={`font-semibold ${quotaMesSelecionado.saldo >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {quotaMesSelecionado.saldo} dias
+                        </span>
+                      </div>
+                      {/* Progress bar */}
+                      <div className="mt-2">
+                        <div className="h-2 bg-muted rounded-full overflow-hidden flex">
+                          <div 
+                            className="h-full bg-primary transition-all"
+                            style={{ width: `${Math.min((quotaMesSelecionado.marcados / quotaMesSelecionado.limite) * 100, 100)}%` }}
+                          />
+                          <div 
+                            className="h-full bg-amber-400 transition-all"
+                            style={{ width: `${Math.min((quotaMesSelecionado.previsto / quotaMesSelecionado.limite) * 100, Math.max(0, 100 - (quotaMesSelecionado.marcados / quotaMesSelecionado.limite) * 100))}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                          <span>{quotaMesSelecionado.marcados + quotaMesSelecionado.previsto} / {quotaMesSelecionado.limite}</span>
+                          <div className="flex gap-2">
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-primary"></span>
+                              Marcados
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                              Previsão
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             </div>
           </div>
         </div>
