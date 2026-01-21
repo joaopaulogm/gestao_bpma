@@ -54,7 +54,7 @@ const MonitorarRAPs = () => {
       const { data, error } = await supabase
         .from('rap_processados')
         .select('*')
-        .order('processado_em', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
@@ -66,7 +66,9 @@ const MonitorarRAPs = () => {
   const processRAPs = useMutation({
     mutationFn: async () => {
       setIsProcessing(true);
-      const { data, error } = await supabase.functions.invoke('process-raps-folder');
+      const { data, error } = await supabase.functions.invoke('process-raps-folder', {
+        body: { action: 'process', limit: 5 }
+      });
       
       if (error) throw error;
       return data as ProcessResult;
@@ -249,7 +251,7 @@ const MonitorarRAPs = () => {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{rap.drive_file_name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(rap.processed_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                        {format(new Date(rap.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                       </p>
                       <p className="text-xs text-muted-foreground">RAP: {rap.rap_numero}</p>
                     </div>
