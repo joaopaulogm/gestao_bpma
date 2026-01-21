@@ -1,10 +1,14 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { ArrowLeft, FileText, Loader2, Printer, Download, Calendar, Gift } from 'lucide-react';
+import { ArrowLeft, FileText, Loader2, Printer, Calendar, Gift, FileSpreadsheet, FileDown } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { format, addDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Table,
   TableBody,
@@ -13,8 +17,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 interface AbonoMinuta {
   id: string;
@@ -23,8 +37,8 @@ interface AbonoMinuta {
   matricula: string;
   nome: string;
   dias: number;
-  data_inicio: string;
-  data_fim: string;
+  data_inicio: Date;
+  data_fim: Date;
 }
 
 const MESES = [
@@ -36,16 +50,6 @@ const postoOrdem: Record<string, number> = {
   'TC': 1, 'MAJ': 2, 'CAP': 3, '1º TEN': 4, '2º TEN': 5, 'ASP OF': 6,
   'ST': 7, '1º SGT': 8, '2º SGT': 9, '3º SGT': 10, 'CB': 11, 'SD': 12
 };
-
-// Calculate end date from start date and number of days
-function calcularDataFim(ano: number, mes: number, dias: number): string {
-  // Assuming abono starts on day 1 of the month
-  const startDate = new Date(ano, mes - 1, 1);
-  const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + dias - 1);
-  
-  return endDate.toLocaleDateString('pt-BR');
-}
 
 const MinutaAbono: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -73,25 +77,26 @@ const MinutaAbono: React.FC = () => {
 
       if (error) throw error;
 
-      // Transform data
       const minutaData: AbonoMinuta[] = [];
       
       abonos?.forEach((a: any) => {
         if (a.efetivo) {
+          const dataInicio = new Date(ano, mes - 1, 1);
+          const dataFim = addDays(dataInicio, 4); // 5 days
+          
           minutaData.push({
             id: a.id,
             quadro: a.efetivo.quadro || '-',
             posto_graduacao: a.efetivo.posto_graduacao || '-',
             matricula: a.efetivo.matricula || '-',
             nome: a.efetivo.nome || '-',
-            dias: 5, // Abono is always 5 days
-            data_inicio: `01/${mes.toString().padStart(2, '0')}/${ano}`,
-            data_fim: calcularDataFim(ano, mes, 5),
+            dias: 5,
+            data_inicio: dataInicio,
+            data_fim: dataFim,
           });
         }
       });
 
-      // Sort by posto
       minutaData.sort((a, b) => {
         const postoA = postoOrdem[a.posto_graduacao] || 99;
         const postoB = postoOrdem[b.posto_graduacao] || 99;
@@ -112,8 +117,164 @@ const MinutaAbono: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
+  const updateDataInicio = (id: string, newDate: Date) => {
+    setData(prev => prev.map(item => {
+      if (item.id === id) {
+        const newDataFim = addDays(newDate, item.dias - 1);
+        return { ...item, data_inicio: newDate, data_fim: newDataFim };
+      }
+      return item;
+    }));
+  };
+
+  const updateDataFim = (id: string, newDate: Date) => {
+    setData(prev => prev.map(item => {
+      if (item.id === id) {
+        return { ...item, data_fim: newDate };
+      }
+      return item;
+    }));
+  };
+
   const handlePrint = () => {
     window.print();
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(14);
+    doc.text('POLÍCIA MILITAR DO DISTRITO FEDERAL', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text('BATALHÃO DE POLICIAMENTO DE PROTEÇÃO AMBIENTAL', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
+    doc.setFontSize(11);
+    doc.text(`MINUTA DE ABONO - ${MESES[mes - 1].toUpperCase()} DE ${ano}`, doc.internal.pageSize.getWidth() / 2, 32, { align: 'center' });
+
+    const tableData = data.map((item, index) => [
+      index + 1,
+      item.quadro,
+      item.posto_graduacao,
+      item.matricula,
+      item.nome,
+      item.dias,
+      format(item.data_inicio, 'dd/MM/yyyy'),
+      format(item.data_fim, 'dd/MM/yyyy'),
+    ]);
+
+    autoTable(doc, {
+      head: [['#', 'Quadro', 'Posto/Grad', 'Matrícula', 'Nome Completo', 'Dias', 'Data Início', 'Data Término']],
+      body: tableData,
+      startY: 40,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [230, 126, 34] },
+    });
+
+    const finalY = (doc as any).lastAutoTable.finalY || 40;
+    doc.setFontSize(10);
+    doc.text('_______________________________', 30, finalY + 30);
+    doc.text('Chefe da Seção de Pessoas', 35, finalY + 36);
+    doc.text('_______________________________', 130, finalY + 30);
+    doc.text('Comandante do BPMA', 140, finalY + 36);
+
+    doc.save(`minuta_abono_${MESES[mes - 1].toLowerCase()}_${ano}.pdf`);
+    toast.success('PDF exportado com sucesso!');
+  };
+
+  const exportToExcel = () => {
+    const wsData = [
+      ['POLÍCIA MILITAR DO DISTRITO FEDERAL'],
+      ['BATALHÃO DE POLICIAMENTO DE PROTEÇÃO AMBIENTAL'],
+      [`MINUTA DE ABONO - ${MESES[mes - 1].toUpperCase()} DE ${ano}`],
+      [],
+      ['#', 'Quadro', 'Posto/Graduação', 'Matrícula', 'Nome Completo', 'Qtd. Dias', 'Data Início', 'Data Término'],
+      ...data.map((item, index) => [
+        index + 1,
+        item.quadro,
+        item.posto_graduacao,
+        item.matricula,
+        item.nome,
+        item.dias,
+        format(item.data_inicio, 'dd/MM/yyyy'),
+        format(item.data_fim, 'dd/MM/yyyy'),
+      ]),
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Minuta de Abono');
+    
+    ws['!cols'] = [
+      { wch: 5 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 35 }, { wch: 10 }, { wch: 12 }, { wch: 12 }
+    ];
+
+    XLSX.writeFile(wb, `minuta_abono_${MESES[mes - 1].toLowerCase()}_${ano}.xlsx`);
+    toast.success('Excel exportado com sucesso!');
+  };
+
+  const exportToWord = () => {
+    const htmlContent = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="utf-8"><title>Minuta de Abono</title></head>
+      <body style="font-family: Arial, sans-serif;">
+        <h2 style="text-align: center;">POLÍCIA MILITAR DO DISTRITO FEDERAL</h2>
+        <h3 style="text-align: center;">BATALHÃO DE POLICIAMENTO DE PROTEÇÃO AMBIENTAL</h3>
+        <h4 style="text-align: center;">MINUTA DE ABONO - ${MESES[mes - 1].toUpperCase()} DE ${ano}</h4>
+        <br/>
+        <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background-color: #e67e22; color: white;">
+              <th>#</th>
+              <th>Quadro</th>
+              <th>Posto/Graduação</th>
+              <th>Matrícula</th>
+              <th>Nome Completo</th>
+              <th>Qtd. Dias</th>
+              <th>Data Início</th>
+              <th>Data Término</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map((item, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${item.quadro}</td>
+                <td>${item.posto_graduacao}</td>
+                <td>${item.matricula}</td>
+                <td>${item.nome}</td>
+                <td style="text-align: center;">${item.dias}</td>
+                <td>${format(item.data_inicio, 'dd/MM/yyyy')}</td>
+                <td>${format(item.data_fim, 'dd/MM/yyyy')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <br/><br/><br/>
+        <table style="width: 100%;">
+          <tr>
+            <td style="text-align: center; width: 50%;">
+              <div style="border-top: 1px solid black; width: 200px; margin: auto; padding-top: 5px;">
+                Chefe da Seção de Pessoas
+              </div>
+            </td>
+            <td style="text-align: center; width: 50%;">
+              <div style="border-top: 1px solid black; width: 200px; margin: auto; padding-top: 5px;">
+                Comandante do BPMA
+              </div>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `minuta_abono_${MESES[mes - 1].toLowerCase()}_${ano}.doc`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Word exportado com sucesso!');
   };
 
   const totalDias = useMemo(() => data.reduce((acc, item) => acc + item.dias, 0), [data]);
@@ -143,10 +304,34 @@ const MinutaAbono: React.FC = () => {
               </div>
             </div>
 
-            <Button onClick={handlePrint} className="gap-2">
-              <Printer className="h-4 w-4" />
-              Imprimir
-            </Button>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <FileDown className="h-4 w-4" />
+                    Exportar
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={exportToPDF} className="gap-2">
+                    <FileText className="h-4 w-4 text-red-500" />
+                    Exportar PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportToWord} className="gap-2">
+                    <FileText className="h-4 w-4 text-blue-500" />
+                    Exportar Word (DOC)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportToExcel} className="gap-2">
+                    <FileSpreadsheet className="h-4 w-4 text-green-500" />
+                    Exportar Excel (XLSX)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button onClick={handlePrint} className="gap-2">
+                <Printer className="h-4 w-4" />
+                Imprimir
+              </Button>
+            </div>
           </div>
 
           {/* Print Header */}
@@ -174,7 +359,7 @@ const MinutaAbono: React.FC = () => {
             </Card>
             <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
               <CardContent className="p-4 text-center">
-                <Download className="h-5 w-5 text-emerald-600 mx-auto mb-2" />
+                <FileDown className="h-5 w-5 text-emerald-600 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground">{totalDias}</p>
                 <p className="text-xs text-muted-foreground">Total de Dias</p>
               </CardContent>
@@ -228,8 +413,50 @@ const MinutaAbono: React.FC = () => {
                           <TableCell className="text-center">
                             <Badge variant="secondary">{item.dias}</Badge>
                           </TableCell>
-                          <TableCell>{item.data_inicio}</TableCell>
-                          <TableCell>{item.data_fim}</TableCell>
+                          <TableCell className="print:hidden">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="w-[120px] justify-start text-left font-normal">
+                                  <Calendar className="mr-2 h-4 w-4" />
+                                  {format(item.data_inicio, 'dd/MM/yyyy')}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={item.data_inicio}
+                                  onSelect={(date) => date && updateDataInicio(item.id, date)}
+                                  initialFocus
+                                  className={cn("p-3 pointer-events-auto")}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </TableCell>
+                          <TableCell className="print:hidden">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="w-[120px] justify-start text-left font-normal">
+                                  <Calendar className="mr-2 h-4 w-4" />
+                                  {format(item.data_fim, 'dd/MM/yyyy')}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={item.data_fim}
+                                  onSelect={(date) => date && updateDataFim(item.id, date)}
+                                  initialFocus
+                                  className={cn("p-3 pointer-events-auto")}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </TableCell>
+                          <TableCell className="hidden print:table-cell">
+                            {format(item.data_inicio, 'dd/MM/yyyy')}
+                          </TableCell>
+                          <TableCell className="hidden print:table-cell">
+                            {format(item.data_fim, 'dd/MM/yyyy')}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
