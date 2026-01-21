@@ -524,216 +524,203 @@ const Abono: React.FC = () => {
         </div>
       </div>
 
-      {/* Conteúdo principal com scroll */}
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full max-w-7xl mx-auto p-3 md:p-4">
-          <div className="h-full grid gap-4 lg:grid-cols-[1fr,280px]">
-            {/* Coluna principal */}
-            <div className="flex flex-col gap-3 min-h-0 overflow-hidden">
-              {/* Navegação por mês */}
-              <Card className="flex-shrink-0">
-                <CardContent className="p-2 md:p-3">
-                  <div className="flex items-center justify-between">
-                    <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8">
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    
-                    <div className="flex items-center gap-2 md:gap-3">
-                      <h2 className="text-base md:text-lg font-bold">{mesesNome[selectedMes - 1]}</h2>
-                      <Badge variant="secondary" className="text-sm">
-                        {militaresDoMes.previstos.length + militaresDoMes.marcados.length}
-                      </Badge>
+      {/* Conteúdo principal */}
+      <div className="flex-1 overflow-auto p-3 md:p-4">
+        <div className="max-w-full mx-auto flex flex-col gap-3">
+          {/* Navegação por mês */}
+          <Card className="flex-shrink-0">
+            <CardContent className="p-2 md:p-3">
+              <div className="flex items-center justify-between">
+                <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <div className="flex items-center gap-2 md:gap-3">
+                  <h2 className="text-base md:text-lg font-bold">{mesesNome[selectedMes - 1]}</h2>
+                  <Badge variant="secondary" className="text-sm">
+                    {militaresDoMes.previstos.length + militaresDoMes.marcados.length}
+                  </Badge>
+                </div>
+                
+                <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Cota de Abono - abaixo do nome do mês */}
+          <Collapsible open={cotaExpanded} onOpenChange={setCotaExpanded}>
+            <Card className="bg-white border border-border shadow-sm">
+              <CollapsibleTrigger asChild>
+                <CardHeader className="py-2 px-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <CardTitle className="flex items-center justify-between text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center">
+                        <Gift className="h-3 w-3 text-amber-500" />
+                      </div>
+                      <span>Cota de Abono - {mesesNome[selectedMes - 1]}</span>
                     </div>
-                    
-                    <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8">
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      {!cotaExpanded && (
+                        <div className="flex items-center gap-4 text-xs">
+                          <span className="text-muted-foreground">
+                            Marcados: <span className="font-semibold text-primary">{quotaMesSelecionado.marcados}</span>/{quotaMesSelecionado.limite}
+                          </span>
+                          <span className={`font-semibold ${quotaMesSelecionado.saldo >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            Saldo: {quotaMesSelecionado.saldo} dias
+                          </span>
+                        </div>
+                      )}
+                      {cotaExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="px-3 pb-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-2 bg-muted/50 rounded-lg">
+                      <div className="text-xs text-muted-foreground">Limite mensal</div>
+                      <div className="text-lg font-bold">{quotaMesSelecionado.limite} dias</div>
+                    </div>
+                    <div className="text-center p-2 bg-amber-50 rounded-lg">
+                      <div className="text-xs text-muted-foreground">Previsão</div>
+                      <div className="text-lg font-bold text-amber-600">{quotaMesSelecionado.previsto} dias</div>
+                    </div>
+                    <div className="text-center p-2 bg-primary/10 rounded-lg">
+                      <div className="text-xs text-muted-foreground">Marcados</div>
+                      <div className="text-lg font-bold text-primary">{quotaMesSelecionado.marcados} dias</div>
+                    </div>
+                    <div className={`text-center p-2 rounded-lg ${quotaMesSelecionado.saldo >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+                      <div className="text-xs text-muted-foreground">Saldo disponível</div>
+                      <div className={`text-lg font-bold ${quotaMesSelecionado.saldo >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {quotaMesSelecionado.saldo} dias
+                      </div>
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="mt-3">
+                    <div className="h-2 bg-muted rounded-full overflow-hidden flex">
+                      <div 
+                        className="h-full bg-primary transition-all"
+                        style={{ width: `${Math.min((quotaMesSelecionado.marcados / quotaMesSelecionado.limite) * 100, 100)}%` }}
+                      />
+                      <div 
+                        className="h-full bg-amber-400 transition-all"
+                        style={{ width: `${Math.min((quotaMesSelecionado.previsto / quotaMesSelecionado.limite) * 100, Math.max(0, 100 - (quotaMesSelecionado.marcados / quotaMesSelecionado.limite) * 100))}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-end mt-1 gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-primary"></span>
+                        Marcados
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                        Previsão
+                      </span>
+                    </div>
                   </div>
                 </CardContent>
-              </Card>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
-              {/* Tabs de mês rápidas */}
-              <ScrollArea className="flex-shrink-0">
-                <div className="flex gap-1 pb-1">
-                  {mesesNome.map((mes, idx) => {
-                    const mesNum = idx + 1;
-                    const count = abonoData.filter((item: any) => item.mes === mesNum).length;
-                    const isActive = selectedMes === mesNum;
-                    
-                    return (
-                      <Button
-                        key={mesNum}
-                        variant={isActive ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setSelectedMes(mesNum)}
-                        className={`flex-shrink-0 gap-1 h-7 text-xs px-2 ${isActive ? '' : 'text-muted-foreground'}`}
-                      >
-                        {mesesAbrev[idx]}
-                        {count > 0 && (
-                          <Badge variant={isActive ? "secondary" : "outline"} className="ml-0.5 h-4 px-1 text-[10px]">
-                            {count}
-                          </Badge>
-                        )}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-
-              {/* Busca */}
-              <div className="relative flex-shrink-0">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome ou matrícula..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 h-8 text-sm"
-                />
-              </div>
-
-              {/* Tabelas - exibição completa */}
-              <div className="flex-1 min-h-0 overflow-auto flex flex-col gap-3">
-                {/* Seção Previstos */}
-                <Card>
-                  <CardHeader className="py-2 px-3">
-                    <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                      <Users className="h-4 w-4 text-primary" />
-                      Previstos para {mesesNome[selectedMes - 1]}
-                      <Badge variant="secondary" className="ml-auto text-xs">{filteredPrevistos.length}</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    {filteredPrevistos.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
-                        <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
-                        <p className="text-sm font-medium">Nenhum policial previsto</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        {renderPrevistosTable(filteredPrevistos)}
-                      </div>
+          {/* Tabs de mês rápidas */}
+          <ScrollArea className="flex-shrink-0">
+            <div className="flex gap-1 pb-1">
+              {mesesNome.map((mes, idx) => {
+                const mesNum = idx + 1;
+                const count = abonoData.filter((item: any) => item.mes === mesNum).length;
+                const isActive = selectedMes === mesNum;
+                
+                return (
+                  <Button
+                    key={mesNum}
+                    variant={isActive ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedMes(mesNum)}
+                    className={`flex-shrink-0 gap-1 h-7 text-xs px-2 ${isActive ? '' : 'text-muted-foreground'}`}
+                  >
+                    {mesesAbrev[idx]}
+                    {count > 0 && (
+                      <Badge variant={isActive ? "secondary" : "outline"} className="ml-0.5 h-4 px-1 text-[10px]">
+                        {count}
+                      </Badge>
                     )}
-                  </CardContent>
-                </Card>
-
-                {/* Seção Marcados/Reprogramados */}
-                <Card>
-                  <CardHeader className="py-2 px-3">
-                    <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                      <Calendar className="h-4 w-4 text-amber-500" />
-                      Marcados/Reprogramados
-                      <Badge variant="secondary" className="ml-auto text-xs">{filteredMarcados.length}</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    {filteredMarcados.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
-                        <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
-                        <p className="text-sm font-medium">Nenhum policial marcado</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        {renderMarcadosTable(filteredMarcados)}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
+                  </Button>
+                );
+              })}
             </div>
+          </ScrollArea>
 
-            {/* Sidebar com cotas - visível apenas em desktop */}
-            <div className="hidden lg:flex flex-col gap-3 min-h-0 overflow-hidden">
-              {/* Card de cota do mês selecionado - colapsável */}
-              <Collapsible open={cotaExpanded} onOpenChange={setCotaExpanded}>
-                <Card className="bg-white border border-border shadow-sm">
-                  <CollapsibleTrigger asChild>
-                    <CardHeader className="py-2 px-3 cursor-pointer hover:bg-muted/50 transition-colors">
-                      <CardTitle className="flex items-center justify-between text-sm font-medium">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center">
-                            <Gift className="h-3 w-3 text-amber-500" />
-                          </div>
-                          <span>Cota de Abono - {mesesNome[selectedMes - 1]}</span>
-                        </div>
-                        {cotaExpanded ? (
-                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </CardTitle>
-                    </CardHeader>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <CardContent className="px-3 pb-3 space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Limite mensal</span>
-                        <span className="font-medium">{quotaMesSelecionado.limite} dias</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Previsão</span>
-                        <span className="font-medium text-amber-600">{quotaMesSelecionado.previsto} dias</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Marcados</span>
-                        <span className="font-medium text-primary">{quotaMesSelecionado.marcados} dias</span>
-                      </div>
-                      <div className="h-px bg-border my-2" />
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Saldo disponível</span>
-                        <span className={`font-semibold ${quotaMesSelecionado.saldo >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {quotaMesSelecionado.saldo} dias
-                        </span>
-                      </div>
-                      {/* Progress bar */}
-                      <div className="mt-2">
-                        <div className="h-2 bg-muted rounded-full overflow-hidden flex">
-                          <div 
-                            className="h-full bg-primary transition-all"
-                            style={{ width: `${Math.min((quotaMesSelecionado.marcados / quotaMesSelecionado.limite) * 100, 100)}%` }}
-                          />
-                          <div 
-                            className="h-full bg-amber-400 transition-all"
-                            style={{ width: `${Math.min((quotaMesSelecionado.previsto / quotaMesSelecionado.limite) * 100, Math.max(0, 100 - (quotaMesSelecionado.marcados / quotaMesSelecionado.limite) * 100))}%` }}
-                          />
-                        </div>
-                        <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-                          <span>{quotaMesSelecionado.marcados + quotaMesSelecionado.previsto} / {quotaMesSelecionado.limite}</span>
-                          <div className="flex gap-2">
-                            <span className="flex items-center gap-1">
-                              <span className="w-2 h-2 rounded-full bg-primary"></span>
-                              Marcados
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                              Previsão
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
-            </div>
+          {/* Busca */}
+          <div className="relative flex-shrink-0">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou matrícula..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8 h-8 text-sm"
+            />
+          </div>
+
+          {/* Tabelas - exibição completa ocupando espaço total */}
+          <div className="grid gap-3 lg:grid-cols-2">
+            {/* Seção Previstos */}
+            <Card>
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                  <Users className="h-4 w-4 text-primary" />
+                  Previstos para {mesesNome[selectedMes - 1]}
+                  <Badge variant="secondary" className="ml-auto text-xs">{filteredPrevistos.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {filteredPrevistos.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                    <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
+                    <p className="text-sm font-medium">Nenhum policial previsto</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    {renderPrevistosTable(filteredPrevistos)}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Seção Marcados/Reprogramados */}
+            <Card>
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                  <Calendar className="h-4 w-4 text-amber-500" />
+                  Marcados/Reprogramados
+                  <Badge variant="secondary" className="ml-auto text-xs">{filteredMarcados.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {filteredMarcados.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                    <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
+                    <p className="text-sm font-medium">Nenhum policial marcado</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    {renderMarcadosTable(filteredMarcados)}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
 
-      {/* Mobile: Cards de cota em drawer ou colapsável */}
-      <div className="lg:hidden flex-shrink-0 p-3 border-t bg-muted/30">
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="bg-background rounded-lg p-2 border">
-            <div className="text-muted-foreground">Limite Mensal</div>
-            <div className="font-bold text-primary">{LIMITE_MENSAL} dias</div>
-          </div>
-          <div className="bg-background rounded-lg p-2 border">
-            <div className="text-muted-foreground">Marcados</div>
-            <div className={`font-bold ${quotaMesSelecionado.isOverLimit ? 'text-destructive' : 'text-amber-600'}`}>
-              {quotaMesSelecionado.marcados} dias
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Dialog de edição */}
       <EditarParcelasDialog
