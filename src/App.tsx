@@ -47,7 +47,6 @@ const IdentificarEspecie = lazy(() => import(/* webpackChunkName: "identificar-e
 const ManualRAP = lazy(() => import(/* webpackChunkName: "manual-rap" */ '@/pages/apoio/ManualRAP'));
 const RankingOcorrencias = lazy(() => import(/* webpackChunkName: "ranking" */ '@/pages/RankingOcorrencias'));
 const UploadSchemas = lazy(() => import(/* webpackChunkName: "upload-schemas" */ '@/pages/UploadSchemas'));
-const CrimesComuns = lazy(() => import(/* webpackChunkName: "crimes-comuns" */ '@/pages/CrimesComuns'));
 const AtividadesPrevencao = lazy(() => import(/* webpackChunkName: "atividades-prevencao" */ '@/pages/AtividadesPrevencao'));
 const DashboardPublico = lazy(() => import(/* webpackChunkName: "dashboard-publico" */ '@/pages/DashboardPublico'));
 const ProcessarRAP = lazy(() => import(/* webpackChunkName: "processar-rap" */ '@/pages/ProcessarRAP'));
@@ -85,7 +84,7 @@ function App() {
               <Route path="/material-apoio/identificar-especie" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><IdentificarEspecie /></SidebarLayout></ProtectedRoute>} />
               <Route path="/material-apoio/manual-rap" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><ManualRAP /></SidebarLayout></ProtectedRoute>} />
               <Route path="/ranking" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><RankingOcorrencias /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/crimes-comuns" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><CrimesComuns /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/atividades-prevencao" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><AtividadesPrevencao /></SidebarLayout></ProtectedRoute>} />
               <Route path="/atividades-prevencao" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><AtividadesPrevencao /></SidebarLayout></ProtectedRoute>} />
               {/* Admin only */}
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />
