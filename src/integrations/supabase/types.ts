@@ -2678,6 +2678,90 @@ export type Database = {
         }
         Relationships: []
       }
+      stg_abono_2026: {
+        Row: {
+          ano: number | null
+          loaded_at: string
+          matricula: string | null
+          mes: number | null
+          nome_completo: string | null
+          observacao: string | null
+          posto_graduacao: string | null
+          source_row_number: number
+          source_sheet: string
+        }
+        Insert: {
+          ano?: number | null
+          loaded_at?: string
+          matricula?: string | null
+          mes?: number | null
+          nome_completo?: string | null
+          observacao?: string | null
+          posto_graduacao?: string | null
+          source_row_number: number
+          source_sheet: string
+        }
+        Update: {
+          ano?: number | null
+          loaded_at?: string
+          matricula?: string | null
+          mes?: number | null
+          nome_completo?: string | null
+          observacao?: string | null
+          posto_graduacao?: string | null
+          source_row_number?: number
+          source_sheet?: string
+        }
+        Relationships: []
+      }
+      stg_dm_2026: {
+        Row: {
+          ano: number | null
+          cid: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          dias: number | null
+          loaded_at: string
+          matricula: string | null
+          nome_completo: string | null
+          observacao: string | null
+          posto_graduacao: string | null
+          source_row_number: number
+          source_sheet: string
+          tipo: string | null
+        }
+        Insert: {
+          ano?: number | null
+          cid?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          dias?: number | null
+          loaded_at?: string
+          matricula?: string | null
+          nome_completo?: string | null
+          observacao?: string | null
+          posto_graduacao?: string | null
+          source_row_number: number
+          source_sheet: string
+          tipo?: string | null
+        }
+        Update: {
+          ano?: number | null
+          cid?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          dias?: number | null
+          loaded_at?: string
+          matricula?: string | null
+          nome_completo?: string | null
+          observacao?: string | null
+          posto_graduacao?: string | null
+          source_row_number?: number
+          source_sheet?: string
+          tipo?: string | null
+        }
+        Relationships: []
+      }
       stg_dm_xlsx: {
         Row: {
           ano: number | null
@@ -2834,6 +2918,48 @@ export type Database = {
         }
         Relationships: []
       }
+      stg_restricoes_2025: {
+        Row: {
+          ano: number | null
+          data_fim: string | null
+          data_inicio: string | null
+          loaded_at: string
+          matricula: string | null
+          nome_completo: string | null
+          observacao: string | null
+          posto_graduacao: string | null
+          source_row_number: number
+          source_sheet: string
+          tipo_restricao: string | null
+        }
+        Insert: {
+          ano?: number | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          loaded_at?: string
+          matricula?: string | null
+          nome_completo?: string | null
+          observacao?: string | null
+          posto_graduacao?: string | null
+          source_row_number: number
+          source_sheet: string
+          tipo_restricao?: string | null
+        }
+        Update: {
+          ano?: number | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          loaded_at?: string
+          matricula?: string | null
+          nome_completo?: string | null
+          observacao?: string | null
+          posto_graduacao?: string | null
+          source_row_number?: number
+          source_sheet?: string
+          tipo_restricao?: string | null
+        }
+        Relationships: []
+      }
       sync_logs: {
         Row: {
           acao: string
@@ -2870,6 +2996,36 @@ export type Database = {
           id?: string
           status_final?: string | null
           tipo?: string
+        }
+        Relationships: []
+      }
+      sync_run_logs: {
+        Row: {
+          created_at: string
+          detalhes: Json | null
+          erro: string | null
+          finished_at: string | null
+          id: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          detalhes?: Json | null
+          erro?: string | null
+          finished_at?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          detalhes?: Json | null
+          erro?: string | null
+          finished_at?: string | null
+          id?: string
+          started_at?: string
+          status?: string
         }
         Relationships: []
       }
@@ -3208,6 +3364,14 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
       slugify: { Args: { input: string }; Returns: string }
       slugify_pt: { Args: { input: string }; Returns: string }
+      sync_abono_2026_from_stg: {
+        Args: { p_source_sheet?: string }
+        Returns: Json
+      }
+      sync_dm_2026_from_stg: {
+        Args: { p_source_sheet?: string }
+        Returns: Json
+      }
       sync_ferias_2026_from_stg: {
         Args: { p_source_sheet?: string }
         Returns: Json
@@ -3226,6 +3390,10 @@ export type Database = {
       }
       sync_imagens_fauna: { Args: never; Returns: undefined }
       sync_imagens_flora: { Args: never; Returns: undefined }
+      sync_restricoes_from_stg: {
+        Args: { p_source_sheet?: string }
+        Returns: Json
+      }
       unaccent: { Args: { "": string }; Returns: string }
       upsert_ferias_com_parcelas: {
         Args: {
