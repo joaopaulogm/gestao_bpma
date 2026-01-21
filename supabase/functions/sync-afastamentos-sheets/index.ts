@@ -169,23 +169,33 @@ function getCell(row: any[], headers: Map<string, number>, ...possibleNames: str
 }
 
 // Parse date from various formats
-function parseDate(value: string | null): string | null {
+function parseDate(value: string | null, defaultYear: number = 2026): string | null {
   if (!value) return null;
   
+  const trimmed = value.toString().trim();
+  if (!trimmed) return null;
+  
   // Try DD/MM/YYYY format
-  const brMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const brMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (brMatch) {
     const [, day, month, year] = brMatch;
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
   
+  // Try DD/MM format (assume current/default year)
+  const shortMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})$/);
+  if (shortMatch) {
+    const [, day, month] = shortMatch;
+    return `${defaultYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+  
   // Try YYYY-MM-DD format
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return value;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
   }
   
   // Try serial date (Excel/Sheets)
-  const serial = parseFloat(value);
+  const serial = parseFloat(trimmed);
   if (!isNaN(serial) && serial > 30000 && serial < 60000) {
     const date = new Date((serial - 25569) * 86400 * 1000);
     return date.toISOString().split('T')[0];
@@ -363,6 +373,12 @@ function processAbonoRows(rows: any[][], sheetName: string): any[] {
     console.log(`[processAbonoRows] Row 0 (header): cols 17-35:`, rows[0].slice(17, 36));
   }
   
+  // Log linha 6 (header real dos dados - linha 7 no Excel)
+  if (rows.length > 6) {
+    console.log(`[processAbonoRows] Row 6 (data header): cols 0-15:`, rows[6].slice(0, 16));
+    console.log(`[processAbonoRows] Row 6 (data header): cols 17-35:`, rows[6].slice(17, 36));
+  }
+  
   // Começar da linha 7 (índice 6) - dados começam após headers
   // Ajustar conforme estrutura real da planilha
   const startRow = 7; // Linha 8 no Excel (1-indexed)
@@ -398,13 +414,26 @@ function processAbonoRows(rows: any[][], sheetName: string): any[] {
     // SEI (coluna T)
     const sei = row[COL_SEI]?.toString().trim() || null;
     
-    // Ler datas das parcelas pelos índices das colunas
-    const parcela1Inicio = row[COL_PARCELA1_INICIO] ? parseDate(String(row[COL_PARCELA1_INICIO])) : null;
-    const parcela1Fim = row[COL_PARCELA1_FIM] ? parseDate(String(row[COL_PARCELA1_FIM])) : null;
-    const parcela2Inicio = row[COL_PARCELA2_INICIO] ? parseDate(String(row[COL_PARCELA2_INICIO])) : null;
-    const parcela2Fim = row[COL_PARCELA2_FIM] ? parseDate(String(row[COL_PARCELA2_FIM])) : null;
-    const parcela3Inicio = row[COL_PARCELA3_INICIO] ? parseDate(String(row[COL_PARCELA3_INICIO])) : null;
-    const parcela3Fim = row[COL_PARCELA3_FIM] ? parseDate(String(row[COL_PARCELA3_FIM])) : null;
+    // Log valores brutos das colunas de parcelas para debug
+    if (staging.length < 3) {
+      console.log(`[processAbonoRows] Row ${i} RAW parcela cols:`, {
+        V: row[21],
+        W: row[22],
+        AA: row[26],
+        AB: row[27],
+        AF: row[31],
+        AG: row[32],
+        rowLength: row.length,
+      });
+    }
+    
+    // Ler datas das parcelas pelos índices das colunas (passando o ano para datas DD/MM)
+    const parcela1Inicio = row[COL_PARCELA1_INICIO] ? parseDate(String(row[COL_PARCELA1_INICIO]), anoGozo) : null;
+    const parcela1Fim = row[COL_PARCELA1_FIM] ? parseDate(String(row[COL_PARCELA1_FIM]), anoGozo) : null;
+    const parcela2Inicio = row[COL_PARCELA2_INICIO] ? parseDate(String(row[COL_PARCELA2_INICIO]), anoGozo) : null;
+    const parcela2Fim = row[COL_PARCELA2_FIM] ? parseDate(String(row[COL_PARCELA2_FIM]), anoGozo) : null;
+    const parcela3Inicio = row[COL_PARCELA3_INICIO] ? parseDate(String(row[COL_PARCELA3_INICIO]), anoGozo) : null;
+    const parcela3Fim = row[COL_PARCELA3_FIM] ? parseDate(String(row[COL_PARCELA3_FIM]), anoGozo) : null;
     
     // Log para debug das primeiras linhas com dados
     if (staging.length < 5) {
