@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Gift, ArrowLeft, Search, Calendar, Users, ChevronLeft, ChevronRight, Loader2, ArrowRightLeft, Check, X, AlertCircle } from 'lucide-react';
+import { Gift, ArrowLeft, Search, Calendar, Users, ChevronLeft, ChevronRight, Loader2, Check, X, AlertCircle, Edit2, RefreshCw } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { MonthlyAbonoQuotaCard } from '@/components/abono/MonthlyAbonoQuotaCard';
 import { AbonoQuotaCard, AbonoQuota } from '@/components/abono/AbonoQuotaCard';
+import { EditarParcelasDialog } from '@/components/abono/EditarParcelasDialog';
 
 const mesesNome = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
@@ -29,6 +30,7 @@ interface MilitarAbono {
   posto: string;
   nome: string;
   nome_guerra: string;
+  mes: number;
   mes_previsao: number | null;
   mes_reprogramado: number | null;
   parcela1_inicio: string | null;
@@ -44,7 +46,6 @@ interface MilitarAbono {
   parcela3_inicio: string | null;
   parcela3_fim: string | null;
   parcela3_dias: number | null;
-  tipo: 'previsto' | 'reprogramado';
 }
 
 const postoColors: Record<string, string> = {
@@ -59,10 +60,16 @@ const postoColors: Record<string, string> = {
 const Abono: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedYear] = useState(2026);
   const [selectedMes, setSelectedMes] = useState(new Date().getMonth() + 1);
   const [abonoData, setAbonoData] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'previstos' | 'reprogramados'>('previstos');
+  
+  // Estado para edição
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedMilitar, setSelectedMilitar] = useState<MilitarAbono | null>(null);
 
   const LIMITE_MENSAL = 80;
 
@@ -75,14 +82,23 @@ const Abono: React.FC = () => {
           id,
           mes,
           ano,
+          mes_previsao,
+          mes_reprogramado,
           data_inicio,
           data_fim,
           parcela1_inicio,
           parcela1_fim,
+          parcela1_dias,
+          parcela1_sgpol,
+          parcela1_campanha,
           parcela2_inicio,
           parcela2_fim,
+          parcela2_dias,
+          parcela2_sgpol,
+          parcela2_campanha,
           parcela3_inicio,
           parcela3_fim,
+          parcela3_dias,
           efetivo:dim_efetivo(id, matricula, nome, nome_guerra, posto_graduacao)
         `)
         .eq('ano', selectedYear)
@@ -114,7 +130,33 @@ const Abono: React.FC = () => {
     };
   }, [fetchData]);
 
-  // Processar dados para o mês selecionado
+  // Sincronizar com a planilha
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-afastamentos-sheets', {
+        method: 'POST',
+      });
+      
+      if (error) throw error;
+      
+      if (data?.detalhes?.abono?.rpc_result) {
+        const result = data.detalhes.abono.rpc_result;
+        toast.success(`Sincronização concluída: ${result.upserted} registros atualizados`);
+      } else {
+        toast.success('Sincronização concluída');
+      }
+      
+      await fetchData();
+    } catch (error: any) {
+      console.error('Erro na sincronização:', error);
+      toast.error('Erro ao sincronizar dados');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // Processar dados para o mês selecionado - separar previstos e reprogramados
   const militaresDoMes = useMemo(() => {
     const previstos: MilitarAbono[] = [];
     const reprogramados: MilitarAbono[] = [];
@@ -129,26 +171,33 @@ const Abono: React.FC = () => {
         posto: item.efetivo.posto_graduacao,
         nome: item.efetivo.nome,
         nome_guerra: item.efetivo.nome_guerra,
-        mes_previsao: item.mes, // O campo mes armazena o mês atual
-        mes_reprogramado: null,
+        mes: item.mes,
+        mes_previsao: item.mes_previsao,
+        mes_reprogramado: item.mes_reprogramado,
         parcela1_inicio: item.parcela1_inicio,
         parcela1_fim: item.parcela1_fim,
-        parcela1_dias: null,
-        parcela1_sgpol: false,
-        parcela1_campanha: false,
+        parcela1_dias: item.parcela1_dias,
+        parcela1_sgpol: item.parcela1_sgpol || false,
+        parcela1_campanha: item.parcela1_campanha || false,
         parcela2_inicio: item.parcela2_inicio,
         parcela2_fim: item.parcela2_fim,
-        parcela2_dias: null,
-        parcela2_sgpol: false,
-        parcela2_campanha: false,
+        parcela2_dias: item.parcela2_dias,
+        parcela2_sgpol: item.parcela2_sgpol || false,
+        parcela2_campanha: item.parcela2_campanha || false,
         parcela3_inicio: item.parcela3_inicio,
         parcela3_fim: item.parcela3_fim,
-        parcela3_dias: null,
-        tipo: 'previsto',
+        parcela3_dias: item.parcela3_dias,
       };
 
+      // Se o mês do registro é o mês selecionado
       if (item.mes === selectedMes) {
-        previstos.push(militar);
+        // Verificar se é reprogramado (tem mes_reprogramado definido e é diferente de mes_previsao)
+        if (item.mes_reprogramado && item.mes_reprogramado === selectedMes && 
+            item.mes_previsao && item.mes_previsao !== selectedMes) {
+          reprogramados.push(militar);
+        } else {
+          previstos.push(militar);
+        }
       }
     });
 
@@ -157,10 +206,9 @@ const Abono: React.FC = () => {
 
   // Calcular cota para o mês selecionado
   const quotaMesSelecionado = useMemo(() => {
-    // Previsão: quantidade de policiais previstos × 5 dias
-    const diasPrevistos = militaresDoMes.previstos.length * 5;
+    const totalMilitares = militaresDoMes.previstos.length + militaresDoMes.reprogramados.length;
+    const diasPrevistos = totalMilitares * 5;
     
-    // Marcados: soma dos dias das parcelas que têm data definida neste mês
     let diasMarcados = 0;
     abonoData.forEach((item: any) => {
       const parcelas = [
@@ -171,8 +219,9 @@ const Abono: React.FC = () => {
       
       parcelas.forEach(parcela => {
         if (parcela.inicio && parcela.fim) {
-          const inicioDate = new Date(parcela.inicio);
-          if (inicioDate.getMonth() + 1 === selectedMes && inicioDate.getFullYear() === selectedYear) {
+          const [year, month] = parcela.inicio.split('-').map(Number);
+          if (month === selectedMes && year === selectedYear) {
+            const inicioDate = new Date(parcela.inicio);
             const fimDate = new Date(parcela.fim);
             const dias = Math.ceil((fimDate.getTime() - inicioDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
             diasMarcados += dias;
@@ -188,18 +237,15 @@ const Abono: React.FC = () => {
       saldo: LIMITE_MENSAL - diasMarcados,
       isOverLimit: diasMarcados > LIMITE_MENSAL,
     };
-  }, [abonoData, selectedMes, selectedYear, militaresDoMes.previstos.length]);
+  }, [abonoData, selectedMes, selectedYear, militaresDoMes]);
 
-  // Calcular cotas para todos os meses (para a tabela anual)
+  // Calcular cotas para todos os meses
   const abonoQuotas = useMemo<AbonoQuota[]>(() => {
     return mesesNome.map((mes, idx) => {
       const mesNum = idx + 1;
-      
-      // Contar policiais previstos para este mês
       const previsto = abonoData.filter((item: any) => item.mes === mesNum).length;
       const diasPrevistos = previsto * 5;
       
-      // Marcados: dias com datas definidas neste mês
       let diasMarcados = 0;
       abonoData.forEach((item: any) => {
         const parcelas = [
@@ -210,8 +256,9 @@ const Abono: React.FC = () => {
         
         parcelas.forEach(parcela => {
           if (parcela.inicio && parcela.fim) {
-            const inicioDate = new Date(parcela.inicio);
-            if (inicioDate.getMonth() + 1 === mesNum && inicioDate.getFullYear() === selectedYear) {
+            const [year, month] = parcela.inicio.split('-').map(Number);
+            if (month === mesNum && year === selectedYear) {
+              const inicioDate = new Date(parcela.inicio);
               const fimDate = new Date(parcela.fim);
               const dias = Math.ceil((fimDate.getTime() - inicioDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
               diasMarcados += dias;
@@ -232,21 +279,26 @@ const Abono: React.FC = () => {
   }, [abonoData, selectedYear]);
 
   // Filtrar militares
-  const filteredPrevistos = useMemo(() => {
-    if (!searchTerm) return militaresDoMes.previstos;
+  const filteredMilitares = useMemo(() => {
+    const list = activeTab === 'previstos' ? militaresDoMes.previstos : militaresDoMes.reprogramados;
+    if (!searchTerm) return list;
     const term = searchTerm.toLowerCase();
-    return militaresDoMes.previstos.filter(m => 
+    return list.filter(m => 
       m.nome.toLowerCase().includes(term) ||
       m.nome_guerra.toLowerCase().includes(term) ||
       m.matricula.includes(searchTerm)
     );
-  }, [militaresDoMes.previstos, searchTerm]);
+  }, [militaresDoMes, searchTerm, activeTab]);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-';
-    // Parse date as local time to avoid timezone issues
     const [year, month, day] = dateStr.split('-').map(Number);
     return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}`;
+  };
+
+  const handleEditClick = (militar: MilitarAbono) => {
+    setSelectedMilitar(militar);
+    setEditDialogOpen(true);
   };
 
   const prevMonth = () => {
@@ -256,6 +308,99 @@ const Abono: React.FC = () => {
   const nextMonth = () => {
     setSelectedMes(prev => prev === 12 ? 1 : prev + 1);
   };
+
+  const renderMilitaresTable = (militares: MilitarAbono[]) => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[100px]">Posto</TableHead>
+          <TableHead>Nome</TableHead>
+          <TableHead className="w-[100px]">Matrícula</TableHead>
+          <TableHead className="text-center">1ª Parcela</TableHead>
+          <TableHead className="text-center">2ª Parcela</TableHead>
+          <TableHead className="text-center">3ª Parcela</TableHead>
+          <TableHead className="w-[80px]">Ações</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {militares.map((militar) => (
+          <TableRow key={militar.id}>
+            <TableCell>
+              <Badge 
+                variant="outline" 
+                className={postoColors[militar.posto] || 'bg-muted'}
+              >
+                {militar.posto}
+              </Badge>
+            </TableCell>
+            <TableCell className="font-medium">{militar.nome_guerra}</TableCell>
+            <TableCell className="text-muted-foreground">{militar.matricula}</TableCell>
+            <TableCell className="text-center">
+              {militar.parcela1_inicio ? (
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-sm font-medium">
+                    {formatDate(militar.parcela1_inicio)} - {formatDate(militar.parcela1_fim)}
+                  </span>
+                  <div className="flex gap-1">
+                    <Badge variant={militar.parcela1_sgpol ? "default" : "outline"} className="text-[10px] h-4 px-1">
+                      {militar.parcela1_sgpol ? <Check className="h-2.5 w-2.5 mr-0.5" /> : <X className="h-2.5 w-2.5 mr-0.5" />}
+                      SGPOL
+                    </Badge>
+                    <Badge variant={militar.parcela1_campanha ? "secondary" : "outline"} className="text-[10px] h-4 px-1">
+                      {militar.parcela1_campanha ? <Check className="h-2.5 w-2.5 mr-0.5" /> : <X className="h-2.5 w-2.5 mr-0.5" />}
+                      Camp
+                    </Badge>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              )}
+            </TableCell>
+            <TableCell className="text-center">
+              {militar.parcela2_inicio ? (
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-sm font-medium">
+                    {formatDate(militar.parcela2_inicio)} - {formatDate(militar.parcela2_fim)}
+                  </span>
+                  <div className="flex gap-1">
+                    <Badge variant={militar.parcela2_sgpol ? "default" : "outline"} className="text-[10px] h-4 px-1">
+                      {militar.parcela2_sgpol ? <Check className="h-2.5 w-2.5 mr-0.5" /> : <X className="h-2.5 w-2.5 mr-0.5" />}
+                      SGPOL
+                    </Badge>
+                    <Badge variant={militar.parcela2_campanha ? "secondary" : "outline"} className="text-[10px] h-4 px-1">
+                      {militar.parcela2_campanha ? <Check className="h-2.5 w-2.5 mr-0.5" /> : <X className="h-2.5 w-2.5 mr-0.5" />}
+                      Camp
+                    </Badge>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              )}
+            </TableCell>
+            <TableCell className="text-center">
+              {militar.parcela3_inicio ? (
+                <span className="text-sm font-medium">
+                  {formatDate(militar.parcela3_inicio)} - {formatDate(militar.parcela3_fim)}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              )}
+            </TableCell>
+            <TableCell>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => handleEditClick(militar)}
+                className="h-8 w-8 p-0"
+              >
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
 
   if (loading) {
     return (
@@ -292,6 +437,15 @@ const Abono: React.FC = () => {
           <div className="flex gap-2">
             <Button 
               variant="outline" 
+              onClick={handleSync}
+              disabled={syncing}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Sincronizando...' : 'Sincronizar'}
+            </Button>
+            <Button 
+              variant="outline" 
               onClick={() => navigate(`/secao-pessoas/abono/minuta?mes=${selectedMes}&ano=${selectedYear}`)}
               className="gap-2"
             >
@@ -316,7 +470,7 @@ const Abono: React.FC = () => {
                   <div className="flex items-center gap-4">
                     <h2 className="text-xl font-bold">{mesesNome[selectedMes - 1]}</h2>
                     <Badge variant="secondary" className="text-lg">
-                      {filteredPrevistos.length} policiais
+                      {militaresDoMes.previstos.length + militaresDoMes.reprogramados.length} policiais
                     </Badge>
                   </div>
                   
@@ -364,97 +518,65 @@ const Abono: React.FC = () => {
               />
             </div>
 
-            {/* Tabela de previstos */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Users className="h-5 w-5 text-primary" />
-                  Policiais Previstos - {mesesNome[selectedMes - 1]}
-                  <Badge variant="outline">{filteredPrevistos.length}</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {filteredPrevistos.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <AlertCircle className="h-12 w-12 mb-4 opacity-50" />
-                    <p className="text-lg font-medium">Nenhum policial previsto</p>
-                    <p className="text-sm">Não há policiais com abono previsto para {mesesNome[selectedMes - 1]}</p>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[100px]">Posto</TableHead>
-                        <TableHead>Nome</TableHead>
-                        <TableHead className="w-[100px]">Matrícula</TableHead>
-                        <TableHead className="text-center">1ª Parcela</TableHead>
-                        <TableHead className="text-center">2ª Parcela</TableHead>
-                        <TableHead className="text-center">3ª Parcela</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredPrevistos.map((militar) => (
-                        <TableRow key={militar.id}>
-                          <TableCell>
-                            <Badge 
-                              variant="outline" 
-                              className={postoColors[militar.posto] || 'bg-muted'}
-                            >
-                              {militar.posto}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">{militar.nome_guerra}</TableCell>
-                          <TableCell className="text-muted-foreground">{militar.matricula}</TableCell>
-                          <TableCell className="text-center">
-                            {militar.parcela1_inicio ? (
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span className="text-sm font-medium">
-                                  {formatDate(militar.parcela1_inicio)} - {formatDate(militar.parcela1_fim)}
-                                </span>
-                                <div className="flex gap-1">
-                                  <Badge variant={militar.parcela1_sgpol ? "default" : "outline"} className="text-[10px] h-4 px-1">
-                                    {militar.parcela1_sgpol ? <Check className="h-2.5 w-2.5 mr-0.5" /> : <X className="h-2.5 w-2.5 mr-0.5" />}
-                                    SGPOL
-                                  </Badge>
-                                </div>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {militar.parcela2_inicio ? (
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span className="text-sm font-medium">
-                                  {formatDate(militar.parcela2_inicio)} - {formatDate(militar.parcela2_fim)}
-                                </span>
-                                <div className="flex gap-1">
-                                  <Badge variant={militar.parcela2_sgpol ? "default" : "outline"} className="text-[10px] h-4 px-1">
-                                    {militar.parcela2_sgpol ? <Check className="h-2.5 w-2.5 mr-0.5" /> : <X className="h-2.5 w-2.5 mr-0.5" />}
-                                    SGPOL
-                                  </Badge>
-                                </div>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {militar.parcela3_inicio ? (
-                              <span className="text-sm font-medium">
-                                {formatDate(militar.parcela3_inicio)} - {formatDate(militar.parcela3_fim)}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+            {/* Tabs Previstos / Reprogramados */}
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="previstos" className="gap-2">
+                  <Users className="h-4 w-4" />
+                  Previstos
+                  <Badge variant="secondary">{militaresDoMes.previstos.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="reprogramados" className="gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Reprogramados
+                  <Badge variant="secondary">{militaresDoMes.reprogramados.length}</Badge>
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="previstos" className="mt-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Users className="h-5 w-5 text-primary" />
+                      Policiais com Previsão em {mesesNome[selectedMes - 1]}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {filteredMilitares.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                        <AlertCircle className="h-12 w-12 mb-4 opacity-50" />
+                        <p className="text-lg font-medium">Nenhum policial previsto</p>
+                        <p className="text-sm">Não há policiais com abono previsto para {mesesNome[selectedMes - 1]}</p>
+                      </div>
+                    ) : (
+                      renderMilitaresTable(filteredMilitares)
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="reprogramados" className="mt-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Calendar className="h-5 w-5 text-amber-500" />
+                      Policiais Reprogramados para {mesesNome[selectedMes - 1]}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {filteredMilitares.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                        <AlertCircle className="h-12 w-12 mb-4 opacity-50" />
+                        <p className="text-lg font-medium">Nenhum policial reprogramado</p>
+                        <p className="text-sm">Não há policiais com abono reprogramado para {mesesNome[selectedMes - 1]}</p>
+                      </div>
+                    ) : (
+                      renderMilitaresTable(filteredMilitares)
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Sidebar com cota */}
@@ -487,6 +609,14 @@ const Abono: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Dialog de edição */}
+      <EditarParcelasDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        militar={selectedMilitar}
+        onSuccess={fetchData}
+      />
     </ScrollArea>
   );
 };

@@ -817,13 +817,22 @@ export type Database = {
           efetivo_id: string | null
           id: string
           mes: number
+          mes_previsao: number | null
+          mes_reprogramado: number | null
           minuta_observacao: string | null
           observacao: string | null
           parcela: number | null
+          parcela1_campanha: boolean | null
+          parcela1_dias: number | null
           parcela1_fim: string | null
           parcela1_inicio: string | null
+          parcela1_sgpol: boolean | null
+          parcela2_campanha: boolean | null
+          parcela2_dias: number | null
           parcela2_fim: string | null
           parcela2_inicio: string | null
+          parcela2_sgpol: boolean | null
+          parcela3_dias: number | null
           parcela3_fim: string | null
           parcela3_inicio: string | null
           updated_at: string | null
@@ -836,13 +845,22 @@ export type Database = {
           efetivo_id?: string | null
           id?: string
           mes: number
+          mes_previsao?: number | null
+          mes_reprogramado?: number | null
           minuta_observacao?: string | null
           observacao?: string | null
           parcela?: number | null
+          parcela1_campanha?: boolean | null
+          parcela1_dias?: number | null
           parcela1_fim?: string | null
           parcela1_inicio?: string | null
+          parcela1_sgpol?: boolean | null
+          parcela2_campanha?: boolean | null
+          parcela2_dias?: number | null
           parcela2_fim?: string | null
           parcela2_inicio?: string | null
+          parcela2_sgpol?: boolean | null
+          parcela3_dias?: number | null
           parcela3_fim?: string | null
           parcela3_inicio?: string | null
           updated_at?: string | null
@@ -855,13 +873,22 @@ export type Database = {
           efetivo_id?: string | null
           id?: string
           mes?: number
+          mes_previsao?: number | null
+          mes_reprogramado?: number | null
           minuta_observacao?: string | null
           observacao?: string | null
           parcela?: number | null
+          parcela1_campanha?: boolean | null
+          parcela1_dias?: number | null
           parcela1_fim?: string | null
           parcela1_inicio?: string | null
+          parcela1_sgpol?: boolean | null
+          parcela2_campanha?: boolean | null
+          parcela2_dias?: number | null
           parcela2_fim?: string | null
           parcela2_inicio?: string | null
+          parcela2_sgpol?: boolean | null
+          parcela3_dias?: number | null
           parcela3_fim?: string | null
           parcela3_inicio?: string | null
           updated_at?: string | null
@@ -2855,12 +2882,21 @@ export type Database = {
           loaded_at: string
           matricula: string | null
           mes: number | null
+          mes_previsao: number | null
+          mes_reprogramado: number | null
           nome_completo: string | null
           observacao: string | null
+          parcela1_campanha: boolean | null
+          parcela1_dias: number | null
           parcela1_fim: string | null
           parcela1_inicio: string | null
+          parcela1_sgpol: boolean | null
+          parcela2_campanha: boolean | null
+          parcela2_dias: number | null
           parcela2_fim: string | null
           parcela2_inicio: string | null
+          parcela2_sgpol: boolean | null
+          parcela3_dias: number | null
           parcela3_fim: string | null
           parcela3_inicio: string | null
           posto_graduacao: string | null
@@ -2872,12 +2908,21 @@ export type Database = {
           loaded_at?: string
           matricula?: string | null
           mes?: number | null
+          mes_previsao?: number | null
+          mes_reprogramado?: number | null
           nome_completo?: string | null
           observacao?: string | null
+          parcela1_campanha?: boolean | null
+          parcela1_dias?: number | null
           parcela1_fim?: string | null
           parcela1_inicio?: string | null
+          parcela1_sgpol?: boolean | null
+          parcela2_campanha?: boolean | null
+          parcela2_dias?: number | null
           parcela2_fim?: string | null
           parcela2_inicio?: string | null
+          parcela2_sgpol?: boolean | null
+          parcela3_dias?: number | null
           parcela3_fim?: string | null
           parcela3_inicio?: string | null
           posto_graduacao?: string | null
@@ -2889,12 +2934,21 @@ export type Database = {
           loaded_at?: string
           matricula?: string | null
           mes?: number | null
+          mes_previsao?: number | null
+          mes_reprogramado?: number | null
           nome_completo?: string | null
           observacao?: string | null
+          parcela1_campanha?: boolean | null
+          parcela1_dias?: number | null
           parcela1_fim?: string | null
           parcela1_inicio?: string | null
+          parcela1_sgpol?: boolean | null
+          parcela2_campanha?: boolean | null
+          parcela2_dias?: number | null
           parcela2_fim?: string | null
           parcela2_inicio?: string | null
+          parcela2_sgpol?: boolean | null
+          parcela3_dias?: number | null
           parcela3_fim?: string | null
           parcela3_inicio?: string | null
           posto_graduacao?: string | null
