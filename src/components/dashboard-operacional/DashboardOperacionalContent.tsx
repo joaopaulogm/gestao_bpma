@@ -255,20 +255,23 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
           };
         });
       } else {
-        // 2026+: Buscar dados com desfecho
+        // 2026+: Buscar dados com destinacao (não desfecho) para calcular solturas/óbitos
         const startDate = `${year}-01-01`;
         const endDate = `${year}-12-31`;
 
-        // Buscar desfechos para lookup
-        const { data: desfechosData } = await supabase
-          .from('dim_desfecho_resgates')
-          .select('id, nome');
+        // Buscar destinacoes para lookup (Soltura = soltura, Óbito não existe em destinacao, 
+        // então usamos desfecho_id para óbitos que vem da dim_desfecho_resgates)
+        const [destinacoesRes, desfechosRes] = await Promise.all([
+          supabase.from('dim_destinacao').select('id, nome'),
+          supabase.from('dim_desfecho_resgates').select('id, nome')
+        ]);
         
-        const desfechosMap = new Map((desfechosData || []).map(d => [d.id, d.nome]));
+        const destinacoesMap = new Map((destinacoesRes.data || []).map(d => [d.id, d.nome]));
+        const desfechosMap = new Map((desfechosRes.data || []).map(d => [d.id, d.nome]));
 
         const { data } = await supabase
           .from('fat_registros_de_resgate')
-          .select('data, quantidade_total, quantidade_adulto, quantidade_filhote, desfecho_id')
+          .select('data, quantidade_total, quantidade_adulto, quantidade_filhote, destinacao_id, desfecho_id')
           .gte('data', startDate).lte('data', endDate);
 
         const byMonth: Record<number, { resgates: number; solturas: number; obitos: number; feridos: number }> = {};
@@ -276,6 +279,7 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
         (data || []).forEach(row => {
           const month = new Date(row.data).getMonth() + 1;
           const qty = row.quantidade_total || (row.quantidade_adulto || 0) + (row.quantidade_filhote || 0) || 1;
+          const destinacaoNome = row.destinacao_id ? destinacoesMap.get(row.destinacao_id) : null;
           const desfechoNome = row.desfecho_id ? desfechosMap.get(row.desfecho_id) : null;
           
           if (!byMonth[month]) {
@@ -284,9 +288,12 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
           
           byMonth[month].resgates += qty;
           
-          if (desfechoNome === 'Vida Livre' || desfechoNome === 'Resolvido no Local') {
+          // Soltura pode vir da destinacao "Soltura" ou "Vida Livre"
+          if (destinacaoNome === 'Soltura' || destinacaoNome === 'Vida Livre' ||
+              desfechoNome === 'Vida Livre' || desfechoNome === 'Resolvido no Local') {
             byMonth[month].solturas += qty;
           }
+          // Óbito pode vir do desfecho "Óbito"
           if (desfechoNome === 'Óbito') {
             byMonth[month].obitos += qty;
           }

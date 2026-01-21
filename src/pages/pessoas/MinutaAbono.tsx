@@ -411,7 +411,7 @@ const MinutaAbono: React.FC = () => {
   return (
     <ScrollArea className="h-[calc(100vh-4rem)]">
       <div className="min-h-full bg-background">
-        <div className="container mx-auto p-4 md:p-6 max-w-7xl">
+        <div className="w-[75%] mx-auto p-4 md:p-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">

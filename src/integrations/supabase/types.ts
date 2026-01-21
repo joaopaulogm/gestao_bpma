@@ -1897,12 +1897,15 @@ export type Database = {
           estado_saude_id: string | null
           estagio_vida_id: string | null
           hora_guarda_ceapa: string | null
+          horario_acionamento: string | null
+          horario_termino: string | null
           id: string
           latitude_origem: string
           latitude_soltura: string | null
           longitude_origem: string
           longitude_soltura: string | null
           motivo_entrega_ceapa: string | null
+          numero_tco: string | null
           numero_termo_entrega: string | null
           origem_id: string | null
           outro_desfecho: string | null
@@ -1924,12 +1927,15 @@ export type Database = {
           estado_saude_id?: string | null
           estagio_vida_id?: string | null
           hora_guarda_ceapa?: string | null
+          horario_acionamento?: string | null
+          horario_termino?: string | null
           id?: string
           latitude_origem: string
           latitude_soltura?: string | null
           longitude_origem: string
           longitude_soltura?: string | null
           motivo_entrega_ceapa?: string | null
+          numero_tco?: string | null
           numero_termo_entrega?: string | null
           origem_id?: string | null
           outro_desfecho?: string | null
@@ -1951,12 +1957,15 @@ export type Database = {
           estado_saude_id?: string | null
           estagio_vida_id?: string | null
           hora_guarda_ceapa?: string | null
+          horario_acionamento?: string | null
+          horario_termino?: string | null
           id?: string
           latitude_origem?: string
           latitude_soltura?: string | null
           longitude_origem?: string
           longitude_soltura?: string | null
           motivo_entrega_ceapa?: string | null
+          numero_tco?: string | null
           numero_termo_entrega?: string | null
           origem_id?: string | null
           outro_desfecho?: string | null
@@ -2476,12 +2485,15 @@ export type Database = {
           estado_saude_id: string | null
           estagio_vida_id: string | null
           hora_guarda_ceapa: string | null
+          horario_acionamento: string | null
+          horario_termino: string | null
           id: string
           latitude_origem: string
           latitude_soltura: string | null
           longitude_origem: string
           longitude_soltura: string | null
           motivo_entrega_ceapa: string | null
+          numero_tco: string | null
           numero_termo_entrega: string | null
           origem_id: string | null
           outro_desfecho: string | null
@@ -2503,12 +2515,15 @@ export type Database = {
           estado_saude_id?: string | null
           estagio_vida_id?: string | null
           hora_guarda_ceapa?: string | null
+          horario_acionamento?: string | null
+          horario_termino?: string | null
           id?: string
           latitude_origem: string
           latitude_soltura?: string | null
           longitude_origem: string
           longitude_soltura?: string | null
           motivo_entrega_ceapa?: string | null
+          numero_tco?: string | null
           numero_termo_entrega?: string | null
           origem_id?: string | null
           outro_desfecho?: string | null
@@ -2530,12 +2545,15 @@ export type Database = {
           estado_saude_id?: string | null
           estagio_vida_id?: string | null
           hora_guarda_ceapa?: string | null
+          horario_acionamento?: string | null
+          horario_termino?: string | null
           id?: string
           latitude_origem?: string
           latitude_soltura?: string | null
           longitude_origem?: string
           longitude_soltura?: string | null
           motivo_entrega_ceapa?: string | null
+          numero_tco?: string | null
           numero_termo_entrega?: string | null
           origem_id?: string | null
           outro_desfecho?: string | null
