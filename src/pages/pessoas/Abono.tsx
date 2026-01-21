@@ -612,10 +612,10 @@ const Abono: React.FC = () => {
                 />
               </div>
 
-              {/* Tabelas com scroll */}
-              <div className="flex-1 min-h-0 overflow-hidden flex flex-col gap-3">
+              {/* Tabelas - exibição completa */}
+              <div className="flex-1 min-h-0 overflow-auto flex flex-col gap-3">
                 {/* Seção Previstos */}
-                <Card className="flex-shrink-0">
+                <Card>
                   <CardHeader className="py-2 px-3">
                     <CardTitle className="flex items-center gap-2 text-sm font-medium">
                       <Users className="h-4 w-4 text-primary" />
@@ -624,39 +624,39 @@ const Abono: React.FC = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <ScrollArea className="max-h-[200px] md:max-h-[250px]">
-                      {filteredPrevistos.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
-                          <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
-                          <p className="text-sm font-medium">Nenhum policial previsto</p>
-                        </div>
-                      ) : (
-                        renderMilitaresTable(filteredPrevistos, true)
-                      )}
-                    </ScrollArea>
+                    {filteredPrevistos.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                        <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
+                        <p className="text-sm font-medium">Nenhum policial previsto</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        {renderMilitaresTable(filteredPrevistos, true)}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
                 {/* Seção Marcados/Reprogramados */}
-                <Card className="flex-1 min-h-0 flex flex-col">
-                  <CardHeader className="py-2 px-3 flex-shrink-0">
+                <Card>
+                  <CardHeader className="py-2 px-3">
                     <CardTitle className="flex items-center gap-2 text-sm font-medium">
                       <Calendar className="h-4 w-4 text-amber-500" />
                       Marcados/Reprogramados
                       <Badge variant="secondary" className="ml-auto text-xs">{filteredMarcados.length}</Badge>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-0 flex-1 min-h-0">
-                    <ScrollArea className="h-full max-h-[300px] md:max-h-none">
-                      {filteredMarcados.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
-                          <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
-                          <p className="text-sm font-medium">Nenhum policial marcado</p>
-                        </div>
-                      ) : (
-                        renderMilitaresTable(filteredMarcados, true)
-                      )}
-                    </ScrollArea>
+                  <CardContent className="p-0">
+                    {filteredMarcados.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                        <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
+                        <p className="text-sm font-medium">Nenhum policial marcado</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        {renderMilitaresTable(filteredMarcados, true)}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>

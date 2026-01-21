@@ -93,6 +93,12 @@ function App() {
               
               {/* Seção Operacional */}
               <Route path="/secao-operacional" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><SecaoOperacional /></SidebarLayout></ProtectedRoute>} />
+              {/* Formulários de Registro - dentro de Seção Operacional */}
+              <Route path="/secao-operacional/resgate-cadastro" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ResgateCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/crimes-ambientais" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><CrimesAmbientaisCadastro /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/crimes-comuns" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><CrimesComuns /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/atividades-prevencao" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><AtividadesPrevencao /></SidebarLayout></ProtectedRoute>} />
+              {/* Demais páginas */}
               <Route path="/secao-operacional/fauna-cadastro" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/fauna-cadastro/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/fauna-cadastrada" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FaunaCadastrada /></SidebarLayout></ProtectedRoute>} />
