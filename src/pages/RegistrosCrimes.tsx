@@ -91,7 +91,7 @@ const RegistrosCrimes = () => {
           tipo_crime:dim_tipo_de_crime(id_tipo_de_crime, "Tipo de Crime"),
           enquadramento:dim_enquadramento(id_enquadramento, "Enquadramento"),
           tipo_area:dim_tipo_de_area(id, "Tipo de Área"),
-          desfecho:dim_desfecho(nome)
+          desfecho:dim_desfecho_resgates(nome)
         `)
         .order('data', { ascending: false });
 

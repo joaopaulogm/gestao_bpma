@@ -15,6 +15,8 @@ const menuItems = [
   { title: 'Hotspots', description: 'Mapa de ocorrências', icon: MapPin, path: '/secao-operacional/hotspots' },
   { title: 'Registros de Resgate', description: 'Todos os registros de resgate', icon: Table, path: '/secao-operacional/registros' },
   { title: 'Registros de Crimes Ambientais', description: 'Todos os crimes ambientais', icon: Briefcase, path: '/secao-operacional/registros-crimes' },
+  { title: 'Registros de Crimes Comuns', description: 'Todos os crimes comuns', icon: Shield, path: '/secao-operacional/registros-crimes-comuns' },
+  { title: 'Registros de Prevenção', description: 'Todas as atividades de prevenção', icon: TreePine, path: '/secao-operacional/registros-prevencao' },
   { title: 'Relatórios', description: 'Gerar relatórios', icon: FileText, path: '/secao-operacional/relatorios' },
   { title: 'Bens Apreendidos', description: 'Gerenciar apreensões', icon: Package, path: '/secao-operacional/bens-apreendidos' },
   { title: 'Cadastrar Fauna', description: 'Registrar novas espécies de fauna', icon: PlusCircle, path: '/secao-operacional/fauna-cadastro' },
