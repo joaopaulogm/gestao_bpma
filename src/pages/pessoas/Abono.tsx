@@ -378,167 +378,96 @@ const Abono: React.FC = () => {
 
   // Tabela para Previstos (sem colunas de parcelas)
   const renderPrevistosTable = (militares: MilitarAbono[]) => (
-    <>
-      {/* Desktop Table */}
-      <div className="hidden md:block overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Posto</TableHead>
-              <TableHead className="min-w-[120px]">Nome</TableHead>
-              <TableHead className="w-[90px]">Matrícula</TableHead>
-              <TableHead className="w-[130px] text-center">Previsão/Reprog.</TableHead>
-              <TableHead className="w-[60px]">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {militares.map((militar) => (
-              <TableRow key={militar.id}>
-                <TableCell>
-                  <Badge variant="outline" className={`${postoColors[militar.posto] || 'bg-muted'} text-xs`}>
-                    {militar.posto}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-medium text-sm">{militar.nome_guerra}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">{militar.matricula}</TableCell>
-                <TableCell className="text-center">
-                  <div className="flex flex-col items-center gap-0.5">
-                    {militar.mes_reprogramado && militar.mes_reprogramado !== (militar.mes_previsao || militar.mes) ? (
-                      <Badge variant="outline" className="text-[10px] h-5 bg-amber-500/10 text-amber-600 border-amber-500/30">
-                        {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]} → {mesesAbrev[militar.mes_reprogramado - 1]}
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-[10px] h-5">
-                        Prev: {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]}
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-7 w-7 p-0">
-                    <Edit2 className="h-3.5 w-3.5" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      
-      {/* Mobile Cards */}
-      <div className="md:hidden">
-        {militares.map(militar => (
-          <div key={militar.id} className="p-3 border-b last:border-b-0 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className={`${postoColors[militar.posto] || 'bg-muted'} text-xs`}>
-                  {militar.posto}
-                </Badge>
-                <span className="font-medium text-sm">{militar.nome_guerra}</span>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-7 w-7 p-0">
-                <Edit2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{militar.matricula}</span>
-              <span>•</span>
-              <Badge variant="outline" className="text-[10px] h-4">
-                Prev: {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]}
+    <Table className="w-full table-fixed">
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[15%]">Posto</TableHead>
+          <TableHead className="w-[35%]">Nome</TableHead>
+          <TableHead className="w-[20%]">Matrícula</TableHead>
+          <TableHead className="w-[20%] text-center">Previsão</TableHead>
+          <TableHead className="w-[10%] text-center">Ações</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {militares.map((militar) => (
+          <TableRow key={militar.id}>
+            <TableCell className="py-1.5">
+              <Badge variant="outline" className={`${postoColors[militar.posto] || 'bg-muted'} text-[10px] md:text-xs`}>
+                {militar.posto}
               </Badge>
-            </div>
-          </div>
+            </TableCell>
+            <TableCell className="font-medium text-xs md:text-sm truncate py-1.5">{militar.nome_guerra}</TableCell>
+            <TableCell className="text-muted-foreground text-xs md:text-sm py-1.5">{militar.matricula}</TableCell>
+            <TableCell className="text-center py-1.5">
+              {militar.mes_reprogramado && militar.mes_reprogramado !== (militar.mes_previsao || militar.mes) ? (
+                <Badge variant="outline" className="text-[9px] md:text-[10px] h-5 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                  {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]} → {mesesAbrev[militar.mes_reprogramado - 1]}
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="text-[9px] md:text-[10px] h-5">
+                  {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]}
+                </Badge>
+              )}
+            </TableCell>
+            <TableCell className="text-center py-1.5">
+              <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-6 w-6 p-0">
+                <Edit2 className="h-3 w-3" />
+              </Button>
+            </TableCell>
+          </TableRow>
         ))}
-      </div>
-    </>
+      </TableBody>
+    </Table>
   );
 
   // Tabela para Marcados/Reprogramados (com coluna Parcelas consolidada)
   const renderMarcadosTable = (militares: MilitarAbono[]) => (
-    <>
-      {/* Desktop Table */}
-      <div className="hidden md:block overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Posto</TableHead>
-              <TableHead className="min-w-[120px]">Nome</TableHead>
-              <TableHead className="w-[90px]">Matrícula</TableHead>
-              <TableHead className="w-[130px] text-center">Previsão/Reprog.</TableHead>
-              <TableHead className="min-w-[200px]">Parcelas</TableHead>
-              <TableHead className="w-[60px]">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {militares.map((militar) => (
-              <TableRow key={militar.id}>
-                <TableCell>
-                  <Badge variant="outline" className={`${postoColors[militar.posto] || 'bg-muted'} text-xs`}>
-                    {militar.posto}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-medium text-sm">{militar.nome_guerra}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">{militar.matricula}</TableCell>
-                <TableCell className="text-center">
-                  <div className="flex flex-col items-center gap-0.5">
-                    {militar.mes_reprogramado && militar.mes_reprogramado !== (militar.mes_previsao || militar.mes) ? (
-                      <Badge variant="outline" className="text-[10px] h-5 bg-amber-500/10 text-amber-600 border-amber-500/30">
-                        {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]} → {mesesAbrev[militar.mes_reprogramado - 1]}
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-[10px] h-5">
-                        Prev: {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]}
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="text-xs font-medium">
-                    {formatParcelasConsolidadas(militar)}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-7 w-7 p-0">
-                    <Edit2 className="h-3.5 w-3.5" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      
-      {/* Mobile Cards */}
-      <div className="md:hidden">
-        {militares.map(militar => (
-          <div key={militar.id} className="p-3 border-b last:border-b-0 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className={`${postoColors[militar.posto] || 'bg-muted'} text-xs`}>
-                  {militar.posto}
-                </Badge>
-                <span className="font-medium text-sm">{militar.nome_guerra}</span>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-7 w-7 p-0">
-                <Edit2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{militar.matricula}</span>
-              <span>•</span>
-              <Badge variant="outline" className="text-[10px] h-4">
-                {militar.mes_reprogramado ? `Reprog: ${mesesAbrev[(militar.mes_previsao || militar.mes) - 1]} → ${mesesAbrev[militar.mes_reprogramado - 1]}` : 
-                 `Mês: ${mesesAbrev[militar.mes - 1]}`}
+    <Table className="w-full table-fixed">
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[12%]">Posto</TableHead>
+          <TableHead className="w-[20%]">Nome</TableHead>
+          <TableHead className="w-[15%]">Matrícula</TableHead>
+          <TableHead className="w-[15%] text-center">Previsão</TableHead>
+          <TableHead className="w-[30%]">Parcelas</TableHead>
+          <TableHead className="w-[8%] text-center">Ações</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {militares.map((militar) => (
+          <TableRow key={militar.id}>
+            <TableCell className="py-1.5">
+              <Badge variant="outline" className={`${postoColors[militar.posto] || 'bg-muted'} text-[10px] md:text-xs`}>
+                {militar.posto}
               </Badge>
-            </div>
-            <div className="text-xs">
-              <span className="text-muted-foreground">Parcelas: </span>
-              <span className="font-medium">{formatParcelasConsolidadas(militar)}</span>
-            </div>
-          </div>
+            </TableCell>
+            <TableCell className="font-medium text-xs md:text-sm truncate py-1.5">{militar.nome_guerra}</TableCell>
+            <TableCell className="text-muted-foreground text-xs md:text-sm py-1.5">{militar.matricula}</TableCell>
+            <TableCell className="text-center py-1.5">
+              {militar.mes_reprogramado && militar.mes_reprogramado !== (militar.mes_previsao || militar.mes) ? (
+                <Badge variant="outline" className="text-[9px] md:text-[10px] h-5 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                  {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]} → {mesesAbrev[militar.mes_reprogramado - 1]}
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="text-[9px] md:text-[10px] h-5">
+                  {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]}
+                </Badge>
+              )}
+            </TableCell>
+            <TableCell className="py-1.5">
+              <span className="text-[10px] md:text-xs font-medium break-words">
+                {formatParcelasConsolidadas(militar)}
+              </span>
+            </TableCell>
+            <TableCell className="text-center py-1.5">
+              <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-6 w-6 p-0">
+                <Edit2 className="h-3 w-3" />
+              </Button>
+            </TableCell>
+          </TableRow>
         ))}
-      </div>
-    </>
+      </TableBody>
+    </Table>
   );
 
   if (loading) {
