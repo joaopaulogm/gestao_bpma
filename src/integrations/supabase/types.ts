@@ -819,6 +819,13 @@ export type Database = {
           mes: number
           minuta_observacao: string | null
           observacao: string | null
+          parcela: number | null
+          parcela1_fim: string | null
+          parcela1_inicio: string | null
+          parcela2_fim: string | null
+          parcela2_inicio: string | null
+          parcela3_fim: string | null
+          parcela3_inicio: string | null
           updated_at: string | null
         }
         Insert: {
@@ -831,6 +838,13 @@ export type Database = {
           mes: number
           minuta_observacao?: string | null
           observacao?: string | null
+          parcela?: number | null
+          parcela1_fim?: string | null
+          parcela1_inicio?: string | null
+          parcela2_fim?: string | null
+          parcela2_inicio?: string | null
+          parcela3_fim?: string | null
+          parcela3_inicio?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -843,6 +857,13 @@ export type Database = {
           mes?: number
           minuta_observacao?: string | null
           observacao?: string | null
+          parcela?: number | null
+          parcela1_fim?: string | null
+          parcela1_inicio?: string | null
+          parcela2_fim?: string | null
+          parcela2_inicio?: string | null
+          parcela3_fim?: string | null
+          parcela3_inicio?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -2836,6 +2857,12 @@ export type Database = {
           mes: number | null
           nome_completo: string | null
           observacao: string | null
+          parcela1_fim: string | null
+          parcela1_inicio: string | null
+          parcela2_fim: string | null
+          parcela2_inicio: string | null
+          parcela3_fim: string | null
+          parcela3_inicio: string | null
           posto_graduacao: string | null
           source_row_number: number
           source_sheet: string
@@ -2847,6 +2874,12 @@ export type Database = {
           mes?: number | null
           nome_completo?: string | null
           observacao?: string | null
+          parcela1_fim?: string | null
+          parcela1_inicio?: string | null
+          parcela2_fim?: string | null
+          parcela2_inicio?: string | null
+          parcela3_fim?: string | null
+          parcela3_inicio?: string | null
           posto_graduacao?: string | null
           source_row_number: number
           source_sheet: string
@@ -2858,6 +2891,12 @@ export type Database = {
           mes?: number | null
           nome_completo?: string | null
           observacao?: string | null
+          parcela1_fim?: string | null
+          parcela1_inicio?: string | null
+          parcela2_fim?: string | null
+          parcela2_inicio?: string | null
+          parcela3_fim?: string | null
+          parcela3_inicio?: string | null
           posto_graduacao?: string | null
           source_row_number?: number
           source_sheet?: string
@@ -3547,6 +3586,7 @@ export type Database = {
         Args: { p_source_sheet?: string }
         Returns: Json
       }
+      sync_stg_to_fat_abono: { Args: never; Returns: undefined }
       unaccent: { Args: { "": string }; Returns: string }
       upsert_ferias_com_parcelas: {
         Args: {

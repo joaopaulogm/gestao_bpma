@@ -37,6 +37,7 @@ interface AbonoMinuta {
   posto_graduacao: string;
   matricula: string;
   nome: string;
+  parcela: number;
   dias: number;
   data_inicio: Date;
   data_fim: Date;
@@ -70,44 +71,66 @@ const MinutaAbono: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Buscar apenas abonos com datas definidas (não previstos)
+      // Buscar abonos com as 3 parcelas
       const { data: abonos, error } = await supabase
         .from('fat_abono')
         .select(`
           id,
           mes,
+          parcela1_inicio,
+          parcela1_fim,
+          parcela2_inicio,
+          parcela2_fim,
+          parcela3_inicio,
+          parcela3_fim,
           data_inicio,
           data_fim,
           minuta_observacao,
           efetivo:dim_efetivo(id, matricula, posto_graduacao, nome, quadro)
         `)
         .eq('ano', ano)
-        .eq('mes', mes)
-        .not('data_inicio', 'is', null)
-        .not('data_fim', 'is', null);
+        .eq('mes', mes);
 
       if (error) throw error;
 
       const minutaData: AbonoMinuta[] = [];
       
       abonos?.forEach((a: any) => {
-        if (a.efetivo && a.data_inicio && a.data_fim) {
-          const dataInicio = parseISO(a.data_inicio);
-          const dataFim = parseISO(a.data_fim);
-          
-          minutaData.push({
-            id: a.id,
-            quadro: a.efetivo.quadro || '-',
-            posto_graduacao: a.efetivo.posto_graduacao || '-',
-            matricula: a.efetivo.matricula || '-',
-            nome: a.efetivo.nome || '-',
-            dias: 5,
-            data_inicio: dataInicio,
-            data_fim: dataFim,
-            observacao: a.minuta_observacao || '',
-            hasChanges: false,
-            saving: false,
-          });
+        if (!a.efetivo) return;
+        
+        // Função helper para adicionar parcela se tiver datas
+        const addParcela = (parcelaNum: number, inicio: string | null, fim: string | null) => {
+          if (inicio && fim) {
+            const dataInicio = parseISO(inicio);
+            const dataFim = parseISO(fim);
+            const diffTime = Math.abs(dataFim.getTime() - dataInicio.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            
+            minutaData.push({
+              id: `${a.id}-p${parcelaNum}`,
+              quadro: a.efetivo.quadro || '-',
+              posto_graduacao: a.efetivo.posto_graduacao || '-',
+              matricula: a.efetivo.matricula || '-',
+              nome: a.efetivo.nome || '-',
+              parcela: parcelaNum,
+              dias: diffDays,
+              data_inicio: dataInicio,
+              data_fim: dataFim,
+              observacao: a.minuta_observacao || '',
+              hasChanges: false,
+              saving: false,
+            });
+          }
+        };
+        
+        // Adicionar cada parcela que tiver datas definidas
+        addParcela(1, a.parcela1_inicio, a.parcela1_fim);
+        addParcela(2, a.parcela2_inicio, a.parcela2_fim);
+        addParcela(3, a.parcela3_inicio, a.parcela3_fim);
+        
+        // Fallback: se não tiver parcelas mas tiver data_inicio/data_fim antigos
+        if (minutaData.filter(m => m.id.startsWith(a.id)).length === 0 && a.data_inicio && a.data_fim) {
+          addParcela(1, a.data_inicio, a.data_fim);
         }
       });
 
@@ -115,7 +138,8 @@ const MinutaAbono: React.FC = () => {
         const postoA = postoOrdem[a.posto_graduacao] || 99;
         const postoB = postoOrdem[b.posto_graduacao] || 99;
         if (postoA !== postoB) return postoA - postoB;
-        return a.nome.localeCompare(b.nome);
+        if (a.nome !== b.nome) return a.nome.localeCompare(b.nome);
+        return a.parcela - b.parcela;
       });
 
       setData(minutaData);
@@ -166,14 +190,32 @@ const MinutaAbono: React.FC = () => {
     setData(prev => prev.map(i => i.id === id ? { ...i, saving: true } : i));
 
     try {
+      // Extrair o ID real do banco (remove o sufixo -pX)
+      const realId = id.includes('-p') ? id.split('-p')[0] : id;
+      const parcela = item.parcela;
+      
+      // Construir o objeto de update baseado na parcela
+      const updateData: Record<string, any> = {
+        minuta_observacao: item.observacao || null,
+      };
+      
+      if (parcela === 1) {
+        updateData.parcela1_inicio = format(item.data_inicio, 'yyyy-MM-dd');
+        updateData.parcela1_fim = format(item.data_fim, 'yyyy-MM-dd');
+        updateData.data_inicio = format(item.data_inicio, 'yyyy-MM-dd');
+        updateData.data_fim = format(item.data_fim, 'yyyy-MM-dd');
+      } else if (parcela === 2) {
+        updateData.parcela2_inicio = format(item.data_inicio, 'yyyy-MM-dd');
+        updateData.parcela2_fim = format(item.data_fim, 'yyyy-MM-dd');
+      } else if (parcela === 3) {
+        updateData.parcela3_inicio = format(item.data_inicio, 'yyyy-MM-dd');
+        updateData.parcela3_fim = format(item.data_fim, 'yyyy-MM-dd');
+      }
+      
       const { error } = await supabase
         .from('fat_abono')
-        .update({
-          data_inicio: format(item.data_inicio, 'yyyy-MM-dd'),
-          data_fim: format(item.data_fim, 'yyyy-MM-dd'),
-          minuta_observacao: item.observacao || null,
-        })
-        .eq('id', id);
+        .update(updateData)
+        .eq('id', realId);
 
       if (error) throw error;
 
@@ -520,6 +562,7 @@ const MinutaAbono: React.FC = () => {
                         <TableHead>Posto/Grad</TableHead>
                         <TableHead>Matrícula</TableHead>
                         <TableHead>Nome Completo</TableHead>
+                        <TableHead className="text-center">Parcela</TableHead>
                         <TableHead className="text-center">Dias</TableHead>
                         <TableHead>Data Início</TableHead>
                         <TableHead>Data Término</TableHead>
@@ -539,6 +582,11 @@ const MinutaAbono: React.FC = () => {
                           <TableCell>{item.posto_graduacao}</TableCell>
                           <TableCell>{item.matricula}</TableCell>
                           <TableCell className="font-medium">{item.nome}</TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                              {item.parcela}ª
+                            </Badge>
+                          </TableCell>
                           <TableCell className="text-center">
                             <Badge variant="secondary">{item.dias}</Badge>
                           </TableCell>
