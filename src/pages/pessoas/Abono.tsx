@@ -19,7 +19,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { MonthlyAbonoQuotaCard } from '@/components/abono/MonthlyAbonoQuotaCard';
-import { AbonoQuotaCard, AbonoQuota } from '@/components/abono/AbonoQuotaCard';
+import { AbonoQuota } from '@/components/abono/AbonoQuotaCard';
 import { EditarParcelasDialog } from '@/components/abono/EditarParcelasDialog';
 
 const mesesNome = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -689,10 +689,6 @@ const Abono: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Tabela de cota anual */}
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <AbonoQuotaCard quotas={abonoQuotas} />
-              </div>
             </div>
           </div>
         </div>
