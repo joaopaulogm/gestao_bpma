@@ -321,37 +321,98 @@ function processDMRows(rows: any[][], sheetName: string): any[] {
   return staging;
 }
 
-// Process Abono sheet
+// Process Abono sheet - lê as 3 parcelas de abono
+// Estrutura da planilha 03 | ABONO 2026:
+// Coluna A (0) = FBRA
+// Coluna B (1) = Posto/Graduação
+// Coluna C (2) = Nome Completo
+// Coluna D (3) = Matrícula
+// Coluna E (4) = Mês do Abono (1-12)
+// Colunas V (21) e W (22) = Início e Término da 1ª parcela
+// Colunas AA (26) e AB (27) = Início e Término da 2ª parcela
+// Colunas AF (31) e AG (32) = Início e Término da 3ª parcela
 function processAbonoRows(rows: any[][], sheetName: string): any[] {
   if (rows.length < 2) return [];
   
-  const headers = parseHeaders(rows[0]);
   const staging: any[] = [];
   
+  // Índices das colunas (0-indexed)
+  const COL_POSTO = 1;         // B
+  const COL_NOME = 2;          // C
+  const COL_MATRICULA = 3;     // D
+  const COL_MES = 4;           // E - mês do abono
+  const COL_PARCELA1_INICIO = 21; // V
+  const COL_PARCELA1_FIM = 22;    // W
+  const COL_PARCELA2_INICIO = 26; // AA
+  const COL_PARCELA2_FIM = 27;    // AB
+  const COL_PARCELA3_INICIO = 31; // AF
+  const COL_PARCELA3_FIM = 32;    // AG
+  
+  console.log(`[processAbonoRows] Processing ${rows.length - 1} rows from ${sheetName}`);
+  
+  // Log primeira linha (header) para debug
+  if (rows.length > 0) {
+    console.log(`[processAbonoRows] Row 0 (header): cols 0-10:`, rows[0].slice(0, 10));
+    console.log(`[processAbonoRows] Row 0 (header): cols 21-33:`, rows[0].slice(21, 34));
+  }
+  
+  // Começar da linha 1 (pular header)
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    const matricula = getCell(row, headers, 'matricula', 'mat', 'matrícula');
     
-    if (!matricula) continue;
+    // Ler matrícula pelo índice fixo
+    const matricula = row[COL_MATRICULA]?.toString().trim();
+    if (!matricula || matricula === '') continue;
     
-    const mesValue = getCell(row, headers, 'mes', 'mês', 'mes abono');
-    const mes = parseMonth(mesValue) || parseInt2(mesValue);
+    // Ler mês pelo índice fixo
+    const mesRaw = row[COL_MES];
+    const mes = parseMonth(mesRaw?.toString()) || parseInt2(mesRaw?.toString());
     
-    if (!mes) continue;
+    if (!mes) {
+      // Log para debug
+      if (i <= 5) {
+        console.log(`[processAbonoRows] Row ${i}: skipped, no mes found. matricula=${matricula}, mesRaw=${mesRaw}`);
+      }
+      continue;
+    }
+    
+    // Ler datas das parcelas pelos índices das colunas
+    const parcela1Inicio = row[COL_PARCELA1_INICIO] ? parseDate(String(row[COL_PARCELA1_INICIO])) : null;
+    const parcela1Fim = row[COL_PARCELA1_FIM] ? parseDate(String(row[COL_PARCELA1_FIM])) : null;
+    const parcela2Inicio = row[COL_PARCELA2_INICIO] ? parseDate(String(row[COL_PARCELA2_INICIO])) : null;
+    const parcela2Fim = row[COL_PARCELA2_FIM] ? parseDate(String(row[COL_PARCELA2_FIM])) : null;
+    const parcela3Inicio = row[COL_PARCELA3_INICIO] ? parseDate(String(row[COL_PARCELA3_INICIO])) : null;
+    const parcela3Fim = row[COL_PARCELA3_FIM] ? parseDate(String(row[COL_PARCELA3_FIM])) : null;
+    
+    // Log para debug das primeiras linhas
+    if (i <= 5) {
+      console.log(`[processAbonoRows] Row ${i}: matricula=${matricula}, mes=${mes}`);
+      console.log(`  Posto=${row[COL_POSTO]}, Nome=${row[COL_NOME]}`);
+      console.log(`  Parcela1: ${parcela1Inicio} - ${parcela1Fim}`);
+      console.log(`  Parcela2: ${parcela2Inicio} - ${parcela2Fim}`);
+      console.log(`  Parcela3: ${parcela3Inicio} - ${parcela3Fim}`);
+    }
     
     staging.push({
       source_sheet: sheetName,
       source_row_number: i + 1,
       matricula,
-      posto_graduacao: getCell(row, headers, 'posto/grad', 'posto', 'graduacao'),
-      nome_completo: getCell(row, headers, 'nome', 'nome completo'),
+      posto_graduacao: row[COL_POSTO]?.toString().trim() || null,
+      nome_completo: row[COL_NOME]?.toString().trim() || null,
       mes,
-      ano: parseInt2(getCell(row, headers, 'ano')) || 2026,
-      observacao: getCell(row, headers, 'obs', 'observacao', 'observacoes'),
+      ano: 2026,
+      observacao: null,
+      parcela1_inicio: parcela1Inicio,
+      parcela1_fim: parcela1Fim,
+      parcela2_inicio: parcela2Inicio,
+      parcela2_fim: parcela2Fim,
+      parcela3_inicio: parcela3Inicio,
+      parcela3_fim: parcela3Fim,
       loaded_at: new Date().toISOString(),
     });
   }
   
+  console.log(`[processAbonoRows] Processed ${staging.length} valid rows`);
   return staging;
 }
 
