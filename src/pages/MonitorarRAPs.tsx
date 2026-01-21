@@ -24,15 +24,22 @@ interface ProcessedRAP {
 
 interface ProcessResult {
   success: boolean;
-  message: string;
-  processed: number;
-  errors: number;
-  details: Array<{
+  message?: string;
+  processed?: number;
+  errors?: number;
+  error?: string;
+  results?: Array<{
     file: string;
-    success: boolean;
+    status: string;
     error?: string;
-    registro_id?: string;
+    rap_numero?: string;
+    form_type?: string;
+    confidence?: number;
   }>;
+  // List action fields
+  total_files?: number;
+  processed_count?: number;
+  pending_count?: number;
 }
 
 const MonitorarRAPs = () => {
@@ -68,14 +75,18 @@ const MonitorarRAPs = () => {
       setLastResult(result);
       queryClient.invalidateQueries({ queryKey: ['rap_processados'] });
       
-      if (result.processed > 0) {
-        toast.success(`${result.processed} RAP(s) processado(s) com sucesso!`);
-      } else if (result.errors === 0) {
+      const processedCount = result.processed ?? 0;
+      const results = result.results ?? [];
+      const errorCount = results.filter(r => r.status === 'error').length;
+      
+      if (processedCount > 0) {
+        toast.success(`${processedCount} RAP(s) processado(s) com sucesso!`);
+      } else if (errorCount === 0 && results.length === 0) {
         toast.info('Nenhum RAP novo encontrado para processar.');
       }
       
-      if (result.errors > 0) {
-        toast.error(`${result.errors} RAP(s) com erro no processamento.`);
+      if (errorCount > 0) {
+        toast.error(`${errorCount} RAP(s) com erro no processamento.`);
       }
     },
     onError: (error: Error) => {
@@ -129,61 +140,79 @@ const MonitorarRAPs = () => {
       </div>
 
       {/* Resultado do último processamento */}
-      {lastResult && (
-        <Card className={lastResult.errors > 0 ? 'border-orange-300' : 'border-green-300'}>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              {lastResult.errors === 0 ? (
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-              ) : (
-                <XCircle className="h-5 w-5 text-orange-600" />
-              )}
-              Último Processamento
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center p-3 bg-muted rounded-lg">
-                <div className="text-2xl font-bold">{lastResult.processed}</div>
-                <div className="text-sm text-muted-foreground">Processados</div>
-              </div>
-              <div className="text-center p-3 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-destructive">{lastResult.errors}</div>
-                <div className="text-sm text-muted-foreground">Erros</div>
-              </div>
-              <div className="text-center p-3 bg-muted rounded-lg">
-                <div className="text-2xl font-bold">{lastResult.details.length}</div>
-                <div className="text-sm text-muted-foreground">Total Analisado</div>
-              </div>
-            </div>
-            
-            {lastResult.details.length > 0 && (
-              <ScrollArea className="h-[200px]">
-                <div className="space-y-2">
-                  {lastResult.details.map((detail, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`p-2 rounded-lg text-sm flex items-center gap-2 ${
-                        detail.success ? 'bg-green-50' : 'bg-red-50'
-                      }`}
-                    >
-                      {detail.success ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
-                      )}
-                      <span className="truncate flex-1">{detail.file}</span>
-                      {detail.error && (
-                        <span className="text-red-600 text-xs">{detail.error}</span>
-                      )}
-                    </div>
-                  ))}
+      {lastResult && (() => {
+        const results = lastResult.results ?? [];
+        const successCount = results.filter(r => r.status === 'success').length;
+        const errorCount = results.filter(r => r.status === 'error').length;
+        const hasError = errorCount > 0 || !!lastResult.error;
+        
+        return (
+          <Card className={hasError ? 'border-orange-300' : 'border-green-300'}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                {!hasError ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-orange-600" />
+                )}
+                Último Processamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {lastResult.error ? (
+                <div className="p-3 bg-red-50 rounded-lg text-red-700 text-sm">
+                  <strong>Erro:</strong> {lastResult.error}
                 </div>
-              </ScrollArea>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="text-center p-3 bg-muted rounded-lg">
+                      <div className="text-2xl font-bold">{successCount}</div>
+                      <div className="text-sm text-muted-foreground">Processados</div>
+                    </div>
+                    <div className="text-center p-3 bg-muted rounded-lg">
+                      <div className="text-2xl font-bold text-destructive">{errorCount}</div>
+                      <div className="text-sm text-muted-foreground">Erros</div>
+                    </div>
+                    <div className="text-center p-3 bg-muted rounded-lg">
+                      <div className="text-2xl font-bold">{results.length}</div>
+                      <div className="text-sm text-muted-foreground">Total Analisado</div>
+                    </div>
+                  </div>
+                  
+                  {results.length > 0 && (
+                    <ScrollArea className="h-[200px]">
+                      <div className="space-y-2">
+                        {results.map((detail, idx) => (
+                          <div 
+                            key={idx} 
+                            className={`p-2 rounded-lg text-sm flex items-center gap-2 ${
+                              detail.status === 'success' ? 'bg-green-50' : 'bg-red-50'
+                            }`}
+                          >
+                            {detail.status === 'success' ? (
+                              <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
+                            )}
+                            <span className="truncate flex-1">{detail.file}</span>
+                            {detail.rap_numero && (
+                              <Badge variant="outline" className="text-xs">{detail.rap_numero}</Badge>
+                            )}
+                            {detail.error && (
+                              <span className="text-red-600 text-xs">{detail.error}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Lista de RAPs processados */}
       <Card>
