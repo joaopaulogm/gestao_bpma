@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Trash2, UserPlus, Shield, Users, Mail, Search, UserCheck } from 'lucide-react';
+import { Trash2, UserPlus, Shield, Users, Search, UserCheck, Mail, Check, X } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
+import { Switch } from '@/components/ui/switch';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -19,26 +20,24 @@ interface UserRole {
   created_at: string | null;
 }
 
-interface AllowedUser {
+interface UsuarioPorLogin {
   id: string;
-  "Email 1": string | null;
-  Nome: string | null;
-  criado_em: string | null;
+  nome: string | null;
+  nome_guerra: string | null;
+  matricula: string | null;
+  post_grad: string | null;
+  quadro: string | null;
+  email: string | null;
+  login: string | null;
+  auth_user_id: string | null;
+  vinculado_em: string | null;
+  ativo: boolean | null;
+  lotacao: string | null;
 }
 
-interface Efetivo {
-  id: string;
-  nome: string;
-  nome_guerra: string;
-  matricula: string;
-  posto_graduacao: string;
-  lotacao: string;
-}
-
-interface EfetivoWithRole extends Efetivo {
+interface UsuarioWithRole extends UsuarioPorLogin {
   role?: AppRole;
   roleId?: string;
-  authUserId?: string | null;
 }
 
 const ROLE_LABELS: Record<AppRole, string> = {
@@ -53,22 +52,21 @@ const ROLE_LABELS: Record<AppRole, string> = {
 
 const GerenciarPermissoes: React.FC = () => {
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
-  const [allowedUsers, setAllowedUsers] = useState<AllowedUser[]>([]);
-  const [efetivo, setEfetivo] = useState<EfetivoWithRole[]>([]);
+  const [usuarios, setUsuarios] = useState<UsuarioWithRole[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingAllowed, setLoadingAllowed] = useState(true);
-  const [loadingEfetivo, setLoadingEfetivo] = useState(true);
-  const [searchEfetivo, setSearchEfetivo] = useState('');
+  const [loadingUsuarios, setLoadingUsuarios] = useState(true);
+  const [searchUsuarios, setSearchUsuarios] = useState('');
   
   // Form states for permissions
   const [newUserId, setNewUserId] = useState('');
   const [newRole, setNewRole] = useState<AppRole>('operador');
   const [adding, setAdding] = useState(false);
   
-  // Form states for allowed users
-  const [newEmail, setNewEmail] = useState('');
-  const [newNome, setNewNome] = useState('');
-  const [addingAllowed, setAddingAllowed] = useState(false);
+  // Form states for new user
+  const [newUserNome, setNewUserNome] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserMatricula, setNewUserMatricula] = useState('');
+  const [addingUser, setAddingUser] = useState(false);
 
   const fetchUserRoles = async () => {
     try {
@@ -87,65 +85,53 @@ const GerenciarPermissoes: React.FC = () => {
     }
   };
 
-  const fetchAllowedUsers = async () => {
+  const fetchUsuarios = async () => {
     try {
       const { data, error } = await supabase
-        .from('usuarios_permitidos')
-        .select('id, "Email 1", Nome, criado_em')
-        .order('criado_em', { ascending: false });
-
-      if (error) throw error;
-      setAllowedUsers(data || []);
-    } catch (error: any) {
-      console.error('Error fetching allowed users:', error);
-      toast.error('Erro ao carregar usuários permitidos');
-    } finally {
-      setLoadingAllowed(false);
-    }
-  };
-
-  const fetchEfetivo = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('dim_efetivo')
-        .select('id, nome, nome_guerra, matricula, posto_graduacao, lotacao')
-        .order('nome_guerra', { ascending: true });
-
-      if (error) throw error;
-      
-      // Fetch efetivo_roles (pré-configuração de roles)
-      const { data: roles } = await supabase
-        .from('efetivo_roles')
-        .select('*');
-      
-      // Fetch usuarios_por_login para obter auth_user_id
-      const { data: usuarios } = await supabase
         .from('usuarios_por_login')
-        .select('matricula, auth_user_id');
+        .select('id, nome, nome_guerra, matricula, post_grad, quadro, email, login, auth_user_id, vinculado_em, ativo, lotacao')
+        .order('nome', { ascending: true });
+
+      if (error) throw error;
       
-      const rolesMap = new Map(roles?.map(r => [r.efetivo_id, { role: r.role as AppRole, roleId: r.id }]) || []);
-      const authUserMap = new Map(usuarios?.map(u => [u.matricula, u.auth_user_id]) || []);
+      // Fetch efetivo_roles para obter roles pre-configuradas via matricula
+      const { data: efetivoRoles } = await supabase
+        .from('efetivo_roles')
+        .select('id, efetivo_id, role');
       
-      const efetivoWithRoles: EfetivoWithRole[] = (data || []).map(e => ({
-        ...e,
-        role: rolesMap.get(e.id)?.role,
-        roleId: rolesMap.get(e.id)?.roleId,
-        authUserId: authUserMap.get(e.matricula),
-      }));
+      // Fetch dim_efetivo para mapear matricula -> efetivo_id
+      const { data: efetivo } = await supabase
+        .from('dim_efetivo')
+        .select('id, matricula');
       
-      setEfetivo(efetivoWithRoles);
+      // Criar mapa matricula -> efetivo_id
+      const matriculaToEfetivoId = new Map(efetivo?.map(e => [e.matricula, e.id]) || []);
+      
+      // Criar mapa efetivo_id -> role
+      const efetivoIdToRole = new Map(efetivoRoles?.map(r => [r.efetivo_id, { role: r.role as AppRole, roleId: r.id }]) || []);
+      
+      const usuariosWithRoles: UsuarioWithRole[] = (data || []).map(u => {
+        const efetivoId = u.matricula ? matriculaToEfetivoId.get(u.matricula) : null;
+        const roleInfo = efetivoId ? efetivoIdToRole.get(efetivoId) : null;
+        return {
+          ...u,
+          role: roleInfo?.role,
+          roleId: roleInfo?.roleId,
+        };
+      });
+      
+      setUsuarios(usuariosWithRoles);
     } catch (error: any) {
-      console.error('Error fetching efetivo:', error);
-      toast.error('Erro ao carregar efetivo');
+      console.error('Error fetching usuarios:', error);
+      toast.error('Erro ao carregar usuários');
     } finally {
-      setLoadingEfetivo(false);
+      setLoadingUsuarios(false);
     }
   };
 
   useEffect(() => {
     fetchUserRoles();
-    fetchAllowedUsers();
-    fetchEfetivo();
+    fetchUsuarios();
   }, []);
 
   const handleAddRole = async () => {
@@ -169,7 +155,7 @@ const GerenciarPermissoes: React.FC = () => {
       setNewUserId('');
       setNewRole('operador');
       fetchUserRoles();
-      fetchEfetivo();
+      fetchUsuarios();
     } catch (error: any) {
       console.error('Error adding role:', error);
       if (error.code === '23505') {
@@ -193,7 +179,7 @@ const GerenciarPermissoes: React.FC = () => {
 
       toast.success('Permissão removida com sucesso');
       fetchUserRoles();
-      fetchEfetivo();
+      fetchUsuarios();
     } catch (error: any) {
       console.error('Error deleting role:', error);
       toast.error('Erro ao remover permissão');
@@ -211,111 +197,170 @@ const GerenciarPermissoes: React.FC = () => {
 
       toast.success('Permissão atualizada com sucesso');
       fetchUserRoles();
-      fetchEfetivo();
+      fetchUsuarios();
     } catch (error: any) {
       console.error('Error updating role:', error);
       toast.error('Erro ao atualizar permissão');
     }
   };
 
-  const handleSetEfetivoRole = async (efetivoId: string, role: AppRole | 'remove', currentRoleId?: string) => {
+  const handleSetUsuarioRole = async (usuario: UsuarioWithRole, role: AppRole | 'remove') => {
     try {
-      if (role === 'remove' && currentRoleId) {
-        // Remove role
-        const { error } = await supabase
-          .from('efetivo_roles')
-          .delete()
-          .eq('id', currentRoleId);
-        if (error) throw error;
-        toast.success('Nível de acesso removido');
-      } else if (currentRoleId && role !== 'remove') {
-        // Update existing role
-        const { error } = await supabase
-          .from('efetivo_roles')
-          .update({ role: role as AppRole })
-          .eq('id', currentRoleId);
-        if (error) throw error;
-        toast.success('Nível de acesso atualizado');
-      } else if (!currentRoleId && role !== 'remove') {
-        // Create new role
-        const { error } = await supabase
-          .from('efetivo_roles')
-          .insert({
-            efetivo_id: efetivoId,
-            role: role as AppRole,
-          });
-        if (error) throw error;
-        toast.success('Nível de acesso definido');
+      // Primeiro, buscar o efetivo_id pela matricula
+      if (!usuario.matricula) {
+        toast.error('Usuário não possui matrícula cadastrada');
+        return;
       }
-      fetchEfetivo();
+      
+      const { data: efetivoData } = await supabase
+        .from('dim_efetivo')
+        .select('id')
+        .eq('matricula', usuario.matricula)
+        .single();
+      
+      if (!efetivoData) {
+        // Se não existe no efetivo, criar user_role diretamente via auth_user_id
+        if (!usuario.auth_user_id) {
+          toast.error('Usuário ainda não vinculou conta Google');
+          return;
+        }
+        
+        if (role === 'remove') {
+          const { error } = await supabase
+            .from('user_roles')
+            .delete()
+            .eq('user_id', usuario.auth_user_id);
+          if (error) throw error;
+          toast.success('Nível de acesso removido');
+        } else {
+          const { error } = await supabase
+            .from('user_roles')
+            .upsert({
+              user_id: usuario.auth_user_id,
+              role: role,
+            }, { onConflict: 'user_id' });
+          if (error) throw error;
+          toast.success('Nível de acesso atualizado');
+        }
+      } else {
+        // Usar efetivo_roles
+        if (role === 'remove' && usuario.roleId) {
+          const { error } = await supabase
+            .from('efetivo_roles')
+            .delete()
+            .eq('id', usuario.roleId);
+          if (error) throw error;
+          toast.success('Nível de acesso removido');
+        } else if (usuario.roleId && role !== 'remove') {
+          const { error } = await supabase
+            .from('efetivo_roles')
+            .update({ role: role as AppRole })
+            .eq('id', usuario.roleId);
+          if (error) throw error;
+          toast.success('Nível de acesso atualizado');
+        } else if (!usuario.roleId && role !== 'remove') {
+          const { error } = await supabase
+            .from('efetivo_roles')
+            .insert({
+              efetivo_id: efetivoData.id,
+              role: role as AppRole,
+            });
+          if (error) throw error;
+          toast.success('Nível de acesso definido');
+        }
+      }
+      
+      fetchUsuarios();
     } catch (error: any) {
-      console.error('Error setting efetivo role:', error);
+      console.error('Error setting usuario role:', error);
       toast.error('Erro ao definir nível de acesso');
     }
   };
 
-  const handleAddAllowedUser = async () => {
-    if (!newEmail.trim()) {
-      toast.error('Informe o e-mail');
+  const handleAddUser = async () => {
+    if (!newUserNome.trim()) {
+      toast.error('Informe o nome');
       return;
     }
 
-    // Simple email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newEmail)) {
-      toast.error('E-mail inválido');
-      return;
-    }
-
-    setAddingAllowed(true);
+    setAddingUser(true);
     try {
+      // Gerar login baseado no nome
+      const nameParts = newUserNome.trim().split(' ');
+      const firstName = nameParts[0].toLowerCase().replace(/[^a-z]/g, '');
+      const lastName = nameParts[nameParts.length - 1].toLowerCase().replace(/[^a-z]/g, '');
+      const generatedLogin = `${firstName}.${lastName}`;
+
       const { error } = await supabase
-        .from('usuarios_permitidos')
+        .from('usuarios_por_login')
         .insert({
-          "Email 1": newEmail.trim().toLowerCase(),
-          Nome: newNome.trim() || null,
+          nome: newUserNome.trim(),
+          email: newUserEmail.trim().toLowerCase() || null,
+          matricula: newUserMatricula.trim() || null,
+          login: generatedLogin,
+          ativo: true,
         });
 
       if (error) throw error;
 
-      toast.success('Usuário adicionado à lista de permitidos');
-      setNewEmail('');
-      setNewNome('');
-      fetchAllowedUsers();
+      toast.success('Usuário adicionado com sucesso');
+      setNewUserNome('');
+      setNewUserEmail('');
+      setNewUserMatricula('');
+      fetchUsuarios();
     } catch (error: any) {
-      console.error('Error adding allowed user:', error);
+      console.error('Error adding user:', error);
       if (error.code === '23505') {
-        toast.error('Este e-mail já está na lista de permitidos');
+        toast.error('Este usuário já está cadastrado');
       } else {
         toast.error('Erro ao adicionar usuário');
       }
     } finally {
-      setAddingAllowed(false);
+      setAddingUser(false);
     }
   };
 
-  const handleDeleteAllowedUser = async (id: string) => {
+  const handleDeleteUser = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('usuarios_permitidos')
+        .from('usuarios_por_login')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
 
-      toast.success('Usuário removido da lista de permitidos');
-      fetchAllowedUsers();
+      toast.success('Usuário removido com sucesso');
+      fetchUsuarios();
     } catch (error: any) {
-      console.error('Error deleting allowed user:', error);
+      console.error('Error deleting user:', error);
       toast.error('Erro ao remover usuário');
     }
   };
 
-  // Filter efetivo by search term
-  const filteredEfetivo = efetivo.filter(e => 
-    e.nome_guerra.toLowerCase().includes(searchEfetivo.toLowerCase()) ||
-    e.nome.toLowerCase().includes(searchEfetivo.toLowerCase()) ||
-    e.matricula.includes(searchEfetivo)
+  const handleToggleUserStatus = async (id: string, currentStatus: boolean | null) => {
+    try {
+      const { error } = await supabase
+        .from('usuarios_por_login')
+        .update({ ativo: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success(currentStatus ? 'Usuário desativado' : 'Usuário ativado');
+      fetchUsuarios();
+    } catch (error: any) {
+      console.error('Error toggling user status:', error);
+      toast.error('Erro ao alterar status do usuário');
+    }
+  };
+
+  // Filter usuarios by search term
+  const filteredUsuarios = usuarios.filter(u => 
+    (u.nome?.toLowerCase() || '').includes(searchUsuarios.toLowerCase()) ||
+    (u.nome_guerra?.toLowerCase() || '').includes(searchUsuarios.toLowerCase()) ||
+    (u.matricula || '').includes(searchUsuarios) ||
+    (u.email?.toLowerCase() || '').includes(searchUsuarios.toLowerCase()) ||
+    (u.login?.toLowerCase() || '').includes(searchUsuarios.toLowerCase())
   );
 
   return (
@@ -325,102 +370,178 @@ const GerenciarPermissoes: React.FC = () => {
         <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">Gerenciar Permissões</h1>
       </div>
 
-      <Tabs defaultValue="efetivo" className="space-y-4 sm:space-y-6">
-        <TabsList className="grid w-full grid-cols-3 h-auto">
-          <TabsTrigger value="efetivo" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-2.5 px-1 sm:px-3">
+      <Tabs defaultValue="usuarios" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="usuarios" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-2.5 px-1 sm:px-3">
             <UserCheck className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-            <span className="hidden xs:inline sm:inline">Efetivo</span>
-            <span className="xs:hidden sm:hidden">Efet.</span>
-          </TabsTrigger>
-          <TabsTrigger value="allowed" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-2.5 px-1 sm:px-3">
-            <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-            <span className="hidden sm:inline">Permitidos</span>
-            <span className="sm:hidden">Perm.</span>
+            <span className="hidden sm:inline">Usuários</span>
+            <span className="sm:hidden">Usuários</span>
           </TabsTrigger>
           <TabsTrigger value="roles" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-2.5 px-1 sm:px-3">
             <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-            <span className="hidden sm:inline">Níveis</span>
-            <span className="sm:hidden">Nív.</span>
+            <span className="hidden sm:inline">Níveis Manuais</span>
+            <span className="sm:hidden">Níveis</span>
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab: Efetivo BPMA */}
-        <TabsContent value="efetivo" className="space-y-6">
+        {/* Tab: Usuários (tabela unificada) */}
+        <TabsContent value="usuarios" className="space-y-6">
+          {/* Adicionar Usuário */}
+          <Card className="bg-card/80 backdrop-blur-sm border-border/50">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <UserPlus className="h-5 w-5" />
+                Adicionar Usuário
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Adicione novos usuários autorizados a acessar o sistema
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Nome completo *"
+                    value={newUserNome}
+                    onChange={(e) => setNewUserNome(e.target.value)}
+                    className="bg-background/50"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Input
+                    placeholder="E-mail (opcional)"
+                    type="email"
+                    value={newUserEmail}
+                    onChange={(e) => setNewUserEmail(e.target.value)}
+                    className="bg-background/50"
+                  />
+                </div>
+                <div className="w-full sm:w-40">
+                  <Input
+                    placeholder="Matrícula"
+                    value={newUserMatricula}
+                    onChange={(e) => setNewUserMatricula(e.target.value)}
+                    className="bg-background/50"
+                  />
+                </div>
+                <Button 
+                  onClick={handleAddUser} 
+                  disabled={addingUser}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Adicionar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Lista de Usuários */}
           <Card className="bg-card/80 backdrop-blur-sm border-border/50">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <UserCheck className="h-5 w-5" />
-                Definir Nível de Acesso do Efetivo
+                Usuários Cadastrados
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Busque pelo nome de guerra ou matrícula e defina o nível de acesso de cada membro.
-                Login: nome de guerra | Senha: matrícula
+                Gerencie usuários e seus níveis de acesso. Login: nome.sobrenome | Senha: CPF
               </p>
             </CardHeader>
             <CardContent>
               <div className="relative mb-4">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por nome de guerra, nome ou matrícula..."
-                  value={searchEfetivo}
-                  onChange={(e) => setSearchEfetivo(e.target.value)}
+                  placeholder="Buscar por nome, matrícula, email ou login..."
+                  value={searchUsuarios}
+                  onChange={(e) => setSearchUsuarios(e.target.value)}
                   className="pl-10 bg-background/50"
                 />
               </div>
 
-              {loadingEfetivo ? (
+              {loadingUsuarios ? (
                 <div className="flex justify-center py-8">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
                 </div>
-              ) : filteredEfetivo.length === 0 ? (
+              ) : filteredUsuarios.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
-                  {searchEfetivo ? 'Nenhum membro encontrado' : 'Nenhum membro cadastrado'}
+                  {searchUsuarios ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
                 </p>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Ativo</TableHead>
                         <TableHead>Posto/Grad</TableHead>
-                        <TableHead>Nome de Guerra</TableHead>
+                        <TableHead>Nome</TableHead>
                         <TableHead>Matrícula</TableHead>
-                        <TableHead>Lotação</TableHead>
-                        <TableHead>ID do Usuário</TableHead>
-                        <TableHead className="w-64">Nível de Acesso</TableHead>
+                        <TableHead>Login</TableHead>
+                        <TableHead>E-mail</TableHead>
+                        <TableHead>Vinculado</TableHead>
+                        <TableHead className="w-56">Nível de Acesso</TableHead>
+                        <TableHead className="w-16">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredEfetivo.map((member) => (
-                        <TableRow key={member.id}>
-                          <TableCell className="font-medium text-sm">
-                            {member.posto_graduacao}
+                      {filteredUsuarios.map((usuario) => (
+                        <TableRow key={usuario.id} className={usuario.ativo === false ? 'opacity-50' : ''}>
+                          <TableCell>
+                            <Switch
+                              checked={usuario.ativo !== false}
+                              onCheckedChange={() => handleToggleUserStatus(usuario.id, usuario.ativo)}
+                            />
                           </TableCell>
-                          <TableCell className="font-semibold">
-                            {member.nome_guerra}
+                          <TableCell className="font-medium text-sm">
+                            {usuario.post_grad || '-'}
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <span className="font-semibold">{usuario.nome_guerra || usuario.nome}</span>
+                              {usuario.nome_guerra && usuario.nome && (
+                                <p className="text-xs text-muted-foreground">{usuario.nome}</p>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="font-mono text-sm">
-                            {member.matricula}
+                            {usuario.matricula || '-'}
                           </TableCell>
-                          <TableCell className="text-muted-foreground text-sm">
-                            {member.lotacao}
+                          <TableCell className="font-mono text-sm text-muted-foreground">
+                            {usuario.login || '-'}
                           </TableCell>
-                          <TableCell className="font-mono text-xs text-muted-foreground">
-                            {member.authUserId && (
-                              <span className="truncate max-w-[120px] inline-block" title={member.authUserId}>
-                                {member.authUserId.slice(0, 8)}...
+                          <TableCell className="text-sm text-muted-foreground">
+                            {usuario.email ? (
+                              <span className="flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                <span className="truncate max-w-[150px]" title={usuario.email}>
+                                  {usuario.email}
+                                </span>
+                              </span>
+                            ) : '-'}
+                          </TableCell>
+                          <TableCell>
+                            {usuario.auth_user_id ? (
+                              <span className="flex items-center gap-1 text-green-600">
+                                <Check className="h-4 w-4" />
+                                <span className="text-xs" title={usuario.auth_user_id}>
+                                  {usuario.auth_user_id.slice(0, 8)}...
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1 text-muted-foreground">
+                                <X className="h-4 w-4" />
+                                <span className="text-xs">Não</span>
                               </span>
                             )}
                           </TableCell>
                           <TableCell>
                             <Select 
-                              value={member.role || 'none'} 
-                              onValueChange={(value) => handleSetEfetivoRole(
-                                member.id, 
-                                value === 'none' ? 'remove' : value as AppRole,
-                                member.roleId
+                              value={usuario.role || 'none'} 
+                              onValueChange={(value) => handleSetUsuarioRole(
+                                usuario, 
+                                value === 'none' ? 'remove' : value as AppRole
                               )}
                             >
-                              <SelectTrigger className="w-56 bg-background/50">
+                              <SelectTrigger className="w-52 bg-background/50">
                                 <SelectValue placeholder="Sem acesso definido" />
                               </SelectTrigger>
                               <SelectContent>
@@ -435,105 +556,11 @@ const GerenciarPermissoes: React.FC = () => {
                               </SelectContent>
                             </Select>
                           </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-              <p className="text-xs text-muted-foreground mt-4">
-                Total: {filteredEfetivo.length} membros {searchEfetivo && `(de ${efetivo.length} total)`}
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Tab: Allowed Users */}
-        <TabsContent value="allowed" className="space-y-6">
-          <Card className="bg-card/80 backdrop-blur-sm border-border/50">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                Adicionar Usuário Permitido
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Adicione e-mails de policiais autorizados a criar conta no sistema (incluindo contas Google)
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <Input
-                    placeholder="E-mail do policial"
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    className="bg-background/50"
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    placeholder="Nome (opcional)"
-                    value={newNome}
-                    onChange={(e) => setNewNome(e.target.value)}
-                    className="bg-background/50"
-                  />
-                </div>
-                <Button 
-                  onClick={handleAddAllowedUser} 
-                  disabled={addingAllowed}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Adicionar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/80 backdrop-blur-sm border-border/50">
-            <CardHeader>
-              <CardTitle className="text-lg">Lista de Usuários Permitidos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loadingAllowed ? (
-                <div className="flex justify-center py-8">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                </div>
-              ) : allowedUsers.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhum usuário permitido cadastrado
-                </p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>E-mail</TableHead>
-                        <TableHead>Nome</TableHead>
-                        <TableHead>Data de Cadastro</TableHead>
-                        <TableHead className="w-20">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {allowedUsers.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">
-                            {user["Email 1"] || '-'}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {user.Nome || '-'}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {user.criado_em 
-                              ? new Date(user.criado_em).toLocaleDateString('pt-BR')
-                              : '-'}
-                          </TableCell>
                           <TableCell>
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleDeleteAllowedUser(user.id)}
+                              onClick={() => handleDeleteUser(usuario.id)}
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -545,11 +572,14 @@ const GerenciarPermissoes: React.FC = () => {
                   </Table>
                 </div>
               )}
+              <p className="text-xs text-muted-foreground mt-4">
+                Total: {filteredUsuarios.length} usuários {searchUsuarios && `(de ${usuarios.length} total)`}
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Tab: User Roles */}
+        {/* Tab: User Roles (manual) */}
         <TabsContent value="roles" className="space-y-6">
           <Card className="bg-card/80 backdrop-blur-sm border-border/50">
             <CardHeader>
@@ -558,7 +588,7 @@ const GerenciarPermissoes: React.FC = () => {
                 Alterar Nível de Acesso Manual
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Use esta opção apenas para usuários que não estão no efetivo (ex: usuários autenticados via Google).
+                Use esta opção apenas para usuários especiais que não estão na lista de usuários.
               </p>
             </CardHeader>
             <CardContent>

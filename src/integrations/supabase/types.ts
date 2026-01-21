@@ -3127,6 +3127,7 @@ export type Database = {
       }
       usuarios_por_login: {
         Row: {
+          ativo: boolean | null
           auth_user_id: string | null
           contato: string | null
           cpf: number | null
@@ -3148,6 +3149,7 @@ export type Database = {
           vinculado_em: string | null
         }
         Insert: {
+          ativo?: boolean | null
           auth_user_id?: string | null
           contato?: string | null
           cpf?: number | null
@@ -3169,6 +3171,7 @@ export type Database = {
           vinculado_em?: string | null
         }
         Update: {
+          ativo?: boolean | null
           auth_user_id?: string | null
           contato?: string | null
           cpf?: number | null
