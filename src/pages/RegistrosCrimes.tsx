@@ -91,7 +91,7 @@ const RegistrosCrimes = () => {
           tipo_crime:dim_tipo_de_crime(id_tipo_de_crime, "Tipo de Crime"),
           enquadramento:dim_enquadramento(id_enquadramento, "Enquadramento"),
           tipo_area:dim_tipo_de_area(id, "Tipo de Área"),
-          desfecho:dim_desfecho_resgates(nome)
+          desfecho:dim_desfecho_crime_ambientais(nome)
         `)
         .order('data', { ascending: false });
 
@@ -251,7 +251,7 @@ const RegistrosCrimes = () => {
 
   return (
     <Layout title="Registros de Crimes Ambientais" showBackButton>
-      <div className="space-y-4 sm:space-y-6 animate-fade-in w-full">
+      <div className="w-[75%] mx-auto space-y-4 sm:space-y-6 animate-fade-in">
         {/* Ações */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
           <div className="flex-1 w-full sm:max-w-md">

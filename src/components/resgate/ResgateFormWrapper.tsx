@@ -49,7 +49,7 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
   const isEvadido = formData.desfechoResgate === "Evadido";
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="w-[75%] mx-auto space-y-6 animate-fade-in">
       <ResgateFormHeader isEditing={isEditing} isSubmitting={isSubmitting} />
 
       <FormErrorDisplay 
