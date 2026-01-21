@@ -9,6 +9,7 @@ import SidebarLayout from '@/components/SidebarLayout';
 // Lazy load all pages
 const Index = lazy(() => import(/* webpackChunkName: "index" */ '@/pages/Index'));
 const Dashboard = lazy(() => import(/* webpackChunkName: "dashboard" */ '@/pages/Dashboard'));
+const DashboardOperacional = lazy(() => import(/* webpackChunkName: "dashboard-operacional" */ '@/pages/DashboardOperacional'));
 const Hotspots = lazy(() => import(/* webpackChunkName: "hotspots" */ '@/pages/Hotspots'));
 const Registros = lazy(() => import(/* webpackChunkName: "registros" */ '@/pages/Registros'));
 const RegistrosCrimes = lazy(() => import(/* webpackChunkName: "registros-crimes" */ '@/pages/RegistrosCrimes'));
@@ -36,6 +37,8 @@ const Afastamentos = lazy(() => import(/* webpackChunkName: "afastamentos" */ '@
 const Licencas = lazy(() => import(/* webpackChunkName: "licencas" */ '@/pages/pessoas/Licencas'));
 const Ferias = lazy(() => import(/* webpackChunkName: "ferias" */ '@/pages/pessoas/Ferias'));
 const Abono = lazy(() => import(/* webpackChunkName: "abono" */ '@/pages/pessoas/Abono'));
+const MinutaFerias = lazy(() => import(/* webpackChunkName: "minuta-ferias" */ '@/pages/pessoas/MinutaFerias'));
+const MinutaAbono = lazy(() => import(/* webpackChunkName: "minuta-abono" */ '@/pages/pessoas/MinutaAbono'));
 const Campanha = lazy(() => import(/* webpackChunkName: "campanha" */ '@/pages/pessoas/Campanha'));
 const SecaoOperacional = lazy(() => import(/* webpackChunkName: "secao-operacional" */ '@/pages/SecaoOperacional'));
 const SecaoLogistica = lazy(() => import(/* webpackChunkName: "secao-logistica" */ '@/pages/SecaoLogistica'));
@@ -44,6 +47,11 @@ const IdentificarEspecie = lazy(() => import(/* webpackChunkName: "identificar-e
 const ManualRAP = lazy(() => import(/* webpackChunkName: "manual-rap" */ '@/pages/apoio/ManualRAP'));
 const RankingOcorrencias = lazy(() => import(/* webpackChunkName: "ranking" */ '@/pages/RankingOcorrencias'));
 const UploadSchemas = lazy(() => import(/* webpackChunkName: "upload-schemas" */ '@/pages/UploadSchemas'));
+const CrimesComuns = lazy(() => import(/* webpackChunkName: "crimes-comuns" */ '@/pages/CrimesComuns'));
+const AtividadesPrevencao = lazy(() => import(/* webpackChunkName: "atividades-prevencao" */ '@/pages/AtividadesPrevencao'));
+const DashboardPublico = lazy(() => import(/* webpackChunkName: "dashboard-publico" */ '@/pages/DashboardPublico'));
+const ProcessarRAP = lazy(() => import(/* webpackChunkName: "processar-rap" */ '@/pages/ProcessarRAP'));
+const MonitorarRAPs = lazy(() => import(/* webpackChunkName: "monitorar-raps" */ '@/pages/MonitorarRAPs'));
 
 const queryClient = new QueryClient();
 
@@ -65,6 +73,7 @@ function App() {
           <Suspense fallback={<PageLoading />}>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/dashboard-publico" element={<DashboardPublico />} />
               <Route path="/" element={<SidebarLayout><Index /></SidebarLayout>} />
               
               {/* Operador level - requires authentication */}
@@ -76,7 +85,8 @@ function App() {
               <Route path="/material-apoio/identificar-especie" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><IdentificarEspecie /></SidebarLayout></ProtectedRoute>} />
               <Route path="/material-apoio/manual-rap" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><ManualRAP /></SidebarLayout></ProtectedRoute>} />
               <Route path="/ranking" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><RankingOcorrencias /></SidebarLayout></ProtectedRoute>} />
-              
+              <Route path="/crimes-comuns" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><CrimesComuns /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/atividades-prevencao" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><AtividadesPrevencao /></SidebarLayout></ProtectedRoute>} />
               {/* Admin only */}
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />
               <Route path="/upload-schemas" element={<ProtectedRoute requireAdmin><UploadSchemas /></ProtectedRoute>} />
@@ -88,8 +98,9 @@ function App() {
               <Route path="/secao-operacional/fauna-cadastro" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/fauna-cadastro/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/fauna-cadastrada" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FaunaCadastrada /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/dashboard" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Dashboard /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/dashboard" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><DashboardOperacional /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/dashboard-historico" element={<Navigate to="/secao-operacional/dashboard" replace />} />
+              <Route path="/secao-operacional/dashboard-antigo" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Dashboard /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/hotspots" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Hotspots /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/registros" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Registros /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/registros-crimes" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistrosCrimes /></SidebarLayout></ProtectedRoute>} />
@@ -98,6 +109,8 @@ function App() {
               <Route path="/secao-operacional/flora-cadastro" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/flora-cadastro/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/flora-cadastrada" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/processar-rap" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><ProcessarRAP /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/monitorar-raps" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><MonitorarRAPs /></SidebarLayout></ProtectedRoute>} />
               
               {/* Seção Pessoas */}
               <Route path="/secao-pessoas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><SecaoPessoas /></SidebarLayout></ProtectedRoute>} />
@@ -108,7 +121,9 @@ function App() {
               <Route path="/secao-pessoas/afastamentos" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Afastamentos /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/licencas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Licencas /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/ferias" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Ferias /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-pessoas/ferias/minuta" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><MinutaFerias /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/abono" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Abono /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-pessoas/abono/minuta" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><MinutaAbono /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-pessoas/campanha" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><Campanha /></SidebarLayout></ProtectedRoute>} />
               
               {/* Seção Logística */}

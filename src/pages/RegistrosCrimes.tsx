@@ -30,7 +30,7 @@ interface RegistroCrime {
   id: string;
   data: string;
   regiao_administrativa?: { nome: string };
-  tipo_crime?: { "Tipo de Crime": string };
+  tipo_crime?: { id_tipo_de_crime: string; "Tipo de Crime": string };
   enquadramento?: { "Enquadramento": string };
   tipo_area?: { "Tipo de Área": string };
   latitude: string;

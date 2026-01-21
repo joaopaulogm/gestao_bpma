@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Gift, ArrowLeft, Search, Calendar, Users, Filter, ChevronDown, CalendarDays, Edit2, ArrowRightLeft, X, Loader2, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Gift, ArrowLeft, Search, Calendar, Users, Filter, ChevronDown, CalendarDays, Edit2, ArrowRightLeft, X, Loader2, Plus, FileText } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -71,6 +71,7 @@ const mesColors = [
 ];
 
 const Abono: React.FC = () => {
+  const navigate = useNavigate();
   const [dadosAbono, setDadosAbono] = useState<MesAbono[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,6 +86,10 @@ const Abono: React.FC = () => {
   const [selectedMilitar, setSelectedMilitar] = useState<Militar | null>(null);
   const [fromMonth, setFromMonth] = useState<number | null>(null);
   const [toMonth, setToMonth] = useState<string>('');
+
+  const handleOpenMinuta = (mesNum: number) => {
+    navigate(`/secao-pessoas/abono/minuta?mes=${mesNum}&ano=${selectedYear}`);
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -440,7 +445,23 @@ const Abono: React.FC = () => {
                         {mesData.militares.length} militar{mesData.militares.length !== 1 ? 'es' : ''}
                       </Badge>
                     </CardTitle>
-                    <ChevronDown className={`h-5 w-5 transition-transform ${expandedMeses.includes(mesData.numero) ? 'rotate-180' : ''}`} />
+                    <div className="flex items-center gap-2">
+                      {mesData.militares.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1 h-7"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenMinuta(mesData.numero);
+                          }}
+                        >
+                          <FileText className="h-4 w-4" />
+                          <span className="hidden md:inline">Minuta</span>
+                        </Button>
+                      )}
+                      <ChevronDown className={`h-5 w-5 transition-transform ${expandedMeses.includes(mesData.numero) ? 'rotate-180' : ''}`} />
+                    </div>
                   </div>
                 </CardHeader>
               </CollapsibleTrigger>

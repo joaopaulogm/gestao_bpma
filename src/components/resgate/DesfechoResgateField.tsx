@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Select, 
   SelectContent, 
@@ -9,6 +8,7 @@ import {
 } from '@/components/ui/select';
 import FormField from './FormField';
 import FormSection from './FormSection';
+import { buscarDesfechosResgate, DesfechoItem } from '@/services/dimensionService';
 
 interface DesfechoResgateFieldProps {
   desfechoResgate: string;
@@ -23,6 +23,19 @@ const DesfechoResgateField: React.FC<DesfechoResgateFieldProps> = ({
   error,
   required = false
 }) => {
+  const [desfechos, setDesfechos] = useState<DesfechoItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const carregarDesfechos = async () => {
+      setLoading(true);
+      const dados = await buscarDesfechosResgate();
+      setDesfechos(dados);
+      setLoading(false);
+    };
+    carregarDesfechos();
+  }, []);
+
   return (
     <FormSection>
       <FormField 
@@ -34,16 +47,17 @@ const DesfechoResgateField: React.FC<DesfechoResgateFieldProps> = ({
         <Select 
           onValueChange={onDesfechoChange}
           value={desfechoResgate}
+          disabled={loading}
         >
           <SelectTrigger className={error ? "border-red-500" : ""}>
-            <SelectValue placeholder="Selecione o desfecho" />
+            <SelectValue placeholder={loading ? "Carregando..." : "Selecione o desfecho"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Resgatado">Resgatado</SelectItem>
-            <SelectItem value="Evadido">Evadido</SelectItem>
-            <SelectItem value="Óbito">Óbito</SelectItem>
-            <SelectItem value="Desistência do Solicitante">Desistência do Solicitante</SelectItem>
-            <SelectItem value="Impossibilidade de Acesso">Impossibilidade de Acesso</SelectItem>
+            {desfechos.map((desfecho) => (
+              <SelectItem key={desfecho.id} value={desfecho.nome}>
+                {desfecho.nome}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </FormField>

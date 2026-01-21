@@ -4,9 +4,10 @@ import FormField from '@/components/resgate/FormField';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Minus, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { getFaunaImageUrl } from '@/services/especieService';
 
 export interface FaunaItem {
   id: string;
@@ -15,8 +16,10 @@ export interface FaunaItem {
   nomeCientifico: string;
   classeTaxonomica: string;
   ordemTaxonomica: string;
+  familiaTaxonomica: string;
   tipoFauna: string;
   estadoConservacao: string;
+  imagensPaths: string[];
   estadoSaudeId: string;
   estagioVidaId: string;
   atropelamento: string;
@@ -42,8 +45,10 @@ interface EspecieFauna {
   nome_cientifico: string;
   classe_taxonomica: string;
   ordem_taxonomica: string;
+  familia_taxonomica: string;
   tipo_de_fauna: string;
   estado_de_conservacao: string;
+  imagens_paths: string[] | null;
 }
 
 const DESTINACOES_FAUNA = [
@@ -128,8 +133,10 @@ const FaunaSection: React.FC<FaunaSectionProps> = ({
     nomeCientifico: '',
     classeTaxonomica: '',
     ordemTaxonomica: '',
+    familiaTaxonomica: '',
     tipoFauna: '',
     estadoConservacao: '',
+    imagensPaths: [],
     estadoSaudeId: '',
     estagioVidaId: '',
     atropelamento: '',
@@ -167,8 +174,10 @@ const FaunaSection: React.FC<FaunaSectionProps> = ({
             nomePopular: '',
             nomeCientifico: '',
             ordemTaxonomica: '',
+            familiaTaxonomica: '',
             tipoFauna: '',
-            estadoConservacao: ''
+            estadoConservacao: '',
+            imagensPaths: []
           };
         }
         
@@ -183,8 +192,10 @@ const FaunaSection: React.FC<FaunaSectionProps> = ({
               nomeCientifico: especie.nome_cientifico,
               classeTaxonomica: especie.classe_taxonomica,
               ordemTaxonomica: especie.ordem_taxonomica,
+              familiaTaxonomica: especie.familia_taxonomica || '',
               tipoFauna: especie.tipo_de_fauna,
-              estadoConservacao: especie.estado_de_conservacao
+              estadoConservacao: especie.estado_de_conservacao,
+              imagensPaths: Array.isArray(especie.imagens_paths) ? especie.imagens_paths : []
             };
           }
         }
@@ -329,51 +340,73 @@ const FaunaSection: React.FC<FaunaSectionProps> = ({
                       </SelectContent>
                     </Select>
                   </FormField>
-
-                  <FormField
-                    id={`nomeCientifico-${item.id}`}
-                    label="Nome Científico"
-                  >
-                    <Input
-                      value={item.nomeCientifico}
-                      readOnly
-                      className="bg-muted"
-                    />
-                  </FormField>
-
-                  <FormField
-                    id={`ordemTaxonomica-${item.id}`}
-                    label="Ordem Taxonômica"
-                  >
-                    <Input
-                      value={item.ordemTaxonomica}
-                      readOnly
-                      className="bg-muted"
-                    />
-                  </FormField>
-
-                  <FormField
-                    id={`estadoConservacao-${item.id}`}
-                    label="Estado de Conservação"
-                  >
-                    <Input
-                      value={item.estadoConservacao}
-                      readOnly
-                      className="bg-muted"
-                    />
-                  </FormField>
-
-                  <FormField
-                    id={`tipoFauna-${item.id}`}
-                    label="Tipo de Fauna"
-                  >
-                    <Input
-                      value={item.tipoFauna}
-                      readOnly
-                      className="bg-muted"
-                    />
-                  </FormField>
                 </div>
+
+                {/* Card de Detalhes da Espécie - aparece apenas após seleção */}
+                {item.especieId && (
+                  <div className="mt-4 rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5 overflow-hidden">
+                    {/* Header com nome da espécie */}
+                    <div className="px-4 py-3 bg-primary/10 border-b border-primary/20">
+                      <h4 className="font-semibold text-primary flex items-center gap-2">
+                        <ImageIcon className="h-4 w-4" />
+                        {item.nomePopular}
+                        <span className="font-normal text-muted-foreground italic text-sm">
+                          ({item.nomeCientifico})
+                        </span>
+                      </h4>
+                    </div>
+                    
+                    <div className="p-4 space-y-4">
+                      {/* Informações Taxonômicas em layout elegante */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                        <div className="space-y-1">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Ordem</p>
+                          <p className="text-sm font-medium text-foreground">{item.ordemTaxonomica || '—'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Família</p>
+                          <p className="text-sm font-medium text-foreground">{item.familiaTaxonomica || '—'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Tipo</p>
+                          <p className="text-sm font-medium text-foreground">{item.tipoFauna || '—'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Conservação</p>
+                          <p className="text-sm font-medium text-foreground">{item.estadoConservacao || '—'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Classe</p>
+                          <p className="text-sm font-medium text-foreground">{item.classeTaxonomica || '—'}</p>
+                        </div>
+                      </div>
+
+                      {/* Galeria de Fotos */}
+                      {item.imagensPaths && item.imagensPaths.length > 0 && (
+                        <div className="pt-3 border-t border-primary/10">
+                          <p className="text-xs font-medium mb-2 text-muted-foreground uppercase tracking-wider">Fotos da Espécie</p>
+                          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                            {item.imagensPaths.slice(0, 6).map((filename, imgIndex) => (
+                              <div 
+                                key={imgIndex} 
+                                className="aspect-square rounded-lg overflow-hidden border border-border bg-muted shadow-sm hover:shadow-md transition-shadow"
+                              >
+                                <img
+                                  src={getFaunaImageUrl(filename)}
+                                  alt={`${item.nomePopular} ${imgIndex + 1}`}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = '/placeholder.svg';
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Informações do Animal */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t">

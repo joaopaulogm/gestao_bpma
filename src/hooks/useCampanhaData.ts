@@ -4,7 +4,8 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 export type TeamType = 'Alfa' | 'Bravo' | 'Charlie' | 'Delta';
-export type UnitType = 'Guarda' | 'Armeiro' | 'RP Ambiental' | 'GOC' | 'Lacustre' | 'GTA' | 'Administrativo';
+export type UnitType = 'Guarda' | 'Armeiro' | 'RP Ambiental' | 'GOC' | 'Lacustre' | 'GTA';
+export type AdminSectionType = 'SEÇÃO SOI' | 'SEÇÃO SP' | 'SEÇÃO SLOG' | 'SEÇÃO SJD' | 'SEÇÃO SVG' | 'SEÇÃO SECRIMPO' | 'SEÇÃO GARAGEM' | 'SEÇÃO PROJETOS' | 'SECRETARIA';
 
 // Mapping de nomes de equipes para nomes de grupamentos na página Equipes
 const UNIT_TO_GRUPAMENTO: Record<UnitType, string> = {
@@ -14,7 +15,6 @@ const UNIT_TO_GRUPAMENTO: Record<UnitType, string> = {
   'GOC': 'GOC',
   'Lacustre': 'LACUSTRE',
   'GTA': 'GTA',
-  'Administrativo': 'EXPEDIENTE',
 };
 
 export interface EquipeCampanha {
@@ -76,7 +76,8 @@ export interface CampanhaConfig {
 }
 
 const TEAMS: TeamType[] = ['Alfa', 'Bravo', 'Charlie', 'Delta'];
-const UNITS: UnitType[] = ['Guarda', 'Armeiro', 'RP Ambiental', 'GOC', 'Lacustre', 'GTA', 'Administrativo'];
+const UNITS: UnitType[] = ['Guarda', 'Armeiro', 'RP Ambiental', 'GOC', 'Lacustre', 'GTA'];
+const ADMIN_SECTIONS: AdminSectionType[] = ['SEÇÃO SOI', 'SEÇÃO SP', 'SEÇÃO SLOG', 'SEÇÃO SJD', 'SEÇÃO SVG', 'SEÇÃO SECRIMPO', 'SEÇÃO GARAGEM', 'SEÇÃO PROJETOS', 'SECRETARIA'];
 
 // Feriados nacionais
 const feriados: Record<number, string[]> = {
@@ -208,14 +209,13 @@ export const useCampanhaData = (year: number) => {
   }, [fetchData]);
 
   // Default initial teams if no config exists
-  const defaultInitialTeams: Record<UnitType, TeamType | null> = {
+  const defaultInitialTeams: Record<UnitType, TeamType> = {
     'Guarda': 'Bravo',
     'Armeiro': 'Bravo',
     'RP Ambiental': 'Bravo',
     'GOC': 'Bravo',
     'Lacustre': 'Bravo',
     'GTA': 'Alfa',
-    'Administrativo': null,
   };
 
   // Get team name by ID
@@ -232,8 +232,6 @@ export const useCampanhaData = (year: number) => {
 
   // Calculate team for a specific date and unit
   const getTeamForDate = useCallback((date: Date, unidade: UnitType): TeamType | null => {
-    if (unidade === 'Administrativo') return null;
-
     const dateStr = format(date, 'yyyy-MM-dd');
     
     // Check for manual alterations first
@@ -278,10 +276,13 @@ export const useCampanhaData = (year: number) => {
   }, [isFeriado]);
 
   // Get members for a specific team and unit (uses equipes reais from dim_equipes/fat_equipe_membros)
-  const getMembrosForTeam = useCallback((teamName: TeamType, unidade: UnitType): EquipeMembro[] => {
+  const getMembrosForTeam = useCallback((teamName: TeamType | null, unidade: UnitType): EquipeMembro[] => {
     // Mapear unidade para grupamento
     const grupamento = UNIT_TO_GRUPAMENTO[unidade];
     if (!grupamento) return [];
+
+    // Se não tem teamName, retornar vazio
+    if (!teamName) return [];
 
     // Encontrar equipes do grupamento que tenham o nome da equipe (Alfa, Bravo, etc)
     const equipesDoGrupamento = equipesReais.filter((e: any) => 
@@ -301,6 +302,19 @@ export const useCampanhaData = (year: number) => {
 
     const equipesIds = equipesDoGrupamento.map((e: any) => e.id);
     return membrosReais.filter(m => equipesIds.includes(m.equipe_id));
+  }, [equipesReais, membrosReais]);
+
+  // Get members for an admin section
+  const getMembrosForAdminSection = useCallback((section: AdminSectionType): EquipeMembro[] => {
+    // Encontrar a equipe que corresponde à seção
+    const equipe = equipesReais.find((e: any) => 
+      e.nome?.toUpperCase() === section.toUpperCase() ||
+      e.nome?.toUpperCase().includes(section.toUpperCase().replace('SEÇÃO ', ''))
+    );
+
+    if (!equipe) return [];
+
+    return membrosReais.filter(m => m.equipe_id === equipe.id);
   }, [equipesReais, membrosReais]);
 
   // Save a schedule alteration
@@ -474,10 +488,12 @@ export const useCampanhaData = (year: number) => {
     efetivo,
     TEAMS,
     UNITS,
+    ADMIN_SECTIONS,
     getTeamForDate,
     isFeriado,
     administrativoTrabalha,
     getMembrosForTeam,
+    getMembrosForAdminSection,
     saveAlteracao,
     removeAlteracao,
     addMembro,

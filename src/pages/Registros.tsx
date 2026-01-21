@@ -82,7 +82,7 @@ const Registros = () => {
         supabase.from('dim_destinacao').select('id, nome'),
         supabase.from('dim_estado_saude').select('id, nome'),
         supabase.from('dim_estagio_vida').select('id, nome'),
-        supabase.from('dim_desfecho').select('id, nome, tipo'),
+        supabase.from('dim_desfecho_resgates').select('id, nome, tipo'),
         supabase.from('dim_especies_fauna').select('*')
       ]);
       
@@ -792,6 +792,8 @@ const Registros = () => {
           onSearchChange={setSearchTerm}
           onToggleFilters={() => setShowFilters(!showFilters)}
           onExportCSV={handleExportCSV}
+          onExportPDF={handleExportPDF}
+          onExportXLSX={handleExportXLSX}
         />
         
         {showFilters && (

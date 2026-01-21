@@ -9,7 +9,9 @@ import {
   Briefcase,
   Users,
   Wrench,
-  Settings
+  Settings,
+  Gavel,
+  HeartHandshake
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import logoBpma from '@/assets/logo-bpma.svg';
@@ -43,15 +45,15 @@ const HomeCard = ({ title, icon: Icon, to }: HomeCardProps) => {
   return (
     <Link 
       to={to}
-      className="flex flex-col items-center justify-center gap-3 p-4 sm:p-5 aspect-square rounded-xl 
-        bg-card border border-border shadow-sm
-        hover:shadow-md hover:-translate-y-1
-        transition-all duration-200 active:scale-[0.97] min-h-[120px]"
+      className="flex flex-col items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 md:p-5 aspect-square rounded-xl 
+        bg-primary border border-primary/50 shadow-sm
+        hover:shadow-[0_0_25px_rgba(255,204,0,0.5)] hover:-translate-y-1
+        transition-all duration-200 active:scale-[0.97] min-h-[100px] sm:min-h-[120px]"
     >
-      <div className="p-3 rounded-xl bg-primary/10">
-        <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+      <div className="p-2 sm:p-3 rounded-xl bg-accent/10 shrink-0">
+        <Icon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 text-accent" />
       </div>
-      <span className="text-xs sm:text-sm font-medium text-center text-foreground leading-tight line-clamp-2">{title}</span>
+      <span className="text-[10px] sm:text-xs md:text-sm font-medium text-center text-primary-foreground leading-tight break-words hyphens-auto px-1">{title}</span>
     </Link>
   );
 };
@@ -142,7 +144,8 @@ const Index = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                 <HomeCard title="Resgate de Fauna" icon={Clipboard} to="/resgate-cadastro" />
                 <HomeCard title="Crimes Ambientais" icon={Shield} to="/crimes-ambientais" />
-                <HomeCard title="Crimes Comuns" icon={Shield} to="/crimes-comuns" />
+                <HomeCard title="Crimes Comuns" icon={Gavel} to="/crimes-comuns" />
+                <HomeCard title="Atividades de Prevenção" icon={HeartHandshake} to="/atividades-prevencao" />
                 <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
                 <HomeCard title="Ranking de Ocorrências" icon={Trophy} to="/ranking" />
               </div>
