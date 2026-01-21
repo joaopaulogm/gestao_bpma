@@ -526,7 +526,7 @@ const Abono: React.FC = () => {
 
       {/* Conteúdo principal */}
       <div className="flex-1 overflow-auto p-3 md:p-4">
-        <div className="max-w-full mx-auto flex flex-col gap-3">
+        <div className="w-[75%] mx-auto flex flex-col gap-3">
           {/* Navegação por mês */}
           <Card className="flex-shrink-0">
             <CardContent className="p-2 md:p-3">
