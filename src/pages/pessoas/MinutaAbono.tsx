@@ -70,6 +70,7 @@ const MinutaAbono: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
+      // Buscar apenas abonos com datas definidas (não previstos)
       const { data: abonos, error } = await supabase
         .from('fat_abono')
         .select(`
@@ -81,29 +82,18 @@ const MinutaAbono: React.FC = () => {
           efetivo:dim_efetivo(id, matricula, posto_graduacao, nome, quadro)
         `)
         .eq('ano', ano)
-        .eq('mes', mes);
+        .eq('mes', mes)
+        .not('data_inicio', 'is', null)
+        .not('data_fim', 'is', null);
 
       if (error) throw error;
 
       const minutaData: AbonoMinuta[] = [];
       
       abonos?.forEach((a: any) => {
-        if (a.efetivo) {
-          // Use saved dates if available, otherwise calculate defaults
-          let dataInicio: Date;
-          let dataFim: Date;
-          
-          if (a.data_inicio) {
-            dataInicio = parseISO(a.data_inicio);
-          } else {
-            dataInicio = new Date(ano, mes - 1, 1);
-          }
-          
-          if (a.data_fim) {
-            dataFim = parseISO(a.data_fim);
-          } else {
-            dataFim = addDays(dataInicio, 4); // 5 days
-          }
+        if (a.efetivo && a.data_inicio && a.data_fim) {
+          const dataInicio = parseISO(a.data_inicio);
+          const dataFim = parseISO(a.data_fim);
           
           minutaData.push({
             id: a.id,
