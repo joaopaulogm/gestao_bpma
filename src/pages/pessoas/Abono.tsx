@@ -671,7 +671,7 @@ const Abono: React.FC = () => {
           </div>
 
           {/* Tabelas - exibição completa ocupando espaço total */}
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="flex flex-col gap-4">
             {/* Seção Previstos */}
             <Card>
               <CardHeader className="py-2 px-3">

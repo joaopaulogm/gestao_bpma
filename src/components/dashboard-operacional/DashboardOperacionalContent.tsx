@@ -11,6 +11,14 @@ import DashboardOperacionalIndicadores, { IndicadoresData } from './DashboardOpe
 import DashboardOperacionalOrdemPorClasse, { ClasseOrdemData } from './DashboardOperacionalOrdemPorClasse';
 import DashboardOperacionalSazonalidade, { SazonalidadeHistorico, SazonalidadeData } from './DashboardOperacionalSazonalidade';
 import DashboardOperacionalRecordes, { RecordeApreensao } from './DashboardOperacionalRecordes';
+import DashboardOperacionalHorarioChart from './DashboardOperacionalHorarioChart';
+
+interface HorarioData {
+  periodo: string;
+  faixa: string;
+  quantidade: number;
+  cor: string;
+}
 
 interface DashboardOperacionalContentProps {
   year: number;
@@ -151,13 +159,20 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
           isHistorico: true
         };
       } else {
-        // Buscar dados de 2026+ dos formulários
+        // Buscar dados de 2026+ dos formulários com desfecho
         const startDate = `${year}-01-01`;
         const endDate = `${year}-12-31`;
 
+        // Buscar desfechos para lookup
+        const { data: desfechosData } = await supabase
+          .from('dim_desfecho_resgates')
+          .select('id, nome');
+        
+        const desfechosMap = new Map((desfechosData || []).map(d => [d.id, d.nome]));
+
         const [resgatesRes, crimesAmbRes, criComRes, prevRes] = await Promise.all([
           supabase.from('fat_registros_de_resgate')
-            .select('quantidade_total, quantidade_adulto, quantidade_filhote')
+            .select('quantidade_total, quantidade_adulto, quantidade_filhote, desfecho_id, estado_saude_id')
             .gte('data', startDate).lte('data', endDate),
           supabase.from('fat_registros_de_crime')
             .select('id')
@@ -175,17 +190,31 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
           sum + (r.quantidade_total || (r.quantidade_adulto || 0) + (r.quantidade_filhote || 0)), 0);
         const totalFilhotes = resgates.reduce((sum, r) => sum + (r.quantidade_filhote || 0), 0);
 
+        // Calcular solturas e óbitos baseado no desfecho
+        let totalSolturas = 0;
+        let totalObitos = 0;
+        resgates.forEach(r => {
+          const desfechoNome = r.desfecho_id ? desfechosMap.get(r.desfecho_id) : null;
+          const qty = r.quantidade_total || (r.quantidade_adulto || 0) + (r.quantidade_filhote || 0) || 1;
+          if (desfechoNome === 'Vida Livre' || desfechoNome === 'Resolvido no Local') {
+            totalSolturas += qty;
+          }
+          if (desfechoNome === 'Óbito') {
+            totalObitos += qty;
+          }
+        });
+
         const prevencao = prevRes.data || [];
         const publicoPrev = prevencao.reduce((sum, p) => sum + (p.quantidade_publico || 0), 0);
 
         return {
           totalAnimais,
-          totalSolturas: 0, // Calcular via desfecho
-          totalObitos: 0,
-          totalFeridos: 0,
+          totalSolturas,
+          totalObitos,
+          totalFeridos: 0, // Estado de saúde "ferido" would require lookup
           totalFilhotes,
-          taxaMortalidade: 0,
-          taxaSoltura: 0,
+          taxaMortalidade: totalAnimais > 0 ? (totalObitos / totalAnimais) * 100 : 0,
+          taxaSoltura: totalAnimais > 0 ? (totalSolturas / totalAnimais) * 100 : 0,
           totalCrimesAmbientais: crimesAmbRes.data?.length || 0,
           totalCrimesComuns: criComRes.data?.length || 0,
           totalPrevencao: prevRes.data?.length || 0,
@@ -226,27 +255,50 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
           };
         });
       } else {
+        // 2026+: Buscar dados com desfecho
         const startDate = `${year}-01-01`;
         const endDate = `${year}-12-31`;
 
+        // Buscar desfechos para lookup
+        const { data: desfechosData } = await supabase
+          .from('dim_desfecho_resgates')
+          .select('id, nome');
+        
+        const desfechosMap = new Map((desfechosData || []).map(d => [d.id, d.nome]));
+
         const { data } = await supabase
           .from('fat_registros_de_resgate')
-          .select('data, quantidade_total')
+          .select('data, quantidade_total, quantidade_adulto, quantidade_filhote, desfecho_id')
           .gte('data', startDate).lte('data', endDate);
 
-        const byMonth: Record<number, number> = {};
+        const byMonth: Record<number, { resgates: number; solturas: number; obitos: number; feridos: number }> = {};
+        
         (data || []).forEach(row => {
           const month = new Date(row.data).getMonth() + 1;
-          byMonth[month] = (byMonth[month] || 0) + (row.quantidade_total || 1);
+          const qty = row.quantidade_total || (row.quantidade_adulto || 0) + (row.quantidade_filhote || 0) || 1;
+          const desfechoNome = row.desfecho_id ? desfechosMap.get(row.desfecho_id) : null;
+          
+          if (!byMonth[month]) {
+            byMonth[month] = { resgates: 0, solturas: 0, obitos: 0, feridos: 0 };
+          }
+          
+          byMonth[month].resgates += qty;
+          
+          if (desfechoNome === 'Vida Livre' || desfechoNome === 'Resolvido no Local') {
+            byMonth[month].solturas += qty;
+          }
+          if (desfechoNome === 'Óbito') {
+            byMonth[month].obitos += qty;
+          }
         });
 
         return MESES.map((mesNome, i) => ({
           mes: i + 1,
           mesNome,
-          resgates: byMonth[i + 1] || 0,
-          solturas: 0,
-          obitos: 0,
-          feridos: 0
+          resgates: byMonth[i + 1]?.resgates || 0,
+          solturas: byMonth[i + 1]?.solturas || 0,
+          obitos: byMonth[i + 1]?.obitos || 0,
+          feridos: byMonth[i + 1]?.feridos || 0
         }));
       }
     },
@@ -307,6 +359,39 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
           .sort((a, b) => b.quantidade - a.quantidade);
       }
       
+      // 2026+: Buscar da fat_registros_de_resgate com lookup na dim_especies_fauna
+      if (year >= 2026) {
+        const startDate = `${year}-01-01`;
+        const endDate = `${year}-12-31`;
+        
+        const { data, error } = await supabase
+          .from('fat_registros_de_resgate')
+          .select(`
+            quantidade_total, quantidade_adulto, quantidade_filhote,
+            especie:dim_especies_fauna(classe_taxonomica)
+          `)
+          .gte('data', startDate).lte('data', endDate);
+        
+        if (error) return [];
+        
+        const byClasse: Record<string, number> = {};
+        let total = 0;
+        (data || []).forEach((row: any) => {
+          const classe = row.especie?.classe_taxonomica || 'Não informado';
+          const qty = row.quantidade_total || (row.quantidade_adulto || 0) + (row.quantidade_filhote || 0) || 1;
+          byClasse[classe] = (byClasse[classe] || 0) + qty;
+          total += qty;
+        });
+
+        return Object.entries(byClasse)
+          .map(([classe, quantidade]) => ({
+            classe,
+            quantidade,
+            percentual: total > 0 ? (quantidade / total) * 100 : 0
+          }))
+          .sort((a, b) => b.quantidade - a.quantidade);
+      }
+      
       return [];
     },
     staleTime: 5 * 60 * 1000
@@ -348,6 +433,34 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
         (data || []).forEach((row: any) => {
           const nome = row.nome_popular || 'Não identificado';
           byEspecie[nome] = (byEspecie[nome] || 0) + (row.quantidade_resgates || 0);
+        });
+
+        return Object.entries(byEspecie)
+          .map(([nome, quantidade]) => ({ nome, quantidade }))
+          .sort((a, b) => b.quantidade - a.quantidade)
+          .slice(0, 15);
+      }
+      
+      // 2026+: Buscar da fat_registros_de_resgate com lookup na dim_especies_fauna
+      if (year >= 2026) {
+        const startDate = `${year}-01-01`;
+        const endDate = `${year}-12-31`;
+        
+        const { data, error } = await supabase
+          .from('fat_registros_de_resgate')
+          .select(`
+            quantidade_total, quantidade_adulto, quantidade_filhote,
+            especie:dim_especies_fauna(nome_popular)
+          `)
+          .gte('data', startDate).lte('data', endDate);
+        
+        if (error) return [];
+        
+        const byEspecie: Record<string, number> = {};
+        (data || []).forEach((row: any) => {
+          const nome = row.especie?.nome_popular || 'Não identificado';
+          const qty = row.quantidade_total || (row.quantidade_adulto || 0) + (row.quantidade_filhote || 0) || 1;
+          byEspecie[nome] = (byEspecie[nome] || 0) + qty;
         });
 
         return Object.entries(byEspecie)
@@ -563,6 +676,53 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     staleTime: 10 * 60 * 1000
   });
 
+  // Buscar distribuição por horário (apenas para 2026+)
+  const { data: horarioData, isLoading: loadingHorario } = useQuery({
+    queryKey: ['dashboard-operacional-horario', year],
+    queryFn: async (): Promise<HorarioData[]> => {
+      if (year < 2026) return [];
+      
+      const startDate = `${year}-01-01`;
+      const endDate = `${year}-12-31`;
+      
+      const { data, error } = await supabase
+        .from('fat_registros_de_resgate')
+        .select('created_at, quantidade_total, quantidade_adulto, quantidade_filhote')
+        .gte('data', startDate).lte('data', endDate);
+      
+      if (error || !data) return [];
+      
+      // Definir faixas horárias
+      const faixas = [
+        { periodo: 'Madrugada', faixa: '00:01 - 06:59', inicio: 0, fim: 6, cor: 'hsl(260, 60%, 50%)' },
+        { periodo: 'Manhã 1', faixa: '07:00 - 09:59', inicio: 7, fim: 9, cor: 'hsl(38, 92%, 50%)' },
+        { periodo: 'Manhã 2', faixa: '10:00 - 11:59', inicio: 10, fim: 11, cor: 'hsl(45, 93%, 47%)' },
+        { periodo: 'Tarde 1', faixa: '12:00 - 14:59', inicio: 12, fim: 14, cor: 'hsl(142, 76%, 36%)' },
+        { periodo: 'Tarde 2', faixa: '15:00 - 17:59', inicio: 15, fim: 17, cor: 'hsl(160, 84%, 39%)' },
+        { periodo: 'Noite 1', faixa: '18:00 - 20:59', inicio: 18, fim: 20, cor: 'hsl(221, 83%, 53%)' },
+        { periodo: 'Noite 2', faixa: '21:00 - 23:59', inicio: 21, fim: 23, cor: 'hsl(240, 60%, 50%)' },
+      ];
+      
+      const contagem = faixas.map(f => ({ ...f, quantidade: 0 }));
+      
+      data.forEach(row => {
+        if (!row.created_at) return;
+        const hora = new Date(row.created_at).getHours();
+        const qty = row.quantidade_total || (row.quantidade_adulto || 0) + (row.quantidade_filhote || 0) || 1;
+        
+        for (const faixa of contagem) {
+          if (hora >= faixa.inicio && hora <= faixa.fim) {
+            faixa.quantidade += qty;
+            break;
+          }
+        }
+      });
+      
+      return contagem;
+    },
+    staleTime: 5 * 60 * 1000
+  });
+
   if (errorKPIs) {
     return (
       <Alert variant="destructive">
@@ -574,7 +734,7 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     );
   }
 
-  const isLoading = loadingKPIs || loadingMonthly || loadingClasse || loadingEspecies || loadingIndicadores || loadingOrdem || loadingSazonalidade || loadingRecordes;
+  const isLoading = loadingKPIs || loadingMonthly || loadingClasse || loadingEspecies || loadingIndicadores || loadingOrdem || loadingSazonalidade || loadingRecordes || loadingHorario;
 
   if (isLoading) {
     return (
@@ -600,8 +760,11 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
   // Verificar se há dados de sazonalidade
   const hasSazonalidadeData = sazonalidadeData && sazonalidadeData.anos.length > 0;
 
-  // Verificar se há recordes de apreensão
-  const hasRecordes = recordesApreensao && recordesApreensao.length > 0;
+  // Verificar se há recordes de apreensão do ano
+  const hasRecordes = recordesApreensao && recordesApreensao.filter(r => r.ano === year).length > 0;
+
+  // Verificar se há dados de horário
+  const hasHorarioData = horarioData && horarioData.length > 0 && horarioData.some(h => h.quantidade > 0);
 
   return (
     <div className="space-y-8">
@@ -648,6 +811,11 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
         year={year}
         isHistorico={isHistorico}
       />
+      
+      {/* Gráfico de distribuição por horário (apenas 2026+) */}
+      {hasHorarioData && (
+        <DashboardOperacionalHorarioChart data={horarioData!} year={year} />
+      )}
     </div>
   );
 };
