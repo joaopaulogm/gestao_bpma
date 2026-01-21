@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { ArrowLeft, FileText, Loader2, Printer, Calendar, FileSpreadsheet, FileDown } from 'lucide-react';
+import { ArrowLeft, FileText, Loader2, Printer, Calendar, FileSpreadsheet, FileDown, Save, Check } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { format, addDays, parse } from 'date-fns';
+import { format, addDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -39,6 +40,9 @@ interface FeriasMinuta {
   dias: number;
   data_inicio: Date;
   data_fim: Date;
+  observacao: string;
+  hasChanges: boolean;
+  saving: boolean;
 }
 
 const MESES = [
@@ -87,6 +91,7 @@ const MinutaFerias: React.FC = () => {
   
   const [data, setData] = useState<FeriasMinuta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savingAll, setSavingAll] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -98,6 +103,9 @@ const MinutaFerias: React.FC = () => {
           mes_inicio,
           dias,
           observacao,
+          minuta_data_inicio,
+          minuta_data_fim,
+          minuta_observacao,
           efetivo:dim_efetivo(id, matricula, posto_graduacao, nome, quadro)
         `)
         .eq('ano', ano);
@@ -110,8 +118,21 @@ const MinutaFerias: React.FC = () => {
         const diasNoMes = getParcelaForMonth(f.observacao, f.mes_inicio, f.dias, mes);
         
         if (diasNoMes && f.efetivo) {
-          const dataInicio = new Date(ano, mes - 1, 1);
-          const dataFim = addDays(dataInicio, diasNoMes - 1);
+          // Use saved dates if available, otherwise calculate defaults
+          let dataInicio: Date;
+          let dataFim: Date;
+          
+          if (f.minuta_data_inicio) {
+            dataInicio = parseISO(f.minuta_data_inicio);
+          } else {
+            dataInicio = new Date(ano, mes - 1, 1);
+          }
+          
+          if (f.minuta_data_fim) {
+            dataFim = parseISO(f.minuta_data_fim);
+          } else {
+            dataFim = addDays(dataInicio, diasNoMes - 1);
+          }
           
           minutaData.push({
             id: f.id,
@@ -122,6 +143,9 @@ const MinutaFerias: React.FC = () => {
             dias: diasNoMes,
             data_inicio: dataInicio,
             data_fim: dataFim,
+            observacao: f.minuta_observacao || '',
+            hasChanges: false,
+            saving: false,
           });
         }
       });
@@ -150,7 +174,7 @@ const MinutaFerias: React.FC = () => {
     setData(prev => prev.map(item => {
       if (item.id === id) {
         const newDataFim = addDays(newDate, item.dias - 1);
-        return { ...item, data_inicio: newDate, data_fim: newDataFim };
+        return { ...item, data_inicio: newDate, data_fim: newDataFim, hasChanges: true };
       }
       return item;
     }));
@@ -159,10 +183,79 @@ const MinutaFerias: React.FC = () => {
   const updateDataFim = (id: string, newDate: Date) => {
     setData(prev => prev.map(item => {
       if (item.id === id) {
-        return { ...item, data_fim: newDate };
+        return { ...item, data_fim: newDate, hasChanges: true };
       }
       return item;
     }));
+  };
+
+  const updateObservacao = (id: string, observacao: string) => {
+    setData(prev => prev.map(item => {
+      if (item.id === id) {
+        return { ...item, observacao, hasChanges: true };
+      }
+      return item;
+    }));
+  };
+
+  const saveItem = async (id: string) => {
+    const item = data.find(i => i.id === id);
+    if (!item) return;
+
+    setData(prev => prev.map(i => i.id === id ? { ...i, saving: true } : i));
+
+    try {
+      const { error } = await supabase
+        .from('fat_ferias')
+        .update({
+          minuta_data_inicio: format(item.data_inicio, 'yyyy-MM-dd'),
+          minuta_data_fim: format(item.data_fim, 'yyyy-MM-dd'),
+          minuta_observacao: item.observacao || null,
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setData(prev => prev.map(i => i.id === id ? { ...i, hasChanges: false, saving: false } : i));
+      toast.success('Dados salvos com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      toast.error('Erro ao salvar dados');
+      setData(prev => prev.map(i => i.id === id ? { ...i, saving: false } : i));
+    }
+  };
+
+  const saveAll = async () => {
+    const itemsToSave = data.filter(item => item.hasChanges);
+    if (itemsToSave.length === 0) {
+      toast.info('Nenhuma alteração para salvar');
+      return;
+    }
+
+    setSavingAll(true);
+
+    try {
+      for (const item of itemsToSave) {
+        const { error } = await supabase
+          .from('fat_ferias')
+          .update({
+            minuta_data_inicio: format(item.data_inicio, 'yyyy-MM-dd'),
+            minuta_data_fim: format(item.data_fim, 'yyyy-MM-dd'),
+            minuta_observacao: item.observacao || null,
+          })
+          .eq('id', item.id);
+
+        if (error) throw error;
+      }
+
+      setData(prev => prev.map(i => ({ ...i, hasChanges: false })));
+      toast.success(`${itemsToSave.length} registro(s) salvo(s) com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      toast.error('Erro ao salvar dados');
+    } finally {
+      setSavingAll(false);
+    }
   };
 
   const handlePrint = () => {
@@ -188,14 +281,19 @@ const MinutaFerias: React.FC = () => {
       item.dias,
       format(item.data_inicio, 'dd/MM/yyyy'),
       format(item.data_fim, 'dd/MM/yyyy'),
+      item.observacao || '-',
     ]);
 
     autoTable(doc, {
-      head: [['#', 'Quadro', 'Posto/Grad', 'Matrícula', 'Nome Completo', 'Dias', 'Data Início', 'Data Término']],
+      head: [['#', 'Quadro', 'Posto/Grad', 'Matrícula', 'Nome', 'Dias', 'Início', 'Término', 'Obs.']],
       body: tableData,
       startY: 40,
-      styles: { fontSize: 8 },
+      styles: { fontSize: 7 },
       headStyles: { fillColor: [41, 128, 185] },
+      columnStyles: {
+        4: { cellWidth: 30 },
+        8: { cellWidth: 25 },
+      },
     });
 
     const finalY = (doc as any).lastAutoTable.finalY || 40;
@@ -215,7 +313,7 @@ const MinutaFerias: React.FC = () => {
       ['BATALHÃO DE POLICIAMENTO DE PROTEÇÃO AMBIENTAL'],
       [`MINUTA DE FÉRIAS - ${MESES[mes - 1].toUpperCase()} DE ${ano}`],
       [],
-      ['#', 'Quadro', 'Posto/Graduação', 'Matrícula', 'Nome Completo', 'Qtd. Dias', 'Data Início', 'Data Término'],
+      ['#', 'Quadro', 'Posto/Graduação', 'Matrícula', 'Nome Completo', 'Qtd. Dias', 'Data Início', 'Data Término', 'Observações'],
       ...data.map((item, index) => [
         index + 1,
         item.quadro,
@@ -225,6 +323,7 @@ const MinutaFerias: React.FC = () => {
         item.dias,
         format(item.data_inicio, 'dd/MM/yyyy'),
         format(item.data_fim, 'dd/MM/yyyy'),
+        item.observacao || '',
       ]),
     ];
 
@@ -233,7 +332,7 @@ const MinutaFerias: React.FC = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Minuta de Férias');
     
     ws['!cols'] = [
-      { wch: 5 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 35 }, { wch: 10 }, { wch: 12 }, { wch: 12 }
+      { wch: 5 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 35 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 30 }
     ];
 
     XLSX.writeFile(wb, `minuta_ferias_${MESES[mes - 1].toLowerCase()}_${ano}.xlsx`);
@@ -257,9 +356,10 @@ const MinutaFerias: React.FC = () => {
               <th>Posto/Graduação</th>
               <th>Matrícula</th>
               <th>Nome Completo</th>
-              <th>Qtd. Dias</th>
+              <th>Dias</th>
               <th>Data Início</th>
               <th>Data Término</th>
+              <th>Observações</th>
             </tr>
           </thead>
           <tbody>
@@ -273,6 +373,7 @@ const MinutaFerias: React.FC = () => {
                 <td style="text-align: center;">${item.dias}</td>
                 <td>${format(item.data_inicio, 'dd/MM/yyyy')}</td>
                 <td>${format(item.data_fim, 'dd/MM/yyyy')}</td>
+                <td>${item.observacao || '-'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -307,11 +408,12 @@ const MinutaFerias: React.FC = () => {
   };
 
   const totalDias = useMemo(() => data.reduce((acc, item) => acc + item.dias, 0), [data]);
+  const hasAnyChanges = data.some(item => item.hasChanges);
 
   return (
     <ScrollArea className="h-screen">
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto p-4 md:p-6 max-w-6xl pb-20">
+        <div className="container mx-auto p-4 md:p-6 max-w-7xl pb-20">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 print:hidden">
             <div className="flex items-center gap-4">
@@ -333,7 +435,20 @@ const MinutaFerias: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button 
+                onClick={saveAll} 
+                disabled={!hasAnyChanges || savingAll}
+                className="gap-2"
+                variant={hasAnyChanges ? "default" : "outline"}
+              >
+                {savingAll ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Salvar Tudo
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-2">
@@ -356,7 +471,7 @@ const MinutaFerias: React.FC = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button onClick={handlePrint} className="gap-2">
+              <Button onClick={handlePrint} variant="outline" className="gap-2">
                 <Printer className="h-4 w-4" />
                 Imprimir
               </Button>
@@ -371,7 +486,7 @@ const MinutaFerias: React.FC = () => {
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 print:hidden">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 print:hidden">
             <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
               <CardContent className="p-4 text-center">
                 <Calendar className="h-5 w-5 text-primary mx-auto mb-2" />
@@ -391,6 +506,28 @@ const MinutaFerias: React.FC = () => {
                 <FileDown className="h-5 w-5 text-amber-600 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground">{totalDias}</p>
                 <p className="text-xs text-muted-foreground">Total de Dias</p>
+              </CardContent>
+            </Card>
+            <Card className={cn(
+              "border-2 transition-colors",
+              hasAnyChanges 
+                ? "bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/40" 
+                : "bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20"
+            )}>
+              <CardContent className="p-4 text-center">
+                {hasAnyChanges ? (
+                  <>
+                    <Save className="h-5 w-5 text-orange-600 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-foreground">{data.filter(i => i.hasChanges).length}</p>
+                    <p className="text-xs text-muted-foreground">Alterações Pendentes</p>
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-5 w-5 text-green-600 mx-auto mb-2" />
+                    <p className="text-lg font-bold text-foreground">Salvo</p>
+                    <p className="text-xs text-muted-foreground">Tudo Atualizado</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -419,17 +556,19 @@ const MinutaFerias: React.FC = () => {
                       <TableRow>
                         <TableHead className="w-[50px]">#</TableHead>
                         <TableHead>Quadro</TableHead>
-                        <TableHead>Posto/Graduação</TableHead>
+                        <TableHead>Posto/Grad</TableHead>
                         <TableHead>Matrícula</TableHead>
                         <TableHead>Nome Completo</TableHead>
-                        <TableHead className="text-center">Qtd. Dias</TableHead>
+                        <TableHead className="text-center">Dias</TableHead>
                         <TableHead>Data Início</TableHead>
                         <TableHead>Data Término</TableHead>
+                        <TableHead className="min-w-[200px]">Observações</TableHead>
+                        <TableHead className="w-[80px] print:hidden">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {data.map((item, index) => (
-                        <TableRow key={item.id}>
+                        <TableRow key={item.id} className={cn(item.hasChanges && "bg-orange-50 dark:bg-orange-950/20")}>
                           <TableCell className="font-medium">{index + 1}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className="text-xs">
@@ -485,6 +624,37 @@ const MinutaFerias: React.FC = () => {
                           </TableCell>
                           <TableCell className="hidden print:table-cell">
                             {format(item.data_fim, 'dd/MM/yyyy')}
+                          </TableCell>
+                          <TableCell className="print:hidden">
+                            <Input
+                              value={item.observacao}
+                              onChange={(e) => updateObservacao(item.id, e.target.value)}
+                              placeholder="Observações..."
+                              className="h-8 text-xs"
+                            />
+                          </TableCell>
+                          <TableCell className="hidden print:table-cell">
+                            {item.observacao || '-'}
+                          </TableCell>
+                          <TableCell className="print:hidden">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => saveItem(item.id)}
+                              disabled={!item.hasChanges || item.saving}
+                              className={cn(
+                                "h-8 w-8 p-0",
+                                item.hasChanges && "text-orange-600 hover:text-orange-700"
+                              )}
+                            >
+                              {item.saving ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : item.hasChanges ? (
+                                <Save className="h-4 w-4" />
+                              ) : (
+                                <Check className="h-4 w-4 text-green-600" />
+                              )}
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
