@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   Palmtree, ArrowLeft, Search, Calendar, Users, ChevronLeft, ChevronRight,
-  Loader2, Edit3, X, Check, Sun, Umbrella, Plane, TreePalm, CalendarDays
+  Loader2, Edit3, X, Check, Sun, Umbrella, Plane, TreePalm, CalendarDays, FileText
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -110,6 +110,7 @@ function parseParcelasFromObservacao(observacao: string | null, mesInicio: numbe
 }
 
 const Ferias: React.FC = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [mesSelecionado, setMesSelecionado] = useState<number | null>(null);
   const [ferias, setFerias] = useState<FeriasData[]>([]);
@@ -119,6 +120,12 @@ const Ferias: React.FC = () => {
   const [editingPolicial, setEditingPolicial] = useState<FeriasData | null>(null);
   const [parcelas, setParcelas] = useState<ParcelaInfo[]>([{ mes: 1, dias: 30 }]);
   const [saving, setSaving] = useState(false);
+
+  const handleOpenMinuta = () => {
+    if (mesSelecionado) {
+      navigate(`/secao-pessoas/ferias/minuta?mes=${mesSelecionado}&ano=${ano}`);
+    }
+  };
 
   const fetchFerias = useCallback(async () => {
     setLoading(true);
@@ -497,7 +504,16 @@ const Ferias: React.FC = () => {
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={handleOpenMinuta}
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span className="hidden sm:inline">Ver Minuta</span>
+                  </Button>
                   <div className="relative flex-1 sm:flex-none">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
