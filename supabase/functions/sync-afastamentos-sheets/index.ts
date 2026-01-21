@@ -11,9 +11,9 @@ const SPREADSHEET_ID = '1VU1YBhvFtbSbF6Y0wyWLKgvxtYBwSzic_pPAhpNxX_0';
 
 const SHEETS_CONFIG = {
   ferias: { name: '02 | FÉRIAS 2026 PRAÇAS', range: 'A:AZ' },
-  dm: { name: '01 | D. MÉDICAS 2026', range: 'A:AZ' },
+  dm: { name: '01 | D. MÉDICA 2026', range: 'A:AZ' },
   abono: { name: '03 | ABONO 2026', range: 'A:AZ' },
-  restricoes: { name: '06 | RESTRIÇÕES 2025', range: 'A:AZ' },
+  restricoes: { name: '06 | RESTRIÇÃO - 2025', range: 'A:AZ' },
 };
 
 // Google Service Account JWT generation
@@ -105,7 +105,13 @@ async function getServiceAccountToken(): Promise<string> {
 
 // Read sheet data
 async function readSheet(accessToken: string, sheetName: string, range: string): Promise<any[][]> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(sheetName)}!${range}`;
+  // Use single quotes around sheet name to handle special characters (Google Sheets convention)
+  // Escape any single quotes in the sheet name by doubling them
+  const escapedName = sheetName.replace(/'/g, "''");
+  const fullRange = `'${escapedName}'!${range}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(fullRange)}`;
+  
+  console.log(`[sync-afastamentos] Reading sheet: ${sheetName}, Range: ${fullRange}`);
   
   const response = await fetch(url, {
     headers: { 'Authorization': `Bearer ${accessToken}` },
@@ -118,6 +124,23 @@ async function readSheet(accessToken: string, sheetName: string, range: string):
 
   const data = await response.json();
   return data.values || [];
+}
+
+// Get list of all sheet names in spreadsheet
+async function getSheetNames(accessToken: string): Promise<string[]> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties.title`;
+  
+  const response = await fetch(url, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Failed to get sheet names: ${err}`);
+  }
+
+  const data = await response.json();
+  return data.sheets?.map((s: any) => s.properties?.title).filter(Boolean) || [];
 }
 
 // Parse header row and create a mapping
@@ -390,6 +413,15 @@ serve(async (req) => {
     // Get Google Sheets access token
     const accessToken = await getServiceAccountToken();
     console.log('[sync-afastamentos] Got Google access token');
+    
+    // Get available sheet names for debugging
+    try {
+      const sheetNames = await getSheetNames(accessToken);
+      console.log('[sync-afastamentos] Available sheets in spreadsheet:', sheetNames);
+      detalhes.available_sheets = sheetNames;
+    } catch (e) {
+      console.warn('[sync-afastamentos] Could not get sheet names:', e);
+    }
 
     // ========== 1. Process Férias ==========
     console.log('[sync-afastamentos] Processing Férias...');
