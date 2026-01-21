@@ -29,6 +29,8 @@ interface UsuarioPorLogin {
   quadro: string | null;
   email: string | null;
   login: string | null;
+  cpf: number | null;
+  senha: number | null;
   auth_user_id: string | null;
   vinculado_em: string | null;
   ativo: boolean | null;
@@ -89,7 +91,7 @@ const GerenciarPermissoes: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('usuarios_por_login')
-        .select('id, nome, nome_guerra, matricula, post_grad, quadro, email, login, auth_user_id, vinculado_em, ativo, lotacao')
+        .select('id, nome, nome_guerra, matricula, post_grad, quadro, email, login, cpf, senha, auth_user_id, vinculado_em, ativo, lotacao')
         .order('nome', { ascending: true });
 
       if (error) throw error;
@@ -476,8 +478,9 @@ const GerenciarPermissoes: React.FC = () => {
                         <TableHead>Nome</TableHead>
                         <TableHead>Matrícula</TableHead>
                         <TableHead>Login</TableHead>
+                        <TableHead>Senha (CPF)</TableHead>
                         <TableHead>E-mail</TableHead>
-                        <TableHead>Vinculado</TableHead>
+                        <TableHead>ID Único</TableHead>
                         <TableHead className="w-56">Nível de Acesso</TableHead>
                         <TableHead className="w-16">Ações</TableHead>
                       </TableRow>
@@ -508,11 +511,18 @@ const GerenciarPermissoes: React.FC = () => {
                           <TableCell className="font-mono text-sm text-muted-foreground">
                             {usuario.login || '-'}
                           </TableCell>
+                          <TableCell className="font-mono text-sm text-muted-foreground">
+                            {usuario.senha || usuario.cpf ? (
+                              <span title={String(usuario.senha || usuario.cpf)}>
+                                {String(usuario.senha || usuario.cpf).slice(0, 3)}***
+                              </span>
+                            ) : '-'}
+                          </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {usuario.email ? (
                               <span className="flex items-center gap-1">
                                 <Mail className="h-3 w-3" />
-                                <span className="truncate max-w-[150px]" title={usuario.email}>
+                                <span className="truncate max-w-[120px]" title={usuario.email}>
                                   {usuario.email}
                                 </span>
                               </span>
@@ -522,14 +532,14 @@ const GerenciarPermissoes: React.FC = () => {
                             {usuario.auth_user_id ? (
                               <span className="flex items-center gap-1 text-green-600">
                                 <Check className="h-4 w-4" />
-                                <span className="text-xs" title={usuario.auth_user_id}>
+                                <span className="text-xs font-mono" title={usuario.auth_user_id}>
                                   {usuario.auth_user_id.slice(0, 8)}...
                                 </span>
                               </span>
                             ) : (
                               <span className="flex items-center gap-1 text-muted-foreground">
                                 <X className="h-4 w-4" />
-                                <span className="text-xs">Não</span>
+                                <span className="text-xs">Pendente</span>
                               </span>
                             )}
                           </TableCell>
