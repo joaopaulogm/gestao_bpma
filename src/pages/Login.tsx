@@ -18,6 +18,7 @@ interface UsuarioPorLogin {
   email: string | null;
   auth_user_id: string | null;
   vinculado_em: string | null;
+  ativo: boolean | null;
 }
 
 const Login = () => {
@@ -106,6 +107,12 @@ const Login = () => {
 
       if (error || !usuario) {
         toast.error('Login ou senha incorretos');
+        return;
+      }
+
+      // Verificar se usuário está ativo
+      if (usuario.ativo === false) {
+        toast.error('Usuário desativado. Entre em contato com o administrador.');
         return;
       }
 
