@@ -322,12 +322,15 @@ function processDMRows(rows: any[][], sheetName: string): any[] {
 }
 
 // Process Abono sheet - lê as 3 parcelas de abono
-// Estrutura da planilha 03 | ABONO 2026:
-// Coluna A (0) = FBRA
-// Coluna B (1) = Posto/Graduação
-// Coluna C (2) = Nome Completo
-// Coluna D (3) = Matrícula
-// Coluna E (4) = Mês do Abono (1-12)
+// Estrutura da planilha 03 | ABONO 2026 (conforme documentação do usuário):
+// Coluna A (0) = Mês da 1ª Parcela
+// Coluna B (1) = Mês da 2ª Parcela
+// Coluna C (2) = Mês da 3ª Parcela
+// Coluna K (10) = Mês de Previsão do Abono
+// Coluna L (11) = Mês reprogramado
+// Coluna M (12) = Matrícula
+// Coluna R (17) = Ano de Gozo
+// Coluna T (19) = Número do Processo SEI-GDF
 // Colunas V (21) e W (22) = Início e Término da 1ª parcela
 // Colunas AA (26) e AB (27) = Início e Término da 2ª parcela
 // Colunas AF (31) e AG (32) = Início e Término da 3ª parcela
@@ -336,11 +339,15 @@ function processAbonoRows(rows: any[][], sheetName: string): any[] {
   
   const staging: any[] = [];
   
-  // Índices das colunas (0-indexed)
-  const COL_POSTO = 1;         // B
-  const COL_NOME = 2;          // C
-  const COL_MATRICULA = 3;     // D
-  const COL_MES = 4;           // E - mês do abono
+  // Índices das colunas (0-indexed) - CORRETOS conforme usuário
+  const COL_PARC1_MES = 0;       // A - Mês da 1ª Parcela
+  const COL_PARC2_MES = 1;       // B - Mês da 2ª Parcela
+  const COL_PARC3_MES = 2;       // C - Mês da 3ª Parcela
+  const COL_MES_PREVISAO = 10;   // K - Mês de previsão do abono
+  const COL_MES_REPROG = 11;     // L - Mês reprogramado
+  const COL_MATRICULA = 12;      // M - Matrícula
+  const COL_ANO_GOZO = 17;       // R - Ano de gozo
+  const COL_SEI = 19;            // T - Número do Processo SEI-GDF
   const COL_PARCELA1_INICIO = 21; // V
   const COL_PARCELA1_FIM = 22;    // W
   const COL_PARCELA2_INICIO = 26; // AA
@@ -352,29 +359,44 @@ function processAbonoRows(rows: any[][], sheetName: string): any[] {
   
   // Log primeira linha (header) para debug
   if (rows.length > 0) {
-    console.log(`[processAbonoRows] Row 0 (header): cols 0-10:`, rows[0].slice(0, 10));
-    console.log(`[processAbonoRows] Row 0 (header): cols 21-33:`, rows[0].slice(21, 34));
+    console.log(`[processAbonoRows] Row 0 (header): cols 0-15:`, rows[0].slice(0, 16));
+    console.log(`[processAbonoRows] Row 0 (header): cols 17-35:`, rows[0].slice(17, 36));
   }
   
-  // Começar da linha 1 (pular header)
-  for (let i = 1; i < rows.length; i++) {
+  // Começar da linha 7 (índice 6) - dados começam após headers
+  // Ajustar conforme estrutura real da planilha
+  const startRow = 7; // Linha 8 no Excel (1-indexed)
+  
+  for (let i = startRow; i < rows.length; i++) {
     const row = rows[i];
     
-    // Ler matrícula pelo índice fixo
+    // Ler matrícula pela coluna M (índice 12)
     const matricula = row[COL_MATRICULA]?.toString().trim();
-    if (!matricula || matricula === '') continue;
+    if (!matricula || matricula === '' || matricula.toLowerCase() === 'matrícula') continue;
     
-    // Ler mês pelo índice fixo
-    const mesRaw = row[COL_MES];
-    const mes = parseMonth(mesRaw?.toString()) || parseInt2(mesRaw?.toString());
+    // Ler mês de previsão (coluna K)
+    const mesPrevisaoRaw = row[COL_MES_PREVISAO];
+    const mesPrevisao = parseMonth(mesPrevisaoRaw?.toString()) || parseInt2(mesPrevisaoRaw?.toString());
+    
+    // Ler mês reprogramado (coluna L) - se tiver, usa esse
+    const mesReprogRaw = row[COL_MES_REPROG];
+    const mesReprog = parseMonth(mesReprogRaw?.toString()) || parseInt2(mesReprogRaw?.toString());
+    
+    // Usar mês reprogramado se existir, senão usa previsão
+    const mes = mesReprog || mesPrevisao;
     
     if (!mes) {
-      // Log para debug
-      if (i <= 5) {
-        console.log(`[processAbonoRows] Row ${i}: skipped, no mes found. matricula=${matricula}, mesRaw=${mesRaw}`);
+      if (i <= 10) {
+        console.log(`[processAbonoRows] Row ${i}: skipped, no mes found. matricula=${matricula}, mesPrevisao=${mesPrevisaoRaw}, mesReprog=${mesReprogRaw}`);
       }
       continue;
     }
+    
+    // Ano de gozo (coluna R)
+    const anoGozo = parseInt2(row[COL_ANO_GOZO]?.toString()) || 2026;
+    
+    // SEI (coluna T)
+    const sei = row[COL_SEI]?.toString().trim() || null;
     
     // Ler datas das parcelas pelos índices das colunas
     const parcela1Inicio = row[COL_PARCELA1_INICIO] ? parseDate(String(row[COL_PARCELA1_INICIO])) : null;
@@ -384,10 +406,10 @@ function processAbonoRows(rows: any[][], sheetName: string): any[] {
     const parcela3Inicio = row[COL_PARCELA3_INICIO] ? parseDate(String(row[COL_PARCELA3_INICIO])) : null;
     const parcela3Fim = row[COL_PARCELA3_FIM] ? parseDate(String(row[COL_PARCELA3_FIM])) : null;
     
-    // Log para debug das primeiras linhas
-    if (i <= 5) {
-      console.log(`[processAbonoRows] Row ${i}: matricula=${matricula}, mes=${mes}`);
-      console.log(`  Posto=${row[COL_POSTO]}, Nome=${row[COL_NOME]}`);
+    // Log para debug das primeiras linhas com dados
+    if (staging.length < 5) {
+      console.log(`[processAbonoRows] Row ${i}: matricula=${matricula}, mesPrevisao=${mesPrevisao}, mesReprog=${mesReprog}, mes=${mes}`);
+      console.log(`  Ano gozo=${anoGozo}, SEI=${sei}`);
       console.log(`  Parcela1: ${parcela1Inicio} - ${parcela1Fim}`);
       console.log(`  Parcela2: ${parcela2Inicio} - ${parcela2Fim}`);
       console.log(`  Parcela3: ${parcela3Inicio} - ${parcela3Fim}`);
@@ -397,11 +419,11 @@ function processAbonoRows(rows: any[][], sheetName: string): any[] {
       source_sheet: sheetName,
       source_row_number: i + 1,
       matricula,
-      posto_graduacao: row[COL_POSTO]?.toString().trim() || null,
-      nome_completo: row[COL_NOME]?.toString().trim() || null,
+      posto_graduacao: null, // Não temos coluna de posto definida
+      nome_completo: null,   // Não temos coluna de nome definida
       mes,
-      ano: 2026,
-      observacao: null,
+      ano: anoGozo,
+      observacao: sei ? `SEI: ${sei}` : null,
       parcela1_inicio: parcela1Inicio,
       parcela1_fim: parcela1Fim,
       parcela2_inicio: parcela2Inicio,
