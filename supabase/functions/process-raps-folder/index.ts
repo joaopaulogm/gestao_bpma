@@ -230,8 +230,17 @@ async function downloadPDFAsBase64(fileId: string, accessToken: string): Promise
   }
 
   const arrayBuffer = await response.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-  return base64;
+  const uint8Array = new Uint8Array(arrayBuffer);
+  
+  // Convert to base64 in chunks to avoid stack overflow
+  let binary = '';
+  const chunkSize = 32768; // 32KB chunks
+  for (let i = 0; i < uint8Array.length; i += chunkSize) {
+    const chunk = uint8Array.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, Array.from(chunk));
+  }
+  
+  return btoa(binary);
 }
 
 async function extractRAPData(pdfBase64: string, fileName: string): Promise<any> {
