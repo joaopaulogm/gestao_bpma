@@ -218,7 +218,7 @@ const FaunaCadastrada = () => {
 
   return (
     <Layout title="Fauna Cadastrada" showBackButton>
-      <div className="space-y-6 animate-fade-in">
+      <div className="w-[75%] mx-auto space-y-6 animate-fade-in">
         {/* Header Actions */}
         <div className="flex flex-col lg:flex-row justify-between gap-4">
           <div className="flex flex-col sm:flex-row gap-3 flex-1">

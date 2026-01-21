@@ -163,7 +163,7 @@ const RankingOcorrencias: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="w-[75%] mx-auto p-6">
       <div className="flex items-center gap-3 mb-6">
         <Trophy className="h-8 w-8 text-primary" />
         <h1 className="text-2xl font-bold text-foreground">Ranking de Ocorrências</h1>

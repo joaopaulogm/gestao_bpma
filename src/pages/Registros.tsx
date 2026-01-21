@@ -786,7 +786,7 @@ const Registros = () => {
 
   return (
     <Layout title="Lista de Registros" showBackButton>
-      <div className="space-y-4 sm:space-y-6 animate-fade-in w-full">
+      <div className="w-[75%] mx-auto space-y-4 sm:space-y-6 animate-fade-in">
         <RegistrosActions
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}

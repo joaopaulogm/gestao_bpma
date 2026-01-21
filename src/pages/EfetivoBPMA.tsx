@@ -266,7 +266,7 @@ const EfetivoBPMA = () => {
 
   return (
     <Layout title="Efetivo BPMA">
-      <div className="space-y-6">
+      <div className="w-[75%] mx-auto space-y-6">
         {/* Actions Bar */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
           <div className="flex flex-col sm:flex-row gap-4 flex-1">
