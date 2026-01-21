@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { NovoAbonoDialog } from '@/components/abono/NovoAbonoDialog';
+import { AbonoQuotaCard, AbonoQuota } from '@/components/abono/AbonoQuotaCard';
 
 interface Militar {
   id: string;
@@ -91,21 +92,35 @@ const Abono: React.FC = () => {
     navigate(`/secao-pessoas/abono/minuta?mes=${mesNum}&ano=${selectedYear}`);
   };
 
+  // Estado para dados de cota
+  const [abonoData, setAbonoData] = useState<any[]>([]);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
+      // Buscar dados de abono com informações das parcelas
       const { data, error } = await supabase
         .from('fat_abono')
         .select(`
           id,
           mes,
           ano,
+          data_inicio,
+          data_fim,
+          parcela1_inicio,
+          parcela1_fim,
+          parcela2_inicio,
+          parcela2_fim,
+          parcela3_inicio,
+          parcela3_fim,
           efetivo:dim_efetivo(id, matricula, nome, nome_guerra, posto_graduacao)
         `)
         .eq('ano', selectedYear)
         .order('mes');
       
       if (error) throw error;
+
+      setAbonoData(data || []);
 
       // Group by month
       const grouped: Record<number, Militar[]> = {};
@@ -184,6 +199,63 @@ const Abono: React.FC = () => {
   const totalDiasAbono = useMemo(() => {
     return dadosAbono.reduce((acc, m) => acc + m.militares.length * 5, 0);
   }, [dadosAbono]);
+
+  // Calcular cotas mensais de abono
+  // Limite = 1/11 do efetivo total × 5 dias = ~80 dias/mês (conforme planilha AN3)
+  const LIMITE_MENSAL = 80;
+  
+  const abonoQuotas = useMemo<AbonoQuota[]>(() => {
+    return mesesNome.map((mes, idx) => {
+      const mesNum = idx + 1;
+      
+      // Previsão: quantidade de policiais previstos × 5 dias
+      const previsto = dadosAbono.find(d => d.numero === mesNum)?.militares.length || 0;
+      const diasPrevistos = previsto * 5;
+      
+      // Marcados: soma dos dias das parcelas que têm data definida neste mês
+      let diasMarcados = 0;
+      abonoData.forEach(item => {
+        // Verificar cada parcela
+        const parcelas = [
+          { inicio: item.parcela1_inicio, fim: item.parcela1_fim },
+          { inicio: item.parcela2_inicio, fim: item.parcela2_fim },
+          { inicio: item.parcela3_inicio, fim: item.parcela3_fim },
+        ];
+        
+        parcelas.forEach(parcela => {
+          if (parcela.inicio && parcela.fim) {
+            const inicioDate = new Date(parcela.inicio);
+            if (inicioDate.getMonth() + 1 === mesNum && inicioDate.getFullYear() === selectedYear) {
+              // Calcular dias entre início e fim
+              const fimDate = new Date(parcela.fim);
+              const dias = Math.ceil((fimDate.getTime() - inicioDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+              diasMarcados += dias;
+            }
+          }
+        });
+        
+        // Fallback: verificar data_inicio/data_fim principal
+        if (item.data_inicio && item.data_fim && item.mes === mesNum) {
+          const inicioDate = new Date(item.data_inicio);
+          const fimDate = new Date(item.data_fim);
+          const dias = Math.ceil((fimDate.getTime() - inicioDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          // Só adicionar se não foi contado pelas parcelas
+          if (!item.parcela1_inicio && !item.parcela2_inicio && !item.parcela3_inicio) {
+            diasMarcados += dias;
+          }
+        }
+      });
+      
+      return {
+        mes,
+        mesNum,
+        limite: LIMITE_MENSAL,
+        previsto: diasPrevistos,
+        marcados: diasMarcados,
+        saldo: LIMITE_MENSAL - diasMarcados,
+      };
+    });
+  }, [dadosAbono, abonoData, selectedYear]);
 
   const toggleMes = (numero: number) => {
     setExpandedMeses(prev => 
@@ -372,6 +444,11 @@ const Abono: React.FC = () => {
             <p className="text-xs text-muted-foreground">Dias de Abono</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Cota de Abono */}
+      <div className="mb-6">
+        <AbonoQuotaCard quotas={abonoQuotas} />
       </div>
 
       {/* Filters */}
