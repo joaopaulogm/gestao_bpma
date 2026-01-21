@@ -341,8 +341,15 @@ function processDMRows(rows: any[][], sheetName: string): any[] {
 // Coluna M (12) = Matrícula
 // Coluna R (17) = Ano de Gozo
 // Coluna T (19) = Número do Processo SEI-GDF
+// Coluna U (20) = Quantidade de dias da 1ª parcela
 // Colunas V (21) e W (22) = Início e Término da 1ª parcela
+// Coluna X (23) = SGPOL 1ª parcela
+// Coluna Y (24) = Campanha 1ª parcela
+// Coluna Z (25) = Quantidade de dias da 2ª parcela
 // Colunas AA (26) e AB (27) = Início e Término da 2ª parcela
+// Coluna AC (28) = SGPOL 2ª parcela
+// Coluna AD (29) = Campanha 2ª parcela
+// Coluna AE (30) = Quantidade de dias da 3ª parcela
 // Colunas AF (31) e AG (32) = Início e Término da 3ª parcela
 function processAbonoRows(rows: any[][], sheetName: string): any[] {
   if (rows.length < 2) return [];
@@ -358,10 +365,17 @@ function processAbonoRows(rows: any[][], sheetName: string): any[] {
   const COL_MATRICULA = 12;      // M - Matrícula
   const COL_ANO_GOZO = 17;       // R - Ano de gozo
   const COL_SEI = 19;            // T - Número do Processo SEI-GDF
+  const COL_PARCELA1_DIAS = 20;  // U - Quantidade de dias 1ª parcela
   const COL_PARCELA1_INICIO = 21; // V
   const COL_PARCELA1_FIM = 22;    // W
+  const COL_PARCELA1_SGPOL = 23;  // X - SGPOL 1ª parcela
+  const COL_PARCELA1_CAMPANHA = 24; // Y - Campanha 1ª parcela
+  const COL_PARCELA2_DIAS = 25;  // Z - Quantidade de dias 2ª parcela
   const COL_PARCELA2_INICIO = 26; // AA
   const COL_PARCELA2_FIM = 27;    // AB
+  const COL_PARCELA2_SGPOL = 28;  // AC - SGPOL 2ª parcela
+  const COL_PARCELA2_CAMPANHA = 29; // AD - Campanha 2ª parcela
+  const COL_PARCELA3_DIAS = 30;  // AE - Quantidade de dias 3ª parcela
   const COL_PARCELA3_INICIO = 31; // AF
   const COL_PARCELA3_FIM = 32;    // AG
   
@@ -414,18 +428,10 @@ function processAbonoRows(rows: any[][], sheetName: string): any[] {
     // SEI (coluna T)
     const sei = row[COL_SEI]?.toString().trim() || null;
     
-    // Log valores brutos das colunas de parcelas para debug
-    if (staging.length < 3) {
-      console.log(`[processAbonoRows] Row ${i} RAW parcela cols:`, {
-        V: row[21],
-        W: row[22],
-        AA: row[26],
-        AB: row[27],
-        AF: row[31],
-        AG: row[32],
-        rowLength: row.length,
-      });
-    }
+    // Ler quantidade de dias das parcelas
+    const parcela1Dias = parseInt2(row[COL_PARCELA1_DIAS]?.toString());
+    const parcela2Dias = parseInt2(row[COL_PARCELA2_DIAS]?.toString());
+    const parcela3Dias = parseInt2(row[COL_PARCELA3_DIAS]?.toString());
     
     // Ler datas das parcelas pelos índices das colunas (passando o ano para datas DD/MM)
     const parcela1Inicio = row[COL_PARCELA1_INICIO] ? parseDate(String(row[COL_PARCELA1_INICIO]), anoGozo) : null;
@@ -435,13 +441,19 @@ function processAbonoRows(rows: any[][], sheetName: string): any[] {
     const parcela3Inicio = row[COL_PARCELA3_INICIO] ? parseDate(String(row[COL_PARCELA3_INICIO]), anoGozo) : null;
     const parcela3Fim = row[COL_PARCELA3_FIM] ? parseDate(String(row[COL_PARCELA3_FIM]), anoGozo) : null;
     
+    // Ler status SGPOL e Campanha
+    const parcela1Sgpol = parseBool(row[COL_PARCELA1_SGPOL]?.toString());
+    const parcela1Campanha = parseBool(row[COL_PARCELA1_CAMPANHA]?.toString());
+    const parcela2Sgpol = parseBool(row[COL_PARCELA2_SGPOL]?.toString());
+    const parcela2Campanha = parseBool(row[COL_PARCELA2_CAMPANHA]?.toString());
+    
     // Log para debug das primeiras linhas com dados
     if (staging.length < 5) {
       console.log(`[processAbonoRows] Row ${i}: matricula=${matricula}, mesPrevisao=${mesPrevisao}, mesReprog=${mesReprog}, mes=${mes}`);
       console.log(`  Ano gozo=${anoGozo}, SEI=${sei}`);
-      console.log(`  Parcela1: ${parcela1Inicio} - ${parcela1Fim}`);
-      console.log(`  Parcela2: ${parcela2Inicio} - ${parcela2Fim}`);
-      console.log(`  Parcela3: ${parcela3Inicio} - ${parcela3Fim}`);
+      console.log(`  Parcela1: dias=${parcela1Dias}, ${parcela1Inicio} - ${parcela1Fim}, sgpol=${parcela1Sgpol}, campanha=${parcela1Campanha}`);
+      console.log(`  Parcela2: dias=${parcela2Dias}, ${parcela2Inicio} - ${parcela2Fim}, sgpol=${parcela2Sgpol}, campanha=${parcela2Campanha}`);
+      console.log(`  Parcela3: dias=${parcela3Dias}, ${parcela3Inicio} - ${parcela3Fim}`);
     }
     
     staging.push({
@@ -451,12 +463,21 @@ function processAbonoRows(rows: any[][], sheetName: string): any[] {
       posto_graduacao: null, // Não temos coluna de posto definida
       nome_completo: null,   // Não temos coluna de nome definida
       mes,
+      mes_previsao: mesPrevisao,
+      mes_reprogramado: mesReprog,
       ano: anoGozo,
       observacao: sei ? `SEI: ${sei}` : null,
+      parcela1_dias: parcela1Dias,
       parcela1_inicio: parcela1Inicio,
       parcela1_fim: parcela1Fim,
+      parcela1_sgpol: parcela1Sgpol,
+      parcela1_campanha: parcela1Campanha,
+      parcela2_dias: parcela2Dias,
       parcela2_inicio: parcela2Inicio,
       parcela2_fim: parcela2Fim,
+      parcela2_sgpol: parcela2Sgpol,
+      parcela2_campanha: parcela2Campanha,
+      parcela3_dias: parcela3Dias,
       parcela3_inicio: parcela3Inicio,
       parcela3_fim: parcela3Fim,
       loaded_at: new Date().toISOString(),
