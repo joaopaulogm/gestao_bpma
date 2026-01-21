@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Gift, ArrowLeft, Search, Calendar, Users, ChevronLeft, ChevronRight, Loader2, Check, X, AlertCircle, Edit2, RefreshCw } from 'lucide-react';
+import { Gift, ArrowLeft, Search, Calendar, Users, ChevronLeft, ChevronRight, Loader2, Check, X, AlertCircle, Edit2, RefreshCw
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ import { AbonoQuotaCard, AbonoQuota } from '@/components/abono/AbonoQuotaCard';
 import { EditarParcelasDialog } from '@/components/abono/EditarParcelasDialog';
 
 const mesesNome = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+const mesesAbrev = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 interface MilitarAbono {
   id: string;
@@ -46,6 +48,7 @@ interface MilitarAbono {
   parcela3_inicio: string | null;
   parcela3_fim: string | null;
   parcela3_dias: number | null;
+  tipo: 'previsto' | 'marcado';
 }
 
 const postoColors: Record<string, string> = {
@@ -65,7 +68,6 @@ const Abono: React.FC = () => {
   const [selectedYear] = useState(2026);
   const [selectedMes, setSelectedMes] = useState(new Date().getMonth() + 1);
   const [abonoData, setAbonoData] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'previstos' | 'reprogramados'>('previstos');
   
   // Estado para edição
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -156,13 +158,15 @@ const Abono: React.FC = () => {
     }
   };
 
-  // Processar dados para o mês selecionado - separar previstos e reprogramados
+  // Processar dados para o mês selecionado - separar previstos e marcados/reprogramados
   const militaresDoMes = useMemo(() => {
     const previstos: MilitarAbono[] = [];
-    const reprogramados: MilitarAbono[] = [];
+    const marcados: MilitarAbono[] = [];
 
     abonoData.forEach((item: any) => {
       if (!item.efetivo) return;
+      
+      const temDataMarcada = item.parcela1_inicio || item.parcela2_inicio || item.parcela3_inicio;
       
       const militar: MilitarAbono = {
         id: item.id,
@@ -172,7 +176,7 @@ const Abono: React.FC = () => {
         nome: item.efetivo.nome,
         nome_guerra: item.efetivo.nome_guerra,
         mes: item.mes,
-        mes_previsao: item.mes_previsao,
+        mes_previsao: item.mes_previsao || item.mes,
         mes_reprogramado: item.mes_reprogramado,
         parcela1_inicio: item.parcela1_inicio,
         parcela1_fim: item.parcela1_fim,
@@ -187,26 +191,30 @@ const Abono: React.FC = () => {
         parcela3_inicio: item.parcela3_inicio,
         parcela3_fim: item.parcela3_fim,
         parcela3_dias: item.parcela3_dias,
+        tipo: temDataMarcada ? 'marcado' : 'previsto',
       };
 
       // Se o mês do registro é o mês selecionado
       if (item.mes === selectedMes) {
-        // Verificar se é reprogramado (tem mes_reprogramado definido e é diferente de mes_previsao)
-        if (item.mes_reprogramado && item.mes_reprogramado === selectedMes && 
-            item.mes_previsao && item.mes_previsao !== selectedMes) {
-          reprogramados.push(militar);
+        if (temDataMarcada) {
+          marcados.push(militar);
         } else {
           previstos.push(militar);
         }
       }
+      // Se foi reprogramado para o mês selecionado (vindo de outro mês)
+      else if (item.mes_reprogramado === selectedMes && item.mes !== selectedMes) {
+        militar.tipo = 'marcado';
+        marcados.push(militar);
+      }
     });
 
-    return { previstos, reprogramados };
+    return { previstos, marcados };
   }, [abonoData, selectedMes]);
 
   // Calcular cota para o mês selecionado
   const quotaMesSelecionado = useMemo(() => {
-    const totalMilitares = militaresDoMes.previstos.length + militaresDoMes.reprogramados.length;
+    const totalMilitares = militaresDoMes.previstos.length + militaresDoMes.marcados.length;
     const diasPrevistos = totalMilitares * 5;
     
     let diasMarcados = 0;
@@ -279,16 +287,25 @@ const Abono: React.FC = () => {
   }, [abonoData, selectedYear]);
 
   // Filtrar militares
-  const filteredMilitares = useMemo(() => {
-    const list = activeTab === 'previstos' ? militaresDoMes.previstos : militaresDoMes.reprogramados;
-    if (!searchTerm) return list;
+  const filteredPrevistos = useMemo(() => {
+    if (!searchTerm) return militaresDoMes.previstos;
     const term = searchTerm.toLowerCase();
-    return list.filter(m => 
+    return militaresDoMes.previstos.filter(m => 
       m.nome.toLowerCase().includes(term) ||
       m.nome_guerra.toLowerCase().includes(term) ||
       m.matricula.includes(searchTerm)
     );
-  }, [militaresDoMes, searchTerm, activeTab]);
+  }, [militaresDoMes.previstos, searchTerm]);
+
+  const filteredMarcados = useMemo(() => {
+    if (!searchTerm) return militaresDoMes.marcados;
+    const term = searchTerm.toLowerCase();
+    return militaresDoMes.marcados.filter(m => 
+      m.nome.toLowerCase().includes(term) ||
+      m.nome_guerra.toLowerCase().includes(term) ||
+      m.matricula.includes(searchTerm)
+    );
+  }, [militaresDoMes.marcados, searchTerm]);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-';
@@ -309,127 +326,197 @@ const Abono: React.FC = () => {
     setSelectedMes(prev => prev === 12 ? 1 : prev + 1);
   };
 
-  const renderMilitaresTable = (militares: MilitarAbono[]) => (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[100px]">Posto</TableHead>
-          <TableHead>Nome</TableHead>
-          <TableHead className="w-[100px]">Matrícula</TableHead>
-          <TableHead className="text-center">1ª Parcela</TableHead>
-          <TableHead className="text-center">2ª Parcela</TableHead>
-          <TableHead className="text-center">3ª Parcela</TableHead>
-          <TableHead className="w-[80px]">Ações</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {militares.map((militar) => (
-          <TableRow key={militar.id}>
-            <TableCell>
-              <Badge 
-                variant="outline" 
-                className={postoColors[militar.posto] || 'bg-muted'}
-              >
-                {militar.posto}
-              </Badge>
-            </TableCell>
-            <TableCell className="font-medium">{militar.nome_guerra}</TableCell>
-            <TableCell className="text-muted-foreground">{militar.matricula}</TableCell>
-            <TableCell className="text-center">
-              {militar.parcela1_inicio ? (
-                <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-sm font-medium">
-                    {formatDate(militar.parcela1_inicio)} - {formatDate(militar.parcela1_fim)}
-                  </span>
-                  <div className="flex gap-1">
-                    <Badge variant={militar.parcela1_sgpol ? "default" : "outline"} className="text-[10px] h-4 px-1">
-                      {militar.parcela1_sgpol ? <Check className="h-2.5 w-2.5 mr-0.5" /> : <X className="h-2.5 w-2.5 mr-0.5" />}
-                      SGPOL
-                    </Badge>
-                    <Badge variant={militar.parcela1_campanha ? "secondary" : "outline"} className="text-[10px] h-4 px-1">
-                      {militar.parcela1_campanha ? <Check className="h-2.5 w-2.5 mr-0.5" /> : <X className="h-2.5 w-2.5 mr-0.5" />}
-                      Camp
-                    </Badge>
-                  </div>
-                </div>
-              ) : (
-                <span className="text-muted-foreground">-</span>
+  // Render tabela mobile
+  const renderMilitarCardMobile = (militar: MilitarAbono) => (
+    <div key={militar.id} className="p-3 border-b last:border-b-0 space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className={`${postoColors[militar.posto] || 'bg-muted'} text-xs`}>
+            {militar.posto}
+          </Badge>
+          <span className="font-medium text-sm">{militar.nome_guerra}</span>
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-7 w-7 p-0">
+          <Edit2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+      
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span>{militar.matricula}</span>
+        <span>•</span>
+        <Badge variant="outline" className="text-[10px] h-4">
+          {militar.tipo === 'previsto' ? `Prev: ${mesesAbrev[(militar.mes_previsao || militar.mes) - 1]}` : 
+           militar.mes_reprogramado ? `Reprog: ${mesesAbrev[(militar.mes_previsao || militar.mes) - 1]} → ${mesesAbrev[militar.mes_reprogramado - 1]}` : 
+           `Mês: ${mesesAbrev[militar.mes - 1]}`}
+        </Badge>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className="space-y-0.5">
+          <span className="text-muted-foreground">1ª Parcela</span>
+          <div className="font-medium">{militar.parcela1_inicio ? `${formatDate(militar.parcela1_inicio)}` : '-'}</div>
+          {militar.parcela1_inicio && (
+            <div className="flex gap-0.5">
+              <Badge variant={militar.parcela1_sgpol ? "default" : "outline"} className="text-[8px] h-3 px-0.5">SG</Badge>
+              <Badge variant={militar.parcela1_campanha ? "secondary" : "outline"} className="text-[8px] h-3 px-0.5">CP</Badge>
+            </div>
+          )}
+        </div>
+        <div className="space-y-0.5">
+          <span className="text-muted-foreground">2ª Parcela</span>
+          <div className="font-medium">{militar.parcela2_inicio ? `${formatDate(militar.parcela2_inicio)}` : '-'}</div>
+          {militar.parcela2_inicio && (
+            <div className="flex gap-0.5">
+              <Badge variant={militar.parcela2_sgpol ? "default" : "outline"} className="text-[8px] h-3 px-0.5">SG</Badge>
+              <Badge variant={militar.parcela2_campanha ? "secondary" : "outline"} className="text-[8px] h-3 px-0.5">CP</Badge>
+            </div>
+          )}
+        </div>
+        <div className="space-y-0.5">
+          <span className="text-muted-foreground">3ª Parcela</span>
+          <div className="font-medium">{militar.parcela3_inicio ? `${formatDate(militar.parcela3_inicio)}` : '-'}</div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMilitaresTable = (militares: MilitarAbono[], showPrevisaoColumn: boolean = false) => (
+    <>
+      {/* Desktop Table */}
+      <div className="hidden md:block overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[80px]">Posto</TableHead>
+              <TableHead className="min-w-[120px]">Nome</TableHead>
+              <TableHead className="w-[90px]">Matrícula</TableHead>
+              {showPrevisaoColumn && (
+                <TableHead className="w-[130px] text-center">Previsão/Reprog.</TableHead>
               )}
-            </TableCell>
-            <TableCell className="text-center">
-              {militar.parcela2_inicio ? (
-                <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-sm font-medium">
-                    {formatDate(militar.parcela2_inicio)} - {formatDate(militar.parcela2_fim)}
-                  </span>
-                  <div className="flex gap-1">
-                    <Badge variant={militar.parcela2_sgpol ? "default" : "outline"} className="text-[10px] h-4 px-1">
-                      {militar.parcela2_sgpol ? <Check className="h-2.5 w-2.5 mr-0.5" /> : <X className="h-2.5 w-2.5 mr-0.5" />}
-                      SGPOL
-                    </Badge>
-                    <Badge variant={militar.parcela2_campanha ? "secondary" : "outline"} className="text-[10px] h-4 px-1">
-                      {militar.parcela2_campanha ? <Check className="h-2.5 w-2.5 mr-0.5" /> : <X className="h-2.5 w-2.5 mr-0.5" />}
-                      Camp
-                    </Badge>
-                  </div>
-                </div>
-              ) : (
-                <span className="text-muted-foreground">-</span>
-              )}
-            </TableCell>
-            <TableCell className="text-center">
-              {militar.parcela3_inicio ? (
-                <span className="text-sm font-medium">
-                  {formatDate(militar.parcela3_inicio)} - {formatDate(militar.parcela3_fim)}
-                </span>
-              ) : (
-                <span className="text-muted-foreground">-</span>
-              )}
-            </TableCell>
-            <TableCell>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => handleEditClick(militar)}
-                className="h-8 w-8 p-0"
-              >
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+              <TableHead className="text-center min-w-[100px]">1ª Parcela</TableHead>
+              <TableHead className="text-center min-w-[100px]">2ª Parcela</TableHead>
+              <TableHead className="text-center min-w-[80px]">3ª Parcela</TableHead>
+              <TableHead className="w-[60px]">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {militares.map((militar) => (
+              <TableRow key={militar.id}>
+                <TableCell>
+                  <Badge variant="outline" className={`${postoColors[militar.posto] || 'bg-muted'} text-xs`}>
+                    {militar.posto}
+                  </Badge>
+                </TableCell>
+                <TableCell className="font-medium text-sm">{militar.nome_guerra}</TableCell>
+                <TableCell className="text-muted-foreground text-sm">{militar.matricula}</TableCell>
+                {showPrevisaoColumn && (
+                  <TableCell className="text-center">
+                    <div className="flex flex-col items-center gap-0.5">
+                      {militar.mes_reprogramado && militar.mes_reprogramado !== (militar.mes_previsao || militar.mes) ? (
+                        <>
+                          <Badge variant="outline" className="text-[10px] h-5 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                            {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]} → {mesesAbrev[militar.mes_reprogramado - 1]}
+                          </Badge>
+                        </>
+                      ) : (
+                        <Badge variant="secondary" className="text-[10px] h-5">
+                          Prev: {mesesAbrev[(militar.mes_previsao || militar.mes) - 1]}
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
+                <TableCell className="text-center">
+                  {militar.parcela1_inicio ? (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-xs font-medium">
+                        {formatDate(militar.parcela1_inicio)} - {formatDate(militar.parcela1_fim)}
+                      </span>
+                      <div className="flex gap-0.5">
+                        <Badge variant={militar.parcela1_sgpol ? "default" : "outline"} className="text-[9px] h-4 px-1">
+                          {militar.parcela1_sgpol ? <Check className="h-2 w-2" /> : <X className="h-2 w-2" />}
+                        </Badge>
+                        <Badge variant={militar.parcela1_campanha ? "secondary" : "outline"} className="text-[9px] h-4 px-1">
+                          {militar.parcela1_campanha ? <Check className="h-2 w-2" /> : <X className="h-2 w-2" />}
+                        </Badge>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">-</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-center">
+                  {militar.parcela2_inicio ? (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-xs font-medium">
+                        {formatDate(militar.parcela2_inicio)} - {formatDate(militar.parcela2_fim)}
+                      </span>
+                      <div className="flex gap-0.5">
+                        <Badge variant={militar.parcela2_sgpol ? "default" : "outline"} className="text-[9px] h-4 px-1">
+                          {militar.parcela2_sgpol ? <Check className="h-2 w-2" /> : <X className="h-2 w-2" />}
+                        </Badge>
+                        <Badge variant={militar.parcela2_campanha ? "secondary" : "outline"} className="text-[9px] h-4 px-1">
+                          {militar.parcela2_campanha ? <Check className="h-2 w-2" /> : <X className="h-2 w-2" />}
+                        </Badge>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">-</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-center">
+                  {militar.parcela3_inicio ? (
+                    <span className="text-xs font-medium">
+                      {formatDate(militar.parcela3_inicio)}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">-</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="sm" onClick={() => handleEditClick(militar)} className="h-7 w-7 p-0">
+                    <Edit2 className="h-3.5 w-3.5" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {/* Mobile Cards */}
+      <div className="md:hidden">
+        {militares.map(militar => renderMilitarCardMobile(militar))}
+      </div>
+    </>
   );
 
   if (loading) {
     return (
-      <div className="container mx-auto p-4 md:p-6 max-w-7xl">
-        <div className="flex items-center justify-center h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <ScrollArea className="h-screen">
-      <div className="container mx-auto p-4 md:p-6 max-w-7xl pb-20">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-4">
+    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+      {/* Header fixo */}
+      <div className="flex-shrink-0 p-3 md:p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-7xl mx-auto">
+          <div className="flex items-center gap-3">
             <Link to="/secao-pessoas">
-              <Button variant="ghost" size="icon" className="shrink-0">
-                <ArrowLeft className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8">
+                <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 border border-amber-500/20">
-                <Gift className="h-6 w-6 text-amber-500" />
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-500/5 border border-amber-500/20">
+                <Gift className="h-5 w-5 text-amber-500" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Abono Anual</h1>
-                <p className="text-sm text-muted-foreground">{selectedYear} - Gestão de dias de abono</p>
+                <h1 className="text-lg md:text-xl font-bold text-foreground">Abono Anual</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">{selectedYear} - Gestão de dias de abono</p>
               </div>
             </div>
           </div>
@@ -437,175 +524,192 @@ const Abono: React.FC = () => {
           <div className="flex gap-2">
             <Button 
               variant="outline" 
+              size="sm"
               onClick={handleSync}
               disabled={syncing}
-              className="gap-2"
+              className="gap-1.5 h-8 text-xs"
             >
-              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Sincronizando...' : 'Sincronizar'}
+              <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{syncing ? 'Sincronizando...' : 'Sincronizar'}</span>
             </Button>
             <Button 
               variant="outline" 
+              size="sm"
               onClick={() => navigate(`/secao-pessoas/abono/minuta?mes=${selectedMes}&ano=${selectedYear}`)}
-              className="gap-2"
+              className="gap-1.5 h-8 text-xs"
             >
-              <Calendar className="h-4 w-4" />
-              Minuta do Mês
+              <Calendar className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Minuta</span>
             </Button>
           </div>
         </div>
+      </div>
 
-        {/* Layout com sidebar */}
-        <div className="grid gap-6 lg:grid-cols-[1fr,300px]">
-          {/* Conteúdo principal */}
-          <div className="space-y-4">
-            {/* Navegação por mês */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <Button variant="ghost" size="icon" onClick={prevMonth}>
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-                  
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-xl font-bold">{mesesNome[selectedMes - 1]}</h2>
-                    <Badge variant="secondary" className="text-lg">
-                      {militaresDoMes.previstos.length + militaresDoMes.reprogramados.length} policiais
-                    </Badge>
-                  </div>
-                  
-                  <Button variant="ghost" size="icon" onClick={nextMonth}>
-                    <ChevronRight className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Tabs de mês rápidas */}
-            <div className="flex gap-1 overflow-x-auto pb-2">
-              {mesesNome.map((mes, idx) => {
-                const mesNum = idx + 1;
-                const count = abonoData.filter((item: any) => item.mes === mesNum).length;
-                const isActive = selectedMes === mesNum;
-                
-                return (
-                  <Button
-                    key={mesNum}
-                    variant={isActive ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedMes(mesNum)}
-                    className={`flex-shrink-0 gap-1 ${isActive ? '' : 'text-muted-foreground'}`}
-                  >
-                    {mes.slice(0, 3)}
-                    {count > 0 && (
-                      <Badge variant={isActive ? "secondary" : "outline"} className="ml-1 h-5 px-1.5">
-                        {count}
+      {/* Conteúdo principal com scroll */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full max-w-7xl mx-auto p-3 md:p-4">
+          <div className="h-full grid gap-4 lg:grid-cols-[1fr,280px]">
+            {/* Coluna principal */}
+            <div className="flex flex-col gap-3 min-h-0 overflow-hidden">
+              {/* Navegação por mês */}
+              <Card className="flex-shrink-0">
+                <CardContent className="p-2 md:p-3">
+                  <div className="flex items-center justify-between">
+                    <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8">
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    
+                    <div className="flex items-center gap-2 md:gap-3">
+                      <h2 className="text-base md:text-lg font-bold">{mesesNome[selectedMes - 1]}</h2>
+                      <Badge variant="secondary" className="text-sm">
+                        {militaresDoMes.previstos.length + militaresDoMes.marcados.length}
                       </Badge>
-                    )}
-                  </Button>
-                );
-              })}
-            </div>
+                    </div>
+                    
+                    <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8">
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Busca */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome ou matrícula..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-            </div>
+              {/* Tabs de mês rápidas */}
+              <ScrollArea className="flex-shrink-0">
+                <div className="flex gap-1 pb-1">
+                  {mesesNome.map((mes, idx) => {
+                    const mesNum = idx + 1;
+                    const count = abonoData.filter((item: any) => item.mes === mesNum).length;
+                    const isActive = selectedMes === mesNum;
+                    
+                    return (
+                      <Button
+                        key={mesNum}
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedMes(mesNum)}
+                        className={`flex-shrink-0 gap-1 h-7 text-xs px-2 ${isActive ? '' : 'text-muted-foreground'}`}
+                      >
+                        {mesesAbrev[idx]}
+                        {count > 0 && (
+                          <Badge variant={isActive ? "secondary" : "outline"} className="ml-0.5 h-4 px-1 text-[10px]">
+                            {count}
+                          </Badge>
+                        )}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
 
-            {/* Tabs Previstos / Reprogramados */}
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="previstos" className="gap-2">
-                  <Users className="h-4 w-4" />
-                  Previstos
-                  <Badge variant="secondary">{militaresDoMes.previstos.length}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="reprogramados" className="gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Reprogramados
-                  <Badge variant="secondary">{militaresDoMes.reprogramados.length}</Badge>
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="previstos" className="mt-4">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Users className="h-5 w-5 text-primary" />
-                      Policiais com Previsão em {mesesNome[selectedMes - 1]}
+              {/* Busca */}
+              <div className="relative flex-shrink-0">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome ou matrícula..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 h-8 text-sm"
+                />
+              </div>
+
+              {/* Tabelas com scroll */}
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col gap-3">
+                {/* Seção Previstos */}
+                <Card className="flex-shrink-0">
+                  <CardHeader className="py-2 px-3">
+                    <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                      <Users className="h-4 w-4 text-primary" />
+                      Previstos para {mesesNome[selectedMes - 1]}
+                      <Badge variant="secondary" className="ml-auto text-xs">{filteredPrevistos.length}</Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    {filteredMilitares.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                        <AlertCircle className="h-12 w-12 mb-4 opacity-50" />
-                        <p className="text-lg font-medium">Nenhum policial previsto</p>
-                        <p className="text-sm">Não há policiais com abono previsto para {mesesNome[selectedMes - 1]}</p>
-                      </div>
-                    ) : (
-                      renderMilitaresTable(filteredMilitares)
-                    )}
+                    <ScrollArea className="max-h-[200px] md:max-h-[250px]">
+                      {filteredPrevistos.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                          <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
+                          <p className="text-sm font-medium">Nenhum policial previsto</p>
+                        </div>
+                      ) : (
+                        renderMilitaresTable(filteredPrevistos, true)
+                      )}
+                    </ScrollArea>
                   </CardContent>
                 </Card>
-              </TabsContent>
-              
-              <TabsContent value="reprogramados" className="mt-4">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Calendar className="h-5 w-5 text-amber-500" />
-                      Policiais Reprogramados para {mesesNome[selectedMes - 1]}
+
+                {/* Seção Marcados/Reprogramados */}
+                <Card className="flex-1 min-h-0 flex flex-col">
+                  <CardHeader className="py-2 px-3 flex-shrink-0">
+                    <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                      <Calendar className="h-4 w-4 text-amber-500" />
+                      Marcados/Reprogramados
+                      <Badge variant="secondary" className="ml-auto text-xs">{filteredMarcados.length}</Badge>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-0">
-                    {filteredMilitares.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                        <AlertCircle className="h-12 w-12 mb-4 opacity-50" />
-                        <p className="text-lg font-medium">Nenhum policial reprogramado</p>
-                        <p className="text-sm">Não há policiais com abono reprogramado para {mesesNome[selectedMes - 1]}</p>
-                      </div>
-                    ) : (
-                      renderMilitaresTable(filteredMilitares)
-                    )}
+                  <CardContent className="p-0 flex-1 min-h-0">
+                    <ScrollArea className="h-full max-h-[300px] md:max-h-none">
+                      {filteredMarcados.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                          <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
+                          <p className="text-sm font-medium">Nenhum policial marcado</p>
+                        </div>
+                      ) : (
+                        renderMilitaresTable(filteredMarcados, true)
+                      )}
+                    </ScrollArea>
                   </CardContent>
                 </Card>
-              </TabsContent>
-            </Tabs>
+              </div>
+            </div>
+
+            {/* Sidebar com cotas - visível apenas em desktop */}
+            <div className="hidden lg:flex flex-col gap-3 min-h-0 overflow-hidden">
+              {/* Card de cota do mês selecionado */}
+              <div className="flex-shrink-0">
+                <MonthlyAbonoQuotaCard 
+                  quota={quotaMesSelecionado} 
+                  mesNome={mesesNome[selectedMes - 1]} 
+                />
+              </div>
+              
+              {/* Resumo anual */}
+              <Card className="border-primary/20 flex-shrink-0">
+                <CardHeader className="py-2 px-3">
+                  <CardTitle className="text-xs font-medium">Resumo {selectedYear}</CardTitle>
+                </CardHeader>
+                <CardContent className="px-3 pb-3 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Total de policiais</span>
+                    <span className="font-semibold">{abonoData.length}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Dias previstos</span>
+                    <span className="font-semibold text-amber-600">{abonoData.length * 5}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Tabela de cota anual */}
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <AbonoQuotaCard quotas={abonoQuotas} />
+              </div>
+            </div>
           </div>
+        </div>
+      </div>
 
-          {/* Sidebar com cota */}
-          <div className="space-y-4">
-            {/* Card de cota do mês selecionado */}
-            <MonthlyAbonoQuotaCard 
-              quota={quotaMesSelecionado} 
-              mesNome={mesesNome[selectedMes - 1]} 
-            />
-            
-            {/* Resumo anual */}
-            <Card className="border-primary/20">
-              <CardHeader className="py-3 px-4">
-                <CardTitle className="text-sm font-medium">Resumo {selectedYear}</CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 pb-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Total de policiais</span>
-                  <span className="font-semibold">{abonoData.length}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Dias previstos</span>
-                  <span className="font-semibold text-amber-600">{abonoData.length * 5}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Tabela de cota anual */}
-            <AbonoQuotaCard quotas={abonoQuotas} />
+      {/* Mobile: Cards de cota em drawer ou colapsável */}
+      <div className="lg:hidden flex-shrink-0 p-3 border-t bg-muted/30">
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="bg-background rounded-lg p-2 border">
+            <div className="text-muted-foreground">Limite Mensal</div>
+            <div className="font-bold text-primary">{LIMITE_MENSAL} dias</div>
+          </div>
+          <div className="bg-background rounded-lg p-2 border">
+            <div className="text-muted-foreground">Marcados</div>
+            <div className={`font-bold ${quotaMesSelecionado.isOverLimit ? 'text-destructive' : 'text-amber-600'}`}>
+              {quotaMesSelecionado.marcados} dias
+            </div>
           </div>
         </div>
       </div>
@@ -617,7 +721,7 @@ const Abono: React.FC = () => {
         militar={selectedMilitar}
         onSuccess={fetchData}
       />
-    </ScrollArea>
+    </div>
   );
 };
 
