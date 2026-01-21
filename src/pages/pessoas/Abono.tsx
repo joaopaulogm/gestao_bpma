@@ -244,8 +244,9 @@ const Abono: React.FC = () => {
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    // Parse date as local time to avoid timezone issues
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}`;
   };
 
   const prevMonth = () => {
