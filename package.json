@@ -14,7 +14,8 @@
     "remove-anilius": "tsx src/scripts/remove-anilius-scytale.ts",
     "remove-liophis": "tsx src/scripts/remove-liophis-typhlus.ts",
     "migrate-estatisticas": "tsx scripts/run-migration-estatisticas.ts",
-    "executar-migrations-auto": "tsx scripts/executar-migrations-auto.ts"
+    "executar-migrations-auto": "tsx scripts/executar-migrations-auto.ts",
+    "sincronizar-user-roles": "tsx scripts/executar-sincronizacao-user-roles.ts"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.0.2",
