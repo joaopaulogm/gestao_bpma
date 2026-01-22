@@ -32,21 +32,32 @@ AS $$
   )
 $$;
 
--- Trigger para criar role operador automaticamente quando novo usuário faz signup
+-- Trigger para criar role automaticamente quando novo usuário faz signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  v_role app_role;
 BEGIN
-  -- Verificar se o email está na lista de permitidos
-  IF EXISTS (SELECT 1 FROM public.allowed_users WHERE LOWER(email) = LOWER(NEW.email)) THEN
-    -- Criar role operador para o novo usuário
-    INSERT INTO public.user_roles (user_id, role)
-    VALUES (NEW.id, 'operador')
-    ON CONFLICT (user_id) DO NOTHING;
+  -- Primeiro, verificar se é email admin por natureza
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'is_admin_email') AND public.is_admin_email(NEW.email) THEN
+    v_role := 'admin'::app_role;
+  ELSIF EXISTS (SELECT 1 FROM public.allowed_users WHERE LOWER(email) = LOWER(NEW.email)) THEN
+    -- Verificar se o email está na lista de permitidos
+    v_role := 'operador'::app_role;
+  ELSE
+    -- Se não está em nenhuma lista, não criar role
+    RETURN NEW;
   END IF;
+  
+  -- Criar role para o novo usuário
+  INSERT INTO public.user_roles (user_id, role)
+  VALUES (NEW.id, v_role)
+  ON CONFLICT (user_id) DO UPDATE SET role = v_role;
+  
   RETURN NEW;
 END;
 $$;
