@@ -176,6 +176,35 @@ const Index = () => {
             </>
           )}
         </div>
+
+        {/* Footer with Legal Links */}
+        <footer className="pt-8 pb-4 border-t border-border/30 mt-8">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-xs text-muted-foreground">
+            <Link 
+              to="/politica-privacidade" 
+              className="hover:text-primary transition-colors"
+            >
+              Política de Privacidade
+            </Link>
+            <span className="hidden sm:inline">•</span>
+            <Link 
+              to="/politica-cookies" 
+              className="hover:text-primary transition-colors"
+            >
+              Política de Cookies
+            </Link>
+            <span className="hidden sm:inline">•</span>
+            <Link 
+              to="/termos-uso" 
+              className="hover:text-primary transition-colors"
+            >
+              Termos de Uso
+            </Link>
+          </div>
+          <p className="text-center text-xs text-muted-foreground/60 mt-3">
+            © {new Date().getFullYear()} BPMA - Todos os direitos reservados
+          </p>
+        </footer>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import SidebarLayout from '@/components/SidebarLayout';
+import CookieConsentBanner from '@/components/CookieConsentBanner';
 
 // Lazy load all pages
 const Index = lazy(() => import(/* webpackChunkName: "index" */ '@/pages/Index'));
@@ -53,6 +54,11 @@ const DashboardPublico = lazy(() => import(/* webpackChunkName: "dashboard-publi
 const ProcessarRAP = lazy(() => import(/* webpackChunkName: "processar-rap" */ '@/pages/ProcessarRAP'));
 const MonitorarRAPs = lazy(() => import(/* webpackChunkName: "monitorar-raps" */ '@/pages/MonitorarRAPs'));
 
+// Legal pages
+const PoliticaPrivacidade = lazy(() => import(/* webpackChunkName: "politica-privacidade" */ '@/pages/PoliticaPrivacidade'));
+const PoliticaCookies = lazy(() => import(/* webpackChunkName: "politica-cookies" */ '@/pages/PoliticaCookies'));
+const TermosUso = lazy(() => import(/* webpackChunkName: "termos-uso" */ '@/pages/TermosUso'));
+
 const queryClient = new QueryClient();
 
 const PageLoading = () => (
@@ -74,6 +80,12 @@ function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard-publico" element={<DashboardPublico />} />
+              
+              {/* Legal pages - public */}
+              <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
+              <Route path="/politica-cookies" element={<PoliticaCookies />} />
+              <Route path="/termos-uso" element={<TermosUso />} />
+              
               <Route path="/" element={<SidebarLayout><Index /></SidebarLayout>} />
               
               {/* Operador level - requires authentication */}
@@ -139,6 +151,7 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          <CookieConsentBanner />
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
