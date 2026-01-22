@@ -16,6 +16,8 @@ import DashboardComparativoAnos from '@/components/dashboard/DashboardComparativ
 import DashboardMapaCalor from '@/components/dashboard/DashboardMapaCalor';
 import DashboardRankingEspecies from '@/components/dashboard/DashboardRankingEspecies';
 import DashboardTendenciaSazonal from '@/components/dashboard/DashboardTendenciaSazonal';
+import DashboardAlertasPicos from '@/components/dashboard/DashboardAlertasPicos';
+import DashboardAtropelamentos from '@/components/dashboard/DashboardAtropelamentos';
 
 interface HorarioData {
   periodo: string;
@@ -989,6 +991,18 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
           />
         </div>
       )}
+      
+      {/* Alertas de Picos Incomuns */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Sistema de Alertas</h3>
+        <DashboardAlertasPicos year={year} />
+      </div>
+      
+      {/* Análise de Atropelamentos */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Análise de Atropelamentos de Fauna</h3>
+        <DashboardAtropelamentos year={year} />
+      </div>
     </div>
   );
 };
