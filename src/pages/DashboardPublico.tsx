@@ -35,9 +35,13 @@ import {
   Car,
   TreePine,
   Shield,
-  AlertTriangle
+  AlertTriangle,
+  Map as MapIcon,
+  BarChart3
 } from 'lucide-react';
 import logoBpma from '@/assets/logo-bpma.png';
+import DashboardComparativoAnos from '@/components/dashboard/DashboardComparativoAnos';
+import DashboardMapaCalor from '@/components/dashboard/DashboardMapaCalor';
 
 const COLORS = ['#071d49', '#ffcc00', '#3b82f6', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#22c55e'];
 
@@ -197,6 +201,126 @@ const DashboardPublico = () => {
     },
     enabled: !!selectedYear && selectedYear >= 2026,
     staleTime: 5 * 60 * 1000,
+  });
+
+  // Buscar dados comparativos históricos para gráfico entre anos
+  const { data: dadosComparativos } = useQuery({
+    queryKey: ['public-dashboard-comparativo'],
+    queryFn: async () => {
+      const { data: resumoData, error } = await supabase
+        .from('fact_resumo_mensal_historico')
+        .select('ano, mes, resgates, solturas, obitos')
+        .order('ano')
+        .order('mes');
+      
+      if (error) return [];
+      
+      return (resumoData || []).map(r => ({
+        ano: r.ano,
+        mes: r.mes,
+        total: r.resgates || 0,
+        solturas: r.solturas || 0,
+        obitos: r.obitos || 0
+      }));
+    },
+    staleTime: 10 * 60 * 1000
+  });
+
+  // Buscar dados para mapa de calor (pontos geográficos)
+  const { data: pontosMapaCalor } = useQuery({
+    queryKey: ['public-dashboard-mapa-calor', selectedYear],
+    queryFn: async () => {
+      if (!selectedYear || selectedYear < 2026) return [];
+      
+      const startDate = `${selectedYear}-01-01`;
+      const endDate = `${selectedYear}-12-31`;
+      
+      const { data, error } = await supabase
+        .from('fat_registros_de_resgate')
+        .select(`
+          id, 
+          latitude_origem, 
+          longitude_origem,
+          latitude_soltura,
+          longitude_soltura,
+          atropelamento,
+          especie_id,
+          regiao_administrativa_id
+        `)
+        .gte('data', startDate).lte('data', endDate);
+      
+      if (error || !data) return [];
+      
+      // Buscar espécies e regiões
+      const especieIds = [...new Set(data.filter(r => r.especie_id).map(r => r.especie_id as string))];
+      const regiaoIds = [...new Set(data.filter(r => r.regiao_administrativa_id).map(r => r.regiao_administrativa_id as string))];
+      
+      const especiesLookup: Record<string, string> = {};
+      const regioesLookup: Record<string, string> = {};
+      
+      if (especieIds.length > 0) {
+        const { data: especiesData } = await supabase
+          .from('dim_especies_fauna')
+          .select('id, nome_popular')
+          .in('id', especieIds);
+        (especiesData || []).forEach(e => { especiesLookup[e.id] = e.nome_popular; });
+      }
+      
+      if (regiaoIds.length > 0) {
+        const { data: regioesData } = await supabase
+          .from('dim_regiao_administrativa')
+          .select('id, nome')
+          .in('id', regiaoIds);
+        (regioesData || []).forEach(r => { regioesLookup[r.id] = r.nome; });
+      }
+      
+      const pontos: Array<{
+        id: string;
+        latitude: number;
+        longitude: number;
+        tipo: 'resgate' | 'apreensao' | 'soltura' | 'atropelamento';
+        nomePopular?: string;
+        regiao?: string;
+      }> = [];
+      
+      data.forEach(r => {
+        const nomePopular = r.especie_id ? especiesLookup[r.especie_id] : undefined;
+        const regiao = r.regiao_administrativa_id ? regioesLookup[r.regiao_administrativa_id] : undefined;
+        
+        if (r.latitude_origem && r.longitude_origem) {
+          const lat = parseFloat(r.latitude_origem);
+          const lng = parseFloat(r.longitude_origem);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            pontos.push({
+              id: `${r.id}-origem`,
+              latitude: lat,
+              longitude: lng,
+              tipo: r.atropelamento === 'Sim' ? 'atropelamento' : 'resgate',
+              nomePopular,
+              regiao
+            });
+          }
+        }
+        
+        if (r.latitude_soltura && r.longitude_soltura) {
+          const lat = parseFloat(r.latitude_soltura);
+          const lng = parseFloat(r.longitude_soltura);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            pontos.push({
+              id: `${r.id}-soltura`,
+              latitude: lat,
+              longitude: lng,
+              tipo: 'soltura',
+              nomePopular,
+              regiao
+            });
+          }
+        }
+      });
+      
+      return pontos;
+    },
+    staleTime: 5 * 60 * 1000
   });
 
   // Process dashboard data
@@ -550,12 +674,20 @@ const DashboardPublico = () => {
 
         {/* Charts Tabs */}
         <Tabs defaultValue="especies" className="space-y-6">
-          <TabsList className="bg-[#071d49]/10 border border-[#071d49]/20">
+          <TabsList className="bg-[#071d49]/10 border border-[#071d49]/20 flex-wrap">
             <TabsTrigger value="especies" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Espécies</TabsTrigger>
             <TabsTrigger value="destinacao" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Destinação</TabsTrigger>
             <TabsTrigger value="classes" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Classes</TabsTrigger>
             <TabsTrigger value="temporal" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Temporal</TabsTrigger>
             <TabsTrigger value="regioes" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Regiões</TabsTrigger>
+            <TabsTrigger value="comparativo" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
+              <BarChart3 className="h-4 w-4 mr-1" />
+              Comparativo
+            </TabsTrigger>
+            <TabsTrigger value="mapa" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
+              <MapIcon className="h-4 w-4 mr-1" />
+              Mapa
+            </TabsTrigger>
           </TabsList>
 
           {/* Species Tab */}
@@ -819,6 +951,48 @@ const DashboardPublico = () => {
                       <Bar dataKey="value" fill="#071d49" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Comparativo Tab */}
+          <TabsContent value="comparativo">
+            {dadosComparativos && dadosComparativos.length > 0 ? (
+              <DashboardComparativoAnos 
+                dadosHistoricos={dadosComparativos}
+                anosDisponiveis={[2026, 2025, 2024, 2023, 2022, 2021, 2020]}
+                isPublico={true}
+              />
+            ) : (
+              <Card className="glass-card">
+                <CardContent className="py-12 text-center">
+                  <BarChart3 className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    Carregando dados comparativos...
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Mapa de Calor Tab */}
+          <TabsContent value="mapa">
+            {selectedYear && selectedYear >= 2026 ? (
+              <DashboardMapaCalor 
+                pontos={pontosMapaCalor || []}
+                isPublico={true}
+                ano={selectedYear}
+              />
+            ) : (
+              <Card className="glass-card">
+                <CardContent className="py-12 text-center">
+                  <MapIcon className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    {isHistorico 
+                      ? 'Mapa de calor disponível apenas para dados de 2026 em diante.'
+                      : 'Selecione um ano a partir de 2026 para visualizar o mapa de calor.'}
+                  </p>
                 </CardContent>
               </Card>
             )}
