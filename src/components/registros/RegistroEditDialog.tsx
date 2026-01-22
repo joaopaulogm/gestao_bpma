@@ -45,6 +45,8 @@ const RegistroEditDialog: React.FC<RegistroEditDialogProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     data: '',
+    horario_acionamento: '',
+    horario_termino: '',
     regiao_administrativa_id: '',
     origem_id: '',
     destinacao_id: '',
@@ -62,8 +64,14 @@ const RegistroEditDialog: React.FC<RegistroEditDialogProps> = ({
 
   useEffect(() => {
     if (registro) {
+      // Extrair horário de acionamento e término do registro
+      const horarioAcionamento = (registro as any).horario_acionamento || '';
+      const horarioTermino = (registro as any).horario_termino || '';
+      
       setFormData({
         data: registro.data?.split('T')[0] || '',
+        horario_acionamento: horarioAcionamento,
+        horario_termino: horarioTermino,
         regiao_administrativa_id: registro.regiao_administrativa_id || '',
         origem_id: registro.origem_id || '',
         destinacao_id: registro.destinacao_id || '',
@@ -99,6 +107,8 @@ const RegistroEditDialog: React.FC<RegistroEditDialogProps> = ({
       
       const updateData: any = {
         data: formData.data,
+        horario_acionamento: formData.horario_acionamento || null,
+        horario_termino: formData.horario_termino || null,
         quantidade_adulto: formData.quantidade_adulto,
         quantidade_filhote: formData.quantidade_filhote,
         quantidade_total: formData.quantidade_adulto + formData.quantidade_filhote,
@@ -189,6 +199,27 @@ const RegistroEditDialog: React.FC<RegistroEditDialogProps> = ({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Horário de Acionamento</Label>
+              <Input
+                type="time"
+                value={formData.horario_acionamento}
+                onChange={(e) => setFormData({ ...formData, horario_acionamento: e.target.value })}
+                disabled={!isEditable}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Horário de Término</Label>
+              <Input
+                type="time"
+                value={formData.horario_termino}
+                onChange={(e) => setFormData({ ...formData, horario_termino: e.target.value })}
+                disabled={!isEditable}
+              />
             </div>
           </div>
 

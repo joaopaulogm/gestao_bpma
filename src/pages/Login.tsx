@@ -125,13 +125,23 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const { data: usuario, error } = await supabase
+      // Validar login e senha usando a função RPC que valida com efetivo_roles
+      const senhaDigitada = senha.replace(/\D/g, '');
+      const senhaNumero = senhaDigitada ? BigInt(senhaDigitada) : null;
+      
+      if (!senhaNumero) {
+        toast.error('CPF incorreto. Digite apenas os números do seu CPF, sem pontos ou traços.');
+        return;
+      }
+
+      // Buscar usuário primeiro para verificar se existe e está ativo
+      const { data: usuario, error: usuarioError } = await supabase
         .from('usuarios_por_login')
         .select('*')
         .eq('login', login.toLowerCase().trim())
         .single();
 
-      if (error || !usuario) {
+      if (usuarioError || !usuario) {
         toast.error('Login não encontrado. Verifique se está usando o formato: primeiro_nome.ultimo_nome');
         return;
       }
@@ -141,13 +151,27 @@ const Login = () => {
         return;
       }
 
-      // Comparar senha - limpar entrada e converter para número
-      const senhaDigitada = senha.replace(/\D/g, '');
+      // Validar senha
       const senhaArmazenada = usuario.senha?.toString() || '';
-      
       if (senhaArmazenada !== senhaDigitada) {
         toast.error('CPF incorreto. Digite apenas os números do seu CPF, sem pontos ou traços.');
         return;
+      }
+
+      // Verificar role usando a função RPC
+      const { data: role, error: roleError } = await supabase
+        .rpc('get_role_by_login_senha', {
+          p_login: login.toLowerCase().trim(),
+          p_senha: Number(senhaNumero)
+        });
+
+      if (roleError) {
+        console.error('Erro ao buscar role:', roleError);
+      }
+
+      // Se o role não foi encontrado, ainda permite o primeiro acesso
+      if (!role) {
+        console.warn('Role não encontrado para o usuário, usando operador como padrão');
       }
 
       if (usuario.auth_user_id) {
@@ -245,6 +269,15 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Validar login e senha
+      const senhaDigitada = senha.replace(/\D/g, '');
+      const senhaNumero = senhaDigitada ? BigInt(senhaDigitada) : null;
+      
+      if (!senhaNumero) {
+        toast.error('CPF incorreto. Digite apenas os números do seu CPF.');
+        return;
+      }
+
       const { data: usuario, error } = await supabase
         .from('usuarios_por_login')
         .select('*')
@@ -261,10 +294,20 @@ const Login = () => {
         return;
       }
 
-      const senhaDigitada = senha.replace(/\D/g, '');
       if (usuario.senha?.toString() !== senhaDigitada) {
         toast.error('Login ou senha incorretos');
         return;
+      }
+
+      // Verificar role usando a função RPC
+      const { data: role, error: roleError } = await supabase
+        .rpc('get_role_by_login_senha', {
+          p_login: login.toLowerCase().trim(),
+          p_senha: Number(senhaNumero)
+        });
+
+      if (roleError) {
+        console.error('Erro ao buscar role:', roleError);
       }
 
       // If already linked, just proceed with Google

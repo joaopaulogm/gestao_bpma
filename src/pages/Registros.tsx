@@ -429,11 +429,22 @@ const Registros = () => {
     const matchesClasse = filterClasse === 'all' || 
       registro.especie?.classe_taxonomica === filterClasse;
     
-    // Filtro por data específica
+    // Filtro por data específica - comparar apenas YYYY-MM-DD para evitar problemas de timezone
     const matchesData = !filterData || (() => {
-      const registroDate = registro.data ? new Date(registro.data) : null;
-      if (!registroDate) return false;
-      return registroDate.toDateString() === filterData.toDateString();
+      if (!registro.data) return false;
+      try {
+        // Converter data do registro para YYYY-MM-DD
+        const registroDate = new Date(registro.data);
+        if (isNaN(registroDate.getTime())) return false;
+        const registroDateStr = registroDate.toISOString().split('T')[0];
+        
+        // Converter data do filtro para YYYY-MM-DD
+        const filterDateStr = filterData.toISOString().split('T')[0];
+        
+        return registroDateStr === filterDateStr;
+      } catch {
+        return false;
+      }
     })();
     
     // Filtro por ano

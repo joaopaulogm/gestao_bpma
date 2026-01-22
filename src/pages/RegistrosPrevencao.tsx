@@ -9,13 +9,14 @@ import { Search, Filter, Download, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  TableCard,
+  TableCardHeader,
+  TableCardTitle,
+  TableCardContent,
+  TableCardField,
+  TableCardBadge,
+  TableCardActions,
+} from '@/components/ui/table-card';
 import {
   Select,
   SelectContent,
@@ -362,71 +363,93 @@ const RegistrosPrevencao = () => {
         )}
 
         {/* Tabela */}
-        <div className="border border-border rounded-lg shadow-sm overflow-hidden">
-          {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">Carregando registros...</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Atividade</TableHead>
-                    <TableHead>Região</TableHead>
-                    <TableHead>Público</TableHead>
-                    <TableHead>Observações</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRegistros.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                        Nenhum registro encontrado
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredRegistros.map((registro) => (
-                      <TableRow key={registro.id}>
-                        <TableCell>{formatDate(registro.data)}</TableCell>
-                        <TableCell>{registro.tipo_atividade?.categoria || '-'}</TableCell>
-                        <TableCell>{registro.tipo_atividade?.nome || '-'}</TableCell>
-                        <TableCell>{registro.regiao_administrativa?.nome || '-'}</TableCell>
-                        <TableCell>{registro.quantidade_publico || 0}</TableCell>
-                        <TableCell className="max-w-xs truncate">{registro.observacoes || '-'}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(registro)}
-                              disabled={!canEdit(registro.data)}
-                              className="h-8 w-8 p-0"
-                              title={canEdit(registro.data) ? 'Editar' : 'Somente registros de 2026+'}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(registro.id)}
-                              disabled={!canEdit(registro.data)}
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                              title={canEdit(registro.data) ? 'Excluir' : 'Somente registros de 2026+'}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
+        {isLoading ? (
+          <div className="bg-card rounded-xl border border-border p-12 text-center">
+            <p className="text-muted-foreground">Carregando registros...</p>
+          </div>
+        ) : filteredRegistros.length === 0 ? (
+          <div className="bg-card rounded-xl border border-border p-12 text-center">
+            <p className="text-muted-foreground text-sm">Nenhum registro encontrado</p>
+          </div>
+        ) : (
+          <div className="w-full space-y-4">
+            {filteredRegistros.map((registro) => (
+              <TableCard key={registro.id}>
+                <TableCardHeader>
+                  <TableCardTitle subtitle={registro.tipo_atividade?.categoria || undefined}>
+                    {registro.tipo_atividade?.nome || 'Atividade de Prevenção'}
+                  </TableCardTitle>
+                  {registro.quantidade_publico !== undefined && registro.quantidade_publico > 0 && (
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <TableCardBadge variant="success">
+                        {registro.quantidade_publico} pessoas
+                      </TableCardBadge>
+                    </div>
                   )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
+                </TableCardHeader>
+
+                <TableCardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <TableCardField
+                      label="Data"
+                      value={formatDate(registro.data)}
+                    />
+                    <TableCardField
+                      label="Região"
+                      value={registro.regiao_administrativa?.nome || '-'}
+                    />
+                    <TableCardField
+                      label="Público Atendido"
+                      value={
+                        <span className="text-primary font-semibold">
+                          {registro.quantidade_publico || 0}
+                        </span>
+                      }
+                    />
+                    {registro.observacoes && (
+                      <TableCardField
+                        label="Observações"
+                        value={
+                          <span className="text-xs break-words">
+                            {registro.observacoes}
+                          </span>
+                        }
+                        className="sm:col-span-2 lg:col-span-3"
+                      />
+                    )}
+                  </div>
+                </TableCardContent>
+
+                <TableCardActions>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(registro)}
+                      disabled={!canEdit(registro.data)}
+                      className="h-9 px-3"
+                      title={canEdit(registro.data) ? 'Editar' : 'Somente registros de 2026+'}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Editar</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(registro.id)}
+                      disabled={!canEdit(registro.data)}
+                      className="h-9 px-3 text-destructive hover:text-destructive"
+                      title={canEdit(registro.data) ? 'Excluir' : 'Somente registros de 2026+'}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Excluir</span>
+                    </Button>
+                  </div>
+                </TableCardActions>
+              </TableCard>
+            ))}
+          </div>
+        )}
 
         <div className="text-sm text-muted-foreground text-center">
           Mostrando {filteredRegistros.length} de {registros.length} registros

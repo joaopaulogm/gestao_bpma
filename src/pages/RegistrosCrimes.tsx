@@ -10,13 +10,14 @@ import { Search, Filter, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  TableCard,
+  TableCardHeader,
+  TableCardTitle,
+  TableCardContent,
+  TableCardField,
+  TableCardBadge,
+  TableCardActions,
+} from '@/components/ui/table-card';
 import {
   Select,
   SelectContent,
@@ -435,91 +436,118 @@ const RegistrosCrimes = () => {
         )}
 
         {/* Tabela */}
-        <div className="border border-border rounded-lg shadow-sm overflow-hidden">
-          {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">
-              Carregando registros...
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Região</TableHead>
-                    <TableHead>Tipo de Crime</TableHead>
-                    <TableHead>Enquadramento</TableHead>
-                    <TableHead>Apreensão</TableHead>
-                    <TableHead>Procedimento</TableHead>
-                    <TableHead>Desfecho</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRegistros.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                        Nenhum registro encontrado
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredRegistros.map((registro) => (
-                      <TableRow key={registro.id}>
-                        <TableCell>{formatDate(registro.data)}</TableCell>
-                        <TableCell>{registro.regiao_administrativa?.nome || '-'}</TableCell>
-                        <TableCell>{registro.tipo_crime?.["Tipo de Crime"] || '-'}</TableCell>
-                        <TableCell>{registro.enquadramento?.["Enquadramento"] || '-'}</TableCell>
-                        <TableCell>
-                          {registro.ocorreu_apreensao ? (
-                            <span className="text-green-600 font-medium">Sim</span>
-                          ) : (
-                            <span className="text-muted-foreground">Não</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="max-w-xs truncate">
+        {isLoading ? (
+          <div className="bg-card rounded-xl border border-border p-12 text-center">
+            <p className="text-muted-foreground">Carregando registros...</p>
+          </div>
+        ) : filteredRegistros.length === 0 ? (
+          <div className="bg-card rounded-xl border border-border p-12 text-center">
+            <p className="text-muted-foreground text-sm">Nenhum registro encontrado</p>
+          </div>
+        ) : (
+          <div className="w-full space-y-4">
+            {filteredRegistros.map((registro) => (
+              <TableCard key={registro.id}>
+                <TableCardHeader>
+                  <TableCardTitle subtitle={registro.tipo_area?.["Tipo de Área"] || undefined}>
+                    {registro.tipo_crime?.["Tipo de Crime"] || 'Crime não especificado'}
+                  </TableCardTitle>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {registro.ocorreu_apreensao ? (
+                      <TableCardBadge variant="success">Apreensão</TableCardBadge>
+                    ) : (
+                      <TableCardBadge variant="outline">Sem apreensão</TableCardBadge>
+                    )}
+                    {registro.desfecho?.nome && (
+                      <TableCardBadge variant="default">{registro.desfecho.nome}</TableCardBadge>
+                    )}
+                  </div>
+                </TableCardHeader>
+
+                <TableCardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <TableCardField
+                      label="Data"
+                      value={formatDate(registro.data)}
+                    />
+                    <TableCardField
+                      label="Região"
+                      value={registro.regiao_administrativa?.nome || '-'}
+                    />
+                    <TableCardField
+                      label="Enquadramento"
+                      value={registro.enquadramento?.["Enquadramento"] || '-'}
+                    />
+                    <TableCardField
+                      label="Procedimento Legal"
+                      value={
+                        <span className="text-xs break-words">
                           {registro.procedimento_legal || '-'}
-                        </TableCell>
-                        <TableCell>{registro.desfecho?.nome || '-'}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewDetails(registro.id)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(registro)}
-                              disabled={!canEdit(registro.data)}
-                              className="h-8 w-8 p-0"
-                              title={canEdit(registro.data) ? 'Editar' : 'Somente registros de 2026+'}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(registro.id)}
-                              disabled={!canEdit(registro.data)}
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                              title={canEdit(registro.data) ? 'Excluir' : 'Somente registros de 2026+'}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
+                        </span>
+                      }
+                    />
+                    {registro.qtd_detidos_maior !== undefined && (
+                      <TableCardField
+                        label="Detidos (Maior)"
+                        value={
+                          <span className="text-primary font-semibold">
+                            {registro.qtd_detidos_maior}
+                          </span>
+                        }
+                      />
+                    )}
+                    {registro.qtd_detidos_menor !== undefined && (
+                      <TableCardField
+                        label="Detidos (Menor)"
+                        value={
+                          <span className="text-primary font-semibold">
+                            {registro.qtd_detidos_menor}
+                          </span>
+                        }
+                      />
+                    )}
+                  </div>
+                </TableCardContent>
+
+                <TableCardActions>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetails(registro.id)}
+                      className="h-9 px-3"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Ver</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(registro)}
+                      disabled={!canEdit(registro.data)}
+                      className="h-9 px-3"
+                      title={canEdit(registro.data) ? 'Editar' : 'Somente registros de 2026+'}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Editar</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(registro.id)}
+                      disabled={!canEdit(registro.data)}
+                      className="h-9 px-3 text-destructive hover:text-destructive"
+                      title={canEdit(registro.data) ? 'Excluir' : 'Somente registros de 2026+'}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Excluir</span>
+                    </Button>
+                  </div>
+                </TableCardActions>
+              </TableCard>
+            ))}
+          </div>
+        )}
 
         {/* Resumo */}
         <div className="text-sm text-muted-foreground text-center">

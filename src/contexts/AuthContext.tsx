@@ -32,18 +32,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserRole = async (userId: string): Promise<AppRole | null> => {
     try {
+      // Buscar role através da função que vincula auth_user_id com efetivo_roles
       const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
+        .rpc('get_role_by_auth_user_id', { p_auth_user_id: userId });
 
       if (error) {
         console.error('Error fetching user role:', error);
+        // Fallback: tentar buscar através de usuarios_por_login -> efetivo_roles
+        try {
+          const { data: usuario } = await supabase
+            .from('usuarios_por_login')
+            .select('efetivo_id')
+            .eq('auth_user_id', userId)
+            .single();
+
+          if (usuario?.efetivo_id) {
+            const { data: roleData } = await supabase
+              .from('efetivo_roles')
+              .select('role')
+              .eq('efetivo_id', usuario.efetivo_id)
+              .order('role', { ascending: true })
+              .limit(1)
+              .maybeSingle();
+
+            if (roleData?.role) {
+              return roleData.role as AppRole;
+            }
+          }
+        } catch (fallbackError) {
+          console.error('Fallback role fetch error:', fallbackError);
+        }
         return 'operador'; // Default role
       }
 
-      return (data?.role as AppRole) || 'operador';
+      // RPC retorna o valor diretamente (não um objeto)
+      return (data as AppRole) || 'operador';
     } catch (error) {
       console.error('Error fetching user role:', error);
       return 'operador';

@@ -4,7 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  TableCard,
+  TableCardHeader,
+  TableCardTitle,
+  TableCardContent,
+  TableCardField,
+  TableCardBadge,
+  TableCardActions,
+} from '@/components/ui/table-card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, Search, Upload } from 'lucide-react';
 import { useEfetivoTable, Efetivo } from '@/hooks/useEfetivoTable';
@@ -449,72 +457,80 @@ const EfetivoBPMA = () => {
         </div>
 
         {/* Table */}
-        <div className="rounded-lg border bg-card/50 backdrop-blur-sm overflow-hidden">
+        {loading ? (
+          <div className="bg-card rounded-xl border border-border p-12 text-center">
+            <p className="text-muted-foreground">Carregando...</p>
+          </div>
+        ) : efetivo.length === 0 ? (
+          <div className="bg-card rounded-xl border border-border p-12 text-center">
+            <p className="text-muted-foreground text-sm">Nenhum policial encontrado</p>
+          </div>
+        ) : (
           <ScrollArea className="h-[calc(100vh-350px)] min-h-[400px]">
-            <div className="overflow-x-auto">
-              <Table className="w-full">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="whitespace-nowrap">Antig.</TableHead>
-                    <TableHead className="whitespace-nowrap">Posto/Grad</TableHead>
-                    <TableHead className="whitespace-nowrap">Quadro</TableHead>
-                    <TableHead className="whitespace-nowrap">Nome de Guerra</TableHead>
-                    <TableHead>Nome Completo</TableHead>
-                    <TableHead className="whitespace-nowrap">Matrícula</TableHead>
-                    <TableHead className="whitespace-nowrap">Sexo</TableHead>
-                    <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        Carregando...
-                      </TableCell>
-                    </TableRow>
-                  ) : efetivo.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        Nenhum policial encontrado
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    efetivo.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.antiguidade || '-'}</TableCell>
-                        <TableCell className="font-medium">{item.posto_graduacao}</TableCell>
-                        <TableCell>{item.quadro}</TableCell>
-                        <TableCell>{item.nome_guerra}</TableCell>
-                        <TableCell>{item.nome}</TableCell>
-                        <TableCell>{item.matricula}</TableCell>
-                        <TableCell>{item.sexo}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(item)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteClick(item.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+            <div className="w-full space-y-4 pr-4">
+              {efetivo.map((item) => (
+                <TableCard key={item.id}>
+                  <TableCardHeader>
+                    <TableCardTitle subtitle={item.quadro || undefined}>
+                      {item.nome_guerra || item.nome}
+                    </TableCardTitle>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <TableCardBadge variant="default">
+                        {item.posto_graduacao}
+                      </TableCardBadge>
+                      {item.sexo && (
+                        <TableCardBadge variant="outline">
+                          {item.sexo}
+                        </TableCardBadge>
+                      )}
+                    </div>
+                  </TableCardHeader>
+
+                  <TableCardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <TableCardField
+                        label="Nome Completo"
+                        value={item.nome}
+                      />
+                      <TableCardField
+                        label="Matrícula"
+                        value={item.matricula}
+                      />
+                      <TableCardField
+                        label="Antiguidade"
+                        value={item.antiguidade || '-'}
+                      />
+                    </div>
+                  </TableCardContent>
+
+                  <TableCardActions>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(item)}
+                        className="h-9 px-3"
+                      >
+                        <Pencil className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Editar</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteClick(item.id)}
+                        className="h-9 px-3 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Excluir</span>
+                      </Button>
+                    </div>
+                  </TableCardActions>
+                </TableCard>
+              ))}
             </div>
-            <ScrollBar orientation="horizontal" />
+            <ScrollBar orientation="vertical" />
           </ScrollArea>
-        </div>
+        )}
       </div>
 
       <DeleteConfirmationDialog
