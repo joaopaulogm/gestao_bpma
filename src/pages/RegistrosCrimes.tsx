@@ -25,12 +25,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
+import CrimeAmbientalEditDialog from '@/components/crimes/CrimeAmbientalEditDialog';
 
 interface RegistroCrime {
   id: string;
   data: string;
   regiao_administrativa?: { nome: string };
+  regiao_administrativa_id?: string;
   tipo_crime?: { id_tipo_de_crime: string; "Tipo de Crime": string };
+  tipo_crime_id?: string;
   enquadramento?: { "Enquadramento": string };
   tipo_area?: { "Tipo de Área": string };
   latitude: string;
@@ -57,6 +60,11 @@ const RegistrosCrimes = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [regioes, setRegioes] = useState<Array<{ id: string; nome: string }>>([]);
   const [tiposCrime, setTiposCrime] = useState<Array<{ id_tipo_de_crime: string; "Tipo de Crime": string }>>([]);
+  
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingRegistro, setEditingRegistro] = useState<RegistroCrime | null>(null);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -158,11 +166,20 @@ const RegistrosCrimes = () => {
     navigate(`/crimes-ambientais?id=${id}`);
   };
 
-  const handleEdit = (id: string) => {
-    navigate(`/crimes-ambientais?id=${id}`);
+  const handleEdit = (registro: RegistroCrime) => {
+    setEditingRegistro(registro);
+    setEditDialogOpen(true);
   };
 
+  const canEdit = (data: string) => new Date(data).getFullYear() >= 2026;
+
   const handleDelete = async (id: string) => {
+    const registro = registros.find(r => r.id === id);
+    if (registro && !canEdit(registro.data)) {
+      toast.error('Somente registros de 2026 em diante podem ser excluídos');
+      return;
+    }
+
     if (!confirm('Tem certeza que deseja excluir este registro de crime?')) {
       return;
     }
@@ -429,8 +446,10 @@ const RegistrosCrimes = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleEdit(registro.id)}
+                              onClick={() => handleEdit(registro)}
+                              disabled={!canEdit(registro.data)}
                               className="h-8 w-8 p-0"
+                              title={canEdit(registro.data) ? 'Editar' : 'Somente registros de 2026+'}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -438,7 +457,9 @@ const RegistrosCrimes = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDelete(registro.id)}
+                              disabled={!canEdit(registro.data)}
                               className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              title={canEdit(registro.data) ? 'Excluir' : 'Somente registros de 2026+'}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -458,6 +479,15 @@ const RegistrosCrimes = () => {
           Mostrando {filteredRegistros.length} de {registros.length} registros
         </div>
       </div>
+
+      <CrimeAmbientalEditDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        registro={editingRegistro}
+        onSuccess={fetchRegistros}
+        regioes={regioes}
+        tiposCrime={tiposCrime}
+      />
     </Layout>
   );
 };
