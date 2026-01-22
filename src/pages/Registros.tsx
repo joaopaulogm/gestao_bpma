@@ -840,7 +840,7 @@ const Registros = () => {
           />
         )}
         
-        <div className="w-full">
+        <div className="w-full -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-12 px-4 sm:px-6 md:px-8 lg:px-12">
           {isLoading ? (
             <div className="border border-fauna-border rounded-lg shadow-sm overflow-hidden">
               <RegistrosLoading />
