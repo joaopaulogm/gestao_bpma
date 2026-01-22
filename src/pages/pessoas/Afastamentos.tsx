@@ -347,7 +347,7 @@ const Afastamentos: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="w-[75%] mx-auto p-4 md:p-6">
+      <div className="page-container py-4 md:py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">

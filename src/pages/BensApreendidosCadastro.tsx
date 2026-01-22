@@ -187,7 +187,7 @@ const BensApreendidosCadastro = () => {
 
   return (
     <Layout title="Cadastro de Bens Apreendidos" showBackButton>
-      <div className="w-[75%] mx-auto space-y-6 animate-fade-in">
+      <div className="space-y-6 animate-fade-in">
         {/* Formulário de Cadastro */}
         <FormSection title="Novo Item de Apreensão">
           <form onSubmit={handleSubmit} className="space-y-4">

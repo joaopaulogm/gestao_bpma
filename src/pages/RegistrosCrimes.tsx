@@ -315,7 +315,7 @@ const RegistrosCrimes = () => {
 
   return (
     <Layout title="Registros de Crimes Ambientais" showBackButton>
-      <div className="w-[75%] mx-auto space-y-4 sm:space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
         {/* Ações */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
           <div className="flex-1 w-full sm:max-w-md">

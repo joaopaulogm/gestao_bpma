@@ -689,7 +689,7 @@ const Equipes: React.FC = () => {
 
   return (
     <ScrollArea className="h-screen">
-    <div className="w-[75%] mx-auto p-6 space-y-6 pb-20">
+    <div className="page-container py-6 space-y-6 pb-20">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-[#071d49] flex items-center justify-center">

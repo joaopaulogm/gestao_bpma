@@ -351,7 +351,7 @@ const Ferias: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="w-[75%] mx-auto p-3 sm:p-4 md:p-6 pb-20">
+      <div className="page-container py-4 md:py-6 pb-20">
         {/* Header - Mobile Optimized */}
         <div className="flex flex-col gap-4 mb-6 sm:mb-8">
           <div className="flex items-center justify-between">
@@ -568,16 +568,16 @@ const Ferias: React.FC = () => {
                   <p className="text-sm sm:text-base text-muted-foreground">Nenhum policial programado para este mês</p>
                 </div>
               ) : (
-                <Table className="w-full table-fixed">
+                <Table className="w-full">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[8%] text-center">#</TableHead>
-                      <TableHead className="w-[12%]">Posto</TableHead>
-                      <TableHead className="w-[25%]">Nome</TableHead>
-                      <TableHead className="w-[15%]">Matrícula</TableHead>
-                      <TableHead className="w-[25%]">Parcelas</TableHead>
-                      <TableHead className="w-[8%] text-center">Dias</TableHead>
-                      <TableHead className="w-[7%] text-center">Ações</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">#</TableHead>
+                      <TableHead className="whitespace-nowrap">Posto</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead className="whitespace-nowrap">Matrícula</TableHead>
+                      <TableHead>Parcelas</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Dias</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

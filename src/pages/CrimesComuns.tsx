@@ -326,7 +326,7 @@ const CrimesComuns = () => {
 
   return (
     <Layout title="Crimes Comuns" showBackButton>
-      <form onSubmit={handleSubmit} className="w-[75%] mx-auto space-y-6 animate-fade-in">
+      <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
         
         {/* Card: Informações Gerais */}
         <FormSection title="Informações Gerais" columns>
@@ -783,7 +783,7 @@ const CrimesComuns = () => {
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="btn-glass min-w-[200px]"
+            className="btn-glass w-full sm:w-auto px-8"
           >
             {isSubmitting ? (
               <>

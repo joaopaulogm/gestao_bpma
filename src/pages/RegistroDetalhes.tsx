@@ -400,7 +400,7 @@ const RegistroDetalhes = () => {
 
   return (
     <Layout title={`Detalhes do Registro: ${registro.especie?.nome_popular || 'Registro'}`} showBackButton>
-      <div className="w-[75%] mx-auto space-y-6 animate-fade-in">
+      <div className="space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <Button
             variant="outline"
