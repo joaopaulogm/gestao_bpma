@@ -45,6 +45,8 @@ import DashboardComparativoAnos from '@/components/dashboard/DashboardComparativ
 import DashboardMapaCalor from '@/components/dashboard/DashboardMapaCalor';
 import DashboardRankingEspecies from '@/components/dashboard/DashboardRankingEspecies';
 import DashboardTendenciaSazonal from '@/components/dashboard/DashboardTendenciaSazonal';
+import DashboardAlertasPicos from '@/components/dashboard/DashboardAlertasPicos';
+import DashboardAtropelamentos from '@/components/dashboard/DashboardAtropelamentos';
 
 const COLORS = ['#071d49', '#ffcc00', '#3b82f6', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#22c55e'];
 
@@ -683,12 +685,20 @@ const DashboardPublico = () => {
               <Trophy className="h-4 w-4 mr-1" />
               Ranking
             </TabsTrigger>
+            <TabsTrigger value="atropelamentos" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
+              <Car className="h-4 w-4 mr-1" />
+              Atropelamentos
+            </TabsTrigger>
             <TabsTrigger value="destinacao" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Destinação</TabsTrigger>
             <TabsTrigger value="classes" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Classes</TabsTrigger>
             <TabsTrigger value="temporal" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Temporal</TabsTrigger>
             <TabsTrigger value="sazonal" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
               <Calendar className="h-4 w-4 mr-1" />
               Sazonal
+            </TabsTrigger>
+            <TabsTrigger value="alertas" className="data-[state=active]:bg-[#ff0000] data-[state=active]:text-white">
+              <AlertTriangle className="h-4 w-4 mr-1" />
+              Alertas
             </TabsTrigger>
             <TabsTrigger value="regioes" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Regiões</TabsTrigger>
             <TabsTrigger value="comparativo" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
@@ -1020,6 +1030,16 @@ const DashboardPublico = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Atropelamentos Tab */}
+          <TabsContent value="atropelamentos">
+            <DashboardAtropelamentos year={selectedYear || 2026} />
+          </TabsContent>
+
+          {/* Alertas Tab */}
+          <TabsContent value="alertas">
+            <DashboardAlertasPicos year={selectedYear || 2026} />
           </TabsContent>
         </Tabs>
 

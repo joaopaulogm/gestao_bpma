@@ -132,7 +132,7 @@ const Login = () => {
         .single();
 
       if (error || !usuario) {
-        toast.error('Login ou senha incorretos');
+        toast.error('Login não encontrado. Verifique se está usando o formato: primeiro_nome.ultimo_nome');
         return;
       }
 
@@ -141,9 +141,12 @@ const Login = () => {
         return;
       }
 
+      // Comparar senha - limpar entrada e converter para número
       const senhaDigitada = senha.replace(/\D/g, '');
-      if (usuario.senha?.toString() !== senhaDigitada) {
-        toast.error('Login ou senha incorretos');
+      const senhaArmazenada = usuario.senha?.toString() || '';
+      
+      if (senhaArmazenada !== senhaDigitada) {
+        toast.error('CPF incorreto. Digite apenas os números do seu CPF, sem pontos ou traços.');
         return;
       }
 
@@ -622,31 +625,53 @@ const Login = () => {
             {/* Login por Credenciais (usuarios_por_login) */}
             <TabsContent value="credenciais" className="mt-4">
               <form onSubmit={handleCredentialLogin} className="space-y-3 sm:space-y-4">
+                {/* Alerta informativo sobre formato */}
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-3 text-xs">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                    <div className="text-blue-700 dark:text-blue-300">
+                      <p className="font-medium mb-1">Formato do Login:</p>
+                      <p><strong>primeiro_nome.ultimo_nome</strong></p>
+                      <p className="text-blue-600 dark:text-blue-400 mt-1">
+                        Ex: Para "JOÃO CARLOS DA SILVA", use: <strong>joao.silva</strong>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
+                  <Label htmlFor="loginInput" className="text-xs font-medium">Login</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
+                      id="loginInput"
                       type="text"
-                      placeholder="Login (nome.sobrenome)"
+                      placeholder="primeiro.ultimo (ex: joao.silva)"
                       value={login}
-                      onChange={(e) => setLogin(e.target.value)}
-                      className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
+                      onChange={(e) => setLogin(e.target.value.toLowerCase().trim())}
+                      className="pl-10 h-10 sm:h-11 text-sm sm:text-base lowercase"
                       required
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="senhaInput" className="text-xs font-medium">Senha</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
+                      id="senhaInput"
                       type="password"
-                      placeholder="Senha (CPF)"
+                      placeholder="CPF (somente números)"
                       value={senha}
-                      onChange={(e) => setSenha(e.target.value)}
+                      onChange={(e) => setSenha(e.target.value.replace(/\D/g, ''))}
                       className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
+                      maxLength={11}
                       required
                     />
                   </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Digite seu CPF sem pontos ou traços
+                  </p>
                 </div>
                 
                 <Button 
@@ -656,7 +681,7 @@ const Login = () => {
                 >
                   {isLoading ? 'Verificando...' : 'Primeiro Acesso'}
                 </Button>
-                <p className="text-xs text-center text-muted-foreground">
+                <p className="text-xs text-center text-muted-foreground mt-2">
                   Use esta opção apenas se nunca acessou o sistema antes.
                 </p>
               </form>
