@@ -75,88 +75,86 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
   };
 
   return (
-    <div className="w-full">
-      <div className="w-full overflow-x-auto rounded-lg border border-border bg-card">
-        <Table className="w-full table-auto">
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="px-4 py-3 whitespace-nowrap font-semibold">Data</TableHead>
-              <TableHead className="px-4 py-3 whitespace-nowrap font-semibold">Região</TableHead>
-              <TableHead className="px-4 py-3 whitespace-nowrap font-semibold">Tipo</TableHead>
-              {!isMobile && (
-                <>
-                  <TableHead className="px-4 py-3 font-semibold">Espécie</TableHead>
-                  <TableHead className="hidden lg:table-cell px-4 py-3 font-semibold">Nome Científico</TableHead>
-                </>
-              )}
-              <TableHead className="hidden sm:table-cell px-4 py-3 font-semibold">Classe</TableHead>
-              <TableHead className="hidden sm:table-cell px-4 py-3 font-semibold">Estado</TableHead>
-              <TableHead className="hidden md:table-cell px-4 py-3 font-semibold">Estágio</TableHead>
-              <TableHead className="px-4 py-3 text-center font-semibold">Qtd.</TableHead>
-              <TableHead className="hidden md:table-cell px-4 py-3 font-semibold">Destinação</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {registros.length > 0 ? (
-              registros.map((registro) => (
-                <TableRow 
-                  key={registro.id} 
-                  className="hover:bg-primary/5 cursor-pointer transition-colors border-b border-border/50"
-                  onClick={(e) => handleRowClick(e, registro.id)}
-                >
-                  <TableCell className="px-4 py-3 whitespace-nowrap">
-                    <span className="text-sm font-medium">{formatDateTime(registro.data)}</span>
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <span className="text-sm">{registro.regiao_administrativa?.nome || '-'}</span>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 whitespace-nowrap">
-                    <span className="text-sm">{registro.origem?.nome || '-'}</span>
-                  </TableCell>
-                  {!isMobile && (
-                    <>
-                      <TableCell className="px-4 py-3">
-                        <span className="text-sm font-medium text-primary hover:underline">
-                          {registro.especie?.nome_popular || '-'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell px-4 py-3">
-                        <span className="text-sm italic text-muted-foreground">
-                          {registro.especie?.nome_cientifico || '-'}
-                        </span>
-                      </TableCell>
-                    </>
-                  )}
-                  <TableCell className="hidden sm:table-cell px-4 py-3">
-                    <span className="text-sm">{registro.especie?.classe_taxonomica || '-'}</span>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell px-4 py-3">
-                    <span className="text-sm">{registro.estado_saude?.nome || '-'}</span>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell px-4 py-3">
-                    <span className="text-sm">{registro.estagio_vida?.nome || '-'}</span>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-center">
-                    <span className="text-sm font-semibold">{registro.quantidade}</span>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell px-4 py-3">
-                    <span className="text-sm">{registro.destinacao?.nome || '-'}</span>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={isMobile ? 5 : 10} className="text-center py-12">
-                  <div className="flex flex-col items-center gap-2">
-                    <p className="text-muted-foreground text-sm">Nenhum registro encontrado com os filtros atuais.</p>
-                    <p className="text-muted-foreground text-xs">Clique em uma linha para ver os detalhes do registro</p>
-                  </div>
+    <div className="w-full overflow-x-auto">
+      <Table className="w-full min-w-[640px]">
+        <TableHeader>
+          <TableRow className="bg-muted/50">
+            <TableHead className="min-w-[100px] px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap font-semibold text-xs sm:text-sm">Data</TableHead>
+            <TableHead className="min-w-[120px] px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap font-semibold text-xs sm:text-sm">Região</TableHead>
+            <TableHead className="min-w-[100px] px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap font-semibold text-xs sm:text-sm">Tipo</TableHead>
+            {!isMobile && (
+              <>
+                <TableHead className="min-w-[140px] px-2 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm">Espécie</TableHead>
+                <TableHead className="hidden lg:table-cell min-w-[160px] px-2 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm">Nome Científico</TableHead>
+              </>
+            )}
+            <TableHead className="hidden sm:table-cell min-w-[100px] px-2 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm">Classe</TableHead>
+            <TableHead className="hidden sm:table-cell min-w-[100px] px-2 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm">Estado</TableHead>
+            <TableHead className="hidden md:table-cell min-w-[100px] px-2 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm">Estágio</TableHead>
+            <TableHead className="min-w-[60px] px-2 sm:px-4 py-2 sm:py-3 text-center font-semibold text-xs sm:text-sm">Qtd.</TableHead>
+            <TableHead className="hidden md:table-cell min-w-[120px] px-2 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm">Destinação</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {registros.length > 0 ? (
+            registros.map((registro) => (
+              <TableRow 
+                key={registro.id} 
+                className="hover:bg-primary/5 cursor-pointer transition-colors border-b border-border/50"
+                onClick={(e) => handleRowClick(e, registro.id)}
+              >
+                <TableCell className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                  <span className="text-xs sm:text-sm font-medium">{formatDateTime(registro.data)}</span>
+                </TableCell>
+                <TableCell className="px-2 sm:px-4 py-2 sm:py-3">
+                  <span className="text-xs sm:text-sm">{registro.regiao_administrativa?.nome || '-'}</span>
+                </TableCell>
+                <TableCell className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                  <span className="text-xs sm:text-sm">{registro.origem?.nome || '-'}</span>
+                </TableCell>
+                {!isMobile && (
+                  <>
+                    <TableCell className="px-2 sm:px-4 py-2 sm:py-3">
+                      <span className="text-xs sm:text-sm font-medium text-primary hover:underline">
+                        {registro.especie?.nome_popular || '-'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell px-2 sm:px-4 py-2 sm:py-3">
+                      <span className="text-xs sm:text-sm italic text-muted-foreground">
+                        {registro.especie?.nome_cientifico || '-'}
+                      </span>
+                    </TableCell>
+                  </>
+                )}
+                <TableCell className="hidden sm:table-cell px-2 sm:px-4 py-2 sm:py-3">
+                  <span className="text-xs sm:text-sm">{registro.especie?.classe_taxonomica || '-'}</span>
+                </TableCell>
+                <TableCell className="hidden sm:table-cell px-2 sm:px-4 py-2 sm:py-3">
+                  <span className="text-xs sm:text-sm">{registro.estado_saude?.nome || '-'}</span>
+                </TableCell>
+                <TableCell className="hidden md:table-cell px-2 sm:px-4 py-2 sm:py-3">
+                  <span className="text-xs sm:text-sm">{registro.estagio_vida?.nome || '-'}</span>
+                </TableCell>
+                <TableCell className="px-2 sm:px-4 py-2 sm:py-3 text-center">
+                  <span className="text-xs sm:text-sm font-semibold">{registro.quantidade}</span>
+                </TableCell>
+                <TableCell className="hidden md:table-cell px-2 sm:px-4 py-2 sm:py-3">
+                  <span className="text-xs sm:text-sm">{registro.destinacao?.nome || '-'}</span>
                 </TableCell>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={isMobile ? 5 : 10} className="text-center py-8 sm:py-12">
+                <div className="flex flex-col items-center gap-2">
+                  <p className="text-muted-foreground text-xs sm:text-sm">Nenhum registro encontrado com os filtros atuais.</p>
+                  <p className="text-muted-foreground text-xs">Clique em uma linha para ver os detalhes do registro</p>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 };

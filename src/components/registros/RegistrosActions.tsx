@@ -26,21 +26,21 @@ const RegistrosActions = ({
   onExportXLSX,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between gap-4">
-      <div className="relative flex-1">
+    <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
+      <div className="relative flex-1 w-full">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
           placeholder="Buscar por região, nome popular ou científico"
-          className="pl-10"
+          className="pl-10 w-full"
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
         />
       </div>
       
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2 w-full sm:w-auto">
         <Button 
           variant="outline" 
-          className="gap-2"
+          className="gap-2 w-full sm:w-fit"
           onClick={onToggleFilters}
         >
           <Filter className="h-4 w-4" />
@@ -49,22 +49,23 @@ const RegistrosActions = ({
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 w-full sm:w-fit">
               <Download className="h-4 w-4" />
-              Exportar
+              <span className="hidden sm:inline">Exportar</span>
+              <span className="sm:hidden">Exportar</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onExportCSV}>
-              <Download className="h-4 w-4 mr-2" />
+            <DropdownMenuItem onClick={onExportCSV} className="gap-2">
+              <Download className="h-4 w-4" />
               Exportar CSV
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onExportPDF}>
-              <FileText className="h-4 w-4 mr-2" />
+            <DropdownMenuItem onClick={onExportPDF} className="gap-2">
+              <FileText className="h-4 w-4" />
               Exportar PDF
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onExportXLSX}>
-              <FileSpreadsheet className="h-4 w-4 mr-2" />
+            <DropdownMenuItem onClick={onExportXLSX} className="gap-2">
+              <FileSpreadsheet className="h-4 w-4" />
               Exportar XLSX
             </DropdownMenuItem>
           </DropdownMenuContent>

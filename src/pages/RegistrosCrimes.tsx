@@ -33,8 +33,10 @@ interface RegistroCrime {
   tipo_crime?: { id_tipo_de_crime: string; "Tipo de Crime": string };
   enquadramento?: { "Enquadramento": string };
   tipo_area?: { "Tipo de Área": string };
-  latitude: string;
-  longitude: string;
+  latitude?: string;
+  longitude?: string;
+  latitude_ocorrencia?: string;
+  longitude_ocorrencia?: string;
   ocorreu_apreensao: boolean;
   procedimento_legal?: string;
   qtd_detidos_maior?: number;
@@ -83,7 +85,8 @@ const RegistrosCrimes = () => {
     try {
       const supabaseAny = supabase as any;
       
-      const { data, error } = await supabaseAny
+      // Tentar buscar com joins primeiro
+      let query = supabaseAny
         .from('fat_registros_de_crime')
         .select(`
           *,
@@ -95,18 +98,66 @@ const RegistrosCrimes = () => {
         `)
         .order('data', { ascending: false });
 
-      if (error) {
-        throw error;
-      }
+      const { data, error } = await query;
 
-      setRegistros(data || []);
-      console.log(`✅ Total de registros de crimes carregados: ${data?.length || 0}`);
+      if (error) {
+        // Se falhar com joins, tentar buscar sem joins e enriquecer depois
+        console.warn('Erro ao buscar com joins, tentando sem joins:', error);
+        
+        const { data: dataSimple, error: errorSimple } = await supabaseAny
+          .from('fat_registros_de_crime')
+          .select('*')
+          .order('data', { ascending: false });
+
+        if (errorSimple) {
+          throw errorSimple;
+        }
+
+        // Enriquecer dados manualmente
+        const enriched = await enrichCrimeData(dataSimple || []);
+        setRegistros(enriched);
+        console.log(`✅ Total de registros de crimes carregados (sem joins): ${enriched.length}`);
+      } else {
+        setRegistros(data || []);
+        console.log(`✅ Total de registros de crimes carregados: ${data?.length || 0}`);
+      }
     } catch (error) {
       console.error('Erro ao buscar registros de crimes:', error);
       toast.error(handleSupabaseError(error, 'carregar os registros de crimes'));
+      setRegistros([]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const enrichCrimeData = async (registros: any[]): Promise<RegistroCrime[]> => {
+    if (!registros || registros.length === 0) return [];
+
+    // Buscar dimensões
+    const [regioesRes, tiposCrimeRes, enquadramentosRes, tiposAreaRes, desfechosRes] = await Promise.all([
+      supabase.from('dim_regiao_administrativa').select('id, nome'),
+      supabase.from('dim_tipo_de_crime').select('id_tipo_de_crime, "Tipo de Crime"'),
+      supabase.from('dim_enquadramento').select('id_enquadramento, "Enquadramento"'),
+      supabase.from('dim_tipo_de_area').select('id, "Tipo de Área"'),
+      supabase.from('dim_desfecho').select('id, nome'),
+    ]);
+
+    const regioesMap = new Map((regioesRes.data || []).map(r => [r.id, r]));
+    const tiposCrimeMap = new Map((tiposCrimeRes.data || []).map(t => [t.id_tipo_de_crime, t]));
+    const enquadramentosMap = new Map((enquadramentosRes.data || []).map(e => [e.id_enquadramento, e]));
+    const tiposAreaMap = new Map((tiposAreaRes.data || []).map(t => [t.id, t]));
+    const desfechosMap = new Map((desfechosRes.data || []).map(d => [d.id, d]));
+
+    return registros.map(reg => ({
+      ...reg,
+      regiao_administrativa: reg.regiao_administrativa_id ? regioesMap.get(reg.regiao_administrativa_id) : undefined,
+      tipo_crime: reg.tipo_crime_id ? tiposCrimeMap.get(reg.tipo_crime_id) : undefined,
+      enquadramento: reg.enquadramento_id ? enquadramentosMap.get(reg.enquadramento_id) : undefined,
+      tipo_area: reg.tipo_area_id ? tiposAreaMap.get(reg.tipo_area_id) : undefined,
+      desfecho: reg.desfecho_id ? desfechosMap.get(reg.desfecho_id) : undefined,
+      latitude: reg.latitude || reg.latitude_ocorrencia,
+      longitude: reg.longitude || reg.longitude_ocorrencia,
+    }));
   };
 
   const filteredRegistros = registros.filter(registro => {
@@ -209,8 +260,8 @@ const RegistrosCrimes = () => {
           `"${registro.tipo_crime?.["Tipo de Crime"] || ''}"`,
           `"${registro.enquadramento?.["Enquadramento"] || ''}"`,
           `"${registro.tipo_area?.["Tipo de Área"] || ''}"`,
-          registro.latitude,
-          registro.longitude,
+          registro.latitude || registro.latitude_ocorrencia || '',
+          registro.longitude || registro.longitude_ocorrencia || '',
           registro.ocorreu_apreensao ? 'Sim' : 'Não',
           `"${registro.procedimento_legal || ''}"`,
           registro.qtd_detidos_maior || 0,
@@ -251,7 +302,7 @@ const RegistrosCrimes = () => {
 
   return (
     <Layout title="Registros de Crimes Ambientais" showBackButton>
-      <div className="space-y-4 sm:space-y-6 animate-fade-in w-full">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in w-full p-4 sm:p-6">
         {/* Ações */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
           <div className="flex-1 w-full sm:max-w-md">
@@ -261,15 +312,15 @@ const RegistrosCrimes = () => {
                 placeholder="Buscar por região, tipo de crime, enquadramento..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 w-full"
               />
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-full sm:w-fit"
             >
               <Filter className="h-4 w-4" />
               Filtros
@@ -277,7 +328,7 @@ const RegistrosCrimes = () => {
             <Button
               variant="outline"
               onClick={handleExportCSV}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-full sm:w-fit"
             >
               <Download className="h-4 w-4" />
               Exportar CSV
@@ -288,7 +339,7 @@ const RegistrosCrimes = () => {
         {/* Filtros */}
         {showFilters && (
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-4 sm:p-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Ano</label>
@@ -377,18 +428,18 @@ const RegistrosCrimes = () => {
               Carregando registros...
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
+            <div className="w-full overflow-x-auto">
+              <Table className="w-full min-w-[800px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Região</TableHead>
-                    <TableHead>Tipo de Crime</TableHead>
-                    <TableHead>Enquadramento</TableHead>
-                    <TableHead>Apreensão</TableHead>
-                    <TableHead>Procedimento</TableHead>
-                    <TableHead>Desfecho</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead className="min-w-[100px] px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap font-semibold text-xs sm:text-sm">Data</TableHead>
+                    <TableHead className="min-w-[120px] px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap font-semibold text-xs sm:text-sm">Região</TableHead>
+                    <TableHead className="min-w-[140px] px-2 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm">Tipo de Crime</TableHead>
+                    <TableHead className="min-w-[140px] px-2 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm">Enquadramento</TableHead>
+                    <TableHead className="min-w-[100px] px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap font-semibold text-xs sm:text-sm">Apreensão</TableHead>
+                    <TableHead className="min-w-[120px] px-2 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm">Procedimento</TableHead>
+                    <TableHead className="min-w-[100px] px-2 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm">Desfecho</TableHead>
+                    <TableHead className="min-w-[100px] px-2 sm:px-4 py-2 sm:py-3 text-right font-semibold text-xs sm:text-sm">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -400,29 +451,41 @@ const RegistrosCrimes = () => {
                     </TableRow>
                   ) : (
                     filteredRegistros.map((registro) => (
-                      <TableRow key={registro.id}>
-                        <TableCell>{formatDate(registro.data)}</TableCell>
-                        <TableCell>{registro.regiao_administrativa?.nome || '-'}</TableCell>
-                        <TableCell>{registro.tipo_crime?.["Tipo de Crime"] || '-'}</TableCell>
-                        <TableCell>{registro.enquadramento?.["Enquadramento"] || '-'}</TableCell>
-                        <TableCell>
+                      <TableRow key={registro.id} className="hover:bg-muted/50">
+                        <TableCell className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                          <span className="text-xs sm:text-sm">{formatDate(registro.data)}</span>
+                        </TableCell>
+                        <TableCell className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                          <span className="text-xs sm:text-sm">{registro.regiao_administrativa?.nome || '-'}</span>
+                        </TableCell>
+                        <TableCell className="px-2 sm:px-4 py-2 sm:py-3">
+                          <span className="text-xs sm:text-sm">{registro.tipo_crime?.["Tipo de Crime"] || '-'}</span>
+                        </TableCell>
+                        <TableCell className="px-2 sm:px-4 py-2 sm:py-3">
+                          <span className="text-xs sm:text-sm">{registro.enquadramento?.["Enquadramento"] || '-'}</span>
+                        </TableCell>
+                        <TableCell className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
                           {registro.ocorreu_apreensao ? (
-                            <span className="text-green-600 font-medium">Sim</span>
+                            <span className="text-xs sm:text-sm text-green-600 font-medium">Sim</span>
                           ) : (
-                            <span className="text-muted-foreground">Não</span>
+                            <span className="text-xs sm:text-sm text-muted-foreground">Não</span>
                           )}
                         </TableCell>
-                        <TableCell className="max-w-xs truncate">
-                          {registro.procedimento_legal || '-'}
+                        <TableCell className="px-2 sm:px-4 py-2 sm:py-3">
+                          <div className="max-w-full truncate" title={registro.procedimento_legal || ''}>
+                            <span className="text-xs sm:text-sm">{registro.procedimento_legal || '-'}</span>
+                          </div>
                         </TableCell>
-                        <TableCell>{registro.desfecho?.nome || '-'}</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="px-2 sm:px-4 py-2 sm:py-3">
+                          <span className="text-xs sm:text-sm">{registro.desfecho?.nome || '-'}</span>
+                        </TableCell>
+                        <TableCell className="px-2 sm:px-4 py-2 sm:py-3">
                           <div className="flex justify-end gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleViewDetails(registro.id)}
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 flex-shrink-0"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -430,7 +493,7 @@ const RegistrosCrimes = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleEdit(registro.id)}
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 flex-shrink-0"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -438,7 +501,7 @@ const RegistrosCrimes = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDelete(registro.id)}
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              className="h-8 w-8 p-0 flex-shrink-0 text-destructive hover:text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

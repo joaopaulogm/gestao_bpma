@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => ({
           ui: ["@radix-ui/react-dialog", "@radix-ui/react-select", "@radix-ui/react-tabs"],
         },
       },
+      external: [],
     },
   },
   plugins: [

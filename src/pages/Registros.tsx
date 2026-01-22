@@ -785,8 +785,8 @@ const Registros = () => {
   };
 
   return (
-    <Layout title="Lista de Registros" showBackButton>
-      <div className="space-y-4 sm:space-y-6 animate-fade-in w-full">
+    <Layout title="Lista de Registros de Resgate" showBackButton>
+      <div className="space-y-4 sm:space-y-6 animate-fade-in w-full p-4 sm:p-6">
         <RegistrosActions
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -827,7 +827,7 @@ const Registros = () => {
           />
         )}
         
-        <div className="w-full">
+        <div className="w-full overflow-x-auto">
           {isLoading ? (
             <div className="border border-fauna-border rounded-lg shadow-sm overflow-hidden">
               <RegistrosLoading />

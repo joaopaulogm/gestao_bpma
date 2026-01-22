@@ -379,7 +379,7 @@ const RegistroDetalhes = () => {
       }
       
       toast.success(`Registro de "${registroToDelete.nome}" excluído com sucesso`);
-      navigate('/secao-operacional/registros');
+      navigate('/secao-operacional/registros-resgates');
     } catch (error: any) {
       console.error('Erro ao excluir registro:', error);
       toast.error(`Erro ao excluir o registro: ${error?.message || 'Erro desconhecido'}`);
@@ -405,7 +405,7 @@ const RegistroDetalhes = () => {
           <Button
             variant="outline"
             className="gap-2"
-            onClick={() => navigate('/secao-operacional/registros')}
+            onClick={() => navigate('/secao-operacional/registros-resgates')}
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar
