@@ -192,7 +192,7 @@ const Login = () => {
       const { data: role, error: roleError } = await supabase
         .rpc('get_role_by_login_senha', {
           p_login: login.toLowerCase().trim(),
-          p_senha: Number(senhaNumero)
+          p_senha: senhaParaRPC  // Usar a mesma string
         });
 
       if (roleError) {
@@ -329,11 +329,14 @@ const Login = () => {
         return;
       }
 
+      // Preparar senha para RPC (converter BigInt para string)
+      const senhaParaRPC2 = senhaNumero.toString();
+
       // Verificar role usando a função RPC
       const { data: role, error: roleError } = await supabase
         .rpc('get_role_by_login_senha', {
           p_login: login.toLowerCase().trim(),
-          p_senha: Number(senhaNumero)
+          p_senha: senhaParaRPC2  // Usar string
         });
 
       if (roleError) {
