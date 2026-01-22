@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PlusCircle, List, BarChart, MapPin, Table, FileText, Package, Leaf, FolderSearch, Bird, AlertTriangle, Shield, TreePine } from 'lucide-react';
+import { PlusCircle, List, BarChart, MapPin, Table, FileText, Package, Leaf, FolderSearch, Bird, AlertTriangle, Shield, TreePine, ExternalLink, Copy, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Briefcase } from 'lucide-react';
+import { toast } from 'sonner';
 
 const menuItems = [
   // Formulários de Cadastro - Primeiro
@@ -27,11 +29,58 @@ const menuItems = [
 ];
 
 const SecaoOperacional: React.FC = () => {
+  const [copied, setCopied] = useState(false);
+  const publicDashboardUrl = 'https://gestao-bpma.lovable.app/dashboard-publico';
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(publicDashboardUrl);
+      setCopied(true);
+      toast.success('Link copiado para a área de transferência!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast.error('Erro ao copiar link');
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 sm:p-6 h-full overflow-auto">
-      <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
-        <Briefcase className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Seção Operacional</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Briefcase className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Seção Operacional</h1>
+        </div>
+        
+        {/* Botão Dashboard Público */}
+        <div className="flex items-center gap-2">
+          <a 
+            href={publicDashboardUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium"
+          >
+            <ExternalLink className="h-4 w-4" />
+            <span className="hidden sm:inline">Dashboard Público</span>
+          </a>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyLink}
+            className="flex items-center gap-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+          >
+            {copied ? (
+              <>
+                <Check className="h-4 w-4" />
+                <span className="hidden sm:inline">Copiado!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-4 w-4" />
+                <span className="hidden sm:inline">Copiar Link</span>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
