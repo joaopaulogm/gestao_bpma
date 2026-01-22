@@ -36,7 +36,7 @@ export const HistoricalFilters: React.FC<HistoricalFiltersProps> = ({
         value={filters.ano?.toString() || 'all'}
         onValueChange={(value) => onFilterChange({ ...filters, ano: value === 'all' ? null : parseInt(value) })}
       >
-        <SelectTrigger className="w-[120px]">
+        <SelectTrigger className="w-full sm:w-auto sm:min-w-[100px]">
           <SelectValue placeholder="Ano" />
         </SelectTrigger>
         <SelectContent>
@@ -51,7 +51,7 @@ export const HistoricalFilters: React.FC<HistoricalFiltersProps> = ({
         value={filters.classe || 'all'}
         onValueChange={(value) => onFilterChange({ ...filters, classe: value === 'all' ? null : value })}
       >
-        <SelectTrigger className="w-[150px]">
+        <SelectTrigger className="w-full sm:w-auto sm:min-w-[120px]">
           <SelectValue placeholder="Classe" />
         </SelectTrigger>
         <SelectContent>
@@ -66,7 +66,7 @@ export const HistoricalFilters: React.FC<HistoricalFiltersProps> = ({
         value={filters.estadoConservacao || 'all'}
         onValueChange={(value) => onFilterChange({ ...filters, estadoConservacao: value === 'all' ? null : value })}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full sm:w-auto sm:min-w-[140px]">
           <SelectValue placeholder="Estado de Conservação" />
         </SelectTrigger>
         <SelectContent>

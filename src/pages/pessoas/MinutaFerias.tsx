@@ -413,7 +413,7 @@ const MinutaFerias: React.FC = () => {
   return (
     <ScrollArea className="h-screen">
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto p-4 md:p-6 max-w-7xl pb-20">
+        <div className="page-container py-4 md:py-6 pb-20">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 print:hidden">
             <div className="flex items-center gap-4">
@@ -584,7 +584,7 @@ const MinutaFerias: React.FC = () => {
                           <TableCell className="print:hidden">
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="w-[120px] justify-start text-left font-normal">
+                                <Button variant="outline" size="sm" className="min-w-fit px-3 justify-start text-left font-normal">
                                   <Calendar className="mr-2 h-4 w-4" />
                                   {format(item.data_inicio, 'dd/MM/yyyy')}
                                 </Button>
@@ -603,7 +603,7 @@ const MinutaFerias: React.FC = () => {
                           <TableCell className="print:hidden">
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="w-[120px] justify-start text-left font-normal">
+                                <Button variant="outline" size="sm" className="min-w-fit px-3 justify-start text-left font-normal">
                                   <Calendar className="mr-2 h-4 w-4" />
                                   {format(item.data_fim, 'dd/MM/yyyy')}
                                 </Button>

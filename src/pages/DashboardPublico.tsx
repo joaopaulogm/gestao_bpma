@@ -33,9 +33,20 @@ import {
   HeartPulse,
   Home,
   Car,
-  TreePine
+  TreePine,
+  Shield,
+  AlertTriangle,
+  Map as MapIcon,
+  BarChart3,
+  Trophy
 } from 'lucide-react';
 import logoBpma from '@/assets/logo-bpma.png';
+import DashboardComparativoAnos from '@/components/dashboard/DashboardComparativoAnos';
+import DashboardMapaCalor from '@/components/dashboard/DashboardMapaCalor';
+import DashboardRankingEspecies from '@/components/dashboard/DashboardRankingEspecies';
+import DashboardTendenciaSazonal from '@/components/dashboard/DashboardTendenciaSazonal';
+import DashboardAlertasPicos from '@/components/dashboard/DashboardAlertasPicos';
+import DashboardAtropelamentos from '@/components/dashboard/DashboardAtropelamentos';
 
 const COLORS = ['#071d49', '#ffcc00', '#3b82f6', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#22c55e'];
 
@@ -54,74 +65,273 @@ const MONTHS = [
   { value: '12', label: 'Dezembro' },
 ];
 
-const YEARS = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
+const YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
 
 const DashboardPublico = () => {
-  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | null>(2026);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [selectedClasse, setSelectedClasse] = useState<string | null>(null);
 
-  // Fetch data from Supabase
-  const { data: rawData, isLoading } = useQuery({
-    queryKey: ['public-dashboard', selectedYear, selectedMonth, selectedClasse],
-    queryFn: async () => {
-      let query = supabase
-        .from('fat_registros_de_resgate')
-        .select(`
-          *,
-          especie:dim_especies_fauna(id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, estado_de_conservacao, tipo_de_fauna),
-          regiao_administrativa:dim_regiao_administrativa(id, nome),
-          origem:dim_origem(id, nome),
-          destinacao:dim_destinacao(id, nome),
-          estado_saude:dim_estado_saude(id, nome),
-          estagio_vida:dim_estagio_vida(id, nome),
-          desfecho:dim_desfecho_resgates(id, nome, tipo)
-        `)
-        .order('data', { ascending: false });
+  const isHistorico = selectedYear && selectedYear <= 2025;
 
-      // Apply year filter
-      if (selectedYear) {
+  // Fetch rescue data based on selected year
+  const { data: rawData, isLoading } = useQuery({
+    queryKey: ['public-dashboard-rescues', selectedYear, selectedMonth, selectedClasse],
+    queryFn: async () => {
+      if (!selectedYear) {
+        // No year selected - fetch all from 2026+
+        const { data, error } = await supabase
+          .from('fat_registros_de_resgate')
+          .select(`
+            *,
+            especie:dim_especies_fauna(id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, estado_de_conservacao, tipo_de_fauna),
+            regiao_administrativa:dim_regiao_administrativa(id, nome),
+            origem:dim_origem(id, nome),
+            destinacao:dim_destinacao(id, nome),
+            estado_saude:dim_estado_saude(id, nome),
+            estagio_vida:dim_estagio_vida(id, nome),
+            desfecho:dim_desfecho_resgates(id, nome, tipo)
+          `)
+          .order('data', { ascending: false });
+        
+        if (error) throw error;
+        return data || [];
+      }
+
+      // Year selected - fetch from appropriate table
+      if (selectedYear >= 2026) {
+        let query = supabase
+          .from('fat_registros_de_resgate')
+          .select(`
+            *,
+            especie:dim_especies_fauna(id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, estado_de_conservacao, tipo_de_fauna),
+            regiao_administrativa:dim_regiao_administrativa(id, nome),
+            origem:dim_origem(id, nome),
+            destinacao:dim_destinacao(id, nome),
+            estado_saude:dim_estado_saude(id, nome),
+            estagio_vida:dim_estagio_vida(id, nome),
+            desfecho:dim_desfecho_resgates(id, nome, tipo)
+          `)
+          .order('data', { ascending: false });
+
         const startDate = `${selectedYear}-01-01`;
         const endDate = `${selectedYear}-12-31`;
         query = query.gte('data', startDate).lte('data', endDate);
+
+        if (selectedMonth) {
+          const monthStart = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
+          const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
+          const monthEnd = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${lastDay}`;
+          query = query.gte('data', monthStart).lte('data', monthEnd);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return data || [];
       }
 
-      // Apply month filter
-      if (selectedMonth && selectedYear) {
-        const startDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
-        const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
-        const endDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${lastDay}`;
-        query = query.gte('data', startDate).lte('data', endDate);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
+      // Historical years - use appropriate table
+      return [];
     },
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch historical data for complete statistics
+  // Fetch historical data for years <= 2025
   const { data: historicalData } = useQuery({
-    queryKey: ['public-dashboard-historical', selectedYear, selectedClasse],
+    queryKey: ['public-dashboard-historical', selectedYear, selectedMonth],
     queryFn: async () => {
-      if (selectedYear && selectedYear >= 2025) return [];
+      if (!selectedYear || selectedYear > 2025) return null;
+
+      // Use resumo mensal oficial for historical data
+      const { data: resumoData, error } = await supabase
+        .from('fact_resumo_mensal_historico')
+        .select('*')
+        .eq('ano', selectedYear);
+
+      if (error) throw error;
+      return resumoData || [];
+    },
+    enabled: !!selectedYear && selectedYear <= 2025,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // Fetch crimes data for 2026+
+  const { data: crimesData } = useQuery({
+    queryKey: ['public-dashboard-crimes', selectedYear, selectedMonth],
+    queryFn: async () => {
+      if (!selectedYear || selectedYear < 2026) return { ambientais: 0, comuns: 0 };
+
+      const startDate = `${selectedYear}-01-01`;
+      const endDate = `${selectedYear}-12-31`;
+
+      const [ambientaisRes, comunsRes] = await Promise.all([
+        supabase.from('fat_registros_de_crime')
+          .select('id')
+          .gte('data', startDate).lte('data', endDate),
+        supabase.from('fat_crimes_comuns')
+          .select('id')
+          .gte('data', startDate).lte('data', endDate)
+      ]);
+
+      return {
+        ambientais: ambientaisRes.data?.length || 0,
+        comuns: comunsRes.data?.length || 0
+      };
+    },
+    enabled: !!selectedYear && selectedYear >= 2026,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch prevention data for 2026+
+  const { data: prevencaoData } = useQuery({
+    queryKey: ['public-dashboard-prevencao', selectedYear, selectedMonth],
+    queryFn: async () => {
+      if (!selectedYear || selectedYear < 2026) return { atividades: 0, publico: 0 };
+
+      const startDate = `${selectedYear}-01-01`;
+      const endDate = `${selectedYear}-12-31`;
+
+      const { data, error } = await supabase
+        .from('fat_atividades_prevencao')
+        .select('quantidade_publico')
+        .gte('data', startDate).lte('data', endDate);
+
+      if (error) return { atividades: 0, publico: 0 };
+
+      const total = data?.reduce((sum, p) => sum + (p.quantidade_publico || 0), 0) || 0;
+      return {
+        atividades: data?.length || 0,
+        publico: total
+      };
+    },
+    enabled: !!selectedYear && selectedYear >= 2026,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Buscar dados comparativos históricos para gráfico entre anos
+  const { data: dadosComparativos } = useQuery({
+    queryKey: ['public-dashboard-comparativo'],
+    queryFn: async () => {
+      const { data: resumoData, error } = await supabase
+        .from('fact_resumo_mensal_historico')
+        .select('ano, mes, resgates, solturas, obitos')
+        .order('ano')
+        .order('mes');
+      
+      if (error) return [];
+      
+      return (resumoData || []).map(r => ({
+        ano: r.ano,
+        mes: r.mes,
+        total: r.resgates || 0,
+        solturas: r.solturas || 0,
+        obitos: r.obitos || 0
+      }));
+    },
+    staleTime: 10 * 60 * 1000
+  });
+
+  // Buscar dados para mapa de calor (pontos geográficos)
+  const { data: pontosMapaCalor } = useQuery({
+    queryKey: ['public-dashboard-mapa-calor', selectedYear],
+    queryFn: async () => {
+      if (!selectedYear || selectedYear < 2026) return [];
+      
+      const startDate = `${selectedYear}-01-01`;
+      const endDate = `${selectedYear}-12-31`;
       
       const { data, error } = await supabase
-        .from('fat_resgates_diarios_2020a2024')
-        .select('*');
+        .from('fat_registros_de_resgate')
+        .select(`
+          id, 
+          latitude_origem, 
+          longitude_origem,
+          latitude_soltura,
+          longitude_soltura,
+          atropelamento,
+          especie_id,
+          regiao_administrativa_id
+        `)
+        .gte('data', startDate).lte('data', endDate);
       
-      if (error) throw error;
-      return data || [];
+      if (error || !data) return [];
+      
+      // Buscar espécies e regiões
+      const especieIds = [...new Set(data.filter(r => r.especie_id).map(r => r.especie_id as string))];
+      const regiaoIds = [...new Set(data.filter(r => r.regiao_administrativa_id).map(r => r.regiao_administrativa_id as string))];
+      
+      const especiesLookup: Record<string, string> = {};
+      const regioesLookup: Record<string, string> = {};
+      
+      if (especieIds.length > 0) {
+        const { data: especiesData } = await supabase
+          .from('dim_especies_fauna')
+          .select('id, nome_popular')
+          .in('id', especieIds);
+        (especiesData || []).forEach(e => { especiesLookup[e.id] = e.nome_popular; });
+      }
+      
+      if (regiaoIds.length > 0) {
+        const { data: regioesData } = await supabase
+          .from('dim_regiao_administrativa')
+          .select('id, nome')
+          .in('id', regiaoIds);
+        (regioesData || []).forEach(r => { regioesLookup[r.id] = r.nome; });
+      }
+      
+      const pontos: Array<{
+        id: string;
+        latitude: number;
+        longitude: number;
+        tipo: 'resgate' | 'apreensao' | 'soltura' | 'atropelamento';
+        nomePopular?: string;
+        regiao?: string;
+      }> = [];
+      
+      data.forEach(r => {
+        const nomePopular = r.especie_id ? especiesLookup[r.especie_id] : undefined;
+        const regiao = r.regiao_administrativa_id ? regioesLookup[r.regiao_administrativa_id] : undefined;
+        
+        if (r.latitude_origem && r.longitude_origem) {
+          const lat = parseFloat(r.latitude_origem);
+          const lng = parseFloat(r.longitude_origem);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            pontos.push({
+              id: `${r.id}-origem`,
+              latitude: lat,
+              longitude: lng,
+              tipo: r.atropelamento === 'Sim' ? 'atropelamento' : 'resgate',
+              nomePopular,
+              regiao
+            });
+          }
+        }
+        
+        if (r.latitude_soltura && r.longitude_soltura) {
+          const lat = parseFloat(r.latitude_soltura);
+          const lng = parseFloat(r.longitude_soltura);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            pontos.push({
+              id: `${r.id}-soltura`,
+              latitude: lat,
+              longitude: lng,
+              tipo: 'soltura',
+              nomePopular,
+              regiao
+            });
+          }
+        }
+      });
+      
+      return pontos;
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000
   });
 
   // Process dashboard data
   const processedData = useMemo(() => {
-    if (!rawData) return processDashboardData([]);
+    if (isHistorico || !rawData) return processDashboardData([]);
     
-    // Filter by class if selected
     let filteredData = rawData;
     if (selectedClasse) {
       filteredData = rawData.filter((r: any) => 
@@ -130,10 +340,35 @@ const DashboardPublico = () => {
     }
     
     return processDashboardData(filteredData as any);
-  }, [rawData, selectedClasse]);
+  }, [rawData, selectedClasse, isHistorico]);
 
   // Calculate metrics
   const metrics = useMemo(() => {
+    if (isHistorico && historicalData) {
+      // Calculate from historical resumo mensal
+      const totals = historicalData.reduce((acc: any, row: any) => ({
+        resgates: acc.resgates + (row.resgates || 0),
+        solturas: acc.solturas + (row.solturas || 0),
+        obitos: acc.obitos + (row.obitos || 0),
+        feridos: acc.feridos + (row.feridos || 0),
+        filhotes: acc.filhotes + (row.filhotes || 0),
+        atropelamentos: acc.atropelamentos + (row.atropelamentos || 0)
+      }), { resgates: 0, solturas: 0, obitos: 0, feridos: 0, filhotes: 0, atropelamentos: 0 });
+
+      return {
+        totalResgates: totals.resgates,
+        totalAnimais: totals.resgates,
+        solturas: totals.solturas,
+        obitos: totals.obitos,
+        atropelamentos: totals.atropelamentos,
+        filhotes: totals.filhotes,
+        feridos: totals.feridos,
+        crimesAmbientais: 0,
+        crimesComuns: 0,
+        prevencao: 0
+      };
+    }
+
     const data = rawData || [];
     let filteredData = data;
     if (selectedClasse) {
@@ -164,8 +399,19 @@ const DashboardPublico = () => {
       r.estado_saude?.nome?.toLowerCase().includes('debilitado')
     ).length;
 
-    return { totalResgates, totalAnimais, solturas, obitos, atropelamentos, filhotes, feridos };
-  }, [rawData, selectedClasse]);
+    return { 
+      totalResgates, 
+      totalAnimais, 
+      solturas, 
+      obitos, 
+      atropelamentos, 
+      filhotes, 
+      feridos,
+      crimesAmbientais: crimesData?.ambientais || 0,
+      crimesComuns: crimesData?.comuns || 0,
+      prevencao: prevencaoData?.atividades || 0
+    };
+  }, [rawData, selectedClasse, isHistorico, historicalData, crimesData, prevencaoData]);
 
   // Get unique classes
   const availableClasses = useMemo(() => {
@@ -181,6 +427,14 @@ const DashboardPublico = () => {
 
   // Monthly distribution
   const monthlyData = useMemo(() => {
+    if (isHistorico && historicalData) {
+      const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      return MESES.map((name, i) => {
+        const row = historicalData.find((d: any) => d.mes === i + 1);
+        return { name, value: row?.resgates || 0 };
+      });
+    }
+
     if (!rawData) return [];
     const monthCounts: Record<string, number> = {};
     
@@ -192,15 +446,15 @@ const DashboardPublico = () => {
     });
 
     return Object.entries(monthCounts).map(([name, value]) => ({ name, value }));
-  }, [rawData]);
+  }, [rawData, isHistorico, historicalData]);
 
   const clearFilters = () => {
-    setSelectedYear(null);
+    setSelectedYear(2026);
     setSelectedMonth(null);
     setSelectedClasse(null);
   };
 
-  const hasFilters = selectedYear || selectedMonth || selectedClasse;
+  const hasFilters = selectedMonth || selectedClasse || selectedYear !== 2026;
 
   if (isLoading) {
     return (
@@ -220,8 +474,13 @@ const DashboardPublico = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-white border-3 border-[#ffcc00] flex items-center justify-center overflow-hidden transition-all duration-300 hover:scale-110 hover:shadow-[0_0_25px_rgba(255,204,0,0.7)] animate-scale-in">
-                <img src={logoBpma} alt="BPMA" className="h-14 w-14 object-contain transition-transform duration-500 hover:rotate-[360deg]" />
+              {/* Logo com fundo branco e borda amarela para melhor visibilidade */}
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white border-4 border-[#ffcc00] flex items-center justify-center overflow-hidden transition-all duration-300 hover:scale-110 hover:shadow-[0_0_30px_rgba(255,204,0,0.8)] animate-scale-in p-1">
+                <img 
+                  src={logoBpma} 
+                  alt="BPMA" 
+                  className="w-full h-full object-contain transition-transform duration-500 hover:rotate-[360deg]" 
+                />
               </div>
               <div className="animate-fade-in" style={{ animationDelay: '0.15s' }}>
                 <h1 className="text-xl sm:text-2xl font-bold text-white transition-colors duration-300 hover:text-[#ffcc00]">
@@ -232,10 +491,17 @@ const DashboardPublico = () => {
                 </p>
               </div>
             </div>
-            <Badge className="bg-[#ffcc00] text-[#071d49] border-0 font-semibold animate-scale-in hover:scale-105 transition-transform duration-200" style={{ animationDelay: '0.2s' }}>
-              <Activity className="h-3 w-3 mr-1" />
-              Dados Públicos
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-[#ffcc00] text-[#071d49] border-0 font-semibold animate-scale-in hover:scale-105 transition-transform duration-200" style={{ animationDelay: '0.2s' }}>
+                <Activity className="h-3 w-3 mr-1" />
+                Dados Públicos
+              </Badge>
+              {isHistorico && (
+                <Badge variant="secondary" className="bg-white/20 text-white">
+                  Dados Históricos
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -303,6 +569,7 @@ const DashboardPublico = () => {
                 <Select
                   value={selectedClasse || 'all'}
                   onValueChange={(v) => setSelectedClasse(v === 'all' ? null : v)}
+                  disabled={isHistorico}
                 >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Todas" />
@@ -331,224 +598,323 @@ const DashboardPublico = () => {
         </Card>
 
         {/* Metrics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10 gap-3 mb-6">
           <MetricCard
-            icon={<Bird className="h-6 w-6" />}
-            label="Total de Resgates"
+            icon={<Bird className="h-5 w-5" />}
+            label="Resgates"
             value={metrics.totalResgates}
             color="green"
           />
           <MetricCard
-            icon={<PawPrint className="h-6 w-6" />}
-            label="Total de Animais"
+            icon={<PawPrint className="h-5 w-5" />}
+            label="Animais"
             value={metrics.totalAnimais}
             color="blue"
           />
           <MetricCard
-            icon={<TreePine className="h-6 w-6" />}
+            icon={<TreePine className="h-5 w-5" />}
             label="Solturas"
             value={metrics.solturas}
             color="emerald"
           />
           <MetricCard
-            icon={<Skull className="h-6 w-6" />}
+            icon={<Skull className="h-5 w-5" />}
             label="Óbitos"
             value={metrics.obitos}
             color="red"
           />
           <MetricCard
-            icon={<Car className="h-6 w-6" />}
+            icon={<Car className="h-5 w-5" />}
             label="Atropelamentos"
             value={metrics.atropelamentos}
             color="orange"
           />
           <MetricCard
-            icon={<HeartPulse className="h-6 w-6" />}
+            icon={<HeartPulse className="h-5 w-5" />}
             label="Feridos"
             value={metrics.feridos}
             color="yellow"
           />
           <MetricCard
-            icon={<Home className="h-6 w-6" />}
+            icon={<Home className="h-5 w-5" />}
             label="Filhotes"
             value={metrics.filhotes}
             color="purple"
           />
+          {selectedYear && selectedYear >= 2026 && (
+            <>
+              <MetricCard
+                icon={<AlertTriangle className="h-5 w-5" />}
+                label="C. Ambientais"
+                value={metrics.crimesAmbientais}
+                color="blue"
+              />
+              <MetricCard
+                icon={<Shield className="h-5 w-5" />}
+                label="C. Comuns"
+                value={metrics.crimesComuns}
+                color="blue"
+              />
+              <MetricCard
+                icon={<TreePine className="h-5 w-5" />}
+                label="Prevenção"
+                value={metrics.prevencao}
+                color="emerald"
+              />
+            </>
+          )}
         </div>
+
+        {/* Historical Notice */}
+        {isHistorico && (
+          <Card className="mb-6 border-amber-200 bg-amber-50">
+            <CardContent className="py-4">
+              <p className="text-sm text-amber-800">
+                <strong>Dados Históricos:</strong> Os dados exibidos para {selectedYear} são baseados nos registros consolidados oficiais. 
+                Gráficos detalhados de espécies e regiões estão disponíveis apenas para 2026 em diante.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Charts Tabs */}
         <Tabs defaultValue="especies" className="space-y-6">
-          <TabsList className="bg-[#071d49]/10 border border-[#071d49]/20">
+          <TabsList className="bg-[#071d49]/10 border border-[#071d49]/20 flex-wrap">
             <TabsTrigger value="especies" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Espécies</TabsTrigger>
+            <TabsTrigger value="ranking" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
+              <Trophy className="h-4 w-4 mr-1" />
+              Ranking
+            </TabsTrigger>
+            <TabsTrigger value="atropelamentos" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
+              <Car className="h-4 w-4 mr-1" />
+              Atropelamentos
+            </TabsTrigger>
             <TabsTrigger value="destinacao" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Destinação</TabsTrigger>
             <TabsTrigger value="classes" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Classes</TabsTrigger>
             <TabsTrigger value="temporal" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Temporal</TabsTrigger>
+            <TabsTrigger value="sazonal" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
+              <Calendar className="h-4 w-4 mr-1" />
+              Sazonal
+            </TabsTrigger>
+            <TabsTrigger value="alertas" className="data-[state=active]:bg-[#ff0000] data-[state=active]:text-white">
+              <AlertTriangle className="h-4 w-4 mr-1" />
+              Alertas
+            </TabsTrigger>
             <TabsTrigger value="regioes" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Regiões</TabsTrigger>
+            <TabsTrigger value="comparativo" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
+              <BarChart3 className="h-4 w-4 mr-1" />
+              Comparativo
+            </TabsTrigger>
+            <TabsTrigger value="mapa" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
+              <MapIcon className="h-4 w-4 mr-1" />
+              Mapa
+            </TabsTrigger>
           </TabsList>
 
           {/* Species Tab */}
           <TabsContent value="especies">
-            <div className="grid lg:grid-cols-2 gap-6">
+            {isHistorico ? (
               <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
-                    <Bird className="h-5 w-5 text-[#ffcc00]" />
-                    Espécies Mais Resgatadas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart
-                      data={processedData.especiesMaisResgatadas.slice(0, 10)}
-                      layout="vertical"
-                      margin={{ left: 20, right: 20 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" />
-                      <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
-                      <Tooltip />
-                      <Bar dataKey="quantidade" fill="#071d49" radius={[0, 4, 4, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <CardContent className="py-12 text-center">
+                  <Bird className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    Dados detalhados de espécies disponíveis apenas para 2026 em diante.
+                  </p>
                 </CardContent>
               </Card>
+            ) : (
+              <div className="grid lg:grid-cols-2 gap-6">
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                      <Bird className="h-5 w-5 text-[#ffcc00]" />
+                      Espécies Mais Resgatadas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <BarChart
+                        data={processedData.especiesMaisResgatadas.slice(0, 10)}
+                        layout="vertical"
+                        margin={{ left: 20, right: 20 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
+                        <Tooltip />
+                        <Bar dataKey="quantidade" fill="#071d49" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
 
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
-                    <Car className="h-5 w-5 text-[#ff0000]" />
-                    Espécies Mais Atropeladas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart
-                      data={processedData.especiesAtropeladas.slice(0, 10)}
-                      layout="vertical"
-                      margin={{ left: 20, right: 20 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" />
-                      <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
-                      <Tooltip />
-                      <Bar dataKey="quantidade" fill="#f97316" radius={[0, 4, 4, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                      <Car className="h-5 w-5 text-[#ff0000]" />
+                      Espécies Mais Atropeladas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <BarChart
+                        data={processedData.especiesAtropeladas.slice(0, 10)}
+                        layout="vertical"
+                        margin={{ left: 20, right: 20 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
+                        <Tooltip />
+                        <Bar dataKey="quantidade" fill="#f97316" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Ranking Interativo Tab */}
+          <TabsContent value="ranking">
+            <DashboardRankingEspecies 
+              isPublico={true}
+              anosDisponiveis={YEARS}
+            />
           </TabsContent>
 
           {/* Destination Tab */}
           <TabsContent value="destinacao">
-            <div className="grid lg:grid-cols-2 gap-6">
+            {isHistorico ? (
               <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
-                    <MapPin className="h-5 w-5 text-[#ffcc00]" />
-                    Distribuição por Destinação
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <PieChart>
-                      <Pie
-                        data={processedData.destinacaoTipos}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                        outerRadius={120}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {processedData.destinacaoTipos.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <CardContent className="py-12 text-center">
+                  <MapPin className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    Dados detalhados de destinação disponíveis apenas para 2026 em diante.
+                  </p>
                 </CardContent>
               </Card>
+            ) : (
+              <div className="grid lg:grid-cols-2 gap-6">
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                      <MapPin className="h-5 w-5 text-[#ffcc00]" />
+                      Distribuição por Destinação
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <PieChart>
+                        <Pie
+                          data={processedData.destinacaoTipos}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                          outerRadius={120}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {processedData.destinacaoTipos.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
 
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
-                    <Activity className="h-5 w-5 text-[#ffcc00]" />
-                    Distribuição por Desfecho
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={processedData.desfechoResgate}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-45} textAnchor="end" height={80} />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="value" fill="#071d49" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                      <Activity className="h-5 w-5 text-[#ffcc00]" />
+                      Distribuição por Desfecho
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <BarChart data={processedData.desfechoResgate}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-45} textAnchor="end" height={80} />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="value" fill="#071d49" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </TabsContent>
 
           {/* Classes Tab */}
           <TabsContent value="classes">
-            <div className="grid lg:grid-cols-2 gap-6">
+            {isHistorico ? (
               <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
-                    <PawPrint className="h-5 w-5 text-[#ffcc00]" />
-                    Distribuição por Classe Taxonômica
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <PieChart>
-                      <Pie
-                        data={processedData.classeTaxonomica}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                        outerRadius={120}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {processedData.classeTaxonomica.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <CardContent className="py-12 text-center">
+                  <PawPrint className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    Dados detalhados de classes disponíveis apenas para 2026 em diante.
+                  </p>
                 </CardContent>
               </Card>
+            ) : (
+              <div className="grid lg:grid-cols-2 gap-6">
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                      <PawPrint className="h-5 w-5 text-[#ffcc00]" />
+                      Distribuição por Classe Taxonômica
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <PieChart>
+                        <Pie
+                          data={processedData.classeTaxonomica}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                          outerRadius={120}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {processedData.classeTaxonomica.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
 
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
-                    <HeartPulse className="h-5 w-5 text-[#ff0000]" />
-                    Estado de Saúde dos Animais
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={processedData.estadoSaude}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="estado" tick={{ fontSize: 11 }} />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="quantidade" fill="#ff0000" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                      <HeartPulse className="h-5 w-5 text-[#ff0000]" />
+                      Estado de Saúde dos Animais
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <BarChart data={processedData.estadoSaude}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="estado" tick={{ fontSize: 11 }} />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="quantidade" fill="#ff0000" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </TabsContent>
 
           {/* Temporal Tab */}
@@ -557,7 +923,7 @@ const DashboardPublico = () => {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
                   <TrendingUp className="h-5 w-5 text-[#ffcc00]" />
-                  Evolução Mensal de Resgates
+                  Evolução Mensal de Resgates {selectedYear ? `- ${selectedYear}` : ''}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -581,31 +947,99 @@ const DashboardPublico = () => {
             </Card>
           </TabsContent>
 
+          {/* Sazonal Tab - Tendência Sazonal */}
+          <TabsContent value="sazonal">
+            <DashboardTendenciaSazonal isPublico={true} />
+          </TabsContent>
+
           {/* Regions Tab */}
           <TabsContent value="regioes">
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
-                  <MapPin className="h-5 w-5 text-[#ffcc00]" />
-                  Resgates por Região Administrativa
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart
-                    data={processedData.regiaoAdministrativa.slice(0, 15)}
-                    layout="vertical"
-                    margin={{ left: 30, right: 20 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#071d49" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            {isHistorico ? (
+              <Card className="glass-card">
+                <CardContent className="py-12 text-center">
+                  <MapPin className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    Dados detalhados de regiões disponíveis apenas para 2026 em diante.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2 text-[#071d49]">
+                    <MapPin className="h-5 w-5 text-[#ffcc00]" />
+                    Resgates por Região Administrativa
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart
+                      data={processedData.regiaoAdministrativa.slice(0, 15)}
+                      layout="vertical"
+                      margin={{ left: 30, right: 20 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="#071d49" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Comparativo Tab */}
+          <TabsContent value="comparativo">
+            {dadosComparativos && dadosComparativos.length > 0 ? (
+              <DashboardComparativoAnos 
+                dadosHistoricos={dadosComparativos}
+                anosDisponiveis={[2026, 2025, 2024, 2023, 2022, 2021, 2020]}
+                isPublico={true}
+              />
+            ) : (
+              <Card className="glass-card">
+                <CardContent className="py-12 text-center">
+                  <BarChart3 className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    Carregando dados comparativos...
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Mapa de Calor Tab */}
+          <TabsContent value="mapa">
+            {selectedYear && selectedYear >= 2026 ? (
+              <DashboardMapaCalor 
+                pontos={pontosMapaCalor || []}
+                isPublico={true}
+                ano={selectedYear}
+              />
+            ) : (
+              <Card className="glass-card">
+                <CardContent className="py-12 text-center">
+                  <MapIcon className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    {isHistorico 
+                      ? 'Mapa de calor disponível apenas para dados de 2026 em diante.'
+                      : 'Selecione um ano a partir de 2026 para visualizar o mapa de calor.'}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Atropelamentos Tab */}
+          <TabsContent value="atropelamentos">
+            <DashboardAtropelamentos year={selectedYear || 2026} />
+          </TabsContent>
+
+          {/* Alertas Tab */}
+          <TabsContent value="alertas">
+            <DashboardAlertasPicos year={selectedYear || 2026} />
           </TabsContent>
         </Tabs>
 
@@ -644,12 +1078,12 @@ const MetricCard = ({ icon, label, value, color }: MetricCardProps) => {
 
   return (
     <Card className="glass-card hover:shadow-lg transition-shadow">
-      <CardContent className="p-4">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${colorClasses[color]}`}>
+      <CardContent className="p-3">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${colorClasses[color]}`}>
           {icon}
         </div>
-        <p className="text-2xl font-bold text-[#071d49]">{value.toLocaleString('pt-BR')}</p>
-        <p className="text-xs text-muted-foreground mt-1">{label}</p>
+        <p className="text-xl font-bold text-[#071d49]">{value.toLocaleString('pt-BR')}</p>
+        <p className="text-xs text-muted-foreground mt-1 truncate">{label}</p>
       </CardContent>
     </Card>
   );

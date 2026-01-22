@@ -13,6 +13,7 @@ import RegistrosFilters from '@/components/registros/RegistrosFilters';
 import RegistrosTable from '@/components/registros/RegistrosTable';
 import RegistrosSummary from '@/components/registros/RegistrosSummary';
 import RegistrosLoading from '@/components/registros/RegistrosLoading';
+import RegistroEditDialog from '@/components/registros/RegistroEditDialog';
 import { useRegistroDelete } from '@/hooks/useRegistroDelete';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -48,6 +49,11 @@ const Registros = () => {
     desfechos: Map<string, any>;
     especies: Map<string, any>;
   } | null>(null);
+  
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
+  
   const navigate = useNavigate();
   
   const { 
@@ -503,8 +509,15 @@ const Registros = () => {
     navigate(`/registro-detalhes/${id}`);
   };
   
-  const handleEdit = (id: string) => {
-    navigate(`/resgate-editar/${id}`);
+  const handleEdit = (registro: Registro) => {
+    setEditingRegistro(registro);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    if (dimensionCache) {
+      fetchRegistros();
+    }
   };
   
   const handleDuplicate = async (id: string) => {
@@ -785,8 +798,8 @@ const Registros = () => {
   };
 
   return (
-    <Layout title="Lista de Registros de Resgate" showBackButton>
-      <div className="space-y-4 sm:space-y-6 animate-fade-in w-full p-4 sm:p-6">
+    <Layout title="Lista de Registros" showBackButton>
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
         <RegistrosActions
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -827,7 +840,7 @@ const Registros = () => {
           />
         )}
         
-        <div className="w-full overflow-x-auto">
+        <div className="w-full">
           {isLoading ? (
             <div className="border border-fauna-border rounded-lg shadow-sm overflow-hidden">
               <RegistrosLoading />
@@ -836,6 +849,8 @@ const Registros = () => {
             <RegistrosTable
               registros={filteredRegistros}
               onViewDetails={handleViewDetails}
+              onEdit={handleEdit}
+              onDelete={handleDeleteClick}
             />
           )}
         </div>
@@ -851,6 +866,14 @@ const Registros = () => {
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
         itemName={registroToDelete?.nome || ''}
+      />
+
+      <RegistroEditDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        registro={editingRegistro}
+        onSuccess={handleEditSuccess}
+        dimensionCache={dimensionCache}
       />
     </Layout>
   );

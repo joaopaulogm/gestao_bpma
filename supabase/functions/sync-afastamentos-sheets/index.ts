@@ -169,23 +169,33 @@ function getCell(row: any[], headers: Map<string, number>, ...possibleNames: str
 }
 
 // Parse date from various formats
-function parseDate(value: string | null): string | null {
+function parseDate(value: string | null, defaultYear: number = 2026): string | null {
   if (!value) return null;
   
+  const trimmed = value.toString().trim();
+  if (!trimmed) return null;
+  
   // Try DD/MM/YYYY format
-  const brMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const brMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (brMatch) {
     const [, day, month, year] = brMatch;
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
   
+  // Try DD/MM format (assume current/default year)
+  const shortMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})$/);
+  if (shortMatch) {
+    const [, day, month] = shortMatch;
+    return `${defaultYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+  
   // Try YYYY-MM-DD format
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return value;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
   }
   
   // Try serial date (Excel/Sheets)
-  const serial = parseFloat(value);
+  const serial = parseFloat(trimmed);
   if (!isNaN(serial) && serial > 30000 && serial < 60000) {
     const date = new Date((serial - 25569) * 86400 * 1000);
     return date.toISOString().split('T')[0];
@@ -321,37 +331,160 @@ function processDMRows(rows: any[][], sheetName: string): any[] {
   return staging;
 }
 
-// Process Abono sheet
+// Process Abono sheet - lê as 3 parcelas de abono
+// Estrutura da planilha 03 | ABONO 2026 (conforme documentação do usuário):
+// Coluna A (0) = Mês da 1ª Parcela
+// Coluna B (1) = Mês da 2ª Parcela
+// Coluna C (2) = Mês da 3ª Parcela
+// Coluna K (10) = Mês de Previsão do Abono
+// Coluna L (11) = Mês reprogramado
+// Coluna M (12) = Matrícula
+// Coluna R (17) = Ano de Gozo
+// Coluna T (19) = Número do Processo SEI-GDF
+// Coluna U (20) = Quantidade de dias da 1ª parcela
+// Colunas V (21) e W (22) = Início e Término da 1ª parcela
+// Coluna X (23) = SGPOL 1ª parcela
+// Coluna Y (24) = Campanha 1ª parcela
+// Coluna Z (25) = Quantidade de dias da 2ª parcela
+// Colunas AA (26) e AB (27) = Início e Término da 2ª parcela
+// Coluna AC (28) = SGPOL 2ª parcela
+// Coluna AD (29) = Campanha 2ª parcela
+// Coluna AE (30) = Quantidade de dias da 3ª parcela
+// Colunas AF (31) e AG (32) = Início e Término da 3ª parcela
 function processAbonoRows(rows: any[][], sheetName: string): any[] {
   if (rows.length < 2) return [];
   
-  const headers = parseHeaders(rows[0]);
   const staging: any[] = [];
   
-  for (let i = 1; i < rows.length; i++) {
+  // Índices das colunas (0-indexed) - CORRETOS conforme usuário
+  const COL_PARC1_MES = 0;       // A - Mês da 1ª Parcela
+  const COL_PARC2_MES = 1;       // B - Mês da 2ª Parcela
+  const COL_PARC3_MES = 2;       // C - Mês da 3ª Parcela
+  const COL_MES_PREVISAO = 10;   // K - Mês de previsão do abono
+  const COL_MES_REPROG = 11;     // L - Mês reprogramado
+  const COL_MATRICULA = 12;      // M - Matrícula
+  const COL_ANO_GOZO = 17;       // R - Ano de gozo
+  const COL_SEI = 19;            // T - Número do Processo SEI-GDF
+  const COL_PARCELA1_DIAS = 20;  // U - Quantidade de dias 1ª parcela
+  const COL_PARCELA1_INICIO = 21; // V
+  const COL_PARCELA1_FIM = 22;    // W
+  const COL_PARCELA1_SGPOL = 23;  // X - SGPOL 1ª parcela
+  const COL_PARCELA1_CAMPANHA = 24; // Y - Campanha 1ª parcela
+  const COL_PARCELA2_DIAS = 25;  // Z - Quantidade de dias 2ª parcela
+  const COL_PARCELA2_INICIO = 26; // AA
+  const COL_PARCELA2_FIM = 27;    // AB
+  const COL_PARCELA2_SGPOL = 28;  // AC - SGPOL 2ª parcela
+  const COL_PARCELA2_CAMPANHA = 29; // AD - Campanha 2ª parcela
+  const COL_PARCELA3_DIAS = 30;  // AE - Quantidade de dias 3ª parcela
+  const COL_PARCELA3_INICIO = 31; // AF
+  const COL_PARCELA3_FIM = 32;    // AG
+  
+  console.log(`[processAbonoRows] Processing ${rows.length - 1} rows from ${sheetName}`);
+  
+  // Log primeira linha (header) para debug
+  if (rows.length > 0) {
+    console.log(`[processAbonoRows] Row 0 (header): cols 0-15:`, rows[0].slice(0, 16));
+    console.log(`[processAbonoRows] Row 0 (header): cols 17-35:`, rows[0].slice(17, 36));
+  }
+  
+  // Log linha 6 (header real dos dados - linha 7 no Excel)
+  if (rows.length > 6) {
+    console.log(`[processAbonoRows] Row 6 (data header): cols 0-15:`, rows[6].slice(0, 16));
+    console.log(`[processAbonoRows] Row 6 (data header): cols 17-35:`, rows[6].slice(17, 36));
+  }
+  
+  // Começar da linha 7 (índice 6) - dados começam após headers
+  // Ajustar conforme estrutura real da planilha
+  const startRow = 7; // Linha 8 no Excel (1-indexed)
+  
+  for (let i = startRow; i < rows.length; i++) {
     const row = rows[i];
-    const matricula = getCell(row, headers, 'matricula', 'mat', 'matrícula');
     
-    if (!matricula) continue;
+    // Ler matrícula pela coluna M (índice 12)
+    const matricula = row[COL_MATRICULA]?.toString().trim();
+    if (!matricula || matricula === '' || matricula.toLowerCase() === 'matrícula') continue;
     
-    const mesValue = getCell(row, headers, 'mes', 'mês', 'mes abono');
-    const mes = parseMonth(mesValue) || parseInt2(mesValue);
+    // Ler mês de previsão (coluna K)
+    const mesPrevisaoRaw = row[COL_MES_PREVISAO];
+    const mesPrevisao = parseMonth(mesPrevisaoRaw?.toString()) || parseInt2(mesPrevisaoRaw?.toString());
     
-    if (!mes) continue;
+    // Ler mês reprogramado (coluna L) - se tiver, usa esse
+    const mesReprogRaw = row[COL_MES_REPROG];
+    const mesReprog = parseMonth(mesReprogRaw?.toString()) || parseInt2(mesReprogRaw?.toString());
+    
+    // Usar mês reprogramado se existir, senão usa previsão
+    const mes = mesReprog || mesPrevisao;
+    
+    if (!mes) {
+      if (i <= 10) {
+        console.log(`[processAbonoRows] Row ${i}: skipped, no mes found. matricula=${matricula}, mesPrevisao=${mesPrevisaoRaw}, mesReprog=${mesReprogRaw}`);
+      }
+      continue;
+    }
+    
+    // Ano de gozo (coluna R)
+    const anoGozo = parseInt2(row[COL_ANO_GOZO]?.toString()) || 2026;
+    
+    // SEI (coluna T)
+    const sei = row[COL_SEI]?.toString().trim() || null;
+    
+    // Ler quantidade de dias das parcelas
+    const parcela1Dias = parseInt2(row[COL_PARCELA1_DIAS]?.toString());
+    const parcela2Dias = parseInt2(row[COL_PARCELA2_DIAS]?.toString());
+    const parcela3Dias = parseInt2(row[COL_PARCELA3_DIAS]?.toString());
+    
+    // Ler datas das parcelas pelos índices das colunas (passando o ano para datas DD/MM)
+    const parcela1Inicio = row[COL_PARCELA1_INICIO] ? parseDate(String(row[COL_PARCELA1_INICIO]), anoGozo) : null;
+    const parcela1Fim = row[COL_PARCELA1_FIM] ? parseDate(String(row[COL_PARCELA1_FIM]), anoGozo) : null;
+    const parcela2Inicio = row[COL_PARCELA2_INICIO] ? parseDate(String(row[COL_PARCELA2_INICIO]), anoGozo) : null;
+    const parcela2Fim = row[COL_PARCELA2_FIM] ? parseDate(String(row[COL_PARCELA2_FIM]), anoGozo) : null;
+    const parcela3Inicio = row[COL_PARCELA3_INICIO] ? parseDate(String(row[COL_PARCELA3_INICIO]), anoGozo) : null;
+    const parcela3Fim = row[COL_PARCELA3_FIM] ? parseDate(String(row[COL_PARCELA3_FIM]), anoGozo) : null;
+    
+    // Ler status SGPOL e Campanha
+    const parcela1Sgpol = parseBool(row[COL_PARCELA1_SGPOL]?.toString());
+    const parcela1Campanha = parseBool(row[COL_PARCELA1_CAMPANHA]?.toString());
+    const parcela2Sgpol = parseBool(row[COL_PARCELA2_SGPOL]?.toString());
+    const parcela2Campanha = parseBool(row[COL_PARCELA2_CAMPANHA]?.toString());
+    
+    // Log para debug das primeiras linhas com dados
+    if (staging.length < 5) {
+      console.log(`[processAbonoRows] Row ${i}: matricula=${matricula}, mesPrevisao=${mesPrevisao}, mesReprog=${mesReprog}, mes=${mes}`);
+      console.log(`  Ano gozo=${anoGozo}, SEI=${sei}`);
+      console.log(`  Parcela1: dias=${parcela1Dias}, ${parcela1Inicio} - ${parcela1Fim}, sgpol=${parcela1Sgpol}, campanha=${parcela1Campanha}`);
+      console.log(`  Parcela2: dias=${parcela2Dias}, ${parcela2Inicio} - ${parcela2Fim}, sgpol=${parcela2Sgpol}, campanha=${parcela2Campanha}`);
+      console.log(`  Parcela3: dias=${parcela3Dias}, ${parcela3Inicio} - ${parcela3Fim}`);
+    }
     
     staging.push({
       source_sheet: sheetName,
       source_row_number: i + 1,
       matricula,
-      posto_graduacao: getCell(row, headers, 'posto/grad', 'posto', 'graduacao'),
-      nome_completo: getCell(row, headers, 'nome', 'nome completo'),
+      posto_graduacao: null, // Não temos coluna de posto definida
+      nome_completo: null,   // Não temos coluna de nome definida
       mes,
-      ano: parseInt2(getCell(row, headers, 'ano')) || 2026,
-      observacao: getCell(row, headers, 'obs', 'observacao', 'observacoes'),
+      mes_previsao: mesPrevisao,
+      mes_reprogramado: mesReprog,
+      ano: anoGozo,
+      observacao: sei ? `SEI: ${sei}` : null,
+      parcela1_dias: parcela1Dias,
+      parcela1_inicio: parcela1Inicio,
+      parcela1_fim: parcela1Fim,
+      parcela1_sgpol: parcela1Sgpol,
+      parcela1_campanha: parcela1Campanha,
+      parcela2_dias: parcela2Dias,
+      parcela2_inicio: parcela2Inicio,
+      parcela2_fim: parcela2Fim,
+      parcela2_sgpol: parcela2Sgpol,
+      parcela2_campanha: parcela2Campanha,
+      parcela3_dias: parcela3Dias,
+      parcela3_inicio: parcela3Inicio,
+      parcela3_fim: parcela3Fim,
       loaded_at: new Date().toISOString(),
     });
   }
   
+  console.log(`[processAbonoRows] Processed ${staging.length} valid rows`);
   return staging;
 }
 

@@ -466,10 +466,42 @@ export const useCampanhaCalendar = (year: number, month: number) => {
       }
     }
 
-    // Priority 6: Check abono previsão (without specific dates)
+    // Priority 6: Check abono (impedido if has dates, previsão if not)
     const abonoRecord = abonos.find(a => a.efetivo_id === efetivoId && a.mes === dateMonth);
     if (abonoRecord) {
-      // If abono has no specific date, mark as previsão
+      // Check if abono has specific dates marked
+      const hasAbonoMarcado = (
+        (abonoRecord.parcela1_inicio && abonoRecord.parcela1_fim) ||
+        (abonoRecord.parcela2_inicio && abonoRecord.parcela2_fim) ||
+        (abonoRecord.parcela3_inicio && abonoRecord.parcela3_fim) ||
+        (abonoRecord.data_inicio && abonoRecord.data_fim)
+      );
+      
+      if (hasAbonoMarcado) {
+        // Check if current date is within any abono period
+        const checkAbonoPeriod = (inicio: string | null, fim: string | null): boolean => {
+          if (!inicio || !fim) return false;
+          try {
+            const startDate = parseISO(inicio);
+            const endDate = parseISO(fim);
+            return isWithinInterval(date, { start: startDate, end: endDate });
+          } catch {
+            return false;
+          }
+        };
+        
+        const isWithinAbono = 
+          checkAbonoPeriod(abonoRecord.parcela1_inicio, abonoRecord.parcela1_fim) ||
+          checkAbonoPeriod(abonoRecord.parcela2_inicio, abonoRecord.parcela2_fim) ||
+          checkAbonoPeriod(abonoRecord.parcela3_inicio, abonoRecord.parcela3_fim) ||
+          checkAbonoPeriod(abonoRecord.data_inicio, abonoRecord.data_fim);
+        
+        if (isWithinAbono) {
+          return { status: 'impedido', reason: 'Abono', returnDate: undefined };
+        }
+      }
+      
+      // If no dates marked, mark as previsão (still apto for scheduling)
       return { status: 'previsao', reason: 'Abono (previsão)', returnDate: undefined };
     }
 

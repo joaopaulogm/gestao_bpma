@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { ArrowLeft, FileText, Loader2, Printer, Calendar, Gift, FileSpreadsheet, FileDown, Save, Check } from 'lucide-react';
+import { ArrowLeft, FileText, Loader2, Calendar, Gift, FileSpreadsheet, FileDown, Save, Check } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { format, addDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -33,14 +33,15 @@ import * as XLSX from 'xlsx';
 
 interface AbonoMinuta {
   id: string;
-  quadro: string;
   posto_graduacao: string;
   matricula: string;
+  nome_guerra: string;
   nome: string;
+  parcela: number;
   dias: number;
   data_inicio: Date;
   data_fim: Date;
-  observacao: string;
+  sei: string;
   hasChanges: boolean;
   saving: boolean;
 }
@@ -75,10 +76,19 @@ const MinutaAbono: React.FC = () => {
         .select(`
           id,
           mes,
+          observacao,
+          parcela1_inicio,
+          parcela1_fim,
+          parcela1_dias,
+          parcela2_inicio,
+          parcela2_fim,
+          parcela2_dias,
+          parcela3_inicio,
+          parcela3_fim,
+          parcela3_dias,
           data_inicio,
           data_fim,
-          minuta_observacao,
-          efetivo:dim_efetivo(id, matricula, posto_graduacao, nome, quadro)
+          efetivo:dim_efetivo(id, matricula, posto_graduacao, nome, nome_guerra)
         `)
         .eq('ano', ano)
         .eq('mes', mes);
@@ -88,36 +98,38 @@ const MinutaAbono: React.FC = () => {
       const minutaData: AbonoMinuta[] = [];
       
       abonos?.forEach((a: any) => {
-        if (a.efetivo) {
-          // Use saved dates if available, otherwise calculate defaults
-          let dataInicio: Date;
-          let dataFim: Date;
-          
-          if (a.data_inicio) {
-            dataInicio = parseISO(a.data_inicio);
-          } else {
-            dataInicio = new Date(ano, mes - 1, 1);
+        if (!a.efetivo) return;
+        
+        const addParcela = (parcelaNum: number, inicio: string | null, fim: string | null, diasParcela: number | null) => {
+          if (inicio && fim) {
+            const dataInicio = parseISO(inicio);
+            const dataFim = parseISO(fim);
+            const diffTime = Math.abs(dataFim.getTime() - dataInicio.getTime());
+            const diffDays = diasParcela || Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            
+            minutaData.push({
+              id: `${a.id}-p${parcelaNum}`,
+              posto_graduacao: a.efetivo.posto_graduacao || '-',
+              matricula: a.efetivo.matricula || '-',
+              nome_guerra: a.efetivo.nome_guerra || '-',
+              nome: a.efetivo.nome || '-',
+              parcela: parcelaNum,
+              dias: diffDays,
+              data_inicio: dataInicio,
+              data_fim: dataFim,
+              sei: a.observacao || '',
+              hasChanges: false,
+              saving: false,
+            });
           }
-          
-          if (a.data_fim) {
-            dataFim = parseISO(a.data_fim);
-          } else {
-            dataFim = addDays(dataInicio, 4); // 5 days
-          }
-          
-          minutaData.push({
-            id: a.id,
-            quadro: a.efetivo.quadro || '-',
-            posto_graduacao: a.efetivo.posto_graduacao || '-',
-            matricula: a.efetivo.matricula || '-',
-            nome: a.efetivo.nome || '-',
-            dias: 5,
-            data_inicio: dataInicio,
-            data_fim: dataFim,
-            observacao: a.minuta_observacao || '',
-            hasChanges: false,
-            saving: false,
-          });
+        };
+        
+        addParcela(1, a.parcela1_inicio, a.parcela1_fim, a.parcela1_dias);
+        addParcela(2, a.parcela2_inicio, a.parcela2_fim, a.parcela2_dias);
+        addParcela(3, a.parcela3_inicio, a.parcela3_fim, a.parcela3_dias);
+        
+        if (minutaData.filter(m => m.id.startsWith(a.id)).length === 0 && a.data_inicio && a.data_fim) {
+          addParcela(1, a.data_inicio, a.data_fim, null);
         }
       });
 
@@ -125,7 +137,8 @@ const MinutaAbono: React.FC = () => {
         const postoA = postoOrdem[a.posto_graduacao] || 99;
         const postoB = postoOrdem[b.posto_graduacao] || 99;
         if (postoA !== postoB) return postoA - postoB;
-        return a.nome.localeCompare(b.nome);
+        if (a.nome !== b.nome) return a.nome.localeCompare(b.nome);
+        return a.parcela - b.parcela;
       });
 
       setData(minutaData);
@@ -160,10 +173,10 @@ const MinutaAbono: React.FC = () => {
     }));
   };
 
-  const updateObservacao = (id: string, observacao: string) => {
+  const updateSEI = (id: string, sei: string) => {
     setData(prev => prev.map(item => {
       if (item.id === id) {
-        return { ...item, observacao, hasChanges: true };
+        return { ...item, sei, hasChanges: true };
       }
       return item;
     }));
@@ -176,14 +189,30 @@ const MinutaAbono: React.FC = () => {
     setData(prev => prev.map(i => i.id === id ? { ...i, saving: true } : i));
 
     try {
+      const realId = id.includes('-p') ? id.split('-p')[0] : id;
+      const parcela = item.parcela;
+      
+      const updateData: Record<string, any> = {
+        observacao: item.sei || null,
+      };
+      
+      if (parcela === 1) {
+        updateData.parcela1_inicio = format(item.data_inicio, 'yyyy-MM-dd');
+        updateData.parcela1_fim = format(item.data_fim, 'yyyy-MM-dd');
+        updateData.data_inicio = format(item.data_inicio, 'yyyy-MM-dd');
+        updateData.data_fim = format(item.data_fim, 'yyyy-MM-dd');
+      } else if (parcela === 2) {
+        updateData.parcela2_inicio = format(item.data_inicio, 'yyyy-MM-dd');
+        updateData.parcela2_fim = format(item.data_fim, 'yyyy-MM-dd');
+      } else if (parcela === 3) {
+        updateData.parcela3_inicio = format(item.data_inicio, 'yyyy-MM-dd');
+        updateData.parcela3_fim = format(item.data_fim, 'yyyy-MM-dd');
+      }
+      
       const { error } = await supabase
         .from('fat_abono')
-        .update({
-          data_inicio: format(item.data_inicio, 'yyyy-MM-dd'),
-          data_fim: format(item.data_fim, 'yyyy-MM-dd'),
-          minuta_observacao: item.observacao || null,
-        })
-        .eq('id', id);
+        .update(updateData)
+        .eq('id', realId);
 
       if (error) throw error;
 
@@ -207,14 +236,15 @@ const MinutaAbono: React.FC = () => {
 
     try {
       for (const item of itemsToSave) {
+        const realId = item.id.includes('-p') ? item.id.split('-p')[0] : item.id;
         const { error } = await supabase
           .from('fat_abono')
           .update({
             data_inicio: format(item.data_inicio, 'yyyy-MM-dd'),
             data_fim: format(item.data_fim, 'yyyy-MM-dd'),
-            minuta_observacao: item.observacao || null,
+            observacao: item.sei || null,
           })
-          .eq('id', item.id);
+          .eq('id', realId);
 
         if (error) throw error;
       }
@@ -229,10 +259,6 @@ const MinutaAbono: React.FC = () => {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const exportToPDF = () => {
     const doc = new jsPDF();
     
@@ -245,23 +271,24 @@ const MinutaAbono: React.FC = () => {
 
     const tableData = data.map((item, index) => [
       index + 1,
-      item.quadro,
       item.posto_graduacao,
       item.matricula,
+      item.nome_guerra,
       item.nome,
-      item.dias,
       format(item.data_inicio, 'dd/MM/yyyy'),
       format(item.data_fim, 'dd/MM/yyyy'),
-      item.observacao || '-',
+      item.dias,
+      item.sei || '-',
     ]);
 
     autoTable(doc, {
-      head: [['#', 'Quadro', 'Posto/Grad', 'Matrícula', 'Nome', 'Dias', 'Início', 'Término', 'Obs.']],
+      head: [['#', 'Posto/Grad', 'Matrícula', 'Nome de Guerra', 'Nome Completo', 'Data Início', 'Data Término', 'Dias', 'Nº SEI']],
       body: tableData,
       startY: 40,
       styles: { fontSize: 7 },
       headStyles: { fillColor: [230, 126, 34] },
       columnStyles: {
+        3: { cellWidth: 20 },
         4: { cellWidth: 30 },
         8: { cellWidth: 25 },
       },
@@ -284,17 +311,17 @@ const MinutaAbono: React.FC = () => {
       ['BATALHÃO DE POLICIAMENTO DE PROTEÇÃO AMBIENTAL'],
       [`MINUTA DE ABONO - ${MESES[mes - 1].toUpperCase()} DE ${ano}`],
       [],
-      ['#', 'Quadro', 'Posto/Graduação', 'Matrícula', 'Nome Completo', 'Qtd. Dias', 'Data Início', 'Data Término', 'Observações'],
+      ['#', 'Posto/Graduação', 'Matrícula', 'Nome de Guerra', 'Nome Completo', 'Data Início', 'Data Término', 'Qtd. Dias', 'Nº Processo SEI'],
       ...data.map((item, index) => [
         index + 1,
-        item.quadro,
         item.posto_graduacao,
         item.matricula,
+        item.nome_guerra,
         item.nome,
-        item.dias,
         format(item.data_inicio, 'dd/MM/yyyy'),
         format(item.data_fim, 'dd/MM/yyyy'),
-        item.observacao || '',
+        item.dias,
+        item.sei || '',
       ]),
     ];
 
@@ -303,7 +330,7 @@ const MinutaAbono: React.FC = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Minuta de Abono');
     
     ws['!cols'] = [
-      { wch: 5 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 35 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 30 }
+      { wch: 5 }, { wch: 12 }, { wch: 12 }, { wch: 20 }, { wch: 35 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 30 }
     ];
 
     XLSX.writeFile(wb, `minuta_abono_${MESES[mes - 1].toLowerCase()}_${ano}.xlsx`);
@@ -323,28 +350,28 @@ const MinutaAbono: React.FC = () => {
           <thead>
             <tr style="background-color: #e67e22; color: white;">
               <th>#</th>
-              <th>Quadro</th>
               <th>Posto/Graduação</th>
               <th>Matrícula</th>
+              <th>Nome de Guerra</th>
               <th>Nome Completo</th>
-              <th>Dias</th>
               <th>Data Início</th>
               <th>Data Término</th>
-              <th>Observações</th>
+              <th>Dias</th>
+              <th>Nº Processo SEI</th>
             </tr>
           </thead>
           <tbody>
             ${data.map((item, index) => `
               <tr>
                 <td>${index + 1}</td>
-                <td>${item.quadro}</td>
                 <td>${item.posto_graduacao}</td>
                 <td>${item.matricula}</td>
+                <td>${item.nome_guerra}</td>
                 <td>${item.nome}</td>
-                <td style="text-align: center;">${item.dias}</td>
                 <td>${format(item.data_inicio, 'dd/MM/yyyy')}</td>
                 <td>${format(item.data_fim, 'dd/MM/yyyy')}</td>
-                <td>${item.observacao || '-'}</td>
+                <td style="text-align: center;">${item.dias}</td>
+                <td>${item.sei || '-'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -382,11 +409,11 @@ const MinutaAbono: React.FC = () => {
   const hasAnyChanges = data.some(item => item.hasChanges);
 
   return (
-    <ScrollArea className="h-screen">
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto p-4 md:p-6 max-w-7xl pb-20">
+    <ScrollArea className="h-[calc(100vh-4rem)]">
+      <div className="min-h-full bg-background">
+        <div className="page-container py-4 md:py-6">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 print:hidden">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
               <Link to="/secao-pessoas/abono">
                 <Button variant="ghost" size="icon" className="shrink-0">
@@ -442,22 +469,11 @@ const MinutaAbono: React.FC = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button onClick={handlePrint} variant="outline" className="gap-2">
-                <Printer className="h-4 w-4" />
-                Imprimir
-              </Button>
             </div>
           </div>
 
-          {/* Print Header */}
-          <div className="hidden print:block text-center mb-6">
-            <h1 className="text-xl font-bold">POLÍCIA MILITAR DO DISTRITO FEDERAL</h1>
-            <h2 className="text-lg font-semibold">BATALHÃO DE POLICIAMENTO DE PROTEÇÃO AMBIENTAL</h2>
-            <h3 className="text-md mt-2">MINUTA DE ABONO - {MESES[mes - 1].toUpperCase()} DE {ano}</h3>
-          </div>
-
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 print:hidden">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
               <CardContent className="p-4 text-center">
                 <Calendar className="h-5 w-5 text-primary mx-auto mb-2" />
@@ -505,9 +521,9 @@ const MinutaAbono: React.FC = () => {
 
           {/* Table */}
           <Card>
-            <CardHeader className="print:py-2">
-              <CardTitle className="flex items-center gap-2 text-lg print:text-base">
-                <Gift className="h-5 w-5 text-amber-600 print:hidden" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Gift className="h-5 w-5 text-amber-600" />
                 Relação de Policiais com Abono em {MESES[mes - 1]}
               </CardTitle>
             </CardHeader>
@@ -526,36 +542,29 @@ const MinutaAbono: React.FC = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-[50px]">#</TableHead>
-                        <TableHead>Quadro</TableHead>
                         <TableHead>Posto/Grad</TableHead>
                         <TableHead>Matrícula</TableHead>
+                        <TableHead>Nome de Guerra</TableHead>
                         <TableHead>Nome Completo</TableHead>
-                        <TableHead className="text-center">Dias</TableHead>
                         <TableHead>Data Início</TableHead>
                         <TableHead>Data Término</TableHead>
-                        <TableHead className="min-w-[200px]">Observações</TableHead>
-                        <TableHead className="w-[80px] print:hidden">Ações</TableHead>
+                        <TableHead className="text-center">Qtd. Dias</TableHead>
+                        <TableHead className="min-w-[180px]">Nº Processo SEI</TableHead>
+                        <TableHead className="w-[80px]">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {data.map((item, index) => (
                         <TableRow key={item.id} className={cn(item.hasChanges && "bg-orange-50 dark:bg-orange-950/20")}>
                           <TableCell className="font-medium">{index + 1}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-xs">
-                              {item.quadro}
-                            </Badge>
-                          </TableCell>
                           <TableCell>{item.posto_graduacao}</TableCell>
                           <TableCell>{item.matricula}</TableCell>
-                          <TableCell className="font-medium">{item.nome}</TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant="secondary">{item.dias}</Badge>
-                          </TableCell>
-                          <TableCell className="print:hidden">
+                          <TableCell className="font-medium">{item.nome_guerra}</TableCell>
+                          <TableCell>{item.nome}</TableCell>
+                          <TableCell>
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="w-[120px] justify-start text-left font-normal">
+                                <Button variant="outline" size="sm" className="w-[110px] justify-start text-left font-normal">
                                   <Calendar className="mr-2 h-4 w-4" />
                                   {format(item.data_inicio, 'dd/MM/yyyy')}
                                 </Button>
@@ -571,10 +580,10 @@ const MinutaAbono: React.FC = () => {
                               </PopoverContent>
                             </Popover>
                           </TableCell>
-                          <TableCell className="print:hidden">
+                          <TableCell>
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="w-[120px] justify-start text-left font-normal">
+                                <Button variant="outline" size="sm" className="w-[110px] justify-start text-left font-normal">
                                   <Calendar className="mr-2 h-4 w-4" />
                                   {format(item.data_fim, 'dd/MM/yyyy')}
                                 </Button>
@@ -590,24 +599,18 @@ const MinutaAbono: React.FC = () => {
                               </PopoverContent>
                             </Popover>
                           </TableCell>
-                          <TableCell className="hidden print:table-cell">
-                            {format(item.data_inicio, 'dd/MM/yyyy')}
+                          <TableCell className="text-center">
+                            <Badge variant="secondary">{item.dias}</Badge>
                           </TableCell>
-                          <TableCell className="hidden print:table-cell">
-                            {format(item.data_fim, 'dd/MM/yyyy')}
-                          </TableCell>
-                          <TableCell className="print:hidden">
+                          <TableCell>
                             <Input
-                              value={item.observacao}
-                              onChange={(e) => updateObservacao(item.id, e.target.value)}
-                              placeholder="Observações..."
+                              value={item.sei}
+                              onChange={(e) => updateSEI(item.id, e.target.value)}
+                              placeholder="Nº Processo SEI..."
                               className="h-8 text-xs"
                             />
                           </TableCell>
-                          <TableCell className="hidden print:table-cell">
-                            {item.observacao || '-'}
-                          </TableCell>
-                          <TableCell className="print:hidden">
+                          <TableCell>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -635,22 +638,6 @@ const MinutaAbono: React.FC = () => {
               )}
             </CardContent>
           </Card>
-
-          {/* Print Footer */}
-          <div className="hidden print:block mt-8 text-sm">
-            <div className="flex justify-between mt-12">
-              <div className="text-center">
-                <div className="border-t border-black w-48 pt-1">
-                  Chefe da Seção de Pessoas
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="border-t border-black w-48 pt-1">
-                  Comandante do BPMA
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </ScrollArea>

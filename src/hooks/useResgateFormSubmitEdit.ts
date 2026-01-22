@@ -137,6 +137,7 @@ const prepararDadosParaAtualizacao = async (
     tipo_area_id: data.tipoAreaId || null,
     latitude_origem: data.latitudeOrigem,
     longitude_origem: data.longitudeOrigem,
+    numero_tco: data.numeroTCO || null,
     outro_desfecho: data.outroDesfecho || null,
     atropelamento: data.atropelamento,
     quantidade: data.quantidade,

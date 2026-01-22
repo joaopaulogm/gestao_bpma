@@ -817,8 +817,24 @@ export type Database = {
           efetivo_id: string | null
           id: string
           mes: number
+          mes_previsao: number | null
+          mes_reprogramado: number | null
           minuta_observacao: string | null
           observacao: string | null
+          parcela: number | null
+          parcela1_campanha: boolean | null
+          parcela1_dias: number | null
+          parcela1_fim: string | null
+          parcela1_inicio: string | null
+          parcela1_sgpol: boolean | null
+          parcela2_campanha: boolean | null
+          parcela2_dias: number | null
+          parcela2_fim: string | null
+          parcela2_inicio: string | null
+          parcela2_sgpol: boolean | null
+          parcela3_dias: number | null
+          parcela3_fim: string | null
+          parcela3_inicio: string | null
           updated_at: string | null
         }
         Insert: {
@@ -829,8 +845,24 @@ export type Database = {
           efetivo_id?: string | null
           id?: string
           mes: number
+          mes_previsao?: number | null
+          mes_reprogramado?: number | null
           minuta_observacao?: string | null
           observacao?: string | null
+          parcela?: number | null
+          parcela1_campanha?: boolean | null
+          parcela1_dias?: number | null
+          parcela1_fim?: string | null
+          parcela1_inicio?: string | null
+          parcela1_sgpol?: boolean | null
+          parcela2_campanha?: boolean | null
+          parcela2_dias?: number | null
+          parcela2_fim?: string | null
+          parcela2_inicio?: string | null
+          parcela2_sgpol?: boolean | null
+          parcela3_dias?: number | null
+          parcela3_fim?: string | null
+          parcela3_inicio?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -841,8 +873,24 @@ export type Database = {
           efetivo_id?: string | null
           id?: string
           mes?: number
+          mes_previsao?: number | null
+          mes_reprogramado?: number | null
           minuta_observacao?: string | null
           observacao?: string | null
+          parcela?: number | null
+          parcela1_campanha?: boolean | null
+          parcela1_dias?: number | null
+          parcela1_fim?: string | null
+          parcela1_inicio?: string | null
+          parcela1_sgpol?: boolean | null
+          parcela2_campanha?: boolean | null
+          parcela2_dias?: number | null
+          parcela2_fim?: string | null
+          parcela2_inicio?: string | null
+          parcela2_sgpol?: boolean | null
+          parcela3_dias?: number | null
+          parcela3_fim?: string | null
+          parcela3_inicio?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -1148,55 +1196,106 @@ export type Database = {
       }
       fat_crimes_comuns: {
         Row: {
+          arma_utilizada: boolean | null
           created_at: string | null
           data: string
+          descricao_material: string | null
+          descricao_ocorrencia: string | null
           desfecho_id: string | null
+          enquadramento_legal: string | null
+          horario_acionamento: string | null
+          horario_desfecho: string | null
           id: string
           latitude: string
+          local_especifico: string | null
           longitude: string
+          material_apreendido: boolean | null
+          natureza_crime: string | null
           observacoes: string | null
+          ocorreu_apreensao: boolean | null
+          placa_veiculo: string | null
+          procedimento_legal: string | null
           qtd_detidos_maior: number | null
           qtd_detidos_menor: number | null
           qtd_liberados_maior: number | null
           qtd_liberados_menor: number | null
           regiao_administrativa_id: string | null
           situacao_autor: string | null
+          suspeitos_envolvidos: number | null
           tipo_area_id: string | null
+          tipo_arma: string | null
           tipo_penal_id: string | null
+          tipo_veiculo: string | null
+          veiculo_envolvido: boolean | null
+          vitimas_envolvidas: number | null
         }
         Insert: {
+          arma_utilizada?: boolean | null
           created_at?: string | null
           data: string
+          descricao_material?: string | null
+          descricao_ocorrencia?: string | null
           desfecho_id?: string | null
+          enquadramento_legal?: string | null
+          horario_acionamento?: string | null
+          horario_desfecho?: string | null
           id?: string
           latitude: string
+          local_especifico?: string | null
           longitude: string
+          material_apreendido?: boolean | null
+          natureza_crime?: string | null
           observacoes?: string | null
+          ocorreu_apreensao?: boolean | null
+          placa_veiculo?: string | null
+          procedimento_legal?: string | null
           qtd_detidos_maior?: number | null
           qtd_detidos_menor?: number | null
           qtd_liberados_maior?: number | null
           qtd_liberados_menor?: number | null
           regiao_administrativa_id?: string | null
           situacao_autor?: string | null
+          suspeitos_envolvidos?: number | null
           tipo_area_id?: string | null
+          tipo_arma?: string | null
           tipo_penal_id?: string | null
+          tipo_veiculo?: string | null
+          veiculo_envolvido?: boolean | null
+          vitimas_envolvidas?: number | null
         }
         Update: {
+          arma_utilizada?: boolean | null
           created_at?: string | null
           data?: string
+          descricao_material?: string | null
+          descricao_ocorrencia?: string | null
           desfecho_id?: string | null
+          enquadramento_legal?: string | null
+          horario_acionamento?: string | null
+          horario_desfecho?: string | null
           id?: string
           latitude?: string
+          local_especifico?: string | null
           longitude?: string
+          material_apreendido?: boolean | null
+          natureza_crime?: string | null
           observacoes?: string | null
+          ocorreu_apreensao?: boolean | null
+          placa_veiculo?: string | null
+          procedimento_legal?: string | null
           qtd_detidos_maior?: number | null
           qtd_detidos_menor?: number | null
           qtd_liberados_maior?: number | null
           qtd_liberados_menor?: number | null
           regiao_administrativa_id?: string | null
           situacao_autor?: string | null
+          suspeitos_envolvidos?: number | null
           tipo_area_id?: string | null
+          tipo_arma?: string | null
           tipo_penal_id?: string | null
+          tipo_veiculo?: string | null
+          veiculo_envolvido?: boolean | null
+          vitimas_envolvidas?: number | null
         }
         Relationships: [
           {
@@ -1261,6 +1360,42 @@ export type Database = {
             columns: ["registro_id"]
             isOneToOne: false
             referencedRelation: "fat_registros_de_crime"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_equipe_crime_comum: {
+        Row: {
+          created_at: string | null
+          efetivo_id: string
+          id: string
+          registro_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          efetivo_id: string
+          id?: string
+          registro_id: string
+        }
+        Update: {
+          created_at?: string | null
+          efetivo_id?: string
+          id?: string
+          registro_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_equipe_crime_comum_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_equipe_crime_comum_registro_id_fkey"
+            columns: ["registro_id"]
+            isOneToOne: false
+            referencedRelation: "fat_crimes_comuns"
             referencedColumns: ["id"]
           },
         ]
@@ -1543,6 +1678,45 @@ export type Database = {
           },
         ]
       }
+      fat_ocorrencia_apreensao_crime_comum: {
+        Row: {
+          created_at: string | null
+          id: string
+          id_item_apreendido: string | null
+          id_ocorrencia: string | null
+          quantidade: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          id_item_apreendido?: string | null
+          id_ocorrencia?: string | null
+          quantidade?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          id_item_apreendido?: string | null
+          id_ocorrencia?: string | null
+          quantidade?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_ocorrencia_apreensao_crime_comum_id_item_apreendido_fkey"
+            columns: ["id_item_apreendido"]
+            isOneToOne: false
+            referencedRelation: "dim_itens_apreensao"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_ocorrencia_apreensao_crime_comum_id_ocorrencia_fkey"
+            columns: ["id_ocorrencia"]
+            isOneToOne: false
+            referencedRelation: "fat_crimes_comuns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fat_registros_de_crime: {
         Row: {
           alteracao_visual: boolean | null
@@ -1561,7 +1735,7 @@ export type Database = {
           enquadramento_id: string | null
           estruturas_encontradas: string | null
           horario_acionamento: string | null
-          horario_termino: string | null
+          horario_desfecho: string | null
           id: string
           intensidade_percebida: string | null
           latitude: string
@@ -1609,7 +1783,7 @@ export type Database = {
           enquadramento_id?: string | null
           estruturas_encontradas?: string | null
           horario_acionamento?: string | null
-          horario_termino?: string | null
+          horario_desfecho?: string | null
           id?: string
           intensidade_percebida?: string | null
           latitude: string
@@ -1657,7 +1831,7 @@ export type Database = {
           enquadramento_id?: string | null
           estruturas_encontradas?: string | null
           horario_acionamento?: string | null
-          horario_termino?: string | null
+          horario_desfecho?: string | null
           id?: string
           intensidade_percebida?: string | null
           latitude?: string
@@ -1731,6 +1905,7 @@ export type Database = {
           longitude_origem: string
           longitude_soltura: string | null
           motivo_entrega_ceapa: string | null
+          numero_tco: string | null
           numero_termo_entrega: string | null
           origem_id: string | null
           outro_desfecho: string | null
@@ -1760,6 +1935,7 @@ export type Database = {
           longitude_origem: string
           longitude_soltura?: string | null
           motivo_entrega_ceapa?: string | null
+          numero_tco?: string | null
           numero_termo_entrega?: string | null
           origem_id?: string | null
           outro_desfecho?: string | null
@@ -1789,6 +1965,7 @@ export type Database = {
           longitude_origem?: string
           longitude_soltura?: string | null
           motivo_entrega_ceapa?: string | null
+          numero_tco?: string | null
           numero_termo_entrega?: string | null
           origem_id?: string | null
           outro_desfecho?: string | null
@@ -2308,12 +2485,15 @@ export type Database = {
           estado_saude_id: string | null
           estagio_vida_id: string | null
           hora_guarda_ceapa: string | null
+          horario_acionamento: string | null
+          horario_termino: string | null
           id: string
           latitude_origem: string
           latitude_soltura: string | null
           longitude_origem: string
           longitude_soltura: string | null
           motivo_entrega_ceapa: string | null
+          numero_tco: string | null
           numero_termo_entrega: string | null
           origem_id: string | null
           outro_desfecho: string | null
@@ -2335,12 +2515,15 @@ export type Database = {
           estado_saude_id?: string | null
           estagio_vida_id?: string | null
           hora_guarda_ceapa?: string | null
+          horario_acionamento?: string | null
+          horario_termino?: string | null
           id?: string
           latitude_origem: string
           latitude_soltura?: string | null
           longitude_origem: string
           longitude_soltura?: string | null
           motivo_entrega_ceapa?: string | null
+          numero_tco?: string | null
           numero_termo_entrega?: string | null
           origem_id?: string | null
           outro_desfecho?: string | null
@@ -2362,12 +2545,15 @@ export type Database = {
           estado_saude_id?: string | null
           estagio_vida_id?: string | null
           hora_guarda_ceapa?: string | null
+          horario_acionamento?: string | null
+          horario_termino?: string | null
           id?: string
           latitude_origem?: string
           latitude_soltura?: string | null
           longitude_origem?: string
           longitude_soltura?: string | null
           motivo_entrega_ceapa?: string | null
+          numero_tco?: string | null
           numero_termo_entrega?: string | null
           origem_id?: string | null
           outro_desfecho?: string | null
@@ -2714,8 +2900,23 @@ export type Database = {
           loaded_at: string
           matricula: string | null
           mes: number | null
+          mes_previsao: number | null
+          mes_reprogramado: number | null
           nome_completo: string | null
           observacao: string | null
+          parcela1_campanha: boolean | null
+          parcela1_dias: number | null
+          parcela1_fim: string | null
+          parcela1_inicio: string | null
+          parcela1_sgpol: boolean | null
+          parcela2_campanha: boolean | null
+          parcela2_dias: number | null
+          parcela2_fim: string | null
+          parcela2_inicio: string | null
+          parcela2_sgpol: boolean | null
+          parcela3_dias: number | null
+          parcela3_fim: string | null
+          parcela3_inicio: string | null
           posto_graduacao: string | null
           source_row_number: number
           source_sheet: string
@@ -2725,8 +2926,23 @@ export type Database = {
           loaded_at?: string
           matricula?: string | null
           mes?: number | null
+          mes_previsao?: number | null
+          mes_reprogramado?: number | null
           nome_completo?: string | null
           observacao?: string | null
+          parcela1_campanha?: boolean | null
+          parcela1_dias?: number | null
+          parcela1_fim?: string | null
+          parcela1_inicio?: string | null
+          parcela1_sgpol?: boolean | null
+          parcela2_campanha?: boolean | null
+          parcela2_dias?: number | null
+          parcela2_fim?: string | null
+          parcela2_inicio?: string | null
+          parcela2_sgpol?: boolean | null
+          parcela3_dias?: number | null
+          parcela3_fim?: string | null
+          parcela3_inicio?: string | null
           posto_graduacao?: string | null
           source_row_number: number
           source_sheet: string
@@ -2736,8 +2952,23 @@ export type Database = {
           loaded_at?: string
           matricula?: string | null
           mes?: number | null
+          mes_previsao?: number | null
+          mes_reprogramado?: number | null
           nome_completo?: string | null
           observacao?: string | null
+          parcela1_campanha?: boolean | null
+          parcela1_dias?: number | null
+          parcela1_fim?: string | null
+          parcela1_inicio?: string | null
+          parcela1_sgpol?: boolean | null
+          parcela2_campanha?: boolean | null
+          parcela2_dias?: number | null
+          parcela2_fim?: string | null
+          parcela2_inicio?: string | null
+          parcela2_sgpol?: boolean | null
+          parcela3_dias?: number | null
+          parcela3_fim?: string | null
+          parcela3_inicio?: string | null
           posto_graduacao?: string | null
           source_row_number?: number
           source_sheet?: string
@@ -3427,6 +3658,7 @@ export type Database = {
         Args: { p_source_sheet?: string }
         Returns: Json
       }
+      sync_stg_to_fat_abono: { Args: never; Returns: undefined }
       unaccent: { Args: { "": string }; Returns: string }
       upsert_ferias_com_parcelas: {
         Args: {

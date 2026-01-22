@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,10 @@ import { CampanhaCalendarView } from '@/components/campanha/CampanhaCalendarView
 import { StatusLegendChips } from '@/components/campanha/StatusLegendChips';
 import { MonthlyVacationQuotaCard } from '@/components/campanha/MonthlyVacationQuotaCard';
 import { DayDetailDrawer } from '@/components/campanha/DayDetailDrawer';
+import { AbonoQuotaCard, AbonoQuota } from '@/components/abono/AbonoQuotaCard';
+import { supabase } from '@/integrations/supabase/client';
+
+const mesesNome = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 const Campanha: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string>('2026');
@@ -18,6 +22,8 @@ const Campanha: React.FC = () => {
   const [statusFilters, setStatusFilters] = useState<MemberStatus[]>([]);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [abonoData, setAbonoData] = useState<any[]>([]);
+  const [abonoLoading, setAbonoLoading] = useState(true);
 
   const year = parseInt(selectedYear);
   const month = getMonth(currentDate);
@@ -33,6 +39,101 @@ const Campanha: React.FC = () => {
     removeVolunteer,
     getVolunteersForDate,
   } = useCampanhaCalendar(year, month);
+
+  // Buscar dados de abono
+  const fetchAbonoData = useCallback(async () => {
+    setAbonoLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('fat_abono')
+        .select(`
+          id,
+          mes,
+          ano,
+          data_inicio,
+          data_fim,
+          parcela1_inicio,
+          parcela1_fim,
+          parcela2_inicio,
+          parcela2_fim,
+          parcela3_inicio,
+          parcela3_fim
+        `)
+        .eq('ano', year);
+      
+      if (error) throw error;
+      setAbonoData(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar dados de abono:', error);
+    } finally {
+      setAbonoLoading(false);
+    }
+  }, [year]);
+
+  useEffect(() => {
+    fetchAbonoData();
+  }, [fetchAbonoData]);
+
+  // Calcular cotas de abono
+  const LIMITE_MENSAL = 80;
+  
+  const abonoQuotas = useMemo<AbonoQuota[]>(() => {
+    // Contar previstos por mês
+    const previstosPorMes: Record<number, number> = {};
+    for (let i = 1; i <= 12; i++) {
+      previstosPorMes[i] = 0;
+    }
+    abonoData.forEach(item => {
+      if (item.mes && item.mes >= 1 && item.mes <= 12) {
+        previstosPorMes[item.mes]++;
+      }
+    });
+
+    return mesesNome.map((mes, idx) => {
+      const mesNum = idx + 1;
+      const previsto = previstosPorMes[mesNum] || 0;
+      const diasPrevistos = previsto * 5;
+      
+      // Marcados: dias com datas definidas
+      let diasMarcados = 0;
+      abonoData.forEach(item => {
+        const parcelas = [
+          { inicio: item.parcela1_inicio, fim: item.parcela1_fim },
+          { inicio: item.parcela2_inicio, fim: item.parcela2_fim },
+          { inicio: item.parcela3_inicio, fim: item.parcela3_fim },
+        ];
+        
+        parcelas.forEach(parcela => {
+          if (parcela.inicio && parcela.fim) {
+            const inicioDate = new Date(parcela.inicio);
+            if (inicioDate.getMonth() + 1 === mesNum && inicioDate.getFullYear() === year) {
+              const fimDate = new Date(parcela.fim);
+              const dias = Math.ceil((fimDate.getTime() - inicioDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+              diasMarcados += dias;
+            }
+          }
+        });
+        
+        if (item.data_inicio && item.data_fim && item.mes === mesNum) {
+          const inicioDate = new Date(item.data_inicio);
+          const fimDate = new Date(item.data_fim);
+          const dias = Math.ceil((fimDate.getTime() - inicioDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          if (!item.parcela1_inicio && !item.parcela2_inicio && !item.parcela3_inicio) {
+            diasMarcados += dias;
+          }
+        }
+      });
+      
+      return {
+        mes,
+        mesNum,
+        limite: LIMITE_MENSAL,
+        previsto: diasPrevistos,
+        marcados: diasMarcados,
+        saldo: LIMITE_MENSAL - diasMarcados,
+      };
+    });
+  }, [abonoData, year]);
 
   // Handle year change
   const handleYearChange = (value: string) => {
@@ -113,7 +214,7 @@ const Campanha: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+      <div className="page-container py-4 md:py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -165,7 +266,10 @@ const Campanha: React.FC = () => {
           </div>
 
           {/* Vacation quota card */}
-          <MonthlyVacationQuotaCard quota={vacationQuota} />
+          <div className="space-y-4">
+            <MonthlyVacationQuotaCard quota={vacationQuota} />
+            <AbonoQuotaCard quotas={abonoQuotas} compact />
+          </div>
         </div>
 
         {/* Calendar */}

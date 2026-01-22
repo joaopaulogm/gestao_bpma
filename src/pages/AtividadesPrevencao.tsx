@@ -170,7 +170,7 @@ const AtividadesPrevencao: React.FC = () => {
   
   return (
     <Layout title="Atividades de Prevenção" showBackButton>
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 animate-fade-in max-w-4xl mx-auto">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 animate-fade-in">
         {/* Tabs de Categorias */}
         <Card>
           <CardHeader className="p-4 sm:p-6">
