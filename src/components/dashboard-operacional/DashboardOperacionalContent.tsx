@@ -12,6 +12,8 @@ import DashboardOperacionalOrdemPorClasse, { ClasseOrdemData } from './Dashboard
 import DashboardOperacionalSazonalidade, { SazonalidadeHistorico, SazonalidadeData } from './DashboardOperacionalSazonalidade';
 import DashboardOperacionalRecordes, { RecordeApreensao } from './DashboardOperacionalRecordes';
 import DashboardOperacionalHorarioChart from './DashboardOperacionalHorarioChart';
+import DashboardComparativoAnos from '@/components/dashboard/DashboardComparativoAnos';
+import DashboardMapaCalor from '@/components/dashboard/DashboardMapaCalor';
 
 interface HorarioData {
   periodo: string;
@@ -730,6 +732,132 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
     staleTime: 5 * 60 * 1000
   });
 
+  // Buscar dados comparativos entre anos (para o gráfico comparativo)
+  const { data: dadosComparativos } = useQuery({
+    queryKey: ['dashboard-operacional-comparativo'],
+    queryFn: async () => {
+      // Buscar resumo mensal de todos os anos
+      const { data: resumoData, error } = await supabase
+        .from('fact_resumo_mensal_historico')
+        .select('ano, mes, resgates, solturas, obitos')
+        .order('ano')
+        .order('mes');
+      
+      if (error) return [];
+      
+      return (resumoData || []).map(r => ({
+        ano: r.ano,
+        mes: r.mes,
+        total: r.resgates || 0,
+        solturas: r.solturas || 0,
+        obitos: r.obitos || 0
+      }));
+    },
+    staleTime: 10 * 60 * 1000
+  });
+
+  // Buscar dados para o mapa de calor (coordenadas de ocorrências)
+  const { data: pontosMapaCalor } = useQuery({
+    queryKey: ['dashboard-operacional-mapa-calor', year],
+    queryFn: async () => {
+      if (year < 2026) {
+        // Para anos históricos, não temos coordenadas detalhadas
+        return [];
+      }
+      
+      const startDate = `${year}-01-01`;
+      const endDate = `${year}-12-31`;
+      
+      const { data, error } = await supabase
+        .from('fat_registros_de_resgate')
+        .select(`
+          id, 
+          latitude_origem, 
+          longitude_origem,
+          latitude_soltura,
+          longitude_soltura,
+          atropelamento,
+          especie_id,
+          regiao_administrativa_id
+        `)
+        .gte('data', startDate).lte('data', endDate);
+      
+      if (error || !data) return [];
+      
+      // Buscar espécies e regiões
+      const especieIds = [...new Set(data.filter(r => r.especie_id).map(r => r.especie_id as string))];
+      const regiaoIds = [...new Set(data.filter(r => r.regiao_administrativa_id).map(r => r.regiao_administrativa_id as string))];
+      
+      const especiesLookup: Record<string, string> = {};
+      const regioesLookup: Record<string, string> = {};
+      
+      if (especieIds.length > 0) {
+        const { data: especiesData } = await supabase
+          .from('dim_especies_fauna')
+          .select('id, nome_popular')
+          .in('id', especieIds);
+        (especiesData || []).forEach(e => { especiesLookup[e.id] = e.nome_popular; });
+      }
+      
+      if (regiaoIds.length > 0) {
+        const { data: regioesData } = await supabase
+          .from('dim_regiao_administrativa')
+          .select('id, nome')
+          .in('id', regiaoIds);
+        (regioesData || []).forEach(r => { regioesLookup[r.id] = r.nome; });
+      }
+      
+      const pontos: Array<{
+        id: string;
+        latitude: number;
+        longitude: number;
+        tipo: 'resgate' | 'apreensao' | 'soltura' | 'atropelamento';
+        nomePopular?: string;
+        regiao?: string;
+      }> = [];
+      
+      data.forEach(r => {
+        const nomePopular = r.especie_id ? especiesLookup[r.especie_id] : undefined;
+        const regiao = r.regiao_administrativa_id ? regioesLookup[r.regiao_administrativa_id] : undefined;
+        
+        // Ponto de origem (resgate/atropelamento)
+        if (r.latitude_origem && r.longitude_origem) {
+          const lat = parseFloat(r.latitude_origem);
+          const lng = parseFloat(r.longitude_origem);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            pontos.push({
+              id: `${r.id}-origem`,
+              latitude: lat,
+              longitude: lng,
+              tipo: r.atropelamento === 'Sim' ? 'atropelamento' : 'resgate',
+              nomePopular,
+              regiao
+            });
+          }
+        }
+        
+        // Ponto de soltura
+        if (r.latitude_soltura && r.longitude_soltura) {
+          const lat = parseFloat(r.latitude_soltura);
+          const lng = parseFloat(r.longitude_soltura);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            pontos.push({
+              id: `${r.id}-soltura`,
+              latitude: lat,
+              longitude: lng,
+              tipo: 'soltura',
+              nomePopular,
+              regiao
+            });
+          }
+        }
+      });
+      
+      return pontos;
+    },
+    staleTime: 5 * 60 * 1000
+  });
+
   if (errorKPIs) {
     return (
       <Alert variant="destructive">
@@ -822,6 +950,28 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
       {/* Gráfico de distribuição por horário (apenas 2026+) */}
       {hasHorarioData && (
         <DashboardOperacionalHorarioChart data={horarioData!} year={year} />
+      )}
+      
+      {/* Gráficos Comparativos entre Anos */}
+      {dadosComparativos && dadosComparativos.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Análise Comparativa entre Anos</h3>
+          <DashboardComparativoAnos 
+            dadosHistoricos={dadosComparativos}
+            anosDisponiveis={[2026, 2025, 2024, 2023, 2022, 2021, 2020]}
+          />
+        </div>
+      )}
+      
+      {/* Mapa de Calor (apenas 2026+) */}
+      {pontosMapaCalor && pontosMapaCalor.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Distribuição Geográfica das Ocorrências</h3>
+          <DashboardMapaCalor 
+            pontos={pontosMapaCalor}
+            ano={year}
+          />
+        </div>
       )}
     </div>
   );
