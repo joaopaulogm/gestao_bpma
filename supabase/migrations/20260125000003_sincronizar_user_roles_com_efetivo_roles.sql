@@ -31,6 +31,7 @@ DECLARE
   v_usuarios_sem_efetivo_id bigint := 0;
   v_record record;
   v_role app_role;
+  v_email text;
 BEGIN
   -- Processar cada usuário em usuarios_por_login que tenha auth_user_id
   FOR v_record IN 
@@ -52,25 +53,41 @@ BEGIN
       CONTINUE;
     END IF;
     
-    -- Buscar role em efetivo_roles (prioridade: admin > secao_operacional > secao_pessoas > secao_logistica > operador)
-    SELECT role INTO v_role
-    FROM public.efetivo_roles
-    WHERE efetivo_id = v_record.efetivo_id
-    ORDER BY 
-      CASE role
-        WHEN 'admin' THEN 1
-        WHEN 'secao_operacional' THEN 2
-        WHEN 'secao_pessoas' THEN 3
-        WHEN 'secao_logistica' THEN 4
-        WHEN 'operador' THEN 5
-        ELSE 6
-      END
-    LIMIT 1;
-    
-    -- Se não encontrou role, usar 'operador' como padrão
-    IF v_role IS NULL THEN
-      v_role := 'operador'::app_role;
-    END IF;
+    -- Verificar se o email do usuário é admin por natureza (se função existir)
+    DECLARE
+      v_email text;
+    BEGIN
+      SELECT email INTO v_email
+      FROM auth.users
+      WHERE id = v_record.auth_user_id;
+      
+      -- Se o email é admin por natureza, usar 'admin' diretamente
+      IF v_email IS NOT NULL AND EXISTS (
+        SELECT 1 FROM pg_proc WHERE proname = 'is_admin_email'
+      ) AND public.is_admin_email(v_email) THEN
+        v_role := 'admin'::app_role;
+      ELSE
+        -- Buscar role em efetivo_roles (prioridade: admin > secao_operacional > secao_pessoas > secao_logistica > operador)
+        SELECT role INTO v_role
+        FROM public.efetivo_roles
+        WHERE efetivo_id = v_record.efetivo_id
+        ORDER BY 
+          CASE role
+            WHEN 'admin' THEN 1
+            WHEN 'secao_operacional' THEN 2
+            WHEN 'secao_pessoas' THEN 3
+            WHEN 'secao_logistica' THEN 4
+            WHEN 'operador' THEN 5
+            ELSE 6
+          END
+        LIMIT 1;
+        
+        -- Se não encontrou role, usar 'operador' como padrão
+        IF v_role IS NULL THEN
+          v_role := 'operador'::app_role;
+        END IF;
+      END IF;
+    END;
     
     -- Verificar se já existe um role para este user_id
     IF EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = v_record.auth_user_id) THEN
