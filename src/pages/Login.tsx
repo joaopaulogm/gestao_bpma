@@ -13,13 +13,23 @@ import { Label } from '@/components/ui/label';
 
 interface UsuarioPorLogin {
   id: string;
+  user_id: string | null;
+  efetivo_id: string | null;
   nome: string;
   login: string;
-  senha: number;
+  senha: string;
   email: string | null;
-  auth_user_id: string | null;
-  vinculado_em: string | null;
+  matricula: string | null;
+  cpf: number | null;
+  role: string;
   ativo: boolean | null;
+  nome_guerra: string | null;
+  post_grad: string | null;
+  quadro: string | null;
+  lotacao: string | null;
+  data_nascimento: string | null;
+  contato: string | null;
+  vinculado_em: string | null;
 }
 
 interface PasswordValidation {
@@ -75,21 +85,20 @@ const Login = () => {
   // Check if user just linked account via Google OAuth
   React.useEffect(() => {
     const checkPendingLink = async () => {
-      const pendingUserId = localStorage.getItem('pendingLinkUserId');
-      if (!pendingUserId) return;
+      const pendingEfetivoId = localStorage.getItem('pendingLinkEfetivoId');
+      if (!pendingEfetivoId) return;
 
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
+        // Vincular usando função RPC (nova estrutura)
         const { error } = await supabase
-          .from('usuarios_por_login')
-          .update({ 
-            auth_user_id: session.user.id,
-            vinculado_em: new Date().toISOString(),
-            email: session.user.email
-          })
-          .eq('id', pendingUserId);
+          .rpc('vincular_user_id_ao_efetivo', {
+            p_efetivo_id: pendingEfetivoId,
+            p_auth_user_id: session.user.id,
+            p_email: session.user.email
+          });
 
-        localStorage.removeItem('pendingLinkUserId');
+        localStorage.removeItem('pendingLinkEfetivoId');
 
         if (error) {
           toast.error('Erro ao vincular conta');
@@ -134,7 +143,7 @@ const Login = () => {
         return;
       }
 
-      // Buscar usuário usando função RPC (bypassa RLS)
+      // Buscar usuário usando função RPC (nova estrutura consolidada)
       // BigInt precisa ser passado como string para RPC do Supabase
       const senhaParaRPC = senhaNumero.toString();
       
@@ -159,18 +168,7 @@ const Login = () => {
           code: usuarioError.code
         });
         
-        // Tentar buscar apenas por login para debug
-        const { data: debugData } = await supabase
-          .rpc('debug_buscar_usuario', {
-            p_login: login.toLowerCase().trim()
-          });
-        
-        if (debugData && Array.isArray(debugData) && debugData.length > 0) {
-          console.log('Usuário encontrado por login:', debugData);
-          toast.error('Erro na senha. Verifique se está usando apenas os números do CPF.');
-        } else {
-          toast.error('Login não encontrado. Verifique se está usando o formato: primeiro_nome.ultimo_nome');
-        }
+        toast.error('Erro ao buscar usuário. Tente novamente.');
         return;
       }
 
@@ -187,24 +185,10 @@ const Login = () => {
       }
 
       // A senha já foi validada pela função RPC get_usuario_by_login_senha
+      // O role já vem no objeto usuario (nova estrutura)
 
-      // Verificar role usando a função RPC
-      const { data: role, error: roleError } = await supabase
-        .rpc('get_role_by_login_senha', {
-          p_login: login.toLowerCase().trim(),
-          p_senha: senhaParaRPC  // Usar a mesma string
-        });
-
-      if (roleError) {
-        console.error('Erro ao buscar role:', roleError);
-      }
-
-      // Se o role não foi encontrado, ainda permite o primeiro acesso
-      if (!role) {
-        console.warn('Role não encontrado para o usuário, usando operador como padrão');
-      }
-
-      if (usuario.auth_user_id) {
+      // Se já tem user_id vinculado, redirecionar para login com Google
+      if (usuario.user_id) {
         toast.info('Use o botão "Entrar com Google" ou a aba "E-mail" para acessar sua conta vinculada');
         return;
       }
@@ -251,20 +235,19 @@ const Login = () => {
         updateData.email = emailToUse;
       }
 
-      // Note: We'll keep the original senha for now, but the user will use Google OAuth
-      // The new password is only for validation before linking
-      
-      if (Object.keys(updateData).length > 0) {
+      // Atualizar email em user_roles (nova estrutura)
+      if (Object.keys(updateData).length > 0 && pendingUser.efetivo_id) {
         const { error } = await supabase
-          .from('usuarios_por_login')
+          .from('user_roles')
           .update(updateData)
-          .eq('id', pendingUser.id);
+          .eq('efetivo_id', pendingUser.efetivo_id)
+          .eq('ativo', true);
 
         if (error) throw error;
       }
 
       // Now proceed to Google linking
-      localStorage.setItem('pendingLinkUserId', pendingUser.id);
+      localStorage.setItem('pendingLinkEfetivoId', pendingUser.efetivo_id || pendingUser.id);
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -278,7 +261,7 @@ const Login = () => {
       });
 
       if (error) {
-        localStorage.removeItem('pendingLinkUserId');
+        localStorage.removeItem('pendingLinkEfetivoId');
         toast.error(handleSupabaseError(error, 'vincular com Google'));
       }
     } catch (error: any) {
@@ -308,43 +291,29 @@ const Login = () => {
         return;
       }
 
-      const { data: usuario, error } = await supabase
-        .from('usuarios_por_login')
-        .select('*')
-        .eq('login', login.toLowerCase().trim())
-        .single();
+      // Buscar usuário usando função RPC (nova estrutura)
+      const senhaParaRPC2 = senhaNumero.toString();
+      
+      const { data: usuarios, error } = await supabase
+        .rpc('get_usuario_by_login_senha', {
+          p_login: login.toLowerCase().trim(),
+          p_senha: senhaParaRPC2
+        });
 
-      if (error || !usuario) {
+      if (error || !usuarios || usuarios.length === 0) {
         toast.error('Login ou senha incorretos');
         return;
       }
+
+      const usuario = usuarios[0];
 
       if (usuario.ativo === false) {
         toast.error('Usuário desativado. Entre em contato com o administrador.');
         return;
       }
 
-      if (usuario.senha?.toString() !== senhaDigitada) {
-        toast.error('Login ou senha incorretos');
-        return;
-      }
-
-      // Preparar senha para RPC (converter BigInt para string)
-      const senhaParaRPC2 = senhaNumero.toString();
-
-      // Verificar role usando a função RPC
-      const { data: role, error: roleError } = await supabase
-        .rpc('get_role_by_login_senha', {
-          p_login: login.toLowerCase().trim(),
-          p_senha: senhaParaRPC2  // Usar string
-        });
-
-      if (roleError) {
-        console.error('Erro ao buscar role:', roleError);
-      }
-
       // If already linked, just proceed with Google
-      if (usuario.auth_user_id) {
+      if (usuario.user_id) {
         const { error: googleError } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
