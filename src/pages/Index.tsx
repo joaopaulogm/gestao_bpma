@@ -159,6 +159,9 @@ const Index = () => {
                       <HomeCard title="Crimes Comuns" icon={Gavel} to="/crimes-comuns" />
                       <HomeCard title="Atividades de Prevenção" icon={HeartHandshake} to="/atividades-prevencao" />
                       <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
+                      <HomeCard title="POP" icon={BookOpen} to="/material-apoio/pop" />
+                      <HomeCard title="Identificar Espécie" icon={BookOpen} to="/material-apoio/identificar-especie" />
+                      <HomeCard title="Manual RAP" icon={BookOpen} to="/material-apoio/manual-rap" />
                       <HomeCard title="Ranking de Ocorrências" icon={Trophy} to="/ranking" />
                     </div>
                   </div>
@@ -170,17 +173,18 @@ const Index = () => {
                       <span className="text-xs sm:text-sm">Seção Operacional</span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-                      <HomeCard title="Dashboard Operacional" icon={Briefcase} to="/secao-operacional/dashboard" />
+                      <HomeCard title="Seção Operacional" icon={Briefcase} to="/secao-operacional" />
+                      <HomeCard title="Dashboard Operacional" icon={BarChart3} to="/secao-operacional/dashboard" />
                       <HomeCard title="Registros de Resgates" icon={Clipboard} to="/secao-operacional/registros-resgates" />
                       <HomeCard title="Registros Crimes Ambientais" icon={Shield} to="/secao-operacional/registros-crimes-ambientais" />
                       <HomeCard title="Registros Crimes Comuns" icon={Gavel} to="/secao-operacional/registros-crimes-comuns" />
                       <HomeCard title="Registros Prevenção" icon={HeartHandshake} to="/secao-operacional/registros-prevencao" />
                       <HomeCard title="Hotspots" icon={Trophy} to="/secao-operacional/hotspots" />
-                      <HomeCard title="Relatórios" icon={BookOpen} to="/secao-operacional/relatorios" />
+                      <HomeCard title="Relatórios" icon={FileText} to="/secao-operacional/relatorios" />
                       <HomeCard title="Fauna Cadastro" icon={Clipboard} to="/secao-operacional/fauna-cadastro" />
-                      <HomeCard title="Fauna Cadastrada" icon={Clipboard} to="/secao-operacional/fauna-cadastrada" />
+                      <HomeCard title="Fauna Cadastrada" icon={Database} to="/secao-operacional/fauna-cadastrada" />
                       <HomeCard title="Flora Cadastro" icon={Clipboard} to="/secao-operacional/flora-cadastro" />
-                      <HomeCard title="Flora Cadastrada" icon={Clipboard} to="/secao-operacional/flora-cadastrada" />
+                      <HomeCard title="Flora Cadastrada" icon={Database} to="/secao-operacional/flora-cadastrada" />
                       <HomeCard title="Bens Apreendidos" icon={Shield} to="/secao-operacional/bens-apreendidos" />
                       <HomeCard title="Processar RAP" icon={Briefcase} to="/secao-operacional/processar-rap" />
                       <HomeCard title="Monitorar RAPs" icon={Briefcase} to="/secao-operacional/monitorar-raps" />
@@ -194,13 +198,16 @@ const Index = () => {
                       <span className="text-xs sm:text-sm">Seção de Pessoas</span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                      <HomeCard title="Seção de Pessoas" icon={Users} to="/secao-pessoas" />
                       <HomeCard title="Efetivo BPMA" icon={Users} to="/secao-pessoas/efetivo" />
                       <HomeCard title="Equipes" icon={Users} to="/secao-pessoas/equipes" />
                       <HomeCard title="Escalas" icon={Users} to="/secao-pessoas/escalas" />
                       <HomeCard title="Afastamentos" icon={Users} to="/secao-pessoas/afastamentos" />
                       <HomeCard title="Licenças" icon={Users} to="/secao-pessoas/licencas" />
                       <HomeCard title="Férias" icon={Users} to="/secao-pessoas/ferias" />
+                      <HomeCard title="Minuta Férias" icon={FileText} to="/secao-pessoas/ferias/minuta" />
                       <HomeCard title="Abono" icon={Users} to="/secao-pessoas/abono" />
+                      <HomeCard title="Minuta Abono" icon={FileText} to="/secao-pessoas/abono/minuta" />
                       <HomeCard title="Campanha" icon={Users} to="/secao-pessoas/campanha" />
                     </div>
                   </div>
@@ -224,7 +231,7 @@ const Index = () => {
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                       <HomeCard title="Gerenciar Permissões" icon={Settings} to="/gerenciar-permissoes" />
-                      <HomeCard title="Upload Schemas" icon={Settings} to="/upload-schemas" />
+                      <HomeCard title="Upload Schemas" icon={Upload} to="/upload-schemas" />
                     </div>
                   </div>
                 </>
