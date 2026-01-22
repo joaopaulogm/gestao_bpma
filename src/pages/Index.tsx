@@ -11,7 +11,11 @@ import {
   Wrench,
   Settings,
   Gavel,
-  HeartHandshake
+  HeartHandshake,
+  BarChart3,
+  FileText,
+  Database,
+  Upload
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import logoBpma from '@/assets/logo-bpma.svg';
@@ -140,38 +144,124 @@ const Index = () => {
             </div>
           ) : (
             <>
-              {/* Operador level - all authenticated users */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-                <HomeCard title="Resgate de Fauna" icon={Clipboard} to="/resgate-cadastro" />
-                <HomeCard title="Crimes Ambientais" icon={Shield} to="/crimes-ambientais" />
-                <HomeCard title="Crimes Comuns" icon={Gavel} to="/crimes-comuns" />
-                <HomeCard title="Atividades de Prevenção" icon={HeartHandshake} to="/atividades-prevencao" />
-                <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
-                <HomeCard title="Ranking de Ocorrências" icon={Trophy} to="/ranking" />
-              </div>
-              
-              {/* Section-based access */}
-              {(hasAccess(['secao_operacional']) || hasAccess(['secao_pessoas']) || hasAccess(['secao_logistica']) || isAdmin) && (
-                <div className="pt-3 sm:pt-4">
-                  <div className="flex items-center gap-2 text-primary font-semibold px-1 mb-3 sm:mb-4">
-                    <Settings className="h-4 w-4" />
-                    <span className="text-xs sm:text-sm">Seções Administrativas</span>
+              {isAdmin ? (
+                // Admin: mostrar TODAS as páginas
+                <>
+                  {/* Páginas Operacionais */}
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-center gap-2 text-primary font-semibold px-1">
+                      <Clipboard className="h-4 w-4" />
+                      <span className="text-xs sm:text-sm">Páginas Operacionais</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                      <HomeCard title="Resgate de Fauna" icon={Clipboard} to="/resgate-cadastro" />
+                      <HomeCard title="Crimes Ambientais" icon={Shield} to="/crimes-ambientais" />
+                      <HomeCard title="Crimes Comuns" icon={Gavel} to="/crimes-comuns" />
+                      <HomeCard title="Atividades de Prevenção" icon={HeartHandshake} to="/atividades-prevencao" />
+                      <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
+                      <HomeCard title="Ranking de Ocorrências" icon={Trophy} to="/ranking" />
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-                    {hasAccess(['secao_operacional']) && (
-                      <HomeCard title="Seção Operacional" icon={Briefcase} to="/secao-operacional" />
-                    )}
-                    {hasAccess(['secao_pessoas']) && (
-                      <HomeCard title="Seção de Pessoas" icon={Users} to="/secao-pessoas" />
-                    )}
-                    {hasAccess(['secao_logistica']) && (
+
+                  {/* Seção Operacional - Todas as páginas */}
+                  <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
+                    <div className="flex items-center gap-2 text-primary font-semibold px-1">
+                      <Briefcase className="h-4 w-4" />
+                      <span className="text-xs sm:text-sm">Seção Operacional</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                      <HomeCard title="Dashboard Operacional" icon={Briefcase} to="/secao-operacional/dashboard" />
+                      <HomeCard title="Registros de Resgates" icon={Clipboard} to="/secao-operacional/registros-resgates" />
+                      <HomeCard title="Registros Crimes Ambientais" icon={Shield} to="/secao-operacional/registros-crimes-ambientais" />
+                      <HomeCard title="Registros Crimes Comuns" icon={Gavel} to="/secao-operacional/registros-crimes-comuns" />
+                      <HomeCard title="Registros Prevenção" icon={HeartHandshake} to="/secao-operacional/registros-prevencao" />
+                      <HomeCard title="Hotspots" icon={Trophy} to="/secao-operacional/hotspots" />
+                      <HomeCard title="Relatórios" icon={BookOpen} to="/secao-operacional/relatorios" />
+                      <HomeCard title="Fauna Cadastro" icon={Clipboard} to="/secao-operacional/fauna-cadastro" />
+                      <HomeCard title="Fauna Cadastrada" icon={Clipboard} to="/secao-operacional/fauna-cadastrada" />
+                      <HomeCard title="Flora Cadastro" icon={Clipboard} to="/secao-operacional/flora-cadastro" />
+                      <HomeCard title="Flora Cadastrada" icon={Clipboard} to="/secao-operacional/flora-cadastrada" />
+                      <HomeCard title="Bens Apreendidos" icon={Shield} to="/secao-operacional/bens-apreendidos" />
+                      <HomeCard title="Processar RAP" icon={Briefcase} to="/secao-operacional/processar-rap" />
+                      <HomeCard title="Monitorar RAPs" icon={Briefcase} to="/secao-operacional/monitorar-raps" />
+                    </div>
+                  </div>
+
+                  {/* Seção de Pessoas - Todas as páginas */}
+                  <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
+                    <div className="flex items-center gap-2 text-primary font-semibold px-1">
+                      <Users className="h-4 w-4" />
+                      <span className="text-xs sm:text-sm">Seção de Pessoas</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                      <HomeCard title="Efetivo BPMA" icon={Users} to="/secao-pessoas/efetivo" />
+                      <HomeCard title="Equipes" icon={Users} to="/secao-pessoas/equipes" />
+                      <HomeCard title="Escalas" icon={Users} to="/secao-pessoas/escalas" />
+                      <HomeCard title="Afastamentos" icon={Users} to="/secao-pessoas/afastamentos" />
+                      <HomeCard title="Licenças" icon={Users} to="/secao-pessoas/licencas" />
+                      <HomeCard title="Férias" icon={Users} to="/secao-pessoas/ferias" />
+                      <HomeCard title="Abono" icon={Users} to="/secao-pessoas/abono" />
+                      <HomeCard title="Campanha" icon={Users} to="/secao-pessoas/campanha" />
+                    </div>
+                  </div>
+
+                  {/* Seção de Logística */}
+                  <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
+                    <div className="flex items-center gap-2 text-primary font-semibold px-1">
+                      <Wrench className="h-4 w-4" />
+                      <span className="text-xs sm:text-sm">Seção de Logística</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                       <HomeCard title="Seção de Logística" icon={Wrench} to="/secao-logistica" />
-                    )}
-                    {isAdmin && (
-                      <HomeCard title="Gerenciar Permissões" icon={Settings} to="/gerenciar-permissoes" />
-                    )}
+                    </div>
                   </div>
-                </div>
+
+                  {/* Administração */}
+                  <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
+                    <div className="flex items-center gap-2 text-primary font-semibold px-1">
+                      <Settings className="h-4 w-4" />
+                      <span className="text-xs sm:text-sm">Administração</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                      <HomeCard title="Gerenciar Permissões" icon={Settings} to="/gerenciar-permissoes" />
+                      <HomeCard title="Upload Schemas" icon={Settings} to="/upload-schemas" />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                // Usuários não-admin: mostrar apenas páginas permitidas
+                <>
+                  {/* Operador level - all authenticated users */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                    <HomeCard title="Resgate de Fauna" icon={Clipboard} to="/resgate-cadastro" />
+                    <HomeCard title="Crimes Ambientais" icon={Shield} to="/crimes-ambientais" />
+                    <HomeCard title="Crimes Comuns" icon={Gavel} to="/crimes-comuns" />
+                    <HomeCard title="Atividades de Prevenção" icon={HeartHandshake} to="/atividades-prevencao" />
+                    <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
+                    <HomeCard title="Ranking de Ocorrências" icon={Trophy} to="/ranking" />
+                  </div>
+                  
+                  {/* Section-based access */}
+                  {(hasAccess(['secao_operacional']) || hasAccess(['secao_pessoas']) || hasAccess(['secao_logistica'])) && (
+                    <div className="pt-3 sm:pt-4">
+                      <div className="flex items-center gap-2 text-primary font-semibold px-1 mb-3 sm:mb-4">
+                        <Settings className="h-4 w-4" />
+                        <span className="text-xs sm:text-sm">Seções Administrativas</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                        {hasAccess(['secao_operacional']) && (
+                          <HomeCard title="Seção Operacional" icon={Briefcase} to="/secao-operacional" />
+                        )}
+                        {hasAccess(['secao_pessoas']) && (
+                          <HomeCard title="Seção de Pessoas" icon={Users} to="/secao-pessoas" />
+                        )}
+                        {hasAccess(['secao_logistica']) && (
+                          <HomeCard title="Seção de Logística" icon={Wrench} to="/secao-logistica" />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
