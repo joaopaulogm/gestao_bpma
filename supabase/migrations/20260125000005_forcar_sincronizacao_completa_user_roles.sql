@@ -4,6 +4,14 @@
 -- Esta migration força a sincronização de todos os usuários
 -- e identifica quais não podem ser sincronizados
 
+-- 0. Garantir que a coluna efetivo_id existe (caso a migration anterior não tenha sido executada)
+ALTER TABLE public.usuarios_por_login 
+ADD COLUMN IF NOT EXISTS efetivo_id uuid REFERENCES public.dim_efetivo(id) ON DELETE SET NULL;
+
+-- Criar índice se não existir
+CREATE INDEX IF NOT EXISTS idx_usuarios_por_login_efetivo_id 
+ON public.usuarios_por_login(efetivo_id);
+
 -- 1. Garantir que todos os vínculos estão feitos
 UPDATE public.usuarios_por_login upl
 SET efetivo_id = de.id
