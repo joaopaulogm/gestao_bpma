@@ -135,15 +135,42 @@ const Login = () => {
       }
 
       // Buscar usuário usando função RPC (bypassa RLS)
+      // BigInt precisa ser passado como string para RPC do Supabase
+      const senhaParaRPC = senhaNumero.toString();
+      
+      console.log('Tentando buscar usuário:', {
+        login: login.toLowerCase().trim(),
+        senhaLength: senhaParaRPC.length,
+        senhaPreview: senhaParaRPC.substring(0, 3) + '...'
+      });
+      
       const { data: usuarios, error: usuarioError } = await supabase
         .rpc('get_usuario_by_login_senha', {
           p_login: login.toLowerCase().trim(),
-          p_senha: Number(senhaNumero)
+          p_senha: senhaParaRPC
         });
 
       if (usuarioError) {
         console.error('Erro ao buscar usuário:', usuarioError);
-        toast.error('Erro ao buscar usuário. Tente novamente.');
+        console.error('Detalhes do erro:', {
+          message: usuarioError.message,
+          details: usuarioError.details,
+          hint: usuarioError.hint,
+          code: usuarioError.code
+        });
+        
+        // Tentar buscar apenas por login para debug
+        const { data: debugData } = await supabase
+          .rpc('debug_buscar_usuario', {
+            p_login: login.toLowerCase().trim()
+          });
+        
+        if (debugData && Array.isArray(debugData) && debugData.length > 0) {
+          console.log('Usuário encontrado por login:', debugData);
+          toast.error('Erro na senha. Verifique se está usando apenas os números do CPF.');
+        } else {
+          toast.error('Login não encontrado. Verifique se está usando o formato: primeiro_nome.ultimo_nome');
+        }
         return;
       }
 
