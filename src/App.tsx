@@ -9,7 +9,6 @@ import CookieConsentBanner from '@/components/CookieConsentBanner';
 
 // Lazy load all pages
 const Index = lazy(() => import(/* webpackChunkName: "index" */ '@/pages/Index'));
-const Dashboard = lazy(() => import(/* webpackChunkName: "dashboard" */ '@/pages/Dashboard'));
 const DashboardOperacional = lazy(() => import(/* webpackChunkName: "dashboard-operacional" */ '@/pages/DashboardOperacional'));
 const Hotspots = lazy(() => import(/* webpackChunkName: "hotspots" */ '@/pages/Hotspots'));
 const Registros = lazy(() => import(/* webpackChunkName: "registros" */ '@/pages/Registros'));
@@ -118,7 +117,7 @@ function App() {
               <Route path="/secao-operacional/fauna-cadastrada" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FaunaCadastrada /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/dashboard" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><DashboardOperacional /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/dashboard-historico" element={<Navigate to="/secao-operacional/dashboard" replace />} />
-              <Route path="/secao-operacional/dashboard-antigo" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Dashboard /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/dashboard-antigo" element={<Navigate to="/secao-operacional/dashboard" replace />} />
               <Route path="/secao-operacional/hotspots" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Hotspots /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/registros" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Registros /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/registros-crimes" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistrosCrimes /></SidebarLayout></ProtectedRoute>} />
