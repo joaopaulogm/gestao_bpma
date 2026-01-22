@@ -134,14 +134,22 @@ const Login = () => {
         return;
       }
 
-      // Buscar usuário primeiro para verificar se existe e está ativo
-      const { data: usuario, error: usuarioError } = await supabase
-        .from('usuarios_por_login')
-        .select('*')
-        .eq('login', login.toLowerCase().trim())
-        .single();
+      // Buscar usuário usando função RPC (bypassa RLS)
+      const { data: usuarios, error: usuarioError } = await supabase
+        .rpc('get_usuario_by_login_senha', {
+          p_login: login.toLowerCase().trim(),
+          p_senha: Number(senhaNumero)
+        });
 
-      if (usuarioError || !usuario) {
+      if (usuarioError) {
+        console.error('Erro ao buscar usuário:', usuarioError);
+        toast.error('Erro ao buscar usuário. Tente novamente.');
+        return;
+      }
+
+      const usuario = Array.isArray(usuarios) && usuarios.length > 0 ? usuarios[0] : null;
+
+      if (!usuario) {
         toast.error('Login não encontrado. Verifique se está usando o formato: primeiro_nome.ultimo_nome');
         return;
       }
