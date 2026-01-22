@@ -89,17 +89,26 @@ const RegistrosCrimes = () => {
   const fetchRegistros = async () => {
     setIsLoading(true);
     try {
-      const supabaseAny = supabase as any;
-      
-      const { data, error } = await supabaseAny
+      // Buscar registros de crime com relacionamentos corrigidos
+      const { data, error } = await supabase
         .from('fat_registros_de_crime')
         .select(`
-          *,
-          regiao_administrativa:dim_regiao_administrativa(nome),
-          tipo_crime:dim_tipo_de_crime(id_tipo_de_crime, "Tipo de Crime"),
-          enquadramento:dim_enquadramento(id_enquadramento, "Enquadramento"),
-          tipo_area:dim_tipo_de_area(id, "Tipo de Área"),
-          desfecho:dim_desfecho_crime_ambientais(nome)
+          id,
+          data,
+          regiao_administrativa_id,
+          tipo_crime_id,
+          enquadramento_id,
+          tipo_area_id,
+          desfecho_id,
+          latitude,
+          longitude,
+          ocorreu_apreensao,
+          procedimento_legal,
+          qtd_detidos_maior,
+          qtd_detidos_menor,
+          qtd_liberados_maior,
+          qtd_liberados_menor,
+          created_at
         `)
         .order('data', { ascending: false });
 
@@ -107,8 +116,46 @@ const RegistrosCrimes = () => {
         throw error;
       }
 
-      setRegistros(data || []);
-      console.log(`✅ Total de registros de crimes carregados: ${data?.length || 0}`);
+      // Buscar dados dimensionais separadamente para evitar problemas de relacionamento
+      const [regioesRes, tiposCrimeRes, enquadramentosRes, tiposAreaRes, desfechosRes] = await Promise.all([
+        supabase.from('dim_regiao_administrativa').select('id, nome'),
+        supabase.from('dim_tipo_de_crime').select('id_tipo_de_crime, "Tipo de Crime"'),
+        supabase.from('dim_enquadramento').select('id_enquadramento, "Enquadramento"'),
+        supabase.from('dim_tipo_de_area').select('id, "Tipo de Área"'),
+        supabase.from('dim_desfecho_crime_ambientais').select('id, nome')
+      ]);
+
+      // Criar lookups
+      const regioesLookup: Record<string, string> = {};
+      (regioesRes.data || []).forEach((r: any) => { regioesLookup[r.id] = r.nome; });
+
+      const tiposCrimeLookup: Record<string, string> = {};
+      (tiposCrimeRes.data || []).forEach((t: any) => { tiposCrimeLookup[t.id_tipo_de_crime] = t["Tipo de Crime"]; });
+
+      const enquadramentosLookup: Record<string, string> = {};
+      (enquadramentosRes.data || []).forEach((e: any) => { enquadramentosLookup[e.id_enquadramento] = e["Enquadramento"]; });
+
+      const tiposAreaLookup: Record<string, string> = {};
+      (tiposAreaRes.data || []).forEach((a: any) => { tiposAreaLookup[a.id] = a["Tipo de Área"]; });
+
+      const desfechosLookup: Record<string, string> = {};
+      (desfechosRes.data || []).forEach((d: any) => { desfechosLookup[d.id] = d.nome; });
+
+      // Enriquecer dados
+      const registrosEnriquecidos = (data || []).map((r: any) => ({
+        ...r,
+        regiao_administrativa: r.regiao_administrativa_id ? { nome: regioesLookup[r.regiao_administrativa_id] } : null,
+        tipo_crime: r.tipo_crime_id ? { 
+          id_tipo_de_crime: r.tipo_crime_id, 
+          "Tipo de Crime": tiposCrimeLookup[r.tipo_crime_id] 
+        } : null,
+        enquadramento: r.enquadramento_id ? { "Enquadramento": enquadramentosLookup[r.enquadramento_id] } : null,
+        tipo_area: r.tipo_area_id ? { "Tipo de Área": tiposAreaLookup[r.tipo_area_id] } : null,
+        desfecho: r.desfecho_id ? { nome: desfechosLookup[r.desfecho_id] } : null
+      }));
+
+      setRegistros(registrosEnriquecidos);
+      console.log(`✅ Total de registros de crimes carregados: ${registrosEnriquecidos.length}`);
     } catch (error) {
       console.error('Erro ao buscar registros de crimes:', error);
       toast.error(handleSupabaseError(error, 'carregar os registros de crimes'));

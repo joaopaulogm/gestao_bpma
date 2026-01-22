@@ -14,6 +14,8 @@ import DashboardOperacionalRecordes, { RecordeApreensao } from './DashboardOpera
 import DashboardOperacionalHorarioChart from './DashboardOperacionalHorarioChart';
 import DashboardComparativoAnos from '@/components/dashboard/DashboardComparativoAnos';
 import DashboardMapaCalor from '@/components/dashboard/DashboardMapaCalor';
+import DashboardRankingEspecies from '@/components/dashboard/DashboardRankingEspecies';
+import DashboardTendenciaSazonal from '@/components/dashboard/DashboardTendenciaSazonal';
 
 interface HorarioData {
   periodo: string;
@@ -946,6 +948,20 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
         year={year}
         isHistorico={isHistorico}
       />
+      
+      {/* Ranking Interativo de Espécies com Filtros */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Ranking Interativo - Top 10 Espécies por Período e Região</h3>
+        <DashboardRankingEspecies 
+          anosDisponiveis={[2026, 2025, 2024, 2023, 2022, 2021, 2020]}
+        />
+      </div>
+      
+      {/* Tendência Sazonal */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Análise de Tendência Sazonal</h3>
+        <DashboardTendenciaSazonal />
+      </div>
       
       {/* Gráfico de distribuição por horário (apenas 2026+) */}
       {hasHorarioData && (

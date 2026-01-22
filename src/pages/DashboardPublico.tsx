@@ -37,11 +37,14 @@ import {
   Shield,
   AlertTriangle,
   Map as MapIcon,
-  BarChart3
+  BarChart3,
+  Trophy
 } from 'lucide-react';
 import logoBpma from '@/assets/logo-bpma.png';
 import DashboardComparativoAnos from '@/components/dashboard/DashboardComparativoAnos';
 import DashboardMapaCalor from '@/components/dashboard/DashboardMapaCalor';
+import DashboardRankingEspecies from '@/components/dashboard/DashboardRankingEspecies';
+import DashboardTendenciaSazonal from '@/components/dashboard/DashboardTendenciaSazonal';
 
 const COLORS = ['#071d49', '#ffcc00', '#3b82f6', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#22c55e'];
 
@@ -676,9 +679,17 @@ const DashboardPublico = () => {
         <Tabs defaultValue="especies" className="space-y-6">
           <TabsList className="bg-[#071d49]/10 border border-[#071d49]/20 flex-wrap">
             <TabsTrigger value="especies" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Espécies</TabsTrigger>
+            <TabsTrigger value="ranking" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
+              <Trophy className="h-4 w-4 mr-1" />
+              Ranking
+            </TabsTrigger>
             <TabsTrigger value="destinacao" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Destinação</TabsTrigger>
             <TabsTrigger value="classes" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Classes</TabsTrigger>
             <TabsTrigger value="temporal" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Temporal</TabsTrigger>
+            <TabsTrigger value="sazonal" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
+              <Calendar className="h-4 w-4 mr-1" />
+              Sazonal
+            </TabsTrigger>
             <TabsTrigger value="regioes" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">Regiões</TabsTrigger>
             <TabsTrigger value="comparativo" className="data-[state=active]:bg-[#071d49] data-[state=active]:text-white">
               <BarChart3 className="h-4 w-4 mr-1" />
@@ -752,6 +763,14 @@ const DashboardPublico = () => {
                 </Card>
               </div>
             )}
+          </TabsContent>
+
+          {/* Ranking Interativo Tab */}
+          <TabsContent value="ranking">
+            <DashboardRankingEspecies 
+              isPublico={true}
+              anosDisponiveis={YEARS}
+            />
           </TabsContent>
 
           {/* Destination Tab */}
@@ -916,6 +935,11 @@ const DashboardPublico = () => {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Sazonal Tab - Tendência Sazonal */}
+          <TabsContent value="sazonal">
+            <DashboardTendenciaSazonal isPublico={true} />
           </TabsContent>
 
           {/* Regions Tab */}
