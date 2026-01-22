@@ -159,12 +159,7 @@ const Login = () => {
         return;
       }
 
-      // Validar senha
-      const senhaArmazenada = usuario.senha?.toString() || '';
-      if (senhaArmazenada !== senhaDigitada) {
-        toast.error('CPF incorreto. Digite apenas os números do seu CPF, sem pontos ou traços.');
-        return;
-      }
+      // A senha já foi validada pela função RPC get_usuario_by_login_senha
 
       // Verificar role usando a função RPC
       const { data: role, error: roleError } = await supabase
