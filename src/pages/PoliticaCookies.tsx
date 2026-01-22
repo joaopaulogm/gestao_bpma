@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 const PoliticaCookies: React.FC = () => {
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
-      <div className="w-[90%] md:w-[75%] mx-auto">
+      <div className="content-container">
         <div className="mb-6">
           <Link to="/">
             <Button variant="ghost" size="sm" className="gap-2">

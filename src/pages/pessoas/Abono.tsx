@@ -378,14 +378,14 @@ const Abono: React.FC = () => {
 
   // Tabela para Previstos (sem colunas de parcelas)
   const renderPrevistosTable = (militares: MilitarAbono[]) => (
-    <Table className="w-full table-fixed">
+    <Table className="w-full">
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[15%]">Posto</TableHead>
-          <TableHead className="w-[35%]">Nome</TableHead>
-          <TableHead className="w-[20%]">Matrícula</TableHead>
-          <TableHead className="w-[20%] text-center">Previsão</TableHead>
-          <TableHead className="w-[10%] text-center">Ações</TableHead>
+          <TableHead className="whitespace-nowrap">Posto</TableHead>
+          <TableHead>Nome</TableHead>
+          <TableHead className="whitespace-nowrap">Matrícula</TableHead>
+          <TableHead className="text-center whitespace-nowrap">Previsão</TableHead>
+          <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -422,15 +422,15 @@ const Abono: React.FC = () => {
 
   // Tabela para Marcados/Reprogramados (com coluna Parcelas consolidada)
   const renderMarcadosTable = (militares: MilitarAbono[]) => (
-    <Table className="w-full table-fixed">
+    <Table className="w-full">
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[12%]">Posto</TableHead>
-          <TableHead className="w-[20%]">Nome</TableHead>
-          <TableHead className="w-[15%]">Matrícula</TableHead>
-          <TableHead className="w-[15%] text-center">Previsão</TableHead>
-          <TableHead className="w-[30%]">Parcelas</TableHead>
-          <TableHead className="w-[8%] text-center">Ações</TableHead>
+          <TableHead className="whitespace-nowrap">Posto</TableHead>
+          <TableHead>Nome</TableHead>
+          <TableHead className="whitespace-nowrap">Matrícula</TableHead>
+          <TableHead className="text-center whitespace-nowrap">Previsão</TableHead>
+          <TableHead>Parcelas</TableHead>
+          <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

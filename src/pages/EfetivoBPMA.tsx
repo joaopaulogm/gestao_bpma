@@ -266,7 +266,7 @@ const EfetivoBPMA = () => {
 
   return (
     <Layout title="Efetivo BPMA">
-      <div className="w-[75%] mx-auto space-y-6">
+      <div className="space-y-6">
         {/* Actions Bar */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
           <div className="flex flex-col sm:flex-row gap-4 flex-1">
@@ -280,7 +280,7 @@ const EfetivoBPMA = () => {
               />
             </div>
             <Select value={quadroFilter} onValueChange={(val) => { setQuadroFilter(val); setPostoFilter('all'); }}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-auto sm:min-w-[160px]">
                 <SelectValue placeholder="Filtrar por Quadro" />
               </SelectTrigger>
               <SelectContent>
@@ -291,7 +291,7 @@ const EfetivoBPMA = () => {
               </SelectContent>
             </Select>
             <Select value={postoFilter} onValueChange={setPostoFilter}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-auto sm:min-w-[160px]">
                 <SelectValue placeholder="Filtrar por Posto" />
               </SelectTrigger>
               <SelectContent>
@@ -451,18 +451,18 @@ const EfetivoBPMA = () => {
         {/* Table */}
         <div className="rounded-lg border bg-card/50 backdrop-blur-sm overflow-hidden">
           <ScrollArea className="h-[calc(100vh-350px)] min-h-[400px]">
-            <div className="min-w-[800px]">
-              <Table>
+            <div className="overflow-x-auto">
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[80px]">Antig.</TableHead>
-                    <TableHead>Posto/Grad</TableHead>
-                    <TableHead>Quadro</TableHead>
-                    <TableHead>Nome de Guerra</TableHead>
+                    <TableHead className="whitespace-nowrap">Antig.</TableHead>
+                    <TableHead className="whitespace-nowrap">Posto/Grad</TableHead>
+                    <TableHead className="whitespace-nowrap">Quadro</TableHead>
+                    <TableHead className="whitespace-nowrap">Nome de Guerra</TableHead>
                     <TableHead>Nome Completo</TableHead>
-                    <TableHead>Matrícula</TableHead>
-                    <TableHead>Sexo</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead className="whitespace-nowrap">Matrícula</TableHead>
+                    <TableHead className="whitespace-nowrap">Sexo</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -69,24 +69,24 @@ const RegistrosTable: React.FC<RegistrosTableProps> = ({
   return (
     <div className="w-full">
       <div className="w-full overflow-x-auto rounded-lg border border-border bg-card">
-        <Table className="w-full table-fixed">
+        <Table className="w-full">
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[10%] px-2 py-2 whitespace-nowrap font-semibold">Data</TableHead>
-              <TableHead className="w-[12%] px-2 py-2 whitespace-nowrap font-semibold">Região</TableHead>
-              <TableHead className="w-[10%] px-2 py-2 whitespace-nowrap font-semibold">Tipo</TableHead>
+              <TableHead className="px-2 py-2 whitespace-nowrap font-semibold">Data</TableHead>
+              <TableHead className="px-2 py-2 whitespace-nowrap font-semibold">Região</TableHead>
+              <TableHead className="px-2 py-2 whitespace-nowrap font-semibold">Tipo</TableHead>
               {!isMobile && (
                 <>
-                  <TableHead className="w-[12%] px-2 py-2 font-semibold">Espécie</TableHead>
-                  <TableHead className="hidden lg:table-cell w-[14%] px-2 py-2 font-semibold">Nome Científico</TableHead>
+                  <TableHead className="px-2 py-2 font-semibold">Espécie</TableHead>
+                  <TableHead className="hidden lg:table-cell px-2 py-2 font-semibold">Nome Científico</TableHead>
                 </>
               )}
-              <TableHead className="hidden sm:table-cell w-[8%] px-2 py-2 font-semibold">Classe</TableHead>
-              <TableHead className="hidden sm:table-cell w-[8%] px-2 py-2 font-semibold">Estado</TableHead>
-              <TableHead className="hidden md:table-cell w-[8%] px-2 py-2 font-semibold">Estágio</TableHead>
-              <TableHead className="w-[6%] px-2 py-2 text-center font-semibold">Qtd.</TableHead>
-              <TableHead className="hidden md:table-cell w-[10%] px-2 py-2 font-semibold">Destinação</TableHead>
-              <TableHead className="w-[10%] px-2 py-2 text-right font-semibold">Ações</TableHead>
+              <TableHead className="hidden sm:table-cell px-2 py-2 font-semibold">Classe</TableHead>
+              <TableHead className="hidden sm:table-cell px-2 py-2 font-semibold">Estado</TableHead>
+              <TableHead className="hidden md:table-cell px-2 py-2 font-semibold">Estágio</TableHead>
+              <TableHead className="px-2 py-2 text-center font-semibold">Qtd.</TableHead>
+              <TableHead className="hidden md:table-cell px-2 py-2 font-semibold">Destinação</TableHead>
+              <TableHead className="px-2 py-2 text-right font-semibold">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
