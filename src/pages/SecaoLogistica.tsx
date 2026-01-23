@@ -410,7 +410,78 @@ const SecaoLogistica: React.FC = () => {
         </div>
       </div>
 
-      {/* Estatísticas */}
+      {/* Cards de Gestão separados */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Card Gestão da Frota */}
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Truck className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Gestão da Frota</CardTitle>
+                <CardDescription>Veículos e Viaturas</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <div className="text-2xl font-bold text-primary">{estatisticasFrota?.total || 0}</div>
+                <p className="text-xs text-muted-foreground">Total de Veículos</p>
+              </div>
+              <div className="text-center p-3 bg-green-500/10 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">{estatisticasFrota?.disponiveis || 0}</div>
+                <p className="text-xs text-muted-foreground">Disponíveis</p>
+              </div>
+              <div className="text-center p-3 bg-amber-500/10 rounded-lg">
+                <div className="text-2xl font-bold text-amber-600">{estatisticasFrota?.indisponiveis || 0}</div>
+                <p className="text-xs text-muted-foreground">Indisponíveis</p>
+              </div>
+              <div className="text-center p-3 bg-red-500/10 rounded-lg">
+                <div className="text-2xl font-bold text-red-600">{estatisticasFrota?.baixadas || 0}</div>
+                <p className="text-xs text-muted-foreground">Baixadas</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card Gestão de Patrimônio */}
+        <Card className="border-2 border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-secondary/10">
+                <Package className="h-6 w-6 text-secondary-foreground" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Gestão de Patrimônio</CardTitle>
+                <CardDescription>Equipamentos e Bens (TGRL)</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <div className="text-2xl font-bold text-primary">{estatisticasTGRL?.total || 0}</div>
+                <p className="text-xs text-muted-foreground">Total de Itens</p>
+              </div>
+              <div className="text-center p-3 bg-green-500/10 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">{estatisticasTGRL?.porEstado?.['Bom'] || estatisticasTGRL?.porEstado?.['BOM'] || 0}</div>
+                <p className="text-xs text-muted-foreground">Bom Estado</p>
+              </div>
+              <div className="col-span-2 text-center p-3 bg-blue-500/10 rounded-lg">
+                <div className="text-xl font-bold text-blue-600">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(estatisticasTGRL?.valorTotal || 0)}
+                </div>
+                <p className="text-xs text-muted-foreground">Valor Total do Patrimônio</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Estatísticas Detalhadas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
