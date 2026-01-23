@@ -74,6 +74,7 @@ const AtividadeOperacionalSection = () => (
       <HomeCard title="POP" icon={BookOpen} to="/material-apoio/pop" />
       <HomeCard title="Identificar Espécie" icon={BookOpen} to="/material-apoio/identificar-especie" />
       <HomeCard title="Manual RAP" icon={BookOpen} to="/material-apoio/manual-rap" />
+      <HomeCard title="Mapa e Localização" icon={Clipboard} to="/mapa-localizacao" />
       <HomeCard title="Ranking de Ocorrências" icon={Trophy} to="/ranking" />
     </div>
   </div>
