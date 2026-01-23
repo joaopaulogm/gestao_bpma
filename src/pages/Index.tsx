@@ -175,7 +175,6 @@ const Index = () => {
                       <HomeCard title="Flora Cadastro" icon={Clipboard} to="/secao-operacional/flora-cadastro" />
                       <HomeCard title="Flora Cadastrada" icon={Database} to="/secao-operacional/flora-cadastrada" />
                       <HomeCard title="Bens Apreendidos" icon={Shield} to="/secao-operacional/bens-apreendidos" />
-                      <HomeCard title="Processar RAP" icon={Briefcase} to="/secao-operacional/processar-rap" />
                       <HomeCard title="Monitorar RAPs" icon={Briefcase} to="/secao-operacional/monitorar-raps" />
                     </div>
                   </div>
