@@ -125,11 +125,12 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const matriculaLimpa = matricula.replace(/\D/g, '');
+      // Aceita números e letra X na matrícula
+      const matriculaLimpa = matricula.replace(/[^0-9Xx]/g, '').toUpperCase();
       const cpfLimpo = cpf.replace(/\D/g, '');
 
       if (!matriculaLimpa) {
-        toast.error('Digite sua matrícula (apenas números)');
+        toast.error('Digite sua matrícula (números e letra X se houver)');
         return;
       }
 
@@ -196,7 +197,8 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const matriculaLimpa = matricula.replace(/\D/g, '');
+      // Aceita números e letra X na matrícula
+      const matriculaLimpa = matricula.replace(/[^0-9Xx]/g, '').toUpperCase();
 
       if (!matriculaLimpa || !senhaLogin) {
         toast.error('Preencha matrícula e senha');
