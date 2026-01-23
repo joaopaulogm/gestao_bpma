@@ -1,72 +1,46 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Clipboard, 
-  LogIn, 
-  Shield,
-  BookOpen,
-  Lock,
-  Trophy,
-  Briefcase,
-  Users,
-  Wrench,
-  Settings,
-  Gavel,
-  HeartHandshake,
-  BarChart3,
-  FileText,
-  Database,
-  Upload
-} from 'lucide-react';
+import { Clipboard, LogIn, Shield, BookOpen, Lock, Trophy, Briefcase, Users, Wrench, Settings, Gavel, HeartHandshake, BarChart3, FileText, Database, Upload } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import logoBpma from '@/assets/logo-bpma.svg';
 import { useIsMobile } from '@/hooks/use-mobile';
-
 const CheckeredDivider = () => {
   const isMobile = useIsMobile();
   const count = isMobile ? 10 : 20;
-  
-  return (
-    <div className="flex gap-[2px] sm:gap-[3px]">
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex flex-col gap-[2px] sm:gap-[3px]">
+  return <div className="flex gap-[2px] sm:gap-[3px]">
+      {Array.from({
+      length: count
+    }).map((_, i) => <div key={i} className="flex flex-col gap-[2px] sm:gap-[3px]">
           <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 ${i % 2 === 0 ? 'bg-primary' : 'bg-transparent'}`} />
           <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 ${i % 2 === 1 ? 'bg-primary' : 'bg-transparent'}`} />
-        </div>
-      ))}
-    </div>
-  );
+        </div>)}
+    </div>;
 };
-
 import type { ElementType } from 'react';
-
 interface HomeCardProps {
   title: string;
   icon: ElementType;
   to: string;
 }
-
-const HomeCard = ({ title, icon: Icon, to }: HomeCardProps) => {
-  return (
-    <Link 
-      to={to}
-      className="flex flex-col items-center justify-center gap-1 p-2 rounded-2xl 
+const HomeCard = ({
+  title,
+  icon: Icon,
+  to
+}: HomeCardProps) => {
+  return <Link to={to} className="flex flex-col items-center justify-center gap-1 p-2 rounded-2xl 
         bg-primary border border-primary/50
         shadow-[0_4px_0_0_#041230,0_6px_10px_rgba(0,0,0,0.3)]
         hover:shadow-[0_2px_0_0_#041230,0_4px_8px_rgba(0,0,0,0.2),0_0_15px_rgba(255,204,0,0.4)]
         hover:translate-y-[2px]
         active:shadow-[0_0px_0_0_#041230,0_2px_4px_rgba(0,0,0,0.1)]
         active:translate-y-[4px]
-        transition-all duration-150 aspect-square w-full"
-    >
+        transition-all duration-150 aspect-square w-full">
       <Icon className="w-[40%] h-[40%] text-accent shrink-0" />
       <span className="text-[clamp(10px,2.5vw,14px)] font-semibold text-center text-primary-foreground leading-tight break-words hyphens-auto px-1 line-clamp-2">{title}</span>
-    </Link>
-  );
+    </Link>;
 };
 
 // Componente para Atividade Operacional (todos os usuários autenticados)
-const AtividadeOperacionalSection = () => (
-  <div className="space-y-3 sm:space-y-4">
+const AtividadeOperacionalSection = () => <div className="space-y-3 sm:space-y-4">
     <div className="flex items-center gap-2 text-primary font-semibold px-1">
       <Lock className="h-4 w-4" />
       <span className="text-xs sm:text-sm">Atividade Operacional</span>
@@ -79,12 +53,10 @@ const AtividadeOperacionalSection = () => (
       <HomeCard title="Mapa e Localização" icon={Clipboard} to="/mapa-localizacao" />
       <HomeCard title="Ranking de Ocorrências" icon={Trophy} to="/ranking" />
     </div>
-  </div>
-);
+  </div>;
 
 // Componente para Seção Operacional
-const SecaoOperacionalSection = () => (
-  <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
+const SecaoOperacionalSection = () => <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
     <div className="flex items-center gap-2 text-primary font-semibold px-1">
       <Briefcase className="h-4 w-4" />
       <span className="text-xs sm:text-sm">Seção Operacional</span>
@@ -100,12 +72,10 @@ const SecaoOperacionalSection = () => (
       <HomeCard title="Flora Cadastrada" icon={Database} to="/secao-operacional/flora-cadastrada" />
       <HomeCard title="Monitorar RAPs" icon={Briefcase} to="/secao-operacional/monitorar-raps" />
     </div>
-  </div>
-);
+  </div>;
 
 // Componente para Seção de Pessoas
-const SecaoPessoasSection = () => (
-  <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
+const SecaoPessoasSection = () => <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
     <div className="flex items-center gap-2 text-primary font-semibold px-1">
       <Users className="h-4 w-4" />
       <span className="text-xs sm:text-sm">Seção de Pessoas</span>
@@ -123,12 +93,10 @@ const SecaoPessoasSection = () => (
       <HomeCard title="Minuta Abono" icon={FileText} to="/secao-pessoas/abono/minuta" />
       <HomeCard title="Campanha" icon={Users} to="/secao-pessoas/campanha" />
     </div>
-  </div>
-);
+  </div>;
 
 // Componente para Seção de Logística
-const SecaoLogisticaSection = () => (
-  <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
+const SecaoLogisticaSection = () => <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
     <div className="flex items-center gap-2 text-primary font-semibold px-1">
       <Wrench className="h-4 w-4" />
       <span className="text-xs sm:text-sm">Seção de Logística</span>
@@ -136,12 +104,10 @@ const SecaoLogisticaSection = () => (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
       <HomeCard title="Seção de Logística" icon={Wrench} to="/secao-logistica" />
     </div>
-  </div>
-);
+  </div>;
 
 // Componente para Administração (apenas admin)
-const AdministracaoSection = () => (
-  <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
+const AdministracaoSection = () => <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
     <div className="flex items-center gap-2 text-primary font-semibold px-1">
       <Settings className="h-4 w-4" />
       <span className="text-xs sm:text-sm">Administração</span>
@@ -149,65 +115,52 @@ const AdministracaoSection = () => (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
       <HomeCard title="Gerenciar Permissões" icon={Settings} to="/gerenciar-permissoes" />
     </div>
-  </div>
-);
-
+  </div>;
 const Index = () => {
-  const { isAuthenticated, isAdmin, userRole, hasAccess } = useAuth();
+  const {
+    isAuthenticated,
+    isAdmin,
+    userRole,
+    hasAccess
+  } = useAuth();
   const isMobile = useIsMobile();
-  
+
   // Determinar quais seções mostrar com base no role
   const showSecaoOperacional = isAdmin || userRole === 'secao_operacional';
   const showSecaoPessoas = isAdmin || userRole === 'secao_pessoas';
   const showSecaoLogistica = isAdmin || userRole === 'secao_logistica';
   const showAdministracao = isAdmin;
-  
-  return (
-    <div className="p-4 sm:p-6 md:p-10 min-h-screen">
+  return <div className="p-4 sm:p-6 md:p-10 min-h-screen">
       {/* Header */}
       <div className="text-center mb-6 sm:mb-8">
         <div className="flex items-center justify-center mx-auto mb-4 sm:mb-5">
-          <div 
-            className="relative transition-all duration-300 hover:scale-105"
-            style={{
-              filter: `
+          <div className="relative transition-all duration-300 hover:scale-105" style={{
+          filter: `
                 drop-shadow(0 2px 4px rgba(7, 29, 73, 0.4))
                 drop-shadow(0 4px 8px rgba(7, 29, 73, 0.3))
                 drop-shadow(0 8px 16px rgba(7, 29, 73, 0.2))
                 drop-shadow(0 16px 32px rgba(7, 29, 73, 0.15))
                 drop-shadow(0 0 0 1px rgba(7, 29, 73, 0.1))
-              `,
-            }}
-          >
-            <img 
-              src={logoBpma} 
-              alt="Logo BPMA" 
-              className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 object-contain relative z-10"
-              style={{
-                filter: `
+              `
+        }}>
+            <img src={logoBpma} alt="Logo BPMA" className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 object-contain relative z-10" style={{
+            filter: `
                   drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15))
                   drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))
-                `,
-              }}
-            />
+                `
+          }} />
             {/* Efeito de brilho sutil e auto-relevo */}
-            <div 
-              className="absolute inset-0 rounded-full opacity-30 blur-2xl pointer-events-none"
-              style={{
-                background: 'radial-gradient(circle at 50% 50%, rgba(7, 29, 73, 0.5) 0%, rgba(7, 29, 73, 0.2) 40%, transparent 70%)',
-                transform: 'scale(1.3)',
-                zIndex: 0,
-              }}
-            />
+            <div className="absolute inset-0 rounded-full opacity-30 blur-2xl pointer-events-none" style={{
+            background: 'radial-gradient(circle at 50% 50%, rgba(7, 29, 73, 0.5) 0%, rgba(7, 29, 73, 0.2) 40%, transparent 70%)',
+            transform: 'scale(1.3)',
+            zIndex: 0
+          }} />
             {/* Efeito de luz superior para auto-relevo */}
-            <div 
-              className="absolute inset-0 rounded-full opacity-40 blur-sm pointer-events-none"
-              style={{
-                background: 'radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 50%)',
-                transform: 'scale(1.1)',
-                zIndex: 1,
-              }}
-            />
+            <div className="absolute inset-0 rounded-full opacity-40 blur-sm pointer-events-none" style={{
+            background: 'radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 50%)',
+            transform: 'scale(1.1)',
+            zIndex: 1
+          }} />
           </div>
         </div>
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-4">
@@ -217,30 +170,21 @@ const Index = () => {
           </h1>
           <CheckeredDivider />
         </div>
-        <p className="text-muted-foreground text-base sm:text-lg px-4">
-          Sistema de gestão de ocorrências e dados ambientais
-        </p>
+        <p className="text-muted-foreground text-base sm:text-lg px-4">Sistema de Gestão de Administrativa e Operacional</p>
       </div>
       
       <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8">
-        {!isAuthenticated ? (
-          /* Usuário não autenticado - mostrar apenas botão de login */
-          <div className="space-y-3 sm:space-y-4">
+        {!isAuthenticated ? (/* Usuário não autenticado - mostrar apenas botão de login */
+      <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center gap-2 text-primary font-semibold px-1">
               <Lock className="h-4 w-4" />
               <span className="text-xs sm:text-sm">Área Restrita</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-              <HomeCard 
-                title="Fazer Login" 
-                icon={LogIn} 
-                to="/login"
-              />
+              <HomeCard title="Fazer Login" icon={LogIn} to="/login" />
             </div>
-          </div>
-        ) : (
-          /* Usuário autenticado - mostrar seções conforme permissão */
-          <>
+          </div>) : (/* Usuário autenticado - mostrar seções conforme permissão */
+      <>
             {/* Atividade Operacional - TODOS os usuários autenticados têm acesso */}
             <AtividadeOperacionalSection />
             
@@ -255,30 +199,20 @@ const Index = () => {
             
             {/* Administração - apenas admin */}
             {showAdministracao && <AdministracaoSection />}
-          </>
-        )}
+          </>)}
 
         {/* Footer with Legal Links */}
         <footer className="pt-8 pb-4 border-t border-border/30 mt-8">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-xs text-muted-foreground">
-            <Link 
-              to="/politica-privacidade" 
-              className="hover:text-primary transition-colors"
-            >
+            <Link to="/politica-privacidade" className="hover:text-primary transition-colors">
               Política de Privacidade
             </Link>
             <span className="hidden sm:inline">•</span>
-            <Link 
-              to="/politica-cookies" 
-              className="hover:text-primary transition-colors"
-            >
+            <Link to="/politica-cookies" className="hover:text-primary transition-colors">
               Política de Cookies
             </Link>
             <span className="hidden sm:inline">•</span>
-            <Link 
-              to="/termos-uso" 
-              className="hover:text-primary transition-colors"
-            >
+            <Link to="/termos-uso" className="hover:text-primary transition-colors">
               Termos de Uso
             </Link>
           </div>
@@ -287,8 +221,6 @@ const Index = () => {
           </p>
         </footer>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
