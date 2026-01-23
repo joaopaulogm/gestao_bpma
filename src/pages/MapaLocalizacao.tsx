@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, MapPin, Navigation, RefreshCw, Shield, TreePine, Mountain, Leaf, AlertTriangle, CheckCircle2, XCircle, Copy, Layers } from 'lucide-react';
+import { Loader2, MapPin, Navigation, AlertTriangle, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { cn } from '@/lib/utils';
 import KmlLayerControls, { KML_LAYERS, KmlLayer } from '@/components/mapa/KmlLayerControls';
+import AreaVerificationGrid from '@/components/mapa/AreaVerificationGrid';
 
 interface Coordenadas {
   latitude: number;
@@ -17,27 +17,10 @@ interface Coordenadas {
   timestamp: Date;
 }
 
-interface AreaProtegida {
-  id: string;
-  nome: string;
-  tipo: 'app' | 'uc_federal' | 'uc_distrital' | 'reserva_legal' | 'area_especial';
-  dentro: boolean;
-}
-
-const tipoAreaConfig = {
-  app: { label: 'APP', icon: TreePine, color: 'bg-green-500' },
-  uc_federal: { label: 'UC Federal', icon: Mountain, color: 'bg-blue-500' },
-  uc_distrital: { label: 'UC Distrital', icon: Shield, color: 'bg-purple-500' },
-  reserva_legal: { label: 'Reserva Legal', icon: Leaf, color: 'bg-emerald-500' },
-  area_especial: { label: 'Área Especial', icon: AlertTriangle, color: 'bg-amber-500' },
-};
-
 const MapaLocalizacao: React.FC = () => {
   const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(null);
   const [loading, setLoading] = useState(false);
-  const [loadingAreas, setLoadingAreas] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [areasProtegidas, setAreasProtegidas] = useState<AreaProtegida[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
@@ -137,8 +120,6 @@ const MapaLocalizacao: React.FC = () => {
     setLoadingLayers(prev => [...prev, layerId]);
 
     try {
-      // URL pública necessária para Google Maps KML
-      // Em produção, usar URL do site publicado
       const baseUrl = window.location.origin;
       const kmlUrl = `${baseUrl}${layer.file}`;
 
@@ -151,7 +132,6 @@ const MapaLocalizacao: React.FC = () => {
         suppressInfoWindows: false,
       });
 
-      // Listener para quando o KML é carregado
       kmlLayer.addListener('status_changed', () => {
         const status = kmlLayer.getStatus();
         console.log(`KML ${layer.name} status:`, status);
@@ -161,18 +141,15 @@ const MapaLocalizacao: React.FC = () => {
           setLayers(prev => prev.map(l => 
             l.id === layerId ? { ...l, visible: true } : l
           ));
-          toast.success(`Camada "${layer.name}" carregada`);
+          toast.success(`"${layer.name}" carregada`);
         } else {
-          console.error(`Erro ao carregar KML ${layer.name}:`, status);
+          console.error(`Erro KML ${layer.name}:`, status);
           kmlLayer.setMap(null);
           
           if (status === 'FETCH_ERROR') {
-            toast.error(
-              `Camada "${layer.name}" requer URL pública. Publique o app para usar.`,
-              { duration: 5000 }
-            );
+            toast.error('Publique o app para usar camadas KML', { duration: 4000 });
           } else {
-            toast.error(`Erro ao carregar: ${status}`);
+            toast.error(`Erro: ${status}`);
           }
         }
         
@@ -216,11 +193,9 @@ const MapaLocalizacao: React.FC = () => {
         title: 'Sua localização',
       });
 
-      // Centralizar mapa
       mapInstanceRef.current.panTo(position);
       mapInstanceRef.current.setZoom(16);
 
-      // Adicionar círculo de precisão
       new google.maps.Circle({
         map: mapInstanceRef.current,
         center: position,
@@ -244,7 +219,7 @@ const MapaLocalizacao: React.FC = () => {
     setError(null);
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
+      (position) => {
         const novasCoordenadas: Coordenadas = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -254,22 +229,19 @@ const MapaLocalizacao: React.FC = () => {
         
         setCoordenadas(novasCoordenadas);
         setLoading(false);
-        toast.success('Localização obtida com sucesso!');
-
-        // Verificar áreas protegidas
-        await verificarAreasProtegidas(novasCoordenadas);
+        toast.success('Localização obtida!');
       },
       (err) => {
         setLoading(false);
         switch (err.code) {
           case err.PERMISSION_DENIED:
-            setError('Permissão de localização negada. Ative nas configurações do navegador.');
+            setError('Permissão negada. Ative nas configurações.');
             break;
           case err.POSITION_UNAVAILABLE:
-            setError('Localização indisponível. Verifique seu GPS.');
+            setError('Localização indisponível. Verifique GPS.');
             break;
           case err.TIMEOUT:
-            setError('Tempo esgotado ao obter localização.');
+            setError('Tempo esgotado.');
             break;
           default:
             setError('Erro ao obter localização.');
@@ -284,37 +256,12 @@ const MapaLocalizacao: React.FC = () => {
     );
   }, []);
 
-  const verificarAreasProtegidas = async (coords: Coordenadas) => {
-    setLoadingAreas(true);
-    try {
-      // Por enquanto, simular verificação até dados PostGIS serem integrados
-      const areasSimuladas: AreaProtegida[] = [
-        { id: '1', nome: 'Verificação via camadas KML', tipo: 'app', dentro: false },
-        { id: '2', nome: 'Ative camadas no painel', tipo: 'uc_federal', dentro: false },
-        { id: '3', nome: 'Para visualizar áreas', tipo: 'uc_distrital', dentro: false },
-        { id: '4', nome: 'Protegidas no mapa', tipo: 'reserva_legal', dentro: false },
-      ];
-
-      setAreasProtegidas(areasSimuladas);
-    } catch (err) {
-      console.error('Erro ao verificar áreas:', err);
-    } finally {
-      setLoadingAreas(false);
-    }
-  };
-
   const copiarCoordenadas = () => {
     if (coordenadas) {
       const texto = `${coordenadas.latitude.toFixed(6)}, ${coordenadas.longitude.toFixed(6)}`;
       navigator.clipboard.writeText(texto);
       toast.success('Coordenadas copiadas!');
     }
-  };
-
-  const formatarPrecisao = (metros: number) => {
-    if (metros < 1) return '< 1m';
-    if (metros < 10) return `± ${metros.toFixed(1)}m`;
-    return `± ${Math.round(metros)}m`;
   };
 
   const visibleLayersCount = layers.filter(l => l.visible).length;
@@ -329,10 +276,10 @@ const MapaLocalizacao: React.FC = () => {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Navigation className="h-5 w-5 text-primary" />
-                Sua Localização
+                Obter Localização
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               <Button
                 onClick={obterLocalizacao}
                 disabled={loading}
@@ -342,57 +289,42 @@ const MapaLocalizacao: React.FC = () => {
                 {loading ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    Obtendo localização...
+                    Obtendo...
                   </>
                 ) : (
                   <>
                     <MapPin className="h-5 w-5" />
-                    {coordenadas ? 'Atualizar Localização' : 'Obter Minha Localização'}
+                    {coordenadas ? 'Atualizar' : 'Obter Localização'}
                   </>
                 )}
               </Button>
 
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="py-2">
                   <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-xs">{error}</AlertDescription>
                 </Alert>
               )}
 
               {coordenadas && (
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Latitude</span>
-                    <span className="font-mono text-sm">{coordenadas.latitude.toFixed(6)}°</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Longitude</span>
-                    <span className="font-mono text-sm">{coordenadas.longitude.toFixed(6)}°</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Precisão</span>
-                    <Badge variant="secondary">{formatarPrecisao(coordenadas.accuracy)}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Atualizado</span>
-                    <span className="text-xs text-muted-foreground">
-                      {coordenadas.timestamp.toLocaleTimeString('pt-BR')}
-                    </span>
-                  </div>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={copiarCoordenadas}
-                    className="w-full gap-2 mt-2"
-                  >
-                    <Copy className="h-4 w-4" />
-                    Copiar Coordenadas
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copiarCoordenadas}
+                  className="w-full gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copiar Coordenadas
+                </Button>
               )}
             </CardContent>
           </Card>
+
+          {/* Grid de Verificação de Áreas */}
+          <AreaVerificationGrid
+            coordenadas={coordenadas}
+            visibleLayersCount={visibleLayersCount}
+          />
 
           {/* Card de Camadas KML */}
           <KmlLayerControls
@@ -400,79 +332,6 @@ const MapaLocalizacao: React.FC = () => {
             onToggleLayer={toggleLayer}
             loadingLayers={loadingLayers}
           />
-
-          {/* Card de Áreas Protegidas */}
-          <Card className="bg-card/50 backdrop-blur border-border/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Shield className="h-5 w-5 text-green-500" />
-                Verificação de Áreas
-                {visibleLayersCount > 0 && (
-                  <Badge variant="secondary" className="ml-auto">
-                    {visibleLayersCount} camadas ativas
-                  </Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!coordenadas ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Obtenha sua localização para verificar áreas protegidas
-                </p>
-              ) : loadingAreas ? (
-                <div className="flex items-center justify-center py-6">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {areasProtegidas.map((area) => {
-                    const config = tipoAreaConfig[area.tipo];
-                    const Icon = config.icon;
-                    
-                    return (
-                      <div
-                        key={area.id}
-                        className={cn(
-                          "flex items-center justify-between p-3 rounded-lg border transition-colors",
-                          area.dentro 
-                            ? "bg-red-500/10 border-red-500/30" 
-                            : "bg-muted/30 border-border/50"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={cn("p-2 rounded-lg", config.color)}>
-                            <Icon className="h-4 w-4 text-white" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm">{config.label}</p>
-                            <p className="text-xs text-muted-foreground">{area.nome}</p>
-                          </div>
-                        </div>
-                        {area.dentro ? (
-                          <Badge variant="destructive" className="gap-1">
-                            <XCircle className="h-3 w-3" />
-                            Dentro
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="gap-1 text-muted-foreground">
-                            <CheckCircle2 className="h-3 w-3" />
-                            Fora
-                          </Badge>
-                        )}
-                      </div>
-                    );
-                  })}
-                  
-                  <Alert className="mt-4">
-                    <Layers className="h-4 w-4" />
-                    <AlertDescription className="text-xs">
-                      Ative as camadas KML acima para visualizar áreas protegidas diretamente no mapa.
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         {/* Mapa */}
