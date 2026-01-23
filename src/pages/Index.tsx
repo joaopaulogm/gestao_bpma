@@ -163,7 +163,6 @@ const Index = () => {
                       <span className="text-xs sm:text-sm">Seção Operacional</span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-                      <HomeCard title="Seção Operacional" icon={Briefcase} to="/secao-operacional" />
                       <HomeCard title="Dashboard Operacional" icon={BarChart3} to="/secao-operacional/dashboard" />
                       <HomeCard title="Registros de Resgates" icon={Clipboard} to="/secao-operacional/registros-resgates" />
                       <HomeCard title="Registros Crimes Ambientais" icon={Shield} to="/secao-operacional/registros-crimes-ambientais" />
