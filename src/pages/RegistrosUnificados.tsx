@@ -87,6 +87,16 @@ interface RegistroPrevencao {
   observacoes?: string;
 }
 
+interface RegistroBemApreendido {
+  id: string;
+  data: string;
+  item?: string;
+  bem_apreendido?: string;
+  tipo_crime?: string;
+  quantidade?: number;
+  ocorrencia_id?: string;
+}
+
 // ==================== BOTÃO 3D ====================
 
 interface Button3DProps {
@@ -195,12 +205,14 @@ const RegistrosUnificados: React.FC = () => {
   const [crimesAmbientais, setCrimesAmbientais] = useState<RegistroCrimeAmbiental[]>([]);
   const [crimesComuns, setCrimesComuns] = useState<RegistroCrimeComum[]>([]);
   const [prevencaoRegistros, setPrevencaoRegistros] = useState<RegistroPrevencao[]>([]);
+  const [bensApreendidos, setBensApreendidos] = useState<RegistroBemApreendido[]>([]);
   
   // Estados de loading
   const [loadingFauna, setLoadingFauna] = useState(false);
   const [loadingCrimesAmbientais, setLoadingCrimesAmbientais] = useState(false);
   const [loadingCrimesComuns, setLoadingCrimesComuns] = useState(false);
   const [loadingPrevencao, setLoadingPrevencao] = useState(false);
+  const [loadingBensApreendidos, setLoadingBensApreendidos] = useState(false);
   
   // Estados de delete
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -245,9 +257,17 @@ const RegistrosUnificados: React.FC = () => {
   // Carregar dados quando cache estiver pronto ou tab mudar
   useEffect(() => {
     if (dimensionCache) {
+      // Carregar todos os dados de uma vez para contadores nas abas
+      loadAllData();
+    }
+  }, [dimensionCache]);
+
+  // Recarregar quando filtros mudarem
+  useEffect(() => {
+    if (dimensionCache) {
       loadDataForTab(activeTab);
     }
-  }, [dimensionCache, activeTab, filterAno, filterMes]);
+  }, [filterAno, filterMes]);
 
   const loadDimensionCache = async () => {
     try {
@@ -295,19 +315,33 @@ const RegistrosUnificados: React.FC = () => {
     }
   };
 
+  const loadAllData = async () => {
+    // Carregar todos de uma vez
+    await Promise.all([
+      loadFaunaData(),
+      loadCrimesAmbientaisData(),
+      loadCrimesComunsData(),
+      loadPrevencaoData(),
+      loadBensApreendidosData(),
+    ]);
+  };
+
   const loadDataForTab = async (tab: string) => {
     switch (tab) {
       case 'fauna':
-        if (faunaRegistros.length === 0) loadFaunaData();
+        loadFaunaData();
         break;
       case 'crimes-ambientais':
-        if (crimesAmbientais.length === 0) loadCrimesAmbientaisData();
+        loadCrimesAmbientaisData();
         break;
       case 'crimes-comuns':
-        if (crimesComuns.length === 0) loadCrimesComunsData();
+        loadCrimesComunsData();
         break;
       case 'prevencao':
-        if (prevencaoRegistros.length === 0) loadPrevencaoData();
+        loadPrevencaoData();
+        break;
+      case 'bens-apreendidos':
+        loadBensApreendidosData();
         break;
     }
   };
@@ -464,6 +498,62 @@ const RegistrosUnificados: React.FC = () => {
     }
   };
 
+  const loadBensApreendidosData = async () => {
+    setLoadingBensApreendidos(true);
+    try {
+      // Buscar da tabela de relacionamento fat_ocorrencia_apreensao
+      const { data, error } = await supabaseAny
+        .from('fat_ocorrencia_apreensao')
+        .select('id, quantidade, ocorrencia_id, item_id')
+        .order('id', { ascending: false })
+        .limit(200);
+
+      if (error) throw error;
+
+      // Buscar itens de apreensão
+      const { data: itensData } = await supabaseAny
+        .from('dim_itens_apreensao')
+        .select('id, Item, "Bem Apreendido", "Tipo de Crime"');
+      
+      const itensMap = new Map<string, any>();
+      itensData?.forEach((i: any) => {
+        itensMap.set(i.id, i);
+      });
+
+      // Buscar ocorrências para data
+      const ocorrenciaIds = [...new Set((data || []).map((r: any) => r.ocorrencia_id).filter(Boolean))];
+      let ocorrenciasMap = new Map<string, string>();
+      if (ocorrenciaIds.length > 0) {
+        const { data: ocorrenciasData } = await supabaseAny
+          .from('fat_registros_de_crime')
+          .select('id, data')
+          .in('id', ocorrenciaIds);
+        ocorrenciasData?.forEach((o: any) => {
+          ocorrenciasMap.set(o.id, o.data);
+        });
+      }
+
+      const enriched: RegistroBemApreendido[] = (data || []).map((r: any) => {
+        const item = itensMap.get(r.item_id);
+        return {
+          id: r.id,
+          data: ocorrenciasMap.get(r.ocorrencia_id) || '',
+          item: item?.Item,
+          bem_apreendido: item?.['Bem Apreendido'],
+          tipo_crime: item?.['Tipo de Crime'],
+          quantidade: r.quantidade,
+          ocorrencia_id: r.ocorrencia_id,
+        };
+      });
+
+      setBensApreendidos(enriched);
+    } catch (error) {
+      console.error('Erro ao carregar bens apreendidos:', error);
+    } finally {
+      setLoadingBensApreendidos(false);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     try {
       return format(new Date(dateStr), 'dd/MM/yyyy', { locale: ptBR });
@@ -616,7 +706,8 @@ const RegistrosUnificados: React.FC = () => {
     crimesAmbientais: crimesAmbientais.length,
     crimesComuns: crimesComuns.length,
     prevencao: prevencaoRegistros.length,
-  }), [faunaRegistros, crimesAmbientais, crimesComuns, prevencaoRegistros]);
+    bensApreendidos: bensApreendidos.length,
+  }), [faunaRegistros, crimesAmbientais, crimesComuns, prevencaoRegistros, bensApreendidos]);
 
   const getStatusVariant = (status: string | undefined): 'success' | 'warning' | 'error' | 'default' => {
     if (!status) return 'default';
@@ -1013,6 +1104,94 @@ const RegistrosUnificados: React.FC = () => {
     );
   };
 
+  const renderBensApreendidosTable = () => {
+    const filteredData = getFilteredData(bensApreendidos, ['item', 'bem_apreendido', 'tipo_crime']);
+    const allIds = filteredData.map(r => r.id);
+
+    if (loadingBensApreendidos) {
+      return (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
+
+    if (filteredData.length === 0) {
+      return (
+        <div className="text-center py-12 text-muted-foreground">
+          <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>Nenhum bem apreendido encontrado</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-lg border bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="w-12">
+                <Checkbox 
+                  checked={selectedItems.size === allIds.length && allIds.length > 0}
+                  onCheckedChange={() => toggleSelectAll(allIds)}
+                />
+              </TableHead>
+              <TableHead>ID</TableHead>
+              <TableHead>Item</TableHead>
+              <TableHead className="hidden md:table-cell">Categoria</TableHead>
+              <TableHead className="hidden lg:table-cell">Quantidade</TableHead>
+              <TableHead className="hidden sm:table-cell">Data</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredData.map((registro, index) => (
+              <TableRow 
+                key={registro.id}
+                className={cn(
+                  "transition-colors",
+                  selectedItems.has(registro.id) && "bg-primary/5"
+                )}
+              >
+                <TableCell>
+                  <Checkbox 
+                    checked={selectedItems.has(registro.id)}
+                    onCheckedChange={() => toggleSelectItem(registro.id)}
+                  />
+                </TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  #{String(index + 1).padStart(5, '0')}
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <p className="font-medium">{registro.item || 'Item'}</p>
+                    {registro.tipo_crime && (
+                      <p className="text-xs text-muted-foreground">{registro.tipo_crime}</p>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <Badge variant="secondary">{registro.bem_apreendido || '-'}</Badge>
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  {registro.quantidade || 0}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  {registro.data ? formatDate(registro.data) : '-'}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button3D size="sm" variant="view" onClick={() => registro.ocorrencia_id && handleView('crimes-ambientais', registro.ocorrencia_id)} />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
   return (
     <Layout title="Registros" showBackButton>
       <div className="space-y-4">
@@ -1062,6 +1241,16 @@ const RegistrosUnificados: React.FC = () => {
                 <span className="hidden sm:inline">Prevenção</span>
                 <Badge variant="secondary" className="ml-1 text-xs rounded-full bg-background/50">
                   {tabStats.prevencao}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="bens-apreendidos" 
+                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all"
+              >
+                <Shield className="h-4 w-4" />
+                <span className="hidden sm:inline">Apreendidos</span>
+                <Badge variant="secondary" className="ml-1 text-xs rounded-full bg-background/50">
+                  {tabStats.bensApreendidos}
                 </Badge>
               </TabsTrigger>
             </TabsList>
@@ -1139,6 +1328,12 @@ const RegistrosUnificados: React.FC = () => {
           <TabsContent value="prevencao" className="mt-0">
             <ScrollArea className="h-[calc(100vh-320px)]">
               {renderPrevencaoTable()}
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="bens-apreendidos" className="mt-0">
+            <ScrollArea className="h-[calc(100vh-320px)]">
+              {renderBensApreendidosTable()}
             </ScrollArea>
           </TabsContent>
         </Tabs>
