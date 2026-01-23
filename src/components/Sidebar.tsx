@@ -110,7 +110,7 @@ const Sidebar = () => {
       <nav className="flex-1 overflow-y-auto p-3">
         <ul className="space-y-1">
           <li>
-            <Link to="/" className={linkClasses('/')}>
+            <Link to="/inicio" className={linkClasses('/inicio')}>
               <Home className="h-5 w-5 flex-shrink-0" />
               {(isOpen || isMobile) && <span className="truncate">Página Inicial</span>}
             </Link>

@@ -86,7 +86,9 @@ function App() {
               <Route path="/politica-cookies" element={<PoliticaCookies />} />
               <Route path="/termos-uso" element={<TermosUso />} />
               
-              <Route path="/" element={<SidebarLayout><Index /></SidebarLayout>} />
+              {/* Redireciona / para /inicio */}
+              <Route path="/" element={<Navigate to="/inicio" replace />} />
+              <Route path="/inicio" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><Index /></SidebarLayout></ProtectedRoute>} />
               
               {/* Operador level - requires authentication */}
               <Route path="/resgate-cadastro" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><ResgateCadastro /></SidebarLayout></ProtectedRoute>} />
