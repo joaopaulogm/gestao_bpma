@@ -392,22 +392,29 @@ const Login = () => {
   const handleSkipGoogleLink = () => {
     // Login realizado com sucesso - redirecionar para página inicial
     // O usuário fez login com matrícula/senha - sessão PERMANENTE
-    toast.success('Login realizado com sucesso!');
     
-    // Armazenar informações do usuário em localStorage (sessão permanente)
     if (pendingUser) {
-      localStorage.setItem('bpma_auth_user', JSON.stringify({
+      // Salvar sessão no localStorage
+      const userData = {
         id: pendingUser.id,
         nome: pendingUser.nome,
         nome_guerra: pendingUser.nome_guerra,
         matricula: pendingUser.matricula,
         email: pendingUser.email,
         role: pendingUser.role
-      }));
+      };
+      localStorage.setItem('bpma_auth_user', JSON.stringify(userData));
+      
+      // Disparar evento para AuthContext reagir imediatamente
+      window.dispatchEvent(new CustomEvent('bpma_local_auth_changed', { detail: userData }));
     }
     
-    // Redirecionar para página inicial
-    navigate('/inicio');
+    toast.success('Login realizado com sucesso!');
+    
+    // Usar setTimeout para garantir que o AuthContext processe o evento antes do navigate
+    setTimeout(() => {
+      navigate('/inicio');
+    }, 100);
   };
 
   // ==================== LOGIN COM EMAIL (Supabase Auth) ====================

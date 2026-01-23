@@ -62,7 +62,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Handler para sessão local (login com matrícula/senha)
+  const handleLocalAuthChange = (userData: { id: string; email?: string; role?: string }) => {
+    setUser({
+      id: userData.id,
+      email: userData.email || '',
+    });
+    setUserRole((userData.role as AppRole) || 'operador');
+    setLoading(false);
+  };
+
   useEffect(() => {
+    // Listener para evento customizado de login local
+    const handleLocalAuthEvent = (event: CustomEvent) => {
+      handleLocalAuthChange(event.detail);
+    };
+    window.addEventListener('bpma_local_auth_changed', handleLocalAuthEvent as EventListener);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (session?.user) {
@@ -81,11 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (localAuthUser) {
             try {
               const localUser = JSON.parse(localAuthUser);
-              setUser({
-                id: localUser.id,
-                email: localUser.email || '',
-              });
-              setUserRole((localUser.role as AppRole) || 'operador');
+              handleLocalAuthChange(localUser);
             } catch (e) {
               console.error('Error parsing local auth user:', e);
               localStorage.removeItem('bpma_auth_user');
@@ -117,11 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (localAuthUser) {
           try {
             const localUser = JSON.parse(localAuthUser);
-            setUser({
-              id: localUser.id,
-              email: localUser.email || '',
-            });
-            setUserRole((localUser.role as AppRole) || 'operador');
+            handleLocalAuthChange(localUser);
           } catch (e) {
             console.error('Error parsing local auth user:', e);
             localStorage.removeItem('bpma_auth_user');
@@ -133,6 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       subscription.unsubscribe();
+      window.removeEventListener('bpma_local_auth_changed', handleLocalAuthEvent as EventListener);
     };
   }, []);
 
