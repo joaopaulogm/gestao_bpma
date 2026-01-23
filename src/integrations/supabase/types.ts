@@ -3292,24 +3292,89 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          ativo: boolean | null
+          contato: string | null
+          cpf: number | null
           created_at: string | null
+          data_inclusao: string | null
+          data_nascimento: string | null
+          efetivo_id: string | null
+          email: string | null
           id: string
+          idade: number | null
+          login: string | null
+          lotacao: string | null
+          matricula: string | null
+          nome: string | null
+          nome_guerra: string | null
+          porte_arma: string | null
+          post_grad: string | null
+          quadro: string | null
           role: Database["public"]["Enums"]["app_role"]
-          user_id: string
+          senha: string | null
+          sexo: string | null
+          user_id: string | null
+          vinculado_em: string | null
         }
         Insert: {
+          ativo?: boolean | null
+          contato?: string | null
+          cpf?: number | null
           created_at?: string | null
+          data_inclusao?: string | null
+          data_nascimento?: string | null
+          efetivo_id?: string | null
+          email?: string | null
           id?: string
+          idade?: number | null
+          login?: string | null
+          lotacao?: string | null
+          matricula?: string | null
+          nome?: string | null
+          nome_guerra?: string | null
+          porte_arma?: string | null
+          post_grad?: string | null
+          quadro?: string | null
           role?: Database["public"]["Enums"]["app_role"]
-          user_id: string
+          senha?: string | null
+          sexo?: string | null
+          user_id?: string | null
+          vinculado_em?: string | null
         }
         Update: {
+          ativo?: boolean | null
+          contato?: string | null
+          cpf?: number | null
           created_at?: string | null
+          data_inclusao?: string | null
+          data_nascimento?: string | null
+          efetivo_id?: string | null
+          email?: string | null
           id?: string
+          idade?: number | null
+          login?: string | null
+          lotacao?: string | null
+          matricula?: string | null
+          nome?: string | null
+          nome_guerra?: string | null
+          porte_arma?: string | null
+          post_grad?: string | null
+          quadro?: string | null
           role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
+          senha?: string | null
+          sexo?: string | null
+          user_id?: string | null
+          vinculado_em?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       usuarios_permitidos: {
         Row: {
@@ -3631,6 +3696,29 @@ export type Database = {
         }[]
       }
       get_current_user_efetivo_id: { Args: never; Returns: string }
+      get_usuario_by_login_senha: {
+        Args: { p_login: string; p_senha: string }
+        Returns: {
+          ativo: boolean
+          contato: string
+          cpf: number
+          data_nascimento: string
+          efetivo_id: string
+          email: string
+          id: string
+          login: string
+          lotacao: string
+          matricula: string
+          nome: string
+          nome_guerra: string
+          post_grad: string
+          quadro: string
+          role: Database["public"]["Enums"]["app_role"]
+          senha: string
+          user_id: string
+          vinculado_em: string
+        }[]
+      }
       has_role:
         | {
             Args: {

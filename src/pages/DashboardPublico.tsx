@@ -38,7 +38,8 @@ import {
   AlertTriangle,
   Map as MapIcon,
   BarChart3,
-  Trophy
+  Trophy,
+  Download
 } from 'lucide-react';
 import logoBpma from '@/assets/logo-bpma.png';
 import DashboardComparativoAnos from '@/components/dashboard/DashboardComparativoAnos';
@@ -47,6 +48,7 @@ import DashboardRankingEspecies from '@/components/dashboard/DashboardRankingEsp
 import DashboardTendenciaSazonal from '@/components/dashboard/DashboardTendenciaSazonal';
 import DashboardAlertasPicos from '@/components/dashboard/DashboardAlertasPicos';
 import DashboardAtropelamentos from '@/components/dashboard/DashboardAtropelamentos';
+import DashboardPublicoExport from '@/components/dashboard/DashboardPublicoExport';
 
 const COLORS = ['#071d49', '#ffcc00', '#3b82f6', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#22c55e'];
 
@@ -593,6 +595,19 @@ const DashboardPublico = () => {
                   Limpar filtros
                 </button>
               )}
+              
+              <div className="ml-auto">
+                <DashboardPublicoExport
+                  metrics={metrics}
+                  monthlyData={monthlyData}
+                  classDistribution={processedData.classeTaxonomica || []}
+                  regionDistribution={processedData.regiaoAdministrativa || []}
+                  speciesRanking={(processedData.especiesMaisResgatadas || []).map(s => ({ name: s.name, value: s.quantidade }))}
+                  selectedYear={selectedYear}
+                  selectedMonth={selectedMonth}
+                  isLoading={isLoading}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
