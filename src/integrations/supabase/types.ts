@@ -3700,6 +3700,7 @@ export type Database = {
         Args: { p_login: string; p_senha: string }
         Returns: {
           ativo: boolean
+          auth_user_id: string
           contato: string
           cpf: number
           data_nascimento: string
@@ -3713,9 +3714,7 @@ export type Database = {
           nome_guerra: string
           post_grad: string
           quadro: string
-          role: Database["public"]["Enums"]["app_role"]
           senha: string
-          user_id: string
           vinculado_em: string
         }[]
       }
