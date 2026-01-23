@@ -170,7 +170,7 @@ const Index = () => {
           </h1>
           <CheckeredDivider />
         </div>
-        <p className="text-muted-foreground text-base sm:text-lg px-4">Sistema de Gestão de Administrativa e Operacional</p>
+        <p className="text-[#071d49] text-base sm:text-lg px-4">Sistema de Gestão de Administrativa e Operacional</p>
       </div>
       
       <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8">
