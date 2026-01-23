@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Lock, User, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle, Shield, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { handleSupabaseError } from '@/utils/errorHandler';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
+import logoBPMA from '@/assets/logo-bpma.png';
 
 // Interface para usuário retornado das RPCs
 interface UserRoleData {
@@ -118,7 +118,7 @@ const Login = () => {
   }, [navigate]);
 
   // ==================== PRIMEIRO ACESSO ====================
-  // Login = matrícula (apenas números)
+  // Login = matrícula (números e letra X)
   // Senha = CPF (11 dígitos, apenas números)
   const handlePrimeiroAcesso = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -388,90 +388,112 @@ const Login = () => {
   const ValidationRule = ({ valid, text }: { valid: boolean; text: string }) => (
     <div className="flex items-center gap-2 text-xs">
       {valid ? (
-        <CheckCircle2 className="h-3 w-3 text-green-500" />
+        <CheckCircle2 className="h-3 w-3 text-green-400" />
       ) : (
-        <XCircle className="h-3 w-3 text-muted-foreground" />
+        <XCircle className="h-3 w-3 text-white/40" />
       )}
-      <span className={valid ? 'text-green-600' : 'text-muted-foreground'}>{text}</span>
+      <span className={valid ? 'text-green-400' : 'text-white/60'}>{text}</span>
+    </div>
+  );
+
+  // Glassmorphism Card Component
+  const GlassCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+    <div className={`
+      relative backdrop-blur-xl bg-white/10 
+      border border-white/20 rounded-2xl 
+      shadow-[0_8px_32px_rgba(0,0,0,0.3)]
+      ${className}
+    `}>
+      {children}
+    </div>
+  );
+
+  // Glass Input Component
+  const GlassInput = ({ icon: Icon, ...props }: { icon: React.ElementType } & React.ComponentProps<typeof Input>) => (
+    <div className="relative">
+      <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#ffcc00]" />
+      <Input
+        {...props}
+        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 
+                   focus:border-[#ffcc00]/50 focus:ring-[#ffcc00]/20 rounded-lg h-11"
+      />
     </div>
   );
 
   // ==================== TELA: ALTERAR SENHA ====================
   if (loginStep === 'password-change' && pendingUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4">
-        <Card className="w-full max-w-md border-border shadow-lg">
-          <CardHeader className="space-y-1 text-center pb-4 sm:pb-6 px-4 sm:px-6">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <KeyRound className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6"
+           style={{ background: 'linear-gradient(135deg, #071d49 0%, #0a2a5e 50%, #071d49 100%)' }}>
+        <GlassCard className="w-full max-w-md p-6 sm:p-8">
+          {/* Avatar */}
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#ffcc00]/30 to-[#ffcc00]/10 
+                            border-2 border-[#ffcc00]/50 flex items-center justify-center">
+              <KeyRound className="h-10 w-10 text-[#ffcc00]" />
             </div>
-            <CardTitle className="text-xl sm:text-2xl font-bold text-foreground">
-              Criar Nova Senha
-            </CardTitle>
-            <CardDescription className="text-muted-foreground text-sm">
-              Olá, <span className="font-semibold">{pendingUser.nome_guerra || pendingUser.nome}</span>!
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 px-4 sm:px-6">
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-sm">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                <p className="text-amber-700 dark:text-amber-400">
-                  Este é seu primeiro acesso. Crie uma senha segura seguindo as regras abaixo.
-                </p>
-              </div>
+          </div>
+
+          <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">
+            Criar Nova Senha
+          </h2>
+          <p className="text-white/70 text-center text-sm mb-6">
+            Olá, <span className="text-[#ffcc00] font-semibold">{pendingUser.nome_guerra || pendingUser.nome}</span>!
+          </p>
+
+          {/* Alert */}
+          <div className="bg-[#ffcc00]/10 border border-[#ffcc00]/30 rounded-lg p-3 mb-6 text-sm">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-[#ffcc00] mt-0.5 shrink-0" />
+              <p className="text-[#ffcc00]/90">
+                Este é seu primeiro acesso. Crie uma senha segura seguindo as regras abaixo.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-white/80 text-sm">Nova Senha</Label>
+              <GlassInput
+                icon={Lock}
+                type="password"
+                placeholder="Digite sua nova senha"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                maxLength={10}
+              />
             </div>
 
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Nova Senha</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    placeholder="Digite sua nova senha"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="pl-10"
-                    maxLength={10}
-                  />
-                </div>
-              </div>
+            <div className="space-y-2">
+              <Label className="text-white/80 text-sm">Confirmar Senha</Label>
+              <GlassInput
+                icon={Lock}
+                type="password"
+                placeholder="Confirme sua nova senha"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                maxLength={10}
+              />
+              {confirmPassword && !passwordsMatch && (
+                <p className="text-xs text-red-400">As senhas não coincidem</p>
+              )}
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Confirme sua nova senha"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10"
-                    maxLength={10}
-                  />
-                </div>
-                {confirmPassword && !passwordsMatch && (
-                  <p className="text-xs text-red-500">As senhas não coincidem</p>
-                )}
-              </div>
-
-              {/* Password Rules */}
-              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Requisitos da senha:</p>
-                <ValidationRule valid={passwordValidation.hasValidLength} text="De 6 a 10 caracteres" />
-                <ValidationRule valid={passwordValidation.hasLowercase} text="Pelo menos uma letra minúscula" />
-                <ValidationRule valid={passwordValidation.hasUppercase} text="Pelo menos uma letra maiúscula" />
-                <ValidationRule valid={passwordValidation.hasNumber} text="Pelo menos um número" />
-                <ValidationRule valid={passwordValidation.hasSpecial} text="Pelo menos um caractere especial (!@#$%...)" />
-              </div>
+            {/* Password Rules */}
+            <div className="bg-white/5 rounded-lg p-3 space-y-1">
+              <p className="text-xs font-medium text-white/70 mb-2">Requisitos da senha:</p>
+              <ValidationRule valid={passwordValidation.hasValidLength} text="De 6 a 10 caracteres" />
+              <ValidationRule valid={passwordValidation.hasLowercase} text="Pelo menos uma letra minúscula" />
+              <ValidationRule valid={passwordValidation.hasUppercase} text="Pelo menos uma letra maiúscula" />
+              <ValidationRule valid={passwordValidation.hasNumber} text="Pelo menos um número" />
+              <ValidationRule valid={passwordValidation.hasSpecial} text="Pelo menos um caractere especial (!@#$%...)" />
             </div>
 
             <Button
               type="button"
-              className="w-full"
+              className="w-full h-11 bg-gradient-to-r from-[#ffcc00] to-[#e6b800] hover:from-[#e6b800] hover:to-[#cc9900] 
+                         text-[#071d49] font-semibold rounded-lg shadow-lg shadow-[#ffcc00]/20
+                         transition-all duration-300 hover:shadow-[#ffcc00]/40"
               onClick={handlePasswordChange}
               disabled={isLoading || !isPasswordValid || !passwordsMatch}
             >
@@ -481,13 +503,13 @@ const Login = () => {
             <Button
               type="button"
               variant="ghost"
-              className="w-full text-sm"
+              className="w-full text-white/70 hover:text-white hover:bg-white/10"
               onClick={resetToLogin}
             >
               Voltar
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </GlassCard>
       </div>
     );
   }
@@ -495,41 +517,49 @@ const Login = () => {
   // ==================== TELA: OFERTA VÍNCULO GOOGLE ====================
   if (loginStep === 'google-link-offer' && pendingUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4">
-        <Card className="w-full max-w-md border-border shadow-lg">
-          <CardHeader className="space-y-1 text-center pb-4 sm:pb-6 px-4 sm:px-6">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6"
+           style={{ background: 'linear-gradient(135deg, #071d49 0%, #0a2a5e 50%, #071d49 100%)' }}>
+        <GlassCard className="w-full max-w-md p-6 sm:p-8">
+          {/* Avatar */}
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500/30 to-green-500/10 
+                            border-2 border-green-500/50 flex items-center justify-center">
+              <Shield className="h-10 w-10 text-green-400" />
             </div>
-            <CardTitle className="text-xl sm:text-2xl font-bold text-foreground">
-              Senha Criada!
-            </CardTitle>
-            <CardDescription className="text-muted-foreground text-sm">
-              Deseja vincular sua conta Google para facilitar o acesso?
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 px-4 sm:px-6">
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm">
-              <div className="flex items-start gap-2">
-                <Link2 className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-                <div className="text-blue-700 dark:text-blue-400">
-                  <p className="font-medium mb-1">Vantagens do vínculo Google:</p>
-                  <ul className="text-xs space-y-1 list-disc list-inside">
-                    <li>Login mais rápido com um clique</li>
-                    <li>Não precisa lembrar a senha</li>
-                    <li>Maior segurança com autenticação Google</li>
-                  </ul>
-                </div>
+          </div>
+
+          <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">
+            Senha Criada!
+          </h2>
+          <p className="text-white/70 text-center text-sm mb-6">
+            Deseja vincular sua conta Google para facilitar o acesso?
+          </p>
+
+          {/* Info Box */}
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-6 text-sm">
+            <div className="flex items-start gap-2">
+              <Link2 className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
+              <div className="text-blue-300">
+                <p className="font-medium mb-1">Vantagens do vínculo Google:</p>
+                <ul className="text-xs space-y-1 list-disc list-inside text-blue-300/80">
+                  <li>Login mais rápido com um clique</li>
+                  <li>Não precisa lembrar a senha</li>
+                  <li>Maior segurança com autenticação Google</li>
+                </ul>
               </div>
             </div>
+          </div>
 
+          <div className="space-y-3">
             <Button
               type="button"
-              className="w-full flex items-center justify-center gap-2"
+              className="w-full h-11 bg-gradient-to-r from-[#ffcc00] to-[#e6b800] hover:from-[#e6b800] hover:to-[#cc9900] 
+                         text-[#071d49] font-semibold rounded-lg shadow-lg shadow-[#ffcc00]/20
+                         transition-all duration-300 hover:shadow-[#ffcc00]/40 flex items-center justify-center gap-2"
               onClick={handleLinkGoogle}
               disabled={isGoogleLoading}
             >
-              <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                 <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -541,244 +571,259 @@ const Login = () => {
             <Button
               type="button"
               variant="outline"
-              className="w-full"
+              className="w-full h-11 bg-transparent border-white/20 text-white hover:bg-white/10"
               onClick={handleSkipGoogleLink}
             >
               Pular por agora
             </Button>
 
-            <p className="text-xs text-center text-muted-foreground">
+            <p className="text-xs text-center text-white/50">
               Você pode vincular sua conta Google a qualquer momento nas configurações.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </GlassCard>
       </div>
     );
   }
 
   // ==================== TELA PRINCIPAL DE LOGIN ====================
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4">
-      <Card className="w-full max-w-md border-border shadow-lg">
-        <CardHeader className="space-y-1 text-center pb-4 sm:pb-6 px-4 sm:px-6">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-            <Lock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6"
+         style={{ background: 'linear-gradient(135deg, #071d49 0%, #0a2a5e 50%, #071d49 100%)' }}>
+      <GlassCard className="w-full max-w-md p-6 sm:p-8">
+        {/* Logo/Avatar */}
+        <div className="flex justify-center mb-6">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#ffcc00]/20 to-[#ffcc00]/5 
+                          border-2 border-[#ffcc00]/40 flex items-center justify-center p-2
+                          shadow-[0_0_30px_rgba(255,204,0,0.2)]">
+            <img src={logoBPMA} alt="BPMA" className="w-16 h-16 object-contain" />
           </div>
-          <CardTitle className="text-xl sm:text-2xl font-bold text-foreground">
-            Gestão BPMA
-          </CardTitle>
-          <CardDescription className="text-muted-foreground text-sm">
-            Sistema de Gestão do Batalhão de Polícia Militar Ambiental
-          </CardDescription>
-        </CardHeader>
+        </div>
 
-        <CardContent className="px-4 sm:px-6">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="primeiro-acesso" className="text-xs sm:text-sm">1º Acesso</TabsTrigger>
-              <TabsTrigger value="senha" className="text-xs sm:text-sm">Com Senha</TabsTrigger>
-              <TabsTrigger value="email" className="text-xs sm:text-sm">E-mail</TabsTrigger>
-            </TabsList>
+        <h1 className="text-xl sm:text-2xl font-bold text-white text-center mb-1">
+          Gestão BPMA
+        </h1>
+        <p className="text-white/60 text-center text-sm mb-6">
+          Sistema de Gestão do Batalhão de Polícia Militar Ambiental
+        </p>
 
-            {/* ========== PRIMEIRO ACESSO ========== */}
-            <TabsContent value="primeiro-acesso">
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4 text-sm">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-                  <div className="text-blue-700 dark:text-blue-400">
-                    <p className="font-medium mb-1">Primeiro acesso ao sistema:</p>
-                    <p className="text-xs">
-                      <strong>Login:</strong> Sua matrícula (apenas números)
-                    </p>
-                    <p className="text-xs mt-1">
-                      <strong>Senha:</strong> Seus 11 números do CPF
-                    </p>
-                  </div>
-                </div>
-              </div>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-5 bg-white/10 border border-white/10 rounded-lg p-1">
+            <TabsTrigger 
+              value="primeiro-acesso" 
+              className="text-xs sm:text-sm text-white/70 data-[state=active]:bg-[#ffcc00] data-[state=active]:text-[#071d49] rounded-md"
+            >
+              1º Acesso
+            </TabsTrigger>
+            <TabsTrigger 
+              value="senha" 
+              className="text-xs sm:text-sm text-white/70 data-[state=active]:bg-[#ffcc00] data-[state=active]:text-[#071d49] rounded-md"
+            >
+              Com Senha
+            </TabsTrigger>
+            <TabsTrigger 
+              value="email" 
+              className="text-xs sm:text-sm text-white/70 data-[state=active]:bg-[#ffcc00] data-[state=active]:text-[#071d49] rounded-md"
+            >
+              E-mail
+            </TabsTrigger>
+          </TabsList>
 
-              <form onSubmit={handlePrimeiroAcesso} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="matricula">Matrícula</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      id="matricula"
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Apenas números da matrícula"
-                      value={matricula}
-                      onChange={(e) => setMatricula(e.target.value.replace(/\D/g, ''))}
-                      className="pl-10"
-                      required
-                      autoComplete="username"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF (11 números)</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      id="cpf"
-                      type="password"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      placeholder="00000000000"
-                      value={cpf}
-                      onChange={(e) => setCpf(e.target.value.replace(/\D/g, ''))}
-                      className="pl-10"
-                      maxLength={11}
-                      required
-                      autoComplete="current-password"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Digite os 11 números do seu CPF (sem pontos ou traços)
+          {/* ========== PRIMEIRO ACESSO ========== */}
+          <TabsContent value="primeiro-acesso">
+            <div className="bg-[#ffcc00]/10 border border-[#ffcc00]/30 rounded-lg p-3 mb-4 text-sm">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-[#ffcc00] mt-0.5 shrink-0" />
+                <div className="text-[#ffcc00]/90">
+                  <p className="font-medium mb-1">Primeiro acesso ao sistema:</p>
+                  <p className="text-xs text-[#ffcc00]/70">
+                    <strong>Login:</strong> Sua matrícula (números e X se houver)
+                  </p>
+                  <p className="text-xs mt-1 text-[#ffcc00]/70">
+                    <strong>Senha:</strong> Seus 11 números do CPF
                   </p>
                 </div>
+              </div>
+            </div>
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Verificando...' : 'Verificar Primeiro Acesso'}
-                </Button>
-              </form>
-            </TabsContent>
-
-            {/* ========== LOGIN COM SENHA ========== */}
-            <TabsContent value="senha">
-              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-4 text-sm">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
-                  <div className="text-green-700 dark:text-green-400">
-                    <p className="font-medium mb-1">Já alterou sua senha?</p>
-                    <p className="text-xs">
-                      Use sua matrícula e a nova senha que você criou.
-                    </p>
-                  </div>
-                </div>
+            <form onSubmit={handlePrimeiroAcesso} className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-white/80 text-sm">Matrícula</Label>
+                <GlassInput
+                  icon={User}
+                  type="text"
+                  inputMode="text"
+                  placeholder="Números da matrícula (e X se houver)"
+                  value={matricula}
+                  onChange={(e) => setMatricula(e.target.value.replace(/[^0-9Xx]/g, '').toUpperCase())}
+                  required
+                  autoComplete="username"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-white/80 text-sm">CPF (11 números)</Label>
+                <GlassInput
+                  icon={Lock}
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="00000000000"
+                  value={cpf}
+                  onChange={(e) => setCpf(e.target.value.replace(/\D/g, ''))}
+                  maxLength={11}
+                  required
+                  autoComplete="current-password"
+                />
+                <p className="text-xs text-white/50">
+                  Digite os 11 números do seu CPF (sem pontos ou traços)
+                </p>
               </div>
 
-              <form onSubmit={handleLoginComSenha} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="matriculaSenha">Matrícula</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      id="matriculaSenha"
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Apenas números da matrícula"
-                      value={matricula}
-                      onChange={(e) => setMatricula(e.target.value.replace(/\D/g, ''))}
-                      className="pl-10"
-                      required
-                      autoComplete="username"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="senhaLogin">Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      id="senhaLogin"
-                      type="password"
-                      placeholder="Sua senha"
-                      value={senhaLogin}
-                      onChange={(e) => setSenhaLogin(e.target.value)}
-                      className="pl-10"
-                      maxLength={10}
-                      required
-                      autoComplete="current-password"
-                    />
-                  </div>
-                </div>
+              <Button 
+                type="submit" 
+                className="w-full h-11 bg-gradient-to-r from-[#ffcc00] to-[#e6b800] hover:from-[#e6b800] hover:to-[#cc9900] 
+                           text-[#071d49] font-semibold rounded-lg shadow-lg shadow-[#ffcc00]/20
+                           transition-all duration-300 hover:shadow-[#ffcc00]/40"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Verificando...' : 'Verificar Primeiro Acesso'}
+              </Button>
+            </form>
+          </TabsContent>
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Entrando...' : 'Entrar com Senha'}
-                </Button>
-              </form>
-            </TabsContent>
-
-            {/* ========== LOGIN COM E-MAIL ========== */}
-            <TabsContent value="email">
-              <form onSubmit={handleEmailLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="seu.email@gmail.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
-                      required
-                      autoComplete="email"
-                    />
-                  </div>
+          {/* ========== LOGIN COM SENHA ========== */}
+          <TabsContent value="senha">
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-4 text-sm">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                <div className="text-green-300">
+                  <p className="font-medium mb-1">Já alterou sua senha?</p>
+                  <p className="text-xs text-green-300/70">
+                    Use sua matrícula e a nova senha que você criou.
+                  </p>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="********"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
-                      required
-                      autoComplete="current-password"
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Entrando...' : 'Entrar com E-mail'}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-
-          <div className="relative my-4 sm:my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
+              </div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Ou</span>
-            </div>
+
+            <form onSubmit={handleLoginComSenha} className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-white/80 text-sm">Matrícula</Label>
+                <GlassInput
+                  icon={User}
+                  type="text"
+                  inputMode="text"
+                  placeholder="Números da matrícula (e X se houver)"
+                  value={matricula}
+                  onChange={(e) => setMatricula(e.target.value.replace(/[^0-9Xx]/g, '').toUpperCase())}
+                  required
+                  autoComplete="username"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-white/80 text-sm">Senha</Label>
+                <GlassInput
+                  icon={Lock}
+                  type="password"
+                  placeholder="Sua senha"
+                  value={senhaLogin}
+                  onChange={(e) => setSenhaLogin(e.target.value)}
+                  maxLength={10}
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full h-11 bg-gradient-to-r from-[#ffcc00] to-[#e6b800] hover:from-[#e6b800] hover:to-[#cc9900] 
+                           text-[#071d49] font-semibold rounded-lg shadow-lg shadow-[#ffcc00]/20
+                           transition-all duration-300 hover:shadow-[#ffcc00]/40"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Entrando...' : 'Entrar com Senha'}
+              </Button>
+            </form>
+          </TabsContent>
+
+          {/* ========== LOGIN COM E-MAIL ========== */}
+          <TabsContent value="email">
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-white/80 text-sm">E-mail</Label>
+                <GlassInput
+                  icon={Mail}
+                  type="email"
+                  placeholder="seu.email@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-white/80 text-sm">Senha</Label>
+                <GlassInput
+                  icon={Lock}
+                  type="password"
+                  placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full h-11 bg-gradient-to-r from-[#ffcc00] to-[#e6b800] hover:from-[#e6b800] hover:to-[#cc9900] 
+                           text-[#071d49] font-semibold rounded-lg shadow-lg shadow-[#ffcc00]/20
+                           transition-all duration-300 hover:shadow-[#ffcc00]/40"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Entrando...' : 'Entrar com E-mail'}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-white/20" />
           </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-transparent px-2 text-white/50">Ou</span>
+          </div>
+        </div>
 
-          <Button
-            variant="outline"
-            className="w-full flex items-center justify-center gap-2"
-            onClick={handleDirectGoogleLogin}
-            disabled={isGoogleLoading}
-          >
-            <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            {isGoogleLoading ? 'Conectando...' : 'Entrar com Google'}
-          </Button>
+        {/* Google Login */}
+        <Button
+          variant="outline"
+          className="w-full h-11 bg-white/10 border-white/20 text-white hover:bg-white/20 
+                     flex items-center justify-center gap-2 rounded-lg"
+          onClick={handleDirectGoogleLogin}
+          disabled={isGoogleLoading}
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24">
+            <path fill="#EA4335" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#4285F4" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          {isGoogleLoading ? 'Conectando...' : 'Entrar com Google'}
+        </Button>
 
-          <p className="text-xs text-center text-muted-foreground mt-3">
-            Use Google se já vinculou sua conta anteriormente
-          </p>
-        </CardContent>
+        <p className="text-xs text-center text-white/40 mt-3">
+          Use Google se já vinculou sua conta anteriormente
+        </p>
 
-        <CardFooter className="flex flex-col space-y-2 text-center text-xs text-muted-foreground px-4 sm:px-6">
-          <p>© 2025 BPMA - Todos os direitos reservados</p>
-        </CardFooter>
-      </Card>
+        {/* Footer */}
+        <div className="mt-6 pt-4 border-t border-white/10 text-center">
+          <p className="text-xs text-white/40">© 2025 BPMA - Todos os direitos reservados</p>
+        </div>
+      </GlassCard>
     </div>
   );
 };
