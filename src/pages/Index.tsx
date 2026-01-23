@@ -49,17 +49,17 @@ const HomeCard = ({ title, icon: Icon, to }: HomeCardProps) => {
   return (
     <Link 
       to={to}
-      className="flex flex-col items-center justify-center gap-0.5 p-[2px] rounded-xl 
+      className="flex flex-col items-center justify-center gap-1 p-2 rounded-2xl 
         bg-primary border border-primary/50
         shadow-[0_4px_0_0_#041230,0_6px_10px_rgba(0,0,0,0.3)]
         hover:shadow-[0_2px_0_0_#041230,0_4px_8px_rgba(0,0,0,0.2),0_0_15px_rgba(255,204,0,0.4)]
         hover:translate-y-[2px]
         active:shadow-[0_0px_0_0_#041230,0_2px_4px_rgba(0,0,0,0.1)]
         active:translate-y-[4px]
-        transition-all duration-150 aspect-square min-h-[35px] sm:min-h-[45px]"
+        transition-all duration-150 aspect-square w-full"
     >
-      <Icon className="h-7 w-7 sm:h-[38px] sm:w-[38px] text-accent shrink-0" />
-      <span className="text-[12px] sm:text-[16px] font-semibold text-center text-primary-foreground leading-none break-words hyphens-auto px-0.5 line-clamp-2">{title}</span>
+      <Icon className="w-[40%] h-[40%] text-accent shrink-0" />
+      <span className="text-[clamp(10px,2.5vw,14px)] font-semibold text-center text-primary-foreground leading-tight break-words hyphens-auto px-1 line-clamp-2">{title}</span>
     </Link>
   );
 };
