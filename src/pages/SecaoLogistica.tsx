@@ -558,8 +558,9 @@ const SecaoLogistica: React.FC = () => {
                         <div className="space-y-2">
                           <Label>Ano de Fabricação</Label>
                           <Input
-                            value={frotaForm.ano_fabricacao || ''}
-                            onChange={(e) => setFrotaForm({ ...frotaForm, ano_fabricacao: e.target.value })}
+                            type="number"
+                            value={frotaForm.ano || ''}
+                            onChange={(e) => setFrotaForm({ ...frotaForm, ano: e.target.value ? Number(e.target.value) : undefined })}
                           />
                         </div>
                         <div className="space-y-2">
@@ -587,11 +588,11 @@ const SecaoLogistica: React.FC = () => {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>KM/HM Atual</Label>
+                          <Label>KM Atual</Label>
                           <Input
                             type="number"
-                            value={frotaForm.km_hm_atual || ''}
-                            onChange={(e) => setFrotaForm({ ...frotaForm, km_hm_atual: e.target.value ? Number(e.target.value) : undefined })}
+                            value={frotaForm.km_atual || ''}
+                            onChange={(e) => setFrotaForm({ ...frotaForm, km_atual: e.target.value ? Number(e.target.value) : undefined })}
                           />
                         </div>
                         <div className="space-y-2 col-span-1 sm:col-span-2">
