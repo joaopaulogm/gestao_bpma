@@ -96,7 +96,6 @@ function App() {
               <Route path="/material-apoio/manual-rap" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><ManualRAP /></SidebarLayout></ProtectedRoute>} />
               <Route path="/ranking" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><RankingOcorrencias /></SidebarLayout></ProtectedRoute>} />
               <Route path="/atividades-prevencao" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><AtividadesPrevencao /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/atividades-prevencao" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><AtividadesPrevencao /></SidebarLayout></ProtectedRoute>} />
               {/* Admin only */}
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />
               <Route path="/upload-schemas" element={<ProtectedRoute requireAdmin><UploadSchemas /></ProtectedRoute>} />

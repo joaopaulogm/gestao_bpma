@@ -1,8 +1,6 @@
-
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -35,14 +33,9 @@ const Header = () => {
           <ul className="py-2">
             {[
               { to: '/', label: 'Página Inicial' },
-              { to: '/resgate-cadastro', label: 'Cadastrar Resgate/Apreensão' },
-              { to: '/crimes-ambientais', label: 'Crimes Ambientais' },
-              { to: '/fauna-cadastro', label: 'Cadastrar Fauna' },
-              { to: '/fauna-cadastrada', label: 'Fauna Cadastrada' },
-              { to: '/dashboard', label: 'Dashboard' },
-              { to: '/hotspots', label: 'Hotspots' },
-              { to: '/registros', label: 'Lista de Registros' },
-              { to: '/relatorios', label: 'Relatórios' },
+              { to: '/secao-operacional', label: 'Seção Operacional' },
+              { to: '/material-apoio', label: 'Material de Apoio' },
+              { to: '/ranking', label: 'Ranking de Ocorrências' },
             ].map((item) => (
               <li key={item.to}>
                 <Link 
