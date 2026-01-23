@@ -73,9 +73,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTimeout(() => {
             fetchUserRole(session.user.id).then(setUserRole);
           }, 0);
+          // Limpar sessão temporária se existir
+          sessionStorage.removeItem('tempAuthUser');
         } else {
-          setUser(null);
-          setUserRole(null);
+          // Verificar se há sessão temporária (login com matrícula/senha sem Google)
+          const tempAuthUser = sessionStorage.getItem('tempAuthUser');
+          if (tempAuthUser) {
+            try {
+              const tempUser = JSON.parse(tempAuthUser);
+              setUser({
+                id: tempUser.id,
+                email: tempUser.email || '',
+              });
+              setUserRole((tempUser.role as AppRole) || 'operador');
+            } catch (e) {
+              console.error('Error parsing temp auth user:', e);
+              setUser(null);
+              setUserRole(null);
+            }
+          } else {
+            setUser(null);
+            setUserRole(null);
+          }
         }
         setLoading(false);
       }
@@ -88,6 +107,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: session.user.email || '',
         });
         fetchUserRole(session.user.id).then(setUserRole);
+        // Limpar sessão temporária se existir
+        sessionStorage.removeItem('tempAuthUser');
+      } else {
+        // Verificar se há sessão temporária (login com matrícula/senha sem Google)
+        const tempAuthUser = sessionStorage.getItem('tempAuthUser');
+        if (tempAuthUser) {
+          try {
+            const tempUser = JSON.parse(tempAuthUser);
+            setUser({
+              id: tempUser.id,
+              email: tempUser.email || '',
+            });
+            setUserRole((tempUser.role as AppRole) || 'operador');
+          } catch (e) {
+            console.error('Error parsing temp auth user:', e);
+          }
+        }
       }
       setLoading(false);
     });
@@ -120,10 +156,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      // Limpar sessão temporária (login com matrícula/senha)
+      sessionStorage.removeItem('tempAuthUser');
+      
       const { error } = await supabase.auth.signOut();
       if (error) {
         throw error;
       }
+      
+      // Limpar estados locais
+      setUser(null);
+      setUserRole(null);
+      
       toast.success('Logout realizado com sucesso');
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';

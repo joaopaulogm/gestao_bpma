@@ -71,9 +71,9 @@ const GlassInput = ({
     <Input
       {...props}
       type={props.type === 'password' && showPassword ? 'text' : props.type}
-      className={`pl-10 ${onTogglePassword ? 'pr-10' : ''} bg-white/10 border-white/20 text-white placeholder:text-white/50 
-                 hover:bg-white/15 hover:border-white/30
-                 focus:border-[#ffcc00]/50 focus:ring-[#ffcc00]/20
+      className={`pl-10 ${onTogglePassword ? 'pr-10' : ''} bg-white/20 border-white/30 text-white placeholder:text-white/50 
+                 hover:bg-white/25 hover:border-white/40
+                 focus:bg-white/25 focus:border-[#ffcc00]/50 focus:ring-[#ffcc00]/20
                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffcc00]/20
                  transition-colors rounded-lg h-11`}
     />
@@ -117,7 +117,7 @@ const Login = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [pendingUser, setPendingUser] = useState<UserRoleData | null>(null);
   const [loginStep, setLoginStep] = useState<LoginStep>('login');
-  const [activeTab, setActiveTab] = useState<'primeiro-acesso' | 'senha' | 'email'>('primeiro-acesso');
+  const [activeTab, setActiveTab] = useState<'primeiro-acesso' | 'senha' | 'email'>('senha');
   
   const { login: authLogin, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -381,11 +381,24 @@ const Login = () => {
   };
 
   const handleSkipGoogleLink = () => {
-    toast.success('Login realizado! Você pode vincular sua conta Google a qualquer momento.');
-    // Como não temos sessão Supabase Auth, resetar para login
-    resetToLogin();
-    setActiveTab('senha');
-    toast.info('Use a aba "Com Senha" para entrar com sua nova senha.');
+    // Login realizado com sucesso - redirecionar para página inicial
+    // O usuário fez login com matrícula/senha, então está autenticado no sistema
+    toast.success('Login realizado com sucesso!');
+    
+    // Armazenar informações do usuário na sessão local para permitir navegação
+    if (pendingUser) {
+      // Salvar dados do usuário para uso temporário
+      sessionStorage.setItem('tempAuthUser', JSON.stringify({
+        id: pendingUser.id,
+        nome: pendingUser.nome,
+        nome_guerra: pendingUser.nome_guerra,
+        matricula: pendingUser.matricula,
+        role: pendingUser.role
+      }));
+    }
+    
+    // Redirecionar para página inicial
+    navigate('/inicio');
   };
 
   // ==================== LOGIN COM EMAIL (Supabase Auth) ====================
