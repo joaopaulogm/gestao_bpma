@@ -3740,6 +3740,10 @@ export type Database = {
       user_roles: {
         Row: {
           ativo: boolean | null
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
           contato: string | null
           cpf: number | null
           created_at: string | null
@@ -3747,24 +3751,36 @@ export type Database = {
           data_nascimento: string | null
           efetivo_id: string | null
           email: string | null
+          equipe: string | null
+          escala: string | null
+          grupamento: string | null
           id: string
           idade: number | null
           login: string | null
+          logradouro: string | null
           lotacao: string | null
           matricula: string | null
           nome: string | null
           nome_guerra: string | null
+          numero: string | null
           porte_arma: string | null
           post_grad: string | null
           quadro: string | null
           role: Database["public"]["Enums"]["app_role"]
           senha: string | null
           sexo: string | null
+          telefone: string | null
+          uf: string | null
+          updated_at: string | null
           user_id: string | null
           vinculado_em: string | null
         }
         Insert: {
           ativo?: boolean | null
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
           contato?: string | null
           cpf?: number | null
           created_at?: string | null
@@ -3772,24 +3788,36 @@ export type Database = {
           data_nascimento?: string | null
           efetivo_id?: string | null
           email?: string | null
+          equipe?: string | null
+          escala?: string | null
+          grupamento?: string | null
           id?: string
           idade?: number | null
           login?: string | null
+          logradouro?: string | null
           lotacao?: string | null
           matricula?: string | null
           nome?: string | null
           nome_guerra?: string | null
+          numero?: string | null
           porte_arma?: string | null
           post_grad?: string | null
           quadro?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           senha?: string | null
           sexo?: string | null
+          telefone?: string | null
+          uf?: string | null
+          updated_at?: string | null
           user_id?: string | null
           vinculado_em?: string | null
         }
         Update: {
           ativo?: boolean | null
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
           contato?: string | null
           cpf?: number | null
           created_at?: string | null
@@ -3797,19 +3825,27 @@ export type Database = {
           data_nascimento?: string | null
           efetivo_id?: string | null
           email?: string | null
+          equipe?: string | null
+          escala?: string | null
+          grupamento?: string | null
           id?: string
           idade?: number | null
           login?: string | null
+          logradouro?: string | null
           lotacao?: string | null
           matricula?: string | null
           nome?: string | null
           nome_guerra?: string | null
+          numero?: string | null
           porte_arma?: string | null
           post_grad?: string | null
           quadro?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           senha?: string | null
           sexo?: string | null
+          telefone?: string | null
+          uf?: string | null
+          updated_at?: string | null
           user_id?: string | null
           vinculado_em?: string | null
         }
@@ -4128,9 +4164,61 @@ export type Database = {
       }
     }
     Functions: {
+      atualizar_perfil_usuario: {
+        Args: {
+          p_bairro?: string
+          p_cep?: string
+          p_cidade?: string
+          p_complemento?: string
+          p_email?: string
+          p_logradouro?: string
+          p_nome?: string
+          p_numero?: string
+          p_telefone?: string
+          p_uf?: string
+          p_user_role_id: string
+        }
+        Returns: boolean
+      }
       atualizar_senha_user_roles: {
         Args: { p_nova_senha: string; p_user_role_id: string }
         Returns: boolean
+      }
+      buscar_perfil_usuario: {
+        Args: { p_user_id: string }
+        Returns: {
+          ativo: boolean
+          bairro: string
+          cep: string
+          cidade: string
+          complemento: string
+          contato: string
+          cpf: number
+          created_at: string
+          data_nascimento: string
+          efetivo_id: string
+          email: string
+          equipe: string
+          escala: string
+          grupamento: string
+          id: string
+          idade: number
+          logradouro: string
+          lotacao: string
+          matricula: string
+          nome: string
+          nome_guerra: string
+          numero: string
+          porte_arma: string
+          post_grad: string
+          quadro: string
+          role: string
+          sexo: string
+          telefone: string
+          uf: string
+          updated_at: string
+          user_id: string
+        }[]
       }
       exec_sql: { Args: { sql_query: string }; Returns: undefined }
       fn_nome_cientifico_prefix: { Args: { nome: string }; Returns: string }
