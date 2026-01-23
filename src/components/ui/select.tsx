@@ -17,14 +17,22 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-11 w-full items-center justify-between rounded-xl border border-primary/15 bg-background/80 backdrop-blur-md px-4 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-primary/30 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 shadow-sm hover:border-primary/25 transition-all duration-200",
+      "flex h-10 w-full items-center justify-between rounded-xl",
+      "border border-border/40 bg-background/60 backdrop-blur-md",
+      "px-3 py-2 text-sm ring-offset-background",
+      "placeholder:text-muted-foreground/60",
+      "transition-all duration-200 ease-apple",
+      "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40",
+      "hover:border-border/60 hover:bg-background/70",
+      "disabled:cursor-not-allowed disabled:opacity-50",
+      "[&>span]:line-clamp-1",
       className
     )}
     {...props}
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-4 w-4 text-primary/60" />
+      <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ))
@@ -73,7 +81,14 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border border-primary/15 bg-background/95 backdrop-blur-xl text-foreground shadow-xl shadow-primary/10 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden",
+        "rounded-xl border border-border/40 bg-background/95 backdrop-blur-xl",
+        "text-foreground shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out",
+        "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2",
+        "data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
         className
@@ -84,7 +99,7 @@ const SelectContent = React.forwardRef<
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
         className={cn(
-          "p-1.5 max-h-[var(--radix-select-content-available-height)] overflow-y-auto",
+          "p-1 max-h-[var(--radix-select-content-available-height)] overflow-y-auto",
           position === "popper" &&
             "w-full min-w-[var(--radix-select-trigger-width)]"
         )}
@@ -116,14 +131,18 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-pointer select-none items-center rounded-lg py-2.5 pl-9 pr-3 text-sm outline-none focus:bg-accent/20 focus:text-foreground hover:bg-primary/5 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors duration-150",
+      "relative flex w-full cursor-pointer select-none items-center",
+      "rounded-lg py-2 pl-8 pr-3 text-sm outline-none",
+      "transition-colors duration-150 ease-apple",
+      "hover:bg-muted/60 focus:bg-primary/10 focus:text-foreground",
+      "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
     {...props}
   >
-    <span className="absolute left-2.5 flex h-4 w-4 items-center justify-center">
+    <span className="absolute left-2 flex h-4 w-4 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4 text-accent" />
+        <Check className="h-4 w-4 text-primary" />
       </SelectPrimitive.ItemIndicator>
     </span>
 

@@ -5,26 +5,27 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium ring-offset-background transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.97]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl text-sm font-semibold ring-offset-background transition-all duration-200 ease-apple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.96] active:brightness-95",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md",
+        default: "bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-[0_2px_8px_rgba(7,29,73,0.25),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_4px_16px_rgba(7,29,73,0.35)] hover:from-primary/95 hover:to-primary/85",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm hover:shadow-md",
+          "bg-gradient-to-b from-destructive to-destructive/90 text-destructive-foreground shadow-[0_2px_8px_rgba(255,59,48,0.25)] hover:shadow-[0_4px_16px_rgba(255,59,48,0.35)]",
         outline:
-          "border border-border bg-background hover:bg-muted hover:text-foreground",
+          "border-2 border-border/60 bg-background/80 backdrop-blur-sm hover:bg-muted/80 hover:border-border hover:text-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border",
-        ghost: "hover:bg-muted hover:text-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        accent: "bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm hover:shadow-md",
+          "bg-gradient-to-b from-secondary to-secondary/90 text-secondary-foreground border border-border/50 hover:from-secondary/95 hover:to-secondary/85",
+        ghost: "hover:bg-muted/60 hover:text-foreground hover:backdrop-blur-sm",
+        link: "text-primary underline-offset-4 hover:underline hover:text-primary/80",
+        accent: "bg-gradient-to-b from-accent to-accent/90 text-accent-foreground shadow-[0_2px_8px_rgba(255,204,0,0.25)] hover:shadow-[0_4px_16px_rgba(255,204,0,0.4)]",
+        glass: "bg-background/60 backdrop-blur-xl border border-border/40 text-foreground hover:bg-background/80 hover:border-border/60",
       },
       size: {
-        default: "h-11 min-h-[44px] px-6 py-2.5", // Apple touch target
-        sm: "h-9 min-h-[36px] rounded-lg px-4",
-        lg: "h-12 min-h-[48px] rounded-xl px-8",
-        icon: "h-11 w-11 min-h-[44px] min-w-[44px]",
+        default: "h-10 min-h-[40px] px-5 py-2",
+        sm: "h-8 min-h-[32px] rounded-xl px-3 text-xs",
+        lg: "h-11 min-h-[44px] rounded-2xl px-7",
+        icon: "h-10 w-10 min-h-[40px] min-w-[40px] rounded-xl",
       },
     },
     defaultVariants: {

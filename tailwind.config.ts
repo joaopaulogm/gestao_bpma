@@ -91,18 +91,22 @@ export default {
 			keyframes: {
 				'accordion-down': {
 					from: {
-						height: '0'
+						height: '0',
+						opacity: '0'
 					},
 					to: {
-						height: 'var(--radix-accordion-content-height)'
+						height: 'var(--radix-accordion-content-height)',
+						opacity: '1'
 					}
 				},
 				'accordion-up': {
 					from: {
-						height: 'var(--radix-accordion-content-height)'
+						height: 'var(--radix-accordion-content-height)',
+						opacity: '1'
 					},
 					to: {
-						height: '0'
+						height: '0',
+						opacity: '0'
 					}
 				},
 				'slide-up': {
@@ -117,19 +121,58 @@ export default {
 				},
 				'fade-in': {
 					'0%': {
-						opacity: '0'
+						opacity: '0',
+						transform: 'scale(0.98)'
 					},
 					'100%': {
+						opacity: '1',
+						transform: 'scale(1)'
+					}
+				},
+				'scale-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'scale(0.95)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'scale(1)'
+					}
+				},
+				'float': {
+					'0%, 100%': {
+						transform: 'translateY(0)'
+					},
+					'50%': {
+						transform: 'translateY(-8px)'
+					}
+				},
+				'pulse-soft': {
+					'0%, 100%': {
 						opacity: '1'
+					},
+					'50%': {
+						opacity: '0.7'
+					}
+				},
+				'shimmer': {
+					'0%': {
+						backgroundPosition: '200% 0'
+					},
+					'100%': {
+						backgroundPosition: '-200% 0'
 					}
 				}
 			},
 			animation: {
-				'accordion-down': 'accordion-down 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)',
-				'accordion-up': 'accordion-up 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)',
+				'accordion-down': 'accordion-down 0.25s cubic-bezier(0.4, 0.0, 0.2, 1)',
+				'accordion-up': 'accordion-up 0.25s cubic-bezier(0.4, 0.0, 0.2, 1)',
 				'slide-up': 'slide-up 0.35s cubic-bezier(0.0, 0.0, 0.2, 1)',
-				'fade-in': 'fade-in 0.25s cubic-bezier(0.0, 0.0, 0.2, 1)',
-				'scale-press': 'scale-press 0.15s cubic-bezier(0.4, 0.0, 0.2, 1)',
+				'fade-in': 'fade-in 0.3s cubic-bezier(0.0, 0.0, 0.2, 1)',
+				'scale-in': 'scale-in 0.2s cubic-bezier(0.0, 0.0, 0.2, 1)',
+				'float': 'float 6s ease-in-out infinite',
+				'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
+				'shimmer': 'shimmer 1.5s infinite',
 			},
 			transitionDuration: {
 				'apple-fast': '150ms',
@@ -140,6 +183,7 @@ export default {
 				'apple': 'cubic-bezier(0.4, 0.0, 0.2, 1)',
 				'apple-in': 'cubic-bezier(0.0, 0.0, 0.2, 1)',
 				'apple-out': 'cubic-bezier(0.4, 0.0, 1, 1)',
+				'bounce-subtle': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
 			}
 		}
 	},
