@@ -72,7 +72,10 @@ const GlassInput = ({
       {...props}
       type={props.type === 'password' && showPassword ? 'text' : props.type}
       className={`pl-10 ${onTogglePassword ? 'pr-10' : ''} bg-white/10 border-white/20 text-white placeholder:text-white/50 
-                 focus:border-[#ffcc00]/50 focus:ring-[#ffcc00]/20 rounded-lg h-11`}
+                 hover:bg-white/15 hover:border-white/30
+                 focus:border-[#ffcc00]/50 focus:ring-[#ffcc00]/20
+                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffcc00]/20
+                 transition-colors rounded-lg h-11`}
     />
     {onTogglePassword && (
       <button
