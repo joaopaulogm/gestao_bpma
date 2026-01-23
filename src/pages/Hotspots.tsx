@@ -21,17 +21,14 @@ const Hotspots = () => {
       try {
         console.log('Fetching registros for heatmap...');
         
-        // Buscar registros do Supabase com joins
+        // Buscar registros do Supabase - query simplificada sem joins problemáticos
         const { data: registros, error } = await supabaseAny
           .from('fat_resgates_diarios_2025')
           .select(`
             id,
             latitude_origem,
             longitude_origem,
-            data,
-            regiao_administrativa:dim_regiao_administrativa(nome),
-            origem:dim_origem(nome),
-            especie:dim_especies_fauna(nome_popular)
+            data
           `)
           .not('latitude_origem', 'is', null)
           .not('longitude_origem', 'is', null);
@@ -46,10 +43,10 @@ const Hotspots = () => {
           tipo: 'resgate',
           lat: parseFloat(reg.latitude_origem),
           lng: parseFloat(reg.longitude_origem),
-          municipio: reg.regiao_administrativa?.nome || 'Não informado',
-          uf: 'DF', // Todos os dados são do Distrito Federal
+          municipio: 'Distrito Federal',
+          uf: 'DF',
           data_iso: reg.data || new Date().toISOString(),
-          fonte: 'IBRAM'
+          fonte: 'BPMA'
         }));
 
         console.log('Transformed data:', transformedData.length, 'items');

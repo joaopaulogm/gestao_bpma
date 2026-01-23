@@ -67,8 +67,8 @@ const Sidebar = () => {
     "flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all duration-150 min-h-[44px]", // Apple touch target
     indented && "ml-3",
     isActive(path) 
-      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm" 
-      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-[0.98]"
+      ? "bg-sidebar-active text-sidebar-active-foreground font-medium shadow-sm" 
+      : "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-[0.98]"
   );
 
   const sidebarContent = (
@@ -148,6 +148,13 @@ const Sidebar = () => {
                   <Link to="/crimes-ambientais" className={linkClasses('/crimes-ambientais', true)}>
                     <Shield className="h-5 w-5 flex-shrink-0" />
                     {(isOpen || isMobile) && <span className="truncate">Crimes Ambientais</span>}
+                  </Link>
+                </li>
+                
+                <li>
+                  <Link to="/crimes-comuns" className={linkClasses('/crimes-comuns', true)}>
+                    <Shield className="h-5 w-5 flex-shrink-0" />
+                    {(isOpen || isMobile) && <span className="truncate">Crimes Comuns</span>}
                   </Link>
                 </li>
                 
@@ -255,7 +262,7 @@ const Sidebar = () => {
         {/* Mobile drawer */}
         <aside 
           className={cn(
-            "fixed top-0 left-0 h-screen bg-sidebar text-sidebar-foreground z-50 flex flex-col border-r border-sidebar-border transition-transform duration-250 ease-out w-72 shadow-lg",
+            "fixed top-0 left-0 h-screen bg-sidebar text-sidebar-foreground z-50 flex flex-col border-r border-sidebar-border transition-transform duration-200 ease-out w-72 shadow-lg",
             isMobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -269,7 +276,7 @@ const Sidebar = () => {
   return (
     <aside 
       className={cn(
-        "h-screen bg-sidebar text-sidebar-foreground transition-all duration-250 ease-out flex flex-col border-r border-sidebar-border",
+        "h-screen bg-sidebar text-sidebar-foreground transition-all duration-200 ease-out flex flex-col border-r border-sidebar-border",
         isOpen ? "w-64" : "w-20"
       )}
     >

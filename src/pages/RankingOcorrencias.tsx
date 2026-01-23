@@ -155,15 +155,15 @@ const RankingOcorrencias: React.FC = () => {
 
   const getMedalColor = (index: number) => {
     switch (index) {
-      case 0: return 'text-yellow-500';
-      case 1: return 'text-gray-400';
+      case 0: return 'text-accent';
+      case 1: return 'text-muted-foreground';
       case 2: return 'text-amber-600';
       default: return 'text-muted-foreground';
     }
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="page-container py-6">
       <div className="flex items-center gap-3 mb-6">
         <Trophy className="h-8 w-8 text-primary" />
         <h1 className="text-2xl font-bold text-foreground">Ranking de Ocorrências</h1>

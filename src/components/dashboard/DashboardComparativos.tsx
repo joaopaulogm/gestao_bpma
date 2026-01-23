@@ -128,7 +128,7 @@ const DashboardComparativos: React.FC<DashboardComparativosProps> = ({ data }) =
         <CardContent className="p-6 bg-white/50 backdrop-blur-sm">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-2 block">Ano A</label>
+              <label className="text-sm font-medium text-foreground mb-2 block">Ano A</label>
               <Select value={anoA.toString()} onValueChange={(v) => setAnoA(parseInt(v))}>
                 <SelectTrigger>
                   <SelectValue />
@@ -141,7 +141,7 @@ const DashboardComparativos: React.FC<DashboardComparativosProps> = ({ data }) =
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-2 block">Ano B</label>
+              <label className="text-sm font-medium text-foreground mb-2 block">Ano B</label>
               <Select value={anoB.toString()} onValueChange={(v) => setAnoB(parseInt(v))}>
                 <SelectTrigger>
                   <SelectValue />

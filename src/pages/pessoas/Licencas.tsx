@@ -53,7 +53,7 @@ const restricaoLabels: Record<string, { label: string; color: string; descriptio
   'PO': { label: 'PO', color: 'bg-red-500/20 text-red-400 border-red-500/30', description: 'Policiamento Ostensivo' },
   'PA': { label: 'PA', color: 'bg-orange-500/20 text-orange-400 border-orange-500/30', description: 'Porte de Arma' },
   'SN': { label: 'SN', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', description: 'Serviço Noturno' },
-  'EF': { label: 'EF', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', description: 'Educação Física' },
+  'EF': { label: 'EF', color: 'bg-primary/20 text-primary/80 border-primary/30', description: 'Educação Física' },
 };
 
 const Licencas: React.FC = () => {
@@ -185,8 +185,8 @@ const Licencas: React.FC = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Activity className="h-5 w-5 text-blue-500" />
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Activity className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Dispensas</p>

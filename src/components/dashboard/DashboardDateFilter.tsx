@@ -1,5 +1,3 @@
-
-import React from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +19,7 @@ interface DashboardDateFilterProps {
   onFilterChange: (year: number, month: number | null) => void;
 }
 
-const DashboardDateFilter: React.FC<DashboardDateFilterProps> = ({ 
+const DashboardDateFilter = ({ 
   year, 
   month, 
   onFilterChange 
@@ -39,10 +37,10 @@ const DashboardDateFilter: React.FC<DashboardDateFilterProps> = ({
       <PopoverTrigger asChild>
         <Button 
           variant="outline" 
-          className="flex items-center gap-2 bg-white border-slate-200"
+          className="flex items-center gap-2 bg-background border-border"
         >
-          <CalendarIcon className="h-4 w-4 text-blue-500" />
-          <span className="font-medium text-slate-700">
+          <CalendarIcon className="h-4 w-4 text-primary" />
+          <span className="font-medium text-foreground">
             {year}
             {month !== null ? 
               ` - ${months[month]}` : 

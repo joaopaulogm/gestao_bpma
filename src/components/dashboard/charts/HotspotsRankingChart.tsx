@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardData } from '@/types/hotspots';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -7,7 +7,7 @@ interface HotspotsRankingChartProps {
   data: DashboardData;
 }
 
-const HotspotsRankingChart: React.FC<HotspotsRankingChartProps> = ({ data }) => {
+const HotspotsRankingChart = ({ data }: HotspotsRankingChartProps) => {
   const registros = data.rawData || [];
   
   const hotspots = useMemo(() => {
@@ -95,20 +95,20 @@ const HotspotsRankingChart: React.FC<HotspotsRankingChartProps> = ({ data }) => 
             
             {/* Lista de hotspots */}
             <div className="mt-6 space-y-2">
-              <h4 className="text-sm font-semibold text-slate-700 mb-3">Lista Detalhada</h4>
+              <h4 className="text-sm font-semibold text-foreground mb-3">Lista Detalhada</h4>
               {hotspots.map((hotspot, index) => (
                 <div 
                   key={index}
-                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200"
+                  className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-bold text-sm">
                       {index + 1}
                     </div>
                     <div>
-                      <p className="font-medium text-slate-700">{hotspot.nome}</p>
+                      <p className="font-medium text-foreground">{hotspot.nome}</p>
                       {hotspot.latitude && hotspot.longitude && (
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                           {hotspot.latitude.toFixed(4)}, {hotspot.longitude.toFixed(4)}
                         </p>
                       )}
@@ -116,7 +116,7 @@ const HotspotsRankingChart: React.FC<HotspotsRankingChartProps> = ({ data }) => 
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-green-700">{hotspot.quantidade.toLocaleString('pt-BR')}</p>
-                    <p className="text-xs text-slate-500">resgates</p>
+                    <p className="text-xs text-muted-foreground">resgates</p>
                   </div>
                 </div>
               ))}

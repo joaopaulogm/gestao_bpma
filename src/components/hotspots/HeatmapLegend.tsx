@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -36,7 +35,7 @@ const HeatmapLegend = ({ dataCount = 0 }: HeatmapLegendProps) => {
             {densityLevels.map((level, index) => (
               <div key={index} className="flex items-center gap-2">
                 <div 
-                  className="w-3 h-3 rounded border border-gray-300" 
+                  className="w-3 h-3 rounded border border-border" 
                   style={{ backgroundColor: level.color }}
                 ></div>
                 <span className="text-xs text-muted-foreground">{level.value}</span>

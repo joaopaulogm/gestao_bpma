@@ -125,6 +125,8 @@ const prepararDadosParaAtualizacao = async (
   // Tabelas modernas (2025+ e fat_registros_de_resgate)
   return {
     data: dataFormatada,
+    horario_acionamento: data.horarioAcionamento || null,
+    horario_termino: data.horarioTermino || null,
     especie_id: especieSelecionada?.id || originalRegistro.especie_id,
     regiao_administrativa_id: regiaoId,
     origem_id: origemId,
@@ -135,6 +137,7 @@ const prepararDadosParaAtualizacao = async (
     tipo_area_id: data.tipoAreaId || null,
     latitude_origem: data.latitudeOrigem,
     longitude_origem: data.longitudeOrigem,
+    numero_tco: data.numeroTCO || null,
     outro_desfecho: data.outroDesfecho || null,
     atropelamento: data.atropelamento,
     quantidade: data.quantidade,
@@ -219,9 +222,9 @@ export const useResgateFormSubmitEdit = (
         buscarIdPorNome('dim_estagio_vida', data.estagioVida),
         buscarIdPorNome('dim_destinacao', data.destinacao),
         data.desfechoApreensao 
-          ? buscarIdPorNome('dim_desfecho', data.desfechoApreensao)
+          ? buscarIdPorNome('dim_desfecho_crime_ambientais', data.desfechoApreensao)
           : data.desfechoResgate 
-            ? buscarIdPorNome('dim_desfecho', data.desfechoResgate)
+            ? buscarIdPorNome('dim_desfecho_resgates', data.desfechoResgate)
             : Promise.resolve(null)
       ]);
 
@@ -309,9 +312,6 @@ export const useResgateFormSubmitEdit = (
         toast.success('Registro atualizado com sucesso!');
       }
       
-      if (error) throw error;
-      
-      toast.success('Registro atualizado com sucesso!');
       navigate('/registros');
     } catch (error) {
       console.error('Erro ao atualizar registro:', error);

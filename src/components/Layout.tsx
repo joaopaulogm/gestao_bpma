@@ -1,8 +1,8 @@
-
 import React from 'react';
 import Header from './Header';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,31 +14,39 @@ const Layout = ({ children, title, showBackButton = false }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Use wider layout for registros and hotspots pages
-  const isRegistrosPage = location.pathname === '/registros';
-  const isHotspotsPage = location.pathname === '/hotspots';
-  const maxWidthClass = (isRegistrosPage || isHotspotsPage) ? 'max-w-full lg:max-w-[95%]' : 'max-w-4xl';
+  // All pages now use fluid responsive container
+  const isWideLayout = location.pathname === '/registros' || 
+                       location.pathname === '/hotspots' ||
+                       location.pathname.startsWith('/dashboard') ||
+                       location.pathname.startsWith('/secao-operacional');
+  
+  // Responsive fluid container instead of fixed widths
+  const containerClass = isWideLayout 
+    ? 'w-full max-w-[1600px] mx-auto' 
+    : 'w-full max-w-5xl mx-auto';
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-hidden">
+    <div className="min-h-screen min-h-[100dvh] bg-background flex flex-col overflow-hidden safe-top safe-bottom">
       <Header />
       
-      <main className={`flex-1 p-5 sm:p-6 ${maxWidthClass} mx-auto w-full overflow-y-auto`}>
-        <div className="flex items-center gap-3 mb-6">
-          {showBackButton && (
-            <button 
-              onClick={() => navigate(-1)} 
-              className="p-2.5 rounded-xl text-primary hover:bg-muted transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.97] min-h-[44px] min-w-[44px]"
-              aria-label="Voltar"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-          )}
-          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">{title}</h1>
-        </div>
-        
-        {children}
-      </main>
+      <ScrollArea className="flex-1">
+        <main className={`px-4 sm:px-6 md:px-8 lg:px-12 py-4 md:py-6 ${containerClass}`}>
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            {showBackButton && (
+              <button 
+                onClick={() => navigate(-1)} 
+                className="p-2 sm:p-2.5 rounded-xl text-primary hover:bg-muted transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.97] touch-target flex-shrink-0"
+                aria-label="Voltar"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            )}
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground tracking-tight truncate">{title}</h1>
+          </div>
+          
+          {children}
+        </main>
+      </ScrollArea>
     </div>
   );
 };

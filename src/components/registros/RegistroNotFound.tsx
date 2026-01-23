@@ -1,5 +1,4 @@
 
-import React from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, List } from 'lucide-react';
@@ -11,9 +10,9 @@ const RegistroNotFound = () => {
   return (
     <Layout title="Detalhes do Registro" showBackButton>
       <div className="text-center py-32 max-w-md mx-auto">
-        <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-800 mb-3">Registro não encontrado</h2>
-          <p className="text-gray-600 mb-6">
+        <div className="bg-card p-8 rounded-lg shadow-sm border border-border">
+          <h2 className="text-xl font-semibold text-foreground mb-3">Registro não encontrado</h2>
+          <p className="text-muted-foreground mb-6">
             O registro que você está procurando não existe ou foi removido.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">

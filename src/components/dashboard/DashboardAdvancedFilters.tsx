@@ -49,7 +49,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
         
         // Carregar desfechos
         const { data: desfechosData } = await supabase
-          .from('dim_desfecho')
+          .from('dim_desfecho_resgates')
           .select('id, nome')
           .eq('tipo', 'resgate')
           .order('nome');
@@ -106,8 +106,8 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className={`flex items-center gap-2 border-slate-200 ${
-              hasFilters ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white'
+            className={`flex items-center gap-2 border-border ${
+              hasFilters ? 'bg-primary/10 text-primary border-primary/30' : 'bg-background'
             }`}
           >
             <Filter className="h-4 w-4" />
@@ -115,7 +115,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
             {hasFilters && (
               <Badge 
                 variant="secondary" 
-                className="ml-1 bg-blue-100 text-blue-700 hover:bg-blue-200"
+                className="ml-1 bg-primary/20 text-primary hover:bg-primary/30"
               >
                 {[
                   filters.classeTaxonomica,
@@ -150,7 +150,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
             <div className="space-y-3">
               {/* Classe Taxonômica */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Classe Taxonômica</h5>
+                <h5 className="text-sm font-medium text-foreground">Classe Taxonômica</h5>
                 <Select
                   value={filters.classeTaxonomica || "all"}
                   onValueChange={(value) => onFilterChange({
@@ -173,7 +173,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
 
               {/* Espécie */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Espécie</h5>
+                <h5 className="text-sm font-medium text-foreground">Espécie</h5>
                 <Select
                   value={filters.especie || "all"}
                   onValueChange={(value) => onFilterChange({
@@ -196,7 +196,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
 
               {/* Região Administrativa */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Região Administrativa</h5>
+                <h5 className="text-sm font-medium text-foreground">Região Administrativa</h5>
                 <Select
                   value={filters.regiaoAdministrativa || "all"}
                   onValueChange={(value) => onFilterChange({
@@ -219,7 +219,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
 
               {/* Desfecho */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Desfecho</h5>
+                <h5 className="text-sm font-medium text-foreground">Desfecho</h5>
                 <Select
                   value={filters.desfecho || "all"}
                   onValueChange={(value) => onFilterChange({
@@ -242,7 +242,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
 
               {/* Tipo de Registro */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Tipo de Registro</h5>
+                <h5 className="text-sm font-medium text-foreground">Tipo de Registro</h5>
                 <Select
                   value={filters.tipoRegistro || "all"}
                   onValueChange={(value) => onFilterChange({
@@ -263,7 +263,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
 
               {/* Exótica */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Espécie Exótica</h5>
+                <h5 className="text-sm font-medium text-foreground">Espécie Exótica</h5>
                 <Select
                   value={filters.exotica === null ? "all" : filters.exotica ? "true" : "false"}
                   onValueChange={(value) => onFilterChange({
@@ -283,7 +283,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
 
               {/* Ameaçada */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-slate-700">Espécie Ameaçada</h5>
+                <h5 className="text-sm font-medium text-foreground">Espécie Ameaçada</h5>
                 <Select
                   value={filters.ameacada === null ? "all" : filters.ameacada ? "true" : "false"}
                   onValueChange={(value) => onFilterChange({
@@ -315,7 +315,7 @@ const DashboardAdvancedFilters: React.FC<DashboardAdvancedFiltersProps> = ({
             </Badge>
           )}
           {filters.especie && (
-            <Badge variant="outline" className="flex items-center gap-1 bg-blue-50 text-blue-700 border-blue-200">
+            <Badge variant="outline" className="flex items-center gap-1 bg-primary/10 text-primary border-primary/30">
               Espécie: {especies.find(e => e.id === filters.especie)?.nome_popular || filters.especie}
               <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => onFilterChange({ especie: null })} />
             </Badge>

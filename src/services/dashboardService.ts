@@ -153,7 +153,7 @@ const enrichDataWithRelations = async (registros: any[]): Promise<any[]> => {
     supabase.from('dim_destinacao').select('id, nome'),
     supabase.from('dim_estado_saude').select('id, nome'),
     supabase.from('dim_estagio_vida').select('id, nome'),
-    supabase.from('dim_desfecho').select('id, nome, tipo'),
+    supabase.from('dim_desfecho_resgates').select('id, nome, tipo'),
     supabase.from('dim_especies_fauna').select('*')
   ]);
   
@@ -179,88 +179,168 @@ const enrichDataWithRelations = async (registros: any[]): Promise<any[]> => {
   }));
 };
 
-export const fetchRegistryData = async (filters: FilterState): Promise<any[]> => {
+/**
+ * Busca dados agregados das novas tabelas BPMA (2021-2024)
+ * Retorna dados de todas as naturezas (Resgate, Solturas, Óbitos, Feridos, Filhotes, etc.)
+ */
+const fetchBpmaAgregados = async (
+  filters: FilterState
+): Promise<any[]> => {
   try {
-    console.log("🔍 [Dashboard] Iniciando busca de dados com filtros:", filters);
-    console.log("🔍 [Dashboard] Ano do filtro:", filters.year, "Tipo:", typeof filters.year);
-    
-    // Normalizar o ano para número (pode vir como string)
     const ano = typeof filters.year === 'string' ? parseInt(filters.year, 10) : filters.year;
     
-    // Determinar qual tabela usar baseado no ano
-    let tabelaResgates = '';
-    if (ano >= 2020 && ano <= 2024) {
-      // Para anos históricos, usar a tabela específica do ano
-      tabelaResgates = `fat_resgates_diarios_${ano}`;
-    } else if (ano === 2025) {
-      // Para 2025, usar fat_resgates_diarios_2025 e também fat_registros_de_resgate
-      tabelaResgates = 'fat_resgates_diarios_2025';
-    } else if (ano >= 2026) {
-      // Para 2026+, usar fat_registros_de_resgate
-      tabelaResgates = 'fat_registros_de_resgate';
-    } else {
-      tabelaResgates = 'fat_registros_de_resgate';
+    if (ano < 2021 || ano > 2024) {
+      return [];
     }
     
-    console.log(`📊 [Dashboard] Tabela selecionada: ${tabelaResgates} (ano: ${ano}, original: ${filters.year})`);
+    let query = supabaseAny
+      .from('bpma_fato_mensal')
+      .select('*')
+      .eq('ano', ano);
     
-    let registrosAtuais: any[] = [];
-    
-    // Para 2020-2024, buscar diretamente da tabela específica
-    if (ano >= 2020 && ano <= 2024) {
-      // Usar busca sem joins diretamente para evitar erros
-      console.log(`📊 [Dashboard] Buscando de ${tabelaResgates} sem joins...`);
-      const { data, error } = await fetchDataWithoutJoins(tabelaResgates, filters);
-      if (!error) {
-        registrosAtuais = data || [];
-        console.log(`✅ [Dashboard] Dados carregados de ${tabelaResgates}:`, registrosAtuais.length, 'registros');
-      } else {
-        console.warn(`⚠️ [Dashboard] Erro ao buscar de ${tabelaResgates}:`, error);
-      }
-    } else {
-      // Para 2025 e 2026+, buscar de fat_registros_de_resgate ou fat_resgates_diarios_2025
-      if (ano === 2025) {
-        // Buscar de ambas as tabelas para 2025
-        const { data: data2025, error: error2025 } = await fetchDataWithoutJoins('fat_resgates_diarios_2025', filters);
-        const { data: dataRegistros, error: errorRegistros } = await fetchDataWithoutJoins('fat_registros_de_resgate', filters);
-        
-        if (!error2025 && data2025) {
-          registrosAtuais = [...registrosAtuais, ...data2025];
-        }
-        if (!errorRegistros && dataRegistros) {
-          registrosAtuais = [...registrosAtuais, ...dataRegistros];
-        }
-        console.log(`✅ [Dashboard] Dados carregados para 2025:`, registrosAtuais.length, 'registros');
-      } else {
-        // Para 2026+, buscar de fat_registros_de_resgate
-        const { data, error } = await fetchDataWithoutJoins('fat_registros_de_resgate', filters);
-        if (!error) {
-          registrosAtuais = data || [];
-          console.log(`✅ [Dashboard] Dados carregados de fat_registros_de_resgate:`, registrosAtuais.length, 'registros');
-        } else {
-          console.warn(`⚠️ [Dashboard] Erro ao buscar de fat_registros_de_resgate:`, error);
-        }
-      }
+    if (filters.month !== null) {
+      query = query.eq('mes', filters.month + 1);
     }
     
-    console.log(`✅ [Dashboard] Registros atuais carregados:`, registrosAtuais?.length || 0);
+    // Buscar todas as naturezas relevantes
+    const naturezasRelevantes = [
+      'Resgate de Fauna Silvestre',
+      'Solturas',
+      'Óbitos',
+      'Feridos',
+      'Filhotes',
+      'Atropelamento'
+    ];
     
-    // Para anos históricos (2020-2024), normalizar os dados para o formato esperado
-    let todosRegistros: any[] = [];
+    query = query.in('natureza', naturezasRelevantes);
     
-    if (ano >= 2020 && ano <= 2024) {
-      // Os dados históricos já foram buscados em registrosAtuais, normalizar para o formato esperado
-      const historicosNormalizados = registrosAtuais.map((h: any) => ({
+    const { data, error } = await query;
+    
+    if (error) {
+      console.warn('⚠️ [Dashboard] Erro ao buscar bpma_fato_mensal:', error);
+      return [];
+    }
+    
+    // Converter dados agregados para formato de registros individuais
+    // Criar registros "sintéticos" para cada natureza e mês
+    const registrosAgregados: any[] = [];
+    
+    (data || []).forEach((item: any) => {
+      // Criar um registro para cada natureza
+      registrosAgregados.push({
+        id: `bpma-${item.ano}-${item.mes}-${item.natureza}`,
+        data: new Date(item.ano, item.mes - 1, 1).toISOString().split('T')[0],
+        quantidade: item.natureza === 'Resgate de Fauna Silvestre' ? item.quantidade : 0,
+        quantidade_total: item.natureza === 'Resgate de Fauna Silvestre' ? item.quantidade : 0,
+        quantidade_solturas: item.natureza === 'Solturas' ? item.quantidade : 0,
+        quantidade_obitos: item.natureza === 'Óbitos' ? item.quantidade : 0,
+        quantidade_feridos: item.natureza === 'Feridos' ? item.quantidade : 0,
+        quantidade_filhotes: item.natureza === 'Filhotes' ? item.quantidade : 0,
+        quantidade_adulto: 0,
+        quantidade_filhote: item.natureza === 'Filhotes' ? item.quantidade : 0,
+        atropelamento: item.natureza === 'Atropelamento' ? 'Sim' : null,
+        regiao_administrativa: null,
+        origem: { nome: 'Resgate de Fauna' },
+        destinacao: null,
+        estado_saude: null,
+        estagio_vida: null,
+        desfecho: null,
+        especie: null,
+        tipo_registro: 'agregado',
+        natureza: item.natureza,
+        mes: item.mes,
+        ano: item.ano
+      });
+    });
+    
+    // Agrupar por mês para consolidar os dados
+    const consolidadoPorMes = new Map<string, any>();
+    
+    registrosAgregados.forEach((reg: any) => {
+      const chave = `${reg.ano}-${reg.mes}`;
+      if (!consolidadoPorMes.has(chave)) {
+        consolidadoPorMes.set(chave, {
+          id: `bpma-${chave}`,
+          data: reg.data,
+          quantidade: 0,
+          quantidade_total: 0,
+          quantidade_solturas: 0,
+          quantidade_obitos: 0,
+          quantidade_feridos: 0,
+          quantidade_filhotes: 0,
+          quantidade_filhote: 0,
+          quantidade_adulto: 0,
+          atropelamento: null,
+          regiao_administrativa: null,
+          origem: { nome: 'Resgate de Fauna' },
+          destinacao: null,
+          estado_saude: null,
+          estagio_vida: null,
+          desfecho: null,
+          especie: null,
+          tipo_registro: 'agregado',
+          mes: reg.mes,
+          ano: reg.ano
+        });
+      }
+      
+      const consolidado = consolidadoPorMes.get(chave)!;
+      consolidado.quantidade += reg.quantidade;
+      consolidado.quantidade_total += reg.quantidade_total;
+      consolidado.quantidade_solturas += reg.quantidade_solturas;
+      consolidado.quantidade_obitos += reg.quantidade_obitos;
+      consolidado.quantidade_feridos += reg.quantidade_feridos;
+      consolidado.quantidade_filhotes += reg.quantidade_filhotes;
+      consolidado.quantidade_filhote += reg.quantidade_filhote;
+      if (reg.atropelamento === 'Sim') {
+        consolidado.atropelamento = 'Sim';
+      }
+    });
+    
+    return Array.from(consolidadoPorMes.values());
+  } catch (err: any) {
+    console.warn('⚠️ [Dashboard] Erro ao buscar dados agregados:', err);
+    return [];
+  }
+};
+
+/**
+ * Busca dados por espécie das tabelas fat_resgates_diarios_* (2021-2024)
+ * Mantém dados detalhados por espécie
+ */
+const fetchBpmaPorEspecie = async (
+  filters: FilterState
+): Promise<any[]> => {
+  try {
+    const ano = typeof filters.year === 'string' ? parseInt(filters.year, 10) : filters.year;
+    
+    if (ano < 2021 || ano > 2024) {
+      return [];
+    }
+    
+    const tabela = `fat_resgates_diarios_${ano}`;
+    const { data, error } = await fetchDataWithoutJoins(tabela, filters);
+    
+    if (error) {
+      console.warn(`⚠️ [Dashboard] Erro ao buscar ${tabela}:`, error);
+      return [];
+    }
+    
+    // Normalizar dados por espécie
+    return (data || []).map((h: any) => ({
       id: h.id || `hist-${Math.random().toString(36).substring(7)}`,
-      data: h.data_ocorrencia || (h.Ano && h.Mês ? 
-        new Date(h.Ano, 
+      data: h.data_ocorrencia || (h.mes ? 
+        new Date(ano, 
           ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-           'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].indexOf(h.Mês), 
+           'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].indexOf(h.mes), 
           1).toISOString().split('T')[0] : null),
       quantidade: h.quantidade_resgates || 0,
       quantidade_total: h.quantidade_resgates || 0,
       quantidade_adulto: 0,
       quantidade_filhote: h.quantidade_filhotes || 0,
+      quantidade_soltura: h.quantidade_solturas || 0,
+      quantidade_obito: h.quantidade_obitos || 0,
+      quantidade_ferido: h.quantidade_feridos || 0,
       atropelamento: null,
       regiao_administrativa: null,
       origem: { nome: 'Resgate de Fauna' },
@@ -277,14 +357,128 @@ export const fetchRegistryData = async (filters: FilterState): Promise<any[]> =>
         tipo_de_fauna: h.tipo_de_fauna || ''
       },
       tipo_registro: 'historico'
-      }));
+    }));
+  } catch (err: any) {
+    console.warn('⚠️ [Dashboard] Erro ao buscar dados por espécie:', err);
+    return [];
+  }
+};
+
+export const fetchRegistryData = async (filters: FilterState): Promise<any[]> => {
+  try {
+    console.log("🔍 [Dashboard] Iniciando busca de dados com filtros:", filters);
+    console.log("🔍 [Dashboard] Ano do filtro:", filters.year, "Tipo:", typeof filters.year);
+    
+    // Normalizar o ano para número (pode vir como string)
+    const ano = typeof filters.year === 'string' ? parseInt(filters.year, 10) : filters.year;
+    
+    let todosRegistros: any[] = [];
+    
+    // Para 2020, usar apenas tabela de espécies
+    if (ano === 2020) {
+      console.log(`📊 [Dashboard] Buscando dados de 2020 (por espécie)...`);
+      const { data, error } = await fetchDataWithoutJoins('fat_resgates_diarios_2020', filters);
+      if (!error && data) {
+        todosRegistros = data.map((h: any) => ({
+          id: h.id || `hist-${Math.random().toString(36).substring(7)}`,
+          data: h.data_ocorrencia || null,
+          quantidade: h.quantidade_resgates || 0,
+          quantidade_total: h.quantidade_resgates || 0,
+          quantidade_adulto: 0,
+          quantidade_filhote: h.quantidade_filhotes || 0,
+          quantidade_soltura: h.quantidade_solturas || 0,
+          quantidade_obito: h.quantidade_obitos || 0,
+          quantidade_ferido: h.quantidade_feridos || 0,
+          atropelamento: null,
+          regiao_administrativa: null,
+          origem: { nome: 'Resgate de Fauna' },
+          destinacao: null,
+          estado_saude: null,
+          estagio_vida: null,
+          desfecho: null,
+          especie: {
+            nome_popular: h.nome_popular || '',
+            nome_cientifico: h.nome_cientifico || '',
+            classe_taxonomica: h.classe_taxonomica || '',
+            ordem_taxonomica: h.ordem_taxonomica || '',
+            estado_de_conservacao: h.estado_de_conservacao || '',
+            tipo_de_fauna: h.tipo_de_fauna || ''
+          },
+          tipo_registro: 'historico'
+        }));
+        console.log(`✅ [Dashboard] Dados de 2020 carregados:`, todosRegistros.length, 'registros');
+      }
+    }
+    // Para 2021-2024, usar NOVAS tabelas: bpma_fato_mensal (agregado) + fat_resgates_diarios_* (por espécie)
+    else if (ano >= 2021 && ano <= 2024) {
+      console.log(`📊 [Dashboard] Buscando dados de ${ano} usando novas tabelas...`);
       
-      todosRegistros = historicosNormalizados;
-      console.log(`✅ [Dashboard] Total de registros históricos normalizados: ${todosRegistros.length}`);
-    } else {
-      // Para 2025 e 2026+, usar os dados já buscados
-      todosRegistros = registrosAtuais || [];
-      console.log(`✅ [Dashboard] Total de registros: ${todosRegistros.length}`);
+      // Buscar dados agregados (para estatísticas gerais)
+      const dadosAgregados = await fetchBpmaAgregados(filters);
+      console.log(`✅ [Dashboard] Dados agregados (bpma_fato_mensal):`, dadosAgregados.length, 'registros');
+      
+      // Buscar dados por espécie (importantes para análises detalhadas)
+      const dadosPorEspecie = await fetchBpmaPorEspecie(filters);
+      console.log(`✅ [Dashboard] Dados por espécie (fat_resgates_diarios_${ano}):`, dadosPorEspecie.length, 'registros');
+      
+      // Priorizar dados por espécie (mais detalhados), usar agregados como fallback
+      todosRegistros = dadosPorEspecie.length > 0 ? dadosPorEspecie : dadosAgregados;
+      console.log(`✅ [Dashboard] Total de registros para ${ano}:`, todosRegistros.length);
+    }
+    // Para 2025, usar fat_resgates_diarios_2025_especies (dados históricos) e fat_registros_de_resgate (novos registros)
+    else if (ano === 2025) {
+      console.log(`📊 [Dashboard] Buscando dados de 2025...`);
+      
+      // Buscar dados por espécie (importados da planilha)
+      const { data: dataEspecies, error: errorEspecies } = await fetchDataWithoutJoins('fat_resgates_diarios_2025_especies', filters);
+      
+      if (!errorEspecies && dataEspecies) {
+        const especiesNormalizadas = dataEspecies.map((h: any) => ({
+          id: h.id,
+          data: h.data_ocorrencia,
+          quantidade: h.quantidade_resgates || 0,
+          quantidade_total: h.quantidade_resgates || 0,
+          quantidade_adulto: 0,
+          quantidade_filhote: h.quantidade_filhotes || 0,
+          quantidade_soltura: h.quantidade_solturas || 0,
+          quantidade_obito: h.quantidade_obitos || 0,
+          quantidade_ferido: h.quantidade_feridos || 0,
+          atropelamento: null,
+          regiao_administrativa: null,
+          origem: { nome: 'Resgate de Fauna' },
+          destinacao: null,
+          estado_saude: null,
+          estagio_vida: null,
+          desfecho: null,
+          especie: {
+            nome_popular: h.nome_popular || '',
+            nome_cientifico: h.nome_cientifico || '',
+            classe_taxonomica: h.classe_taxonomica || '',
+            tipo_de_fauna: h.tipo_de_fauna || ''
+          },
+          tipo_registro: 'historico'
+        }));
+        todosRegistros = [...todosRegistros, ...especiesNormalizadas];
+      }
+      
+      // Também buscar novos registros cadastrados
+      const { data: dataRegistros, error: errorRegistros } = await fetchDataWithoutJoins('fat_registros_de_resgate', filters);
+      if (!errorRegistros && dataRegistros) {
+        todosRegistros = [...todosRegistros, ...dataRegistros];
+      }
+      
+      console.log(`✅ [Dashboard] Dados carregados para 2025:`, todosRegistros.length, 'registros');
+    }
+    // Para 2026+, usar fat_registros_de_resgate
+    else {
+      console.log(`📊 [Dashboard] Buscando dados de ${ano} (2026+)...`);
+      const { data, error } = await fetchDataWithoutJoins('fat_registros_de_resgate', filters);
+      if (!error && data) {
+        todosRegistros = data || [];
+        console.log(`✅ [Dashboard] Dados carregados de fat_registros_de_resgate:`, todosRegistros.length, 'registros');
+      } else {
+        console.warn(`⚠️ [Dashboard] Erro ao buscar de fat_registros_de_resgate:`, error);
+      }
     }
     
     // Aplicar filtros avançados nos dados já enriquecidos

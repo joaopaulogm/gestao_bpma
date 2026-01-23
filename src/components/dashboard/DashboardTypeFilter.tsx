@@ -1,5 +1,3 @@
-
-import React from 'react';
 import { Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +24,7 @@ interface DashboardTypeFilterProps {
   }) => void;
 }
 
-const DashboardTypeFilter: React.FC<DashboardTypeFilterProps> = ({
+const DashboardTypeFilter = ({
   origem,
   classeTaxonomica,
   classesDisponiveis,
@@ -48,8 +46,8 @@ const DashboardTypeFilter: React.FC<DashboardTypeFilterProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className={`flex items-center gap-2 border-slate-200 ${
-              hasFilters ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white'
+            className={`flex items-center gap-2 border-border ${
+              hasFilters ? 'bg-primary/10 text-primary border-primary/30' : 'bg-background'
             }`}
           >
             <Filter className="h-4 w-4" />
@@ -57,7 +55,7 @@ const DashboardTypeFilter: React.FC<DashboardTypeFilterProps> = ({
             {hasFilters && (
               <Badge 
                 variant="secondary" 
-                className="ml-1 bg-blue-100 text-blue-700 hover:bg-blue-200"
+                className="ml-1 bg-primary/20 text-primary hover:bg-primary/30"
               >
                 {(origem !== null ? 1 : 0) + (classeTaxonomica !== null ? 1 : 0)}
               </Badge>
@@ -82,7 +80,7 @@ const DashboardTypeFilter: React.FC<DashboardTypeFilterProps> = ({
             </div>
             
             <div className="space-y-2">
-              <h5 className="text-sm font-medium text-slate-700">Origem</h5>
+              <h5 className="text-sm font-medium text-foreground">Origem</h5>
               <Select
                 value={origem || "all"}
                 onValueChange={(value) => onFilterChange({
@@ -101,7 +99,7 @@ const DashboardTypeFilter: React.FC<DashboardTypeFilterProps> = ({
             </div>
             
             <div className="space-y-2">
-              <h5 className="text-sm font-medium text-slate-700">Classe Taxonômica</h5>
+              <h5 className="text-sm font-medium text-foreground">Classe Taxonômica</h5>
               <Select
                 value={classeTaxonomica || "all"}
                 onValueChange={(value) => onFilterChange({
@@ -140,7 +138,7 @@ const DashboardTypeFilter: React.FC<DashboardTypeFilterProps> = ({
           {origem && (
             <Badge 
               variant="outline" 
-              className="flex items-center gap-1 bg-blue-50 text-blue-700 border-blue-200"
+              className="flex items-center gap-1 bg-primary/10 text-primary border-primary/30"
             >
               Origem: {origem}
               <X 

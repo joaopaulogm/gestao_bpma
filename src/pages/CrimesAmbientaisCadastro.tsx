@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import FormSection from '@/components/resgate/FormSection';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, Search } from 'lucide-react';
+import { Loader2, Plus, Trash2, Search, Image as ImageIcon } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import BensApreendidosSection, { BemApreendido as BemApreendidoType } from '@/components/crimes/BensApreendidosSection';
+import { getFaunaImageUrl } from '@/services/especieService';
 
 // Interface for team member
 interface MembroEquipeCrime {
@@ -45,8 +46,10 @@ interface EspecieFauna {
   nome_cientifico: string;
   classe_taxonomica: string;
   ordem_taxonomica: string;
+  familia_taxonomica: string | null;
   estado_de_conservacao: string;
   tipo_de_fauna: string;
+  imagens_paths?: any;
 }
 
 interface EspecieFlora {
@@ -64,6 +67,7 @@ interface EspecieFlora {
 
 interface FaunaItem {
   id: string;
+  classeTaxonomica: string;
   especieId: string;
   estadoSaudeId: string;
   atropelamento: boolean;
@@ -115,6 +119,8 @@ const CrimesAmbientaisCadastro = () => {
   
   // Form state - Informações Gerais
   const [data, setData] = useState('');
+  const [horarioAcionamento, setHorarioAcionamento] = useState('');
+  const [horarioTermino, setHorarioTermino] = useState('');
   const [regiaoId, setRegiaoId] = useState('');
   const [tipoAreaId, setTipoAreaId] = useState('');
   const [areaProtegida, setAreaProtegida] = useState(false);
@@ -195,6 +201,13 @@ const CrimesAmbientaisCadastro = () => {
   const isFlagrante = desfechoSelecionado?.nome?.toLowerCase().includes('flagrante');
   
   const enquadramentosFiltrados = enquadramentos.filter(e => e.id_tipo_de_crime === tipoCrimeId);
+
+  const classesTaxonomicasFauna = useMemo(() => {
+    const values = especiesFauna
+      .map((e) => (e.classe_taxonomica || '').trim())
+      .filter(Boolean);
+    return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [especiesFauna]);
   
   // Debug logs
   console.log('tipoCrimeId:', tipoCrimeId);
@@ -226,7 +239,7 @@ const CrimesAmbientaisCadastro = () => {
         supabase.from('dim_tipo_de_area').select('id, "Tipo de Área"'),
         supabase.from('dim_tipo_de_crime').select('id_tipo_de_crime, "Tipo de Crime"'),
         supabase.from('dim_enquadramento').select('id_enquadramento, id_tipo_de_crime, "Enquadramento"'),
-        supabase.from('dim_desfecho').select('id, nome, tipo'),
+        supabase.from('dim_desfecho_crime_ambientais').select('id, nome, tipo'),
         supabase.from('dim_especies_fauna').select('*').order('nome_popular'),
         supabase.from('dim_especies_flora').select('*').order('"Nome Popular"'),
         supabase.from('dim_estado_saude').select('id, nome'),
@@ -262,24 +275,36 @@ const CrimesAmbientaisCadastro = () => {
   // Add fauna item
   const addFaunaItem = () => {
     if (faunaItems.length >= 50) return;
-    setFaunaItems([...faunaItems, {
-      id: crypto.randomUUID(),
-      especieId: '',
-      estadoSaudeId: '',
-      atropelamento: false,
-      estagioVidaId: '',
-      quantidadeAdulto: 0,
-      quantidadeFilhote: 0,
-      destinacaoId: ''
-    }]);
+    setFaunaItems((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        classeTaxonomica: '',
+        especieId: '',
+        estadoSaudeId: '',
+        atropelamento: false,
+        estagioVidaId: '',
+        quantidadeAdulto: 0,
+        quantidadeFilhote: 0,
+        destinacaoId: ''
+      }
+    ]);
   };
 
   const removeFaunaItem = (id: string) => {
-    setFaunaItems(faunaItems.filter(f => f.id !== id));
+    setFaunaItems((prev) => prev.filter((f) => f.id !== id));
   };
 
   const updateFaunaItem = (id: string, field: keyof FaunaItem, value: any) => {
-    setFaunaItems(faunaItems.map(f => f.id === id ? { ...f, [field]: value } : f));
+    setFaunaItems((prev) =>
+      prev.map((f) => {
+        if (f.id !== id) return f;
+        if (field === 'classeTaxonomica') {
+          return { ...f, classeTaxonomica: value, especieId: '' };
+        }
+        return { ...f, [field]: value };
+      })
+    );
   };
 
   // Add flora item
@@ -374,6 +399,8 @@ const CrimesAmbientaisCadastro = () => {
         .from('fat_registros_de_crime')
         .insert({
           data,
+          horario_acionamento: horarioAcionamento || null,
+          horario_desfecho: horarioTermino || null,
           regiao_administrativa_id: regiaoId,
           tipo_area_id: tipoAreaId || null,
           area_protegida: areaProtegida,
@@ -512,6 +539,8 @@ const CrimesAmbientaisCadastro = () => {
 
   const resetForm = () => {
     setData('');
+    setHorarioAcionamento('');
+    setHorarioTermino('');
     setRegiaoId('');
     setTipoAreaId('');
     setAreaProtegida(false);
@@ -602,6 +631,32 @@ const CrimesAmbientaisCadastro = () => {
               value={data}
               onChange={(e) => setData(e.target.value)}
               required
+              className="input-glass"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="horarioAcionamento" className="text-sm font-medium">
+              Horário do Acionamento/Início
+            </Label>
+            <Input
+              id="horarioAcionamento"
+              type="time"
+              value={horarioAcionamento}
+              onChange={(e) => setHorarioAcionamento(e.target.value)}
+              className="input-glass"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="horarioTermino" className="text-sm font-medium">
+              Horário do Desfecho
+            </Label>
+            <Input
+              id="horarioTermino"
+              type="time"
+              value={horarioTermino}
+              onChange={(e) => setHorarioTermino(e.target.value)}
               className="input-glass"
             />
           </div>
@@ -770,7 +825,7 @@ const CrimesAmbientaisCadastro = () => {
               <SelectTrigger className="input-glass">
                 <SelectValue placeholder="Selecione o enquadramento" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[300px]">
                 {enquadramentosFiltrados.map(e => (
                   <SelectItem key={e.id_enquadramento} value={e.id_enquadramento}>
                     {e.Enquadramento || 'Sem descrição'}
@@ -1064,36 +1119,118 @@ const CrimesAmbientaisCadastro = () => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-sm">Espécie</Label>
-                        <Select 
-                          value={item.especieId} 
-                          onValueChange={(v) => updateFaunaItem(item.id, 'especieId', v)}
+                        <Label className="text-sm">Classe Taxonômica</Label>
+                        <Select
+                          value={item.classeTaxonomica}
+                          onValueChange={(v) => updateFaunaItem(item.id, 'classeTaxonomica', v)}
                         >
                           <SelectTrigger className="input-glass">
-                            <SelectValue placeholder="Selecione a espécie" />
+                            <SelectValue placeholder="Selecione a classe" />
                           </SelectTrigger>
-                          <SelectContent>
-                            {especiesFauna.map(e => (
-                              <SelectItem key={e.id} value={e.id}>
-                                {e.nome_popular} - {e.nome_cientifico}
+                          <SelectContent className="max-h-80">
+                            {classesTaxonomicasFauna.map((classe) => (
+                              <SelectItem key={classe} value={classe}>
+                                {classe}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
 
-                      {especie && (
-                        <>
-                          <div className="space-y-2">
-                            <Label className="text-sm text-muted-foreground">Classe Taxonômica</Label>
-                            <Input value={especie.classe_taxonomica} disabled className="bg-muted/50" />
+                      <div className="space-y-2">
+                        <Label className="text-sm">Nome Popular</Label>
+                        <Select
+                          value={item.especieId}
+                          onValueChange={(v) => updateFaunaItem(item.id, 'especieId', v)}
+                          disabled={!item.classeTaxonomica}
+                        >
+                          <SelectTrigger className="input-glass">
+                            <SelectValue
+                              placeholder={
+                                item.classeTaxonomica
+                                  ? 'Selecione a espécie'
+                                  : 'Selecione a classe primeiro'
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-80">
+                            {especiesFauna
+                              .filter((e) =>
+                                (e.classe_taxonomica || '').trim() ===
+                                (item.classeTaxonomica || '').trim()
+                              )
+                              .map((e) => (
+                                <SelectItem key={e.id} value={e.id}>
+                                  {e.nome_popular}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {especie 
+                        ? (
+                          <div className="md:col-span-2 rounded-xl border border-primary/20 bg-muted/20 overflow-hidden">
+                            <div className="px-4 py-3 bg-primary/5 border-b border-primary/10">
+                              <h4 className="font-semibold text-primary flex items-center gap-2">
+                                <ImageIcon className="h-4 w-4" />
+                                {especie.nome_popular}
+                                <span className="font-normal text-muted-foreground italic text-sm">
+                                  ({especie.nome_cientifico})
+                                </span>
+                              </h4>
+                            </div>
+                            <div className="p-4 space-y-4">
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                                <div className="space-y-1">
+                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Ordem</p>
+                                  <p className="text-sm font-medium text-foreground">{especie.ordem_taxonomica || '—'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Família</p>
+                                  <p className="text-sm font-medium text-foreground">{especie.familia_taxonomica || '—'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Tipo</p>
+                                  <p className="text-sm font-medium text-foreground">{especie.tipo_de_fauna || '—'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Conservação</p>
+                                  <p className="text-sm font-medium text-foreground">{especie.estado_de_conservacao || '—'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Classe</p>
+                                  <p className="text-sm font-medium text-foreground">{especie.classe_taxonomica || '—'}</p>
+                                </div>
+                              </div>
+
+                              {Array.isArray(especie.imagens_paths) && especie.imagens_paths.length > 0 && (
+                                <div className="pt-3 border-t border-primary/10">
+                                  <p className="text-xs font-medium mb-2 text-muted-foreground uppercase tracking-wider">Fotos da Espécie</p>
+                                  <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                                    {especie.imagens_paths.slice(0, 6).map((filename: string, imgIndex: number) => (
+                                      <div
+                                        key={imgIndex}
+                                        className="aspect-square rounded-lg overflow-hidden border border-border bg-muted shadow-sm"
+                                      >
+                                        <img
+                                          src={getFaunaImageUrl(filename)}
+                                          alt={`${especie.nome_popular} ${imgIndex + 1}`}
+                                          className="w-full h-full object-cover"
+                                          loading="lazy"
+                                          onError={(e) => {
+                                            (e.target as HTMLImageElement).src = '/placeholder.svg';
+                                          }}
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="space-y-2">
-                            <Label className="text-sm text-muted-foreground">Estado de Conservação</Label>
-                            <Input value={especie.estado_de_conservacao} disabled className="bg-muted/50" />
-                          </div>
-                        </>
-                      )}
+                        )
+                        : null}
 
                       <div className="space-y-2">
                         <Label className="text-sm">Estado de Saúde</Label>
@@ -1407,7 +1544,7 @@ const CrimesAmbientaisCadastro = () => {
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="btn-glass min-w-[200px]"
+            className="btn-glass w-full sm:w-auto px-8"
           >
             {isSubmitting ? (
               <>

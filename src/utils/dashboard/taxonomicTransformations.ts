@@ -8,10 +8,19 @@ export const transformTaxonomicClassData = (registros: Registro[]): ChartDataIte
   
   const classeMap = new Map<string, number>();
   registros.forEach(reg => {
-    if (reg?.especie?.classe_taxonomica) {
-      const classe = reg.especie.classe_taxonomica.trim();
-      if (classe) {
-        classeMap.set(classe, (classeMap.get(classe) || 0) + 1);
+    // Para dados históricos, classe_taxonomica pode estar diretamente no registro
+    const classe = reg?.especie?.classe_taxonomica || (reg as any).classe_taxonomica;
+    
+    if (classe) {
+      const classeTrim = classe.trim();
+      if (classeTrim) {
+        // Para dados históricos, usar quantidade_resgates; para atuais, contar 1
+        const isHistorical = (reg as any).tipo_registro === 'historico' || 
+                            (reg as any).quantidade_resgates !== undefined;
+        const quantidade = isHistorical
+          ? (Number((reg as any).quantidade_resgates) || Number((reg as any).quantidade) || 1)
+          : 1;
+        classeMap.set(classeTrim, (classeMap.get(classeTrim) || 0) + quantidade);
       }
     }
   });

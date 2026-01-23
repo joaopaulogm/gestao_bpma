@@ -21,7 +21,7 @@ const FAUNA_CATEGORIES = [
   { value: 'AVE', label: 'Aves', icon: Bird, color: 'bg-sky-500/10 text-sky-600 border-sky-500/30 hover:bg-sky-500/20' },
   { value: 'MAMIFERO', label: 'Mamíferos', icon: PawPrint, color: 'bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20' },
   { value: 'RÉPTEIS', label: 'Répteis', icon: Leaf, color: 'bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/20' },
-  { value: 'PEIXE', label: 'Peixes', icon: Fish, color: 'bg-blue-500/10 text-blue-600 border-blue-500/30 hover:bg-blue-500/20' },
+  { value: 'PEIXE', label: 'Peixes', icon: Fish, color: 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20' },
 ];
 
 // Flora categories - matching dim_especies_flora fields
@@ -225,7 +225,7 @@ const FaunaCard = memo(({
             <span className="px-2 py-1 bg-amber-500/10 text-amber-600 rounded-full">{item.estado_de_conservacao}</span>
           )}
           {item.tipo_de_fauna && (
-            <span className="px-2 py-1 bg-blue-500/10 text-blue-600 rounded-full">{item.tipo_de_fauna}</span>
+            <span className="px-2 py-1 bg-primary/10 text-primary rounded-full">{item.tipo_de_fauna}</span>
           )}
         </div>
       </CardContent>

@@ -124,6 +124,8 @@ const prepararDadosParaInsercao = async (
   // Tabelas modernas (2025+ e fat_registros_de_resgate)
   return {
     data: dataFormatada,
+    horario_acionamento: data.horarioAcionamento || null,
+    horario_termino: data.horarioTermino || null,
     especie_id: especie.especieId || null,
     regiao_administrativa_id: regiaoId,
     origem_id: origemId,
@@ -134,6 +136,7 @@ const prepararDadosParaInsercao = async (
     tipo_area_id: data.tipoAreaId || null,
     latitude_origem: data.latitudeOrigem,
     longitude_origem: data.longitudeOrigem,
+    numero_tco: data.numeroTCO || null,
     outro_desfecho: data.outroDesfecho || null,
     atropelamento: especie.atropelamento,
     quantidade: especie.quantidadeTotal,
@@ -195,9 +198,9 @@ export const useResgateSubmission = () => {
         buscarIdPorNome('dim_regiao_administrativa', data.regiaoAdministrativa),
         buscarIdPorNome('dim_origem', data.origem),
         data.desfechoApreensao 
-          ? buscarIdPorNome('dim_desfecho', data.desfechoApreensao)
+          ? buscarIdPorNome('dim_desfecho_crime_ambientais', data.desfechoApreensao)
           : data.desfechoResgate 
-            ? buscarIdPorNome('dim_desfecho', data.desfechoResgate)
+            ? buscarIdPorNome('dim_desfecho_resgates', data.desfechoResgate)
             : Promise.resolve(null)
       ]);
 

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import FormField from './FormField';
 
@@ -11,7 +10,7 @@ interface RegiaoAdministrativaFieldProps {
   regioes: string[];
 }
 
-const RegiaoAdministrativaField: React.FC<RegiaoAdministrativaFieldProps> = ({ 
+const RegiaoAdministrativaField = ({ 
   regioes, 
   value, 
   onChange,
@@ -56,11 +55,11 @@ const RegiaoAdministrativaField: React.FC<RegiaoAdministrativaFieldProps> = ({
           className={error ? "border-red-500" : ""}
         />
         {filtro && (
-          <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md mt-1 max-h-60 overflow-y-auto">
+          <div className="absolute z-10 w-full bg-background border border-border rounded-md mt-1 max-h-60 overflow-y-auto">
             {regioesFiltradas.map((regiao) => (
               <div 
                 key={regiao} 
-                className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                className="px-4 py-2 cursor-pointer hover:bg-muted"
                 onClick={() => handleRegiaoSelect(regiao)}
               >
                 {regiao}

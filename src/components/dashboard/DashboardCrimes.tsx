@@ -60,7 +60,7 @@ const DashboardCrimes: React.FC<DashboardCrimesProps> = ({
         }}
         className="space-y-4"
       >
-        <TabsList className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 w-full bg-slate-50 p-1 rounded-xl shadow-sm overflow-x-auto gap-1">
+        <TabsList className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 w-full bg-muted/30 p-1 rounded-xl shadow-sm overflow-x-auto gap-1">
           {tiposCrime.map((tipo) => (
             <TabsTrigger 
               key={tipo.id_tipo_de_crime}

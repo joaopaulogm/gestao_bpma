@@ -3,6 +3,8 @@ import React from 'react';
 import { ResgateFormData } from '@/schemas/resgateSchema';
 import FormSection from './FormSection';
 import DataField from './DataField';
+import HorarioAcionamentoField from './HorarioAcionamentoField';
+import HorarioTerminoField from './HorarioTerminoField';
 import OrigemField from './OrigemField';
 import RegiaoAdministrativaField from './RegiaoAdministrativaField';
 import TipoAreaField from './TipoAreaField';
@@ -31,6 +33,20 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
         onChange={handleChange}
         error={errors.data?.message}
         required={true}
+      />
+
+      <HorarioAcionamentoField
+        value={formData.horarioAcionamento || ''}
+        onChange={handleChange}
+        error={errors.horarioAcionamento?.message}
+        required={false}
+      />
+
+      <HorarioTerminoField
+        value={formData.horarioTermino || ''}
+        onChange={handleChange}
+        error={errors.horarioTermino?.message}
+        required={false}
       />
 
       <RegiaoAdministrativaField

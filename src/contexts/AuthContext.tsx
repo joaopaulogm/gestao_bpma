@@ -32,18 +32,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserRole = async (userId: string): Promise<AppRole | null> => {
     try {
-      const { data, error } = await supabase
+      // PRIMEIRO: Verificar se é email admin por natureza (verificação direta)
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser?.email) {
+        const emailLower = authUser.email.toLowerCase().trim();
+        if (emailLower === 'soi.bpma@gmail.com' || emailLower === 'joaopaulogm@gmail.com') {
+          console.log('Email admin detectado:', emailLower);
+          return 'admin';
+        }
+      }
+
+      // SEGUNDO: Buscar role em user_roles usando query direta
+      const { data: userRoleData, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching user role:', error);
-        return 'operador'; // Default role
+      if (!error && userRoleData?.role) {
+        console.log('Role obtido de user_roles:', userRoleData.role);
+        return userRoleData.role as AppRole;
       }
 
-      return (data?.role as AppRole) || 'operador';
+      // TERCEIRO: Buscar via usuarios_por_login -> efetivo_roles
+      const { data: userLoginData } = await supabase
+        .from('usuarios_por_login')
+        .select('efetivo_id')
+        .eq('auth_user_id', userId)
+        .maybeSingle();
+
+      if (userLoginData?.efetivo_id) {
+        const { data: efetivoRoleData } = await supabase
+          .from('efetivo_roles')
+          .select('role')
+          .eq('efetivo_id', userLoginData.efetivo_id)
+          .order('role')
+          .limit(1);
+
+        if (efetivoRoleData && efetivoRoleData.length > 0) {
+          console.log('Role obtido de efetivo_roles:', efetivoRoleData[0].role);
+          return efetivoRoleData[0].role as AppRole;
+        }
+      }
+
+      console.log('Usando role padrão: operador');
+      return 'operador';
     } catch (error) {
       console.error('Error fetching user role:', error);
       return 'operador';
@@ -97,10 +130,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       toast.success('Login realizado com sucesso!');
-    } catch (error: any) {
-      console.error('Login error:', error.message);
-      const errorMessage = handleSupabaseError(error, 'fazer login');
-      toast.error(errorMessage);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      console.error('Login error:', errorMessage);
+      const handledError = handleSupabaseError(error as Error, 'fazer login');
+      toast.error(handledError);
       throw error;
     }
   };
@@ -112,9 +146,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       toast.success('Logout realizado com sucesso');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Logout error:', error);
-      toast.error(`Erro ao fazer logout: ${error.message}`);
+      toast.error(`Erro ao fazer logout: ${errorMessage}`);
     }
   };
 

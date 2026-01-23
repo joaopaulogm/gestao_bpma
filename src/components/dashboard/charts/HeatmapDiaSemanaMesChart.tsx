@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardData } from '@/types/hotspots';
 import { format } from 'date-fns';
@@ -11,7 +11,7 @@ interface HeatmapDiaSemanaMesChartProps {
   year: number;
 }
 
-const HeatmapDiaSemanaMesChart: React.FC<HeatmapDiaSemanaMesChartProps> = ({ data, year }) => {
+const HeatmapDiaSemanaMesChart = ({ data, year }: HeatmapDiaSemanaMesChartProps) => {
   const registros = data.rawData || [];
   
   const heatmapData = useMemo(() => {
@@ -80,9 +80,9 @@ const HeatmapDiaSemanaMesChart: React.FC<HeatmapDiaSemanaMesChartProps> = ({ dat
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th className="p-2 text-sm font-medium text-slate-700 border border-slate-200 bg-slate-50">Dia/Mês</th>
+                <th className="p-2 text-sm font-medium text-foreground border border-border bg-muted">Dia/Mês</th>
                 {meses.map(mes => (
-                  <th key={mes} className="p-2 text-sm font-medium text-slate-700 border border-slate-200 bg-slate-50">
+                  <th key={mes} className="p-2 text-sm font-medium text-foreground border border-border bg-muted">
                     {mes}
                   </th>
                 ))}
@@ -91,7 +91,7 @@ const HeatmapDiaSemanaMesChart: React.FC<HeatmapDiaSemanaMesChartProps> = ({ dat
             <tbody>
               {heatmapData.dados.map((linha, index) => (
                 <tr key={index}>
-                  <td className="p-2 text-sm font-medium text-slate-700 border border-slate-200 bg-slate-50">
+                  <td className="p-2 text-sm font-medium text-foreground border border-border bg-muted">
                     {linha.dia}
                   </td>
                   {meses.map(mes => {
@@ -100,12 +100,12 @@ const HeatmapDiaSemanaMesChart: React.FC<HeatmapDiaSemanaMesChartProps> = ({ dat
                     return (
                       <td
                         key={mes}
-                        className="p-2 text-center border border-slate-200"
+                        className="p-2 text-center border border-border"
                         style={{ backgroundColor: getColor(intensidade) }}
                         title={`${linha.dia} - ${mes}: ${valor} resgates`}
                       >
                         <span className={`text-sm font-medium ${
-                          intensidade > 50 ? 'text-white' : 'text-slate-700'
+                          intensidade > 50 ? 'text-white' : 'text-foreground'
                         }`}>
                           {valor > 0 ? valor : '-'}
                         </span>
@@ -117,7 +117,7 @@ const HeatmapDiaSemanaMesChart: React.FC<HeatmapDiaSemanaMesChartProps> = ({ dat
             </tbody>
           </table>
         </div>
-        <div className="mt-4 flex items-center justify-center gap-4 text-xs text-slate-600">
+        <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded" style={{ backgroundColor: '#f3f4f6' }}></div>
             <span>0</span>

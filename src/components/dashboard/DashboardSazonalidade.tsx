@@ -129,16 +129,16 @@ const DashboardSazonalidade: React.FC<DashboardSazonalidadeProps> = ({ data, yea
           </CardContent>
         </Card>
         
-        <Card className="glass-card border-blue-100 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-blue-50/80 to-white/80 backdrop-blur-sm border-b border-blue-100">
-            <CardTitle className="text-lg font-semibold text-blue-700">
+        <Card className="glass-card border-primary/30 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-primary/10 to-white/80 backdrop-blur-sm border-b border-primary/30">
+            <CardTitle className="text-lg font-semibold text-primary">
               Mês de Vale
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 bg-white/50 backdrop-blur-sm">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">{vale.mes}</div>
-              <div className="text-2xl font-semibold text-blue-700">{vale.media.toFixed(1)} resgates/mês</div>
+              <div className="text-3xl font-bold text-primary mb-2">{vale.mes}</div>
+              <div className="text-2xl font-semibold text-primary">{vale.media.toFixed(1)} resgates/mês</div>
             </div>
           </CardContent>
         </Card>

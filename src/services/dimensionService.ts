@@ -124,27 +124,41 @@ export const buscarEstagiosVida = async (): Promise<DimensionItem[]> => {
 /**
  * Fetches all outcomes (desfechos)
  */
-export const buscarDesfechos = async (tipo?: string): Promise<DesfechoItem[]> => {
+export const buscarDesfechosResgate = async (): Promise<DesfechoItem[]> => {
   try {
-    let query = supabase
-      .from("dim_desfecho")
+    const { data, error } = await supabase
+      .from("dim_desfecho_resgates")
       .select("id, nome, tipo")
+      .eq("tipo", "resgate")
       .order("nome");
     
-    if (tipo) {
-      query = query.eq("tipo", tipo);
-    }
-    
-    const { data, error } = await query;
-    
     if (error) {
-      console.error("Erro ao buscar desfechos:", error);
+      console.error("Erro ao buscar desfechos de resgate:", error);
       return [];
     }
     
     return data || [];
   } catch (error) {
-    console.error("Erro ao buscar desfechos:", error);
+    console.error("Erro ao buscar desfechos de resgate:", error);
+    return [];
+  }
+};
+
+export const buscarDesfechosCrimeAmbiental = async (): Promise<DesfechoItem[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("dim_desfecho_crime_ambientais")
+      .select("id, nome, tipo")
+      .order("nome");
+    
+    if (error) {
+      console.error("Erro ao buscar desfechos de crime ambiental:", error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error("Erro ao buscar desfechos de crime ambiental:", error);
     return [];
   }
 };
@@ -153,7 +167,7 @@ export const buscarDesfechos = async (tipo?: string): Promise<DesfechoItem[]> =>
  * Finds dimension ID by name
  */
 export const buscarIdPorNome = async (
-  tabela: 'dim_regiao_administrativa' | 'dim_origem' | 'dim_destinacao' | 'dim_estado_saude' | 'dim_estagio_vida' | 'dim_desfecho',
+  tabela: 'dim_regiao_administrativa' | 'dim_origem' | 'dim_destinacao' | 'dim_estado_saude' | 'dim_estagio_vida' | 'dim_desfecho_resgates' | 'dim_desfecho_crime_ambientais',
   nome: string
 ): Promise<string | null> => {
   try {

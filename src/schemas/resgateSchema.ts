@@ -4,6 +4,8 @@ import { z } from "zod";
 export const resgateSchema = z
   .object({
     data: z.string().min(1, "Data é obrigatória"),
+    horarioAcionamento: z.string().optional(),
+    horarioTermino: z.string().optional(),
     regiaoAdministrativa: z.string().min(1, "Região Administrativa é obrigatória"),
     origem: z.string().min(1, "Origem é obrigatória"),
     desfechoResgate: z.string().optional(),

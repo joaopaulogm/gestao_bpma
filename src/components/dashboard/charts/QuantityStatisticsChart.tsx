@@ -18,9 +18,9 @@ const QuantityStatisticsChart: React.FC<QuantityStatisticsChartProps> = ({ data 
     <ChartCard title="Estatísticas de Quantidade por Ocorrência" subtitle="Análise quantitativa das ocorrências">
       <div className="flex flex-col justify-center h-full p-6">
         <div className="grid grid-cols-2 gap-8">
-          <div className="flex flex-col items-center justify-center bg-blue-50 p-6 rounded-lg">
-            <span className="text-sm text-blue-600 font-medium mb-2">Mínimo</span>
-            <span className="text-3xl font-bold text-blue-700">
+          <div className="flex flex-col items-center justify-center bg-primary/10 p-6 rounded-lg">
+            <span className="text-sm text-primary font-medium mb-2">Mínimo</span>
+            <span className="text-3xl font-bold text-primary">
               {data.min}
             </span>
           </div>

@@ -442,7 +442,7 @@ const FloraCadastrada = () => {
                               href={`https://pt.wikipedia.org/wiki/${encodeURIComponent(especie.nomeCientifico || especie.nomePopular || '')}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-500 hover:underline"
+                              className="text-primary hover:underline"
                             >
                               <ExternalLink className="h-3 w-3" />
                             </a>

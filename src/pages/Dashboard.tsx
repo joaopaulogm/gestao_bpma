@@ -85,35 +85,37 @@ const Dashboard = () => {
   
   return (
     <Layout title="Painel de Dados" showBackButton>
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
         {/* Header with title and actions */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Acompanhe e analise os dados de fauna com facilidade.
-            </p>
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Dashboard</h1>
+              <p className="text-muted-foreground text-xs sm:text-sm mt-1">
+                Acompanhe e analise os dados de fauna com facilidade.
+              </p>
+            </div>
+            <DashboardHeader 
+              year={filters.year}
+              month={filters.month}
+              origem={filters.origem}
+              classeTaxonomica={filters.classeTaxonomica}
+              classesDisponiveis={displayData?.classeTaxonomica?.map(c => c.name) || []}
+              ultimaAtualizacao={displayData.ultimaAtualizacao}
+              filters={filters}
+              onFilterChange={updateFilters}
+              onRefresh={handleRefresh}
+              data={displayData}
+              isLoading={isLoading}
+            />
           </div>
-          <DashboardHeader 
-            year={filters.year}
-            month={filters.month}
-            origem={filters.origem}
-            classeTaxonomica={filters.classeTaxonomica}
-            classesDisponiveis={displayData?.classeTaxonomica?.map(c => c.name) || []}
-            ultimaAtualizacao={displayData.ultimaAtualizacao}
-            filters={filters}
-            onFilterChange={updateFilters}
-            onRefresh={handleRefresh}
-            data={displayData}
-            isLoading={isLoading}
+
+          {/* Year tabs */}
+          <DashboardYearTabs 
+            selectedYear={filters.year} 
+            onYearChange={handleYearChange} 
           />
         </div>
-
-        {/* Year tabs */}
-        <DashboardYearTabs 
-          selectedYear={filters.year} 
-          onYearChange={handleYearChange} 
-        />
 
         {/* Summary cards */}
         <DashboardSummaryCards data={displayData} />

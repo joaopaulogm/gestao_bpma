@@ -20,8 +20,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 15%;
 
-    /* Primary - Apple Blue #007AFF */
-    --primary: 210 100% 50%; /* #007AFF */
+    /* Primary - Navy Blue #071d49 (RGB 7 29 73, Pantone 2768 C) */
+    --primary: 220 83% 16%; /* #071d49 */
     --primary-foreground: 0 0% 100%;
 
     /* Secondary - Light gray for subtle backgrounds */
@@ -51,7 +51,7 @@
     /* Borders and inputs - Subtle gray */
     --border: 0 0% 90%; /* rgba(0, 0, 0, 0.1) */
     --input: 0 0% 90%;
-    --ring: 210 100% 50%; /* Apple Blue for focus */
+    --ring: 220 83% 16%; /* Navy Blue for focus */
 
     /* Border radius - Apple style */
     --radius: 0.75rem; /* 12px - medium radius */
@@ -59,12 +59,14 @@
     /* Sidebar - Apple style with subtle background */
     --sidebar-background: 0 0% 98%; /* Light gray */
     --sidebar-foreground: 0 0% 15%;
-    --sidebar-primary: 210 100% 50%; /* Apple Blue */
+    --sidebar-primary: 220 83% 16%; /* Navy Blue #071d49 - usado quando NÃO ativo */
     --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-active: 220 83% 16%; /* Navy Blue #071d49 - usado quando ATIVO */
+    --sidebar-active-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 95%; /* Hover state */
     --sidebar-accent-foreground: 0 0% 15%;
     --sidebar-border: 0 0% 90%; /* Subtle border */
-    --sidebar-ring: 210 100% 50%;
+    --sidebar-ring: 220 83% 16%;
   }
 
   .dark {
@@ -78,7 +80,7 @@
     --popover: 0 0% 18%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 210 100% 50%; /* Apple Blue - same in dark mode */
+    --primary: 220 83% 16%; /* Navy Blue #071d49 - same in dark mode */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 18%;
@@ -101,16 +103,18 @@
 
     --border: 0 0% 30%; /* Subtle border in dark */
     --input: 0 0% 30%;
-    --ring: 210 100% 50%;
+    --ring: 220 83% 16%;
 
     --sidebar-background: 0 0% 11%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary: 220 83% 16%; /* Navy Blue #071d49 - usado quando NÃO ativo */
     --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-active: 220 83% 16%; /* Navy Blue #071d49 - usado quando ATIVO */
+    --sidebar-active-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 18%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 30%;
-    --sidebar-ring: 210 100% 50%;
+    --sidebar-ring: 220 83% 16%;
   }
 }
 
@@ -130,8 +134,15 @@
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
+}
+
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
 }
 
 ::-webkit-scrollbar-track {
@@ -146,6 +157,137 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary) / 0.5);
+}
+
+/* Mobile-first responsive utilities */
+@layer utilities {
+  /* Safe area insets for notched devices */
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-x {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  
+  /* Touch-friendly spacing */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Responsive text utilities */
+  .text-responsive-xs {
+    @apply text-[10px] sm:text-xs;
+  }
+  .text-responsive-sm {
+    @apply text-xs sm:text-sm;
+  }
+  .text-responsive-base {
+    @apply text-sm sm:text-base;
+  }
+  .text-responsive-lg {
+    @apply text-base sm:text-lg md:text-xl;
+  }
+  .text-responsive-xl {
+    @apply text-lg sm:text-xl md:text-2xl;
+  }
+  .text-responsive-2xl {
+    @apply text-xl sm:text-2xl md:text-3xl;
+  }
+  
+  /* Responsive padding */
+  .p-responsive {
+    @apply p-3 sm:p-4 md:p-6;
+  }
+  .px-responsive {
+    @apply px-3 sm:px-4 md:px-6;
+  }
+  .py-responsive {
+    @apply py-3 sm:py-4 md:py-6;
+  }
+  
+  /* Responsive gaps */
+  .gap-responsive {
+    @apply gap-2 sm:gap-3 md:gap-4;
+  }
+  .gap-responsive-lg {
+    @apply gap-3 sm:gap-4 md:gap-6;
+  }
+  
+  /* Responsive card padding */
+  .card-padding {
+    @apply p-3 sm:p-4 md:p-5;
+  }
+  
+  /* Hide scrollbar but allow scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Responsive container - replaces fixed w-[75%] with fluid system */
+  .container-responsive {
+    @apply w-full max-w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 mx-auto;
+  }
+  
+  /* Content container with max-width for readability */
+  .content-container {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* Fluid page container - 8pt spacing system */
+  .page-container {
+    @apply w-full mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:max-w-[1400px];
+  }
+  
+  /* Responsive flex utilities */
+  .flex-responsive {
+    @apply flex flex-col sm:flex-row;
+  }
+  
+  .flex-responsive-reverse {
+    @apply flex flex-col-reverse sm:flex-row;
+  }
+  
+  /* Auto-width utilities */
+  .w-auto-full {
+    @apply w-full sm:w-auto;
+  }
+  
+  /* Table responsive container */
+  .table-container {
+    @apply w-full overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0;
+  }
+  
+  /* Button stack on mobile, row on desktop */
+  .btn-stack {
+    @apply flex flex-col sm:flex-row gap-2 sm:gap-3;
+  }
+  
+  /* Filter/action bar responsive */
+  .action-bar {
+    @apply flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center;
+  }
+  
+  /* Grid responsive utilities */
+  .grid-auto-fit {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  
+  @media (min-width: 640px) {
+    .grid-auto-fit {
+      gap: 1.5rem;
+    }
+  }
 }
 
 /* Apple HIG - Custom Animations */
@@ -269,7 +411,7 @@
 .dashboard-card:hover {
   background: hsl(var(--card));
   border-color: hsl(var(--border));
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Level 3 elevation */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Level 3 elevation on hover */
   transform: translateY(-1px);
 }
 

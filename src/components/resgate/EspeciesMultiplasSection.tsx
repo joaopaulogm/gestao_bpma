@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useCallback } from 'react';
 import FormSection from './FormSection';
 import FormField from './FormField';
@@ -7,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getFaunaImageUrl } from '@/services/especieService';
 
 export interface EspecieItem {
   id: string;
@@ -39,8 +39,11 @@ interface EspecieFauna {
   nome_cientifico: string;
   classe_taxonomica: string;
   ordem_taxonomica: string;
+  familia_taxonomica: string | null;
   tipo_de_fauna: string;
   estado_de_conservacao: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  imagens_paths?: any;
 }
 
 interface DimensionItem {
@@ -74,53 +77,27 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch ALL species usando paginação para garantir que todas sejam carregadas
-        const PAGE_SIZE = 1000; // Tamanho máximo recomendado do Supabase
-        let allData: EspecieFauna[] = [];
-        let from = 0;
-        let hasMore = true;
-        let error: Error | null = null;
-
-        while (hasMore) {
-          const { data: pageData, error: pageError } = await supabase
-            .from('dim_especies_fauna')
-            .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, tipo_de_fauna, estado_de_conservacao')
-            .order('nome_popular', { ascending: true })
-            .range(from, from + PAGE_SIZE - 1);
-
-          if (pageError) {
-            console.error('Erro ao carregar página:', pageError);
-            error = pageError;
-            break;
-          }
-
-          if (pageData && pageData.length > 0) {
-            allData = [...allData, ...(pageData as EspecieFauna[])];
-            from += PAGE_SIZE;
-            hasMore = pageData.length === PAGE_SIZE;
-            console.log(`Carregadas ${allData.length} espécies até agora...`);
-          } else {
-            hasMore = false;
-          }
-        }
-
-        const data = allData;
+        // Buscar todas as espécies de uma vez (são menos de 300 registros)
+        const { data: allSpecies, error } = await supabase
+          .from('dim_especies_fauna')
+          .select('id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, familia_taxonomica, tipo_de_fauna, estado_de_conservacao, imagens_paths')
+          .order('nome_popular', { ascending: true });
 
         if (error) {
           console.error('Erro ao carregar espécies:', error);
         }
 
-        const allSpecies = (data as EspecieFauna[]) || [];
+        const speciesList = (allSpecies as EspecieFauna[]) || [];
         console.log('=== DEBUG CARREGAMENTO ESPÉCIES ===');
-        console.log('Total de espécies carregadas:', allSpecies.length);
-        console.log('Primeiras 10 espécies:', allSpecies.slice(0, 10).map(e => ({
+        console.log('Total de espécies carregadas:', speciesList.length);
+        console.log('Primeiras 10 espécies:', speciesList.slice(0, 10).map(e => ({
           nome: e.nome_popular,
           classe: e.classe_taxonomica,
           classeRaw: JSON.stringify(e.classe_taxonomica)
         })));
 
-        if (allSpecies.length > 0) {
-          setEspeciesFauna(allSpecies);
+        if (speciesList.length > 0) {
+          setEspeciesFauna(speciesList);
 
           // Extract unique classes + counts (normalized for safety)
           // Usar o valor original da primeira ocorrência para preservar acentos e formatação
@@ -128,7 +105,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
           const displayByNorm: Record<string, string> = {};
           const todasClasses: string[] = [];
 
-          allSpecies.forEach((e) => {
+          speciesList.forEach((e) => {
             const raw = (e.classe_taxonomica ?? '').trim();
             if (!raw) return;
             
@@ -153,7 +130,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
           setClassesCount(counts);
 
           console.log('=== RESUMO ===');
-          console.log('Total de espécies:', allSpecies.length);
+          console.log('Total de espécies:', speciesList.length);
           console.log('Todas as classes encontradas (com duplicatas):', [...new Set(todasClasses)]);
           console.log('Classes únicas normalizadas:', Object.keys(displayByNorm));
           console.log('Classes finais para exibição:', classes);
@@ -353,8 +330,8 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                 <SelectTrigger>
                   <SelectValue placeholder={loading ? "Carregando..." : "Selecione a classe"} />
                 </SelectTrigger>
-                <SelectContent className="bg-background max-h-60 overflow-y-auto z-50">
-                  <div className="p-2 sticky top-0 bg-background border-b">
+                <SelectContent className="bg-background z-[100]" position="popper" sideOffset={4}>
+                  <div className="p-2 bg-background border-b sticky top-0 z-10">
                     <Input
                       value={classeSearchById[especie.id] ?? ''}
                       onChange={(e) =>
@@ -364,6 +341,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                       onKeyDown={(e) => e.stopPropagation()}
                     />
                   </div>
+                  <div className="max-h-[200px] overflow-y-auto">
                   {loading ? (
                     <div className="p-3 text-center text-muted-foreground text-sm">
                       Carregando classes...
@@ -396,6 +374,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                       );
                     });
                   })()}
+                  </div>
                 </SelectContent>
               </Select>
             </FormField>
@@ -411,8 +390,8 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                     placeholder={!especie.classeTaxonomica ? "Selecione a classe primeiro" : "Selecione a espécie"}
                   />
                 </SelectTrigger>
-                <SelectContent className="bg-background max-h-80 overflow-y-auto z-50">
-                  <div className="p-2 sticky top-0 bg-background border-b">
+                <SelectContent className="bg-background z-[100]" position="popper" sideOffset={4}>
+                  <div className="p-2 bg-background border-b sticky top-0 z-10">
                     <Input
                       value={especieSearchById[especie.id] ?? ''}
                       onChange={(e) =>
@@ -423,59 +402,125 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                       onKeyDown={(e) => e.stopPropagation()}
                     />
                   </div>
-                  {loading ? (
-                    <div className="p-3 text-center text-muted-foreground text-sm">
-                      Carregando espécies...
-                    </div>
-                  ) : !especie.classeTaxonomica ? (
-                    <div className="p-3 text-center text-muted-foreground text-sm">
-                      Selecione uma classe primeiro
-                    </div>
-                  ) : (() => {
-                    // Calcular espécies filtradas uma única vez
-                    const especiesFiltradas = getEspeciesPorClasse(especie.classeTaxonomica);
-                    const searchTerm = (especieSearchById[especie.id] ?? '').trim().toLowerCase();
-                    const especiesComBusca = searchTerm 
-                      ? especiesFiltradas.filter((ef) =>
-                          (ef.nome_popular ?? '')
-                            .toLowerCase()
-                            .includes(searchTerm)
-                        )
-                      : especiesFiltradas;
-                    
-                    if (especiesComBusca.length === 0) {
-                      return (
-                        <div className="p-3 text-center text-muted-foreground text-sm">
-                          {searchTerm ? 'Nenhuma espécie encontrada' : 'Nenhuma espécie disponível para esta classe'}
-                        </div>
-                      );
-                    }
-                    
-                    return especiesComBusca.map((ef) => (
-                      <SelectItem key={ef.id} value={ef.id}>
-                        {ef.nome_popular}
-                      </SelectItem>
-                    ));
-                  })()}
+                  <div className="max-h-[250px] overflow-y-auto">
+                    {loading ? (
+                      <div className="p-3 text-center text-muted-foreground text-sm">
+                        Carregando espécies...
+                      </div>
+                    ) : !especie.classeTaxonomica ? (
+                      <div className="p-3 text-center text-muted-foreground text-sm">
+                        Selecione uma classe primeiro
+                      </div>
+                    ) : (() => {
+                      // Calcular espécies filtradas uma única vez
+                      const especiesFiltradas = getEspeciesPorClasse(especie.classeTaxonomica);
+                      const searchTerm = (especieSearchById[especie.id] ?? '').trim().toLowerCase();
+                      const especiesComBusca = searchTerm 
+                        ? especiesFiltradas.filter((ef) =>
+                            (ef.nome_popular ?? '')
+                              .toLowerCase()
+                              .includes(searchTerm)
+                          )
+                        : especiesFiltradas;
+                      
+                      if (especiesComBusca.length === 0) {
+                        return (
+                          <div className="p-3 text-center text-muted-foreground text-sm">
+                            {searchTerm ? 'Nenhuma espécie encontrada' : 'Nenhuma espécie disponível para esta classe'}
+                          </div>
+                        );
+                      }
+                      
+                      return especiesComBusca.map((ef) => (
+                        <SelectItem key={ef.id} value={ef.id}>
+                          {ef.nome_popular}
+                        </SelectItem>
+                      ));
+                    })()}
+                  </div>
                 </SelectContent>
               </Select>
             </FormField>
+          </div>
 
-            <FormField id={`nomeCientifico-${especie.id}`} label="Nome Científico">
-              <Input value={especie.nomeCientifico} readOnly className="bg-muted" />
-            </FormField>
+          {/* Card de Detalhes da Espécie - aparece após seleção */}
+          {especie.especieId && (() => {
+            const selectedEspecie = especiesFauna.find(ef => ef.id === especie.especieId);
+            if (!selectedEspecie) return null;
+            return (
+              <div className="md:col-span-2 mt-2 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 overflow-hidden">
+                {/* Header com nome da espécie */}
+                <div className="px-4 py-3 bg-primary/10 border-b border-primary/20">
+                  <h4 className="font-semibold text-primary flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4" />
+                    {selectedEspecie.nome_popular}
+                    <span className="font-normal text-muted-foreground italic text-sm">
+                      ({selectedEspecie.nome_cientifico})
+                    </span>
+                  </h4>
+                </div>
+                
+                <div className="p-4 space-y-4">
+                  {/* Informações Taxonômicas em layout elegante */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Ordem</p>
+                      <p className="text-sm font-medium text-foreground">{selectedEspecie.ordem_taxonomica || '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Família</p>
+                      <p className="text-sm font-medium text-foreground">{selectedEspecie.familia_taxonomica || '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Tipo</p>
+                      <p className="text-sm font-medium text-foreground">{selectedEspecie.tipo_de_fauna || '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Conservação</p>
+                      <p className="text-sm font-medium text-foreground">{selectedEspecie.estado_de_conservacao || '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Classe</p>
+                      <p className="text-sm font-medium text-foreground">{selectedEspecie.classe_taxonomica || '—'}</p>
+                    </div>
+                  </div>
 
-            <FormField id={`ordemTaxonomica-${especie.id}`} label="Ordem Taxonômica">
-              <Input value={especie.ordemTaxonomica} readOnly className="bg-muted" />
-            </FormField>
+                  {/* Galeria de Fotos */}
+                  {(() => {
+                    const imagensPaths = Array.isArray(selectedEspecie.imagens_paths) 
+                      ? selectedEspecie.imagens_paths as string[]
+                      : [];
+                    if (imagensPaths.length === 0) return null;
+                    return (
+                      <div className="pt-3 border-t border-primary/10">
+                        <p className="text-xs font-medium mb-2 text-muted-foreground uppercase tracking-wider">Fotos da Espécie</p>
+                        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                          {imagensPaths.slice(0, 6).map((filename, imgIndex) => (
+                            <div 
+                              key={imgIndex} 
+                              className="aspect-square rounded-lg overflow-hidden border border-border bg-muted shadow-sm hover:shadow-md transition-shadow"
+                            >
+                              <img
+                                src={getFaunaImageUrl(filename)}
+                                alt={`${selectedEspecie.nome_popular} ${imgIndex + 1}`}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = '/placeholder.svg';
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            );
+          })()}
 
-            <FormField id={`estadoConservacao-${especie.id}`} label="Estado de Conservação">
-              <Input value={especie.estadoConservacao} readOnly className="bg-muted" />
-            </FormField>
-
-            <FormField id={`tipoFauna-${especie.id}`} label="Tipo de Fauna">
-              <Input value={especie.tipoFauna} readOnly className="bg-muted" />
-            </FormField>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             <FormField id={`estadoSaude-${especie.id}`} label="Estado de Saúde" required={!isEvadido}>
               <Select

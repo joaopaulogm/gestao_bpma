@@ -21,10 +21,20 @@ export const useRegistroDelete = (onDeleteSuccess: (deletedId: string) => void) 
     
     setIsDeleting(true);
     try {
-      const { error } = await supabaseAny
-        .from('fat_resgates_diarios_2025')
+      // Try fat_registros_de_resgate first (2026+)
+      let { error } = await supabaseAny
+        .from('fat_registros_de_resgate')
         .delete()
         .eq('id', registroToDelete.id);
+      
+      // If not found, try fat_resgates_diarios_2025
+      if (error?.code === 'PGRST116' || error?.message?.includes('not found')) {
+        const result = await supabaseAny
+          .from('fat_resgates_diarios_2025')
+          .delete()
+          .eq('id', registroToDelete.id);
+        error = result.error;
+      }
       
       if (error) throw error;
       
