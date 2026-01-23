@@ -49,7 +49,7 @@ const HomeCard = ({ title, icon: Icon, to }: HomeCardProps) => {
   return (
     <Link 
       to={to}
-      className="flex flex-col items-center justify-center gap-0.5 p-0.5 rounded-xl 
+      className="flex flex-col items-center justify-center gap-0.5 p-[2px] rounded-xl 
         bg-primary border border-primary/50
         shadow-[0_4px_0_0_#041230,0_6px_10px_rgba(0,0,0,0.3)]
         hover:shadow-[0_2px_0_0_#041230,0_4px_8px_rgba(0,0,0,0.2),0_0_15px_rgba(255,204,0,0.4)]
@@ -58,10 +58,8 @@ const HomeCard = ({ title, icon: Icon, to }: HomeCardProps) => {
         active:translate-y-[4px]
         transition-all duration-150 aspect-square min-h-[40px] sm:min-h-[52px]"
     >
-      <div className="p-0.5 rounded-md bg-accent/10 shrink-0">
-        <Icon className="h-4 w-4 sm:h-6 sm:w-6 text-accent" />
-      </div>
-      <span className="text-[7px] sm:text-[9px] font-semibold text-center text-primary-foreground leading-tight break-words hyphens-auto px-0.5 line-clamp-2">{title}</span>
+      <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-accent shrink-0" />
+      <span className="text-[8px] sm:text-[11px] font-semibold text-center text-primary-foreground leading-none break-words hyphens-auto px-0.5 line-clamp-2">{title}</span>
     </Link>
   );
 };
