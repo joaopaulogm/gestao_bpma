@@ -47,7 +47,6 @@ const MaterialApoio = lazy(() => import(/* webpackChunkName: "material-apoio" */
 const IdentificarEspecie = lazy(() => import(/* webpackChunkName: "identificar-especie" */ '@/pages/apoio/IdentificarEspecie'));
 const ManualRAP = lazy(() => import(/* webpackChunkName: "manual-rap" */ '@/pages/apoio/ManualRAP'));
 const RankingOcorrencias = lazy(() => import(/* webpackChunkName: "ranking" */ '@/pages/RankingOcorrencias'));
-const UploadSchemas = lazy(() => import(/* webpackChunkName: "upload-schemas" */ '@/pages/UploadSchemas'));
 const AtividadesPrevencao = lazy(() => import(/* webpackChunkName: "atividades-prevencao" */ '@/pages/AtividadesPrevencao'));
 const DashboardPublico = lazy(() => import(/* webpackChunkName: "dashboard-publico" */ '@/pages/DashboardPublico'));
 const MonitorarRAPs = lazy(() => import(/* webpackChunkName: "monitorar-raps" */ '@/pages/MonitorarRAPs'));
@@ -104,7 +103,6 @@ function App() {
               <Route path="/perfil" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><Perfil /></SidebarLayout></ProtectedRoute>} />
               {/* Admin only */}
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/upload-schemas" element={<ProtectedRoute requireAdmin><UploadSchemas /></ProtectedRoute>} />
               <Route path="/registro-detalhes/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistroDetalhes /></SidebarLayout></ProtectedRoute>} />
               <Route path="/resgate-editar/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ResgateEditar /></SidebarLayout></ProtectedRoute>} />
               
