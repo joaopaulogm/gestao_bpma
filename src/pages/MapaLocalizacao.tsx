@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, MapPin, Navigation, RefreshCw, Shield, TreePine, Mountain, Leaf, AlertTriangle, CheckCircle2, XCircle, Copy } from 'lucide-react';
+import { Loader2, MapPin, Navigation, RefreshCw, Shield, TreePine, Mountain, Leaf, AlertTriangle, CheckCircle2, XCircle, Copy, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import KmlLayerControls, { KML_LAYERS, KmlLayer } from '@/components/mapa/KmlLayerControls';
 
 interface Coordenadas {
   latitude: number;
@@ -41,6 +42,11 @@ const MapaLocalizacao: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  
+  // KML Layers state
+  const [layers, setLayers] = useState<KmlLayer[]>(KML_LAYERS);
+  const [loadingLayers, setLoadingLayers] = useState<string[]>([]);
+  const kmlLayersRef = useRef<Map<string, google.maps.KmlLayer>>(new Map());
 
   // Carregar Google Maps
   useEffect(() => {
@@ -82,7 +88,7 @@ const MapaLocalizacao: React.FC = () => {
       
       mapInstanceRef.current = new google.maps.Map(mapRef.current, {
         center: dfCenter,
-        zoom: 12,
+        zoom: 11,
         mapId: 'mapa-localizacao',
         mapTypeId: 'hybrid',
         mapTypeControl: true,
@@ -91,6 +97,94 @@ const MapaLocalizacao: React.FC = () => {
       });
     }
   }, [mapLoaded]);
+
+  // Cleanup KML layers on unmount
+  useEffect(() => {
+    return () => {
+      kmlLayersRef.current.forEach((layer) => {
+        layer.setMap(null);
+      });
+      kmlLayersRef.current.clear();
+    };
+  }, []);
+
+  // Toggle KML layer
+  const toggleLayer = useCallback(async (layerId: string) => {
+    const map = mapInstanceRef.current;
+    if (!map || !mapLoaded) {
+      toast.error('Mapa não está pronto');
+      return;
+    }
+
+    const layer = layers.find(l => l.id === layerId);
+    if (!layer) return;
+
+    // Se a camada já está visível, remover
+    if (layer.visible) {
+      const existingLayer = kmlLayersRef.current.get(layerId);
+      if (existingLayer) {
+        existingLayer.setMap(null);
+        kmlLayersRef.current.delete(layerId);
+      }
+      
+      setLayers(prev => prev.map(l => 
+        l.id === layerId ? { ...l, visible: false } : l
+      ));
+      return;
+    }
+
+    // Carregar a camada KML
+    setLoadingLayers(prev => [...prev, layerId]);
+
+    try {
+      // URL pública necessária para Google Maps KML
+      // Em produção, usar URL do site publicado
+      const baseUrl = window.location.origin;
+      const kmlUrl = `${baseUrl}${layer.file}`;
+
+      console.log('Carregando KML:', kmlUrl);
+
+      const kmlLayer = new google.maps.KmlLayer({
+        url: kmlUrl,
+        map: map,
+        preserveViewport: true,
+        suppressInfoWindows: false,
+      });
+
+      // Listener para quando o KML é carregado
+      kmlLayer.addListener('status_changed', () => {
+        const status = kmlLayer.getStatus();
+        console.log(`KML ${layer.name} status:`, status);
+        
+        if (status === 'OK') {
+          kmlLayersRef.current.set(layerId, kmlLayer);
+          setLayers(prev => prev.map(l => 
+            l.id === layerId ? { ...l, visible: true } : l
+          ));
+          toast.success(`Camada "${layer.name}" carregada`);
+        } else {
+          console.error(`Erro ao carregar KML ${layer.name}:`, status);
+          kmlLayer.setMap(null);
+          
+          if (status === 'FETCH_ERROR') {
+            toast.error(
+              `Camada "${layer.name}" requer URL pública. Publique o app para usar.`,
+              { duration: 5000 }
+            );
+          } else {
+            toast.error(`Erro ao carregar: ${status}`);
+          }
+        }
+        
+        setLoadingLayers(prev => prev.filter(id => id !== layerId));
+      });
+
+    } catch (error) {
+      console.error(`Erro ao carregar camada ${layer.name}:`, error);
+      toast.error(`Erro ao carregar "${layer.name}"`);
+      setLoadingLayers(prev => prev.filter(id => id !== layerId));
+    }
+  }, [mapLoaded, layers]);
 
   // Atualizar marcador quando coordenadas mudarem
   useEffect(() => {
@@ -193,26 +287,15 @@ const MapaLocalizacao: React.FC = () => {
   const verificarAreasProtegidas = async (coords: Coordenadas) => {
     setLoadingAreas(true);
     try {
-      // Por enquanto, simular verificação até dados QGIS serem migrados
-      // Futuramente: consultar tabela de áreas protegidas no Supabase
-      
-      // Exemplo de estrutura para quando dados estiverem disponíveis:
-      // const { data, error } = await supabase
-      //   .from('areas_protegidas')
-      //   .select('*')
-      //   .filter('geom', 'st_contains', `POINT(${coords.longitude} ${coords.latitude})`);
-
-      // Simulação de resposta
+      // Por enquanto, simular verificação até dados PostGIS serem integrados
       const areasSimuladas: AreaProtegida[] = [
-        { id: '1', nome: 'Verificação pendente', tipo: 'app', dentro: false },
-        { id: '2', nome: 'Verificação pendente', tipo: 'uc_federal', dentro: false },
-        { id: '3', nome: 'Verificação pendente', tipo: 'uc_distrital', dentro: false },
-        { id: '4', nome: 'Verificação pendente', tipo: 'reserva_legal', dentro: false },
-        { id: '5', nome: 'Verificação pendente', tipo: 'area_especial', dentro: false },
+        { id: '1', nome: 'Verificação via camadas KML', tipo: 'app', dentro: false },
+        { id: '2', nome: 'Ative camadas no painel', tipo: 'uc_federal', dentro: false },
+        { id: '3', nome: 'Para visualizar áreas', tipo: 'uc_distrital', dentro: false },
+        { id: '4', nome: 'Protegidas no mapa', tipo: 'reserva_legal', dentro: false },
       ];
 
       setAreasProtegidas(areasSimuladas);
-      toast.info('Dados de áreas protegidas serão carregados após migração do QGIS');
     } catch (err) {
       console.error('Erro ao verificar áreas:', err);
     } finally {
@@ -233,6 +316,8 @@ const MapaLocalizacao: React.FC = () => {
     if (metros < 10) return `± ${metros.toFixed(1)}m`;
     return `± ${Math.round(metros)}m`;
   };
+
+  const visibleLayersCount = layers.filter(l => l.visible).length;
 
   return (
     <Layout title="Mapa e Localização" showBackButton>
@@ -309,12 +394,24 @@ const MapaLocalizacao: React.FC = () => {
             </CardContent>
           </Card>
 
+          {/* Card de Camadas KML */}
+          <KmlLayerControls
+            layers={layers}
+            onToggleLayer={toggleLayer}
+            loadingLayers={loadingLayers}
+          />
+
           {/* Card de Áreas Protegidas */}
           <Card className="bg-card/50 backdrop-blur border-border/50">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Shield className="h-5 w-5 text-green-500" />
-                Áreas Protegidas
+                Verificação de Áreas
+                {visibleLayersCount > 0 && (
+                  <Badge variant="secondary" className="ml-auto">
+                    {visibleLayersCount} camadas ativas
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -367,9 +464,9 @@ const MapaLocalizacao: React.FC = () => {
                   })}
                   
                   <Alert className="mt-4">
-                    <AlertTriangle className="h-4 w-4" />
+                    <Layers className="h-4 w-4" />
                     <AlertDescription className="text-xs">
-                      Dados de áreas protegidas serão disponibilizados após migração dos dados QGIS.
+                      Ative as camadas KML acima para visualizar áreas protegidas diretamente no mapa.
                     </AlertDescription>
                   </Alert>
                 </div>
