@@ -147,17 +147,13 @@ const Index = () => {
               {isAdmin ? (
                 // Admin: mostrar TODAS as páginas
                 <>
-                  {/* Páginas Operacionais */}
+                  {/* Material de Apoio */}
                   <div className="space-y-3 sm:space-y-4">
                     <div className="flex items-center gap-2 text-primary font-semibold px-1">
-                      <Clipboard className="h-4 w-4" />
-                      <span className="text-xs sm:text-sm">Páginas Operacionais</span>
+                      <BookOpen className="h-4 w-4" />
+                      <span className="text-xs sm:text-sm">Material de Apoio</span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-                      <HomeCard title="Resgate de Fauna" icon={Clipboard} to="/resgate-cadastro" />
-                      <HomeCard title="Crimes Ambientais" icon={Shield} to="/crimes-ambientais" />
-                      <HomeCard title="Crimes Comuns" icon={Gavel} to="/crimes-comuns" />
-                      <HomeCard title="Atividades de Prevenção" icon={HeartHandshake} to="/atividades-prevencao" />
                       <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
                       <HomeCard title="POP" icon={BookOpen} to="/material-apoio/pop" />
                       <HomeCard title="Identificar Espécie" icon={BookOpen} to="/material-apoio/identificar-especie" />
@@ -240,10 +236,7 @@ const Index = () => {
                 <>
                   {/* Operador level - all authenticated users */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-                    <HomeCard title="Resgate de Fauna" icon={Clipboard} to="/resgate-cadastro" />
-                    <HomeCard title="Crimes Ambientais" icon={Shield} to="/crimes-ambientais" />
-                    <HomeCard title="Crimes Comuns" icon={Gavel} to="/crimes-comuns" />
-                    <HomeCard title="Atividades de Prevenção" icon={HeartHandshake} to="/atividades-prevencao" />
+                    <HomeCard title="Seção Operacional" icon={Briefcase} to="/secao-operacional" />
                     <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
                     <HomeCard title="Ranking de Ocorrências" icon={Trophy} to="/ranking" />
                   </div>
