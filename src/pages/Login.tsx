@@ -135,7 +135,7 @@ const Login = () => {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/inicio');
     }
   }, [isAuthenticated, navigate]);
 
@@ -161,7 +161,7 @@ const Login = () => {
           console.error('Link error:', error);
         } else {
           toast.success('Conta Google vinculada com sucesso!');
-          navigate('/');
+          navigate('/inicio');
         }
       }
     };
@@ -392,7 +392,7 @@ const Login = () => {
 
     try {
       await authLogin(email, password);
-      navigate('/');
+      navigate('/inicio');
     } catch (error: unknown) {
       // Error já tratado no authLogin
     } finally {
@@ -407,7 +407,7 @@ const Login = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/inicio`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

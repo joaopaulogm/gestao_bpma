@@ -9,7 +9,7 @@ const PoliticaPrivacidade: React.FC = () => {
     <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
       <div className="content-container">
         <div className="mb-6">
-          <Link to="/">
+          <Link to="/inicio">
             <Button variant="ghost" size="sm" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               Voltar
