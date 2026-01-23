@@ -212,7 +212,7 @@ const Index = () => {
         </div>
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-4">
           <CheckeredDivider />
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground whitespace-nowrap tracking-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#071d49] whitespace-nowrap tracking-tight">
             Gestão - BPMA
           </h1>
           <CheckeredDivider />
