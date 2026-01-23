@@ -627,7 +627,7 @@ const Login = () => {
                       Use <strong>primeiro_nome.ultimo_nome</strong>
                     </p>
                     <p className="text-xs mt-1">
-                      Ex: João Paulo G. Maciel → <code className="bg-blue-500/20 px-1 rounded">joao.maciel</code>
+                      Ex: Maria da Silva → <code className="bg-blue-500/20 px-1 rounded">maria.silva</code>
                     </p>
                     <p className="text-xs mt-1">
                       Ou use sua <strong>matrícula</strong> como login.
