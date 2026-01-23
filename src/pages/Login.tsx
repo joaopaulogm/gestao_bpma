@@ -133,10 +133,8 @@ const Login = () => {
   // Buscar usuário por login e senha usando query direta
   const buscarUsuarioPorLoginSenha = async (loginInput: string, senhaInput: string): Promise<UsuarioPorLogin | null> => {
     const loginLower = loginInput.toLowerCase().trim();
-    // Limpar senha: remover não-numéricos e zeros à esquerda
-    const senhaLimpa = senhaInput.replace(/[^0-9]/g, '').replace(/^0+/, '');
-    
-    console.log('Buscando usuário:', { login: loginLower, senhaLimpa });
+    // Limpar senha: manter zeros à esquerda (CPF tem 11 dígitos)
+    const senhaLimpa = senhaInput.replace(/[^0-9]/g, '');
     
     // Buscar primeiro por login
     const query = supabase
@@ -172,21 +170,28 @@ const Login = () => {
     }
 
     if (!data || data.length === 0) {
-      console.log('Usuário não encontrado');
       return null;
     }
 
     const usuario = data[0];
     
-    // Verificar senha (CPF ou matrícula) - remover zeros à esquerda para comparação
-    const senhaDB = (usuario.senha?.toString() || '').replace(/^0+/, '');
-    const cpfDB = (usuario.cpf?.toString() || '').replace(/^0+/, '');
-    const matriculaDB = (usuario.matricula || '').replace(/^0+/, '');
-    
-    console.log('Comparando senhas:', { senhaLimpa, senhaDB, cpfDB, matriculaDB });
-    
-    if (senhaLimpa !== senhaDB && senhaLimpa !== cpfDB && senhaLimpa !== matriculaDB) {
-      console.log('Senha não confere');
+    // Verificar senha (CPF ou matrícula)
+    // Obs: como a coluna CPF/senha pode estar como bigint no banco, zeros à esquerda podem ter sido perdidos.
+    // Para manter a experiência correta (CPF com 11 dígitos), fazemos comparação também com left-pad para 11.
+    const senhaDBRaw = (usuario.senha?.toString() || '').replace(/[^0-9]/g, '');
+    const cpfDBRaw = (usuario.cpf?.toString() || '').replace(/[^0-9]/g, '');
+    const matriculaDB = (usuario.matricula || '').replace(/[^0-9]/g, '');
+
+    const pad11 = (v: string) => (v && v.length < 11 ? v.padStart(11, '0') : v);
+    const senhaDB11 = pad11(senhaDBRaw);
+    const cpfDB11 = pad11(cpfDBRaw);
+
+    const matches =
+      (senhaLimpa && (senhaLimpa === senhaDBRaw || senhaLimpa === senhaDB11)) ||
+      (senhaLimpa && (senhaLimpa === cpfDBRaw || senhaLimpa === cpfDB11)) ||
+      (senhaLimpa && senhaLimpa === matriculaDB);
+
+    if (!matches) {
       return null; // Senha não confere
     }
 
@@ -211,7 +216,7 @@ const Login = () => {
       efetivo_id: usuario.efetivo_id,
       nome: usuario.nome || '',
       login: usuario.login || '',
-      senha: senhaDB,
+      senha: senhaDBRaw,
       email: usuario.email,
       matricula: usuario.matricula,
       cpf: usuario.cpf,
