@@ -622,15 +622,15 @@ const Login = () => {
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
                   <div className="text-blue-700 dark:text-blue-400">
-                    <p className="font-medium mb-1">Formato do Login:</p>
+                    <p className="font-medium mb-1">Como fazer login:</p>
                     <p className="text-xs">
-                      Use <strong>primeiro_nome.ultimo_nome</strong>
+                      <strong>Login:</strong> primeiro_nome.ultimo_nome ou matrícula
                     </p>
                     <p className="text-xs mt-1">
                       Ex: Maria da Silva → <code className="bg-blue-500/20 px-1 rounded">maria.silva</code>
                     </p>
-                    <p className="text-xs mt-1">
-                      Ou use sua <strong>matrícula</strong> como login.
+                    <p className="text-xs mt-2">
+                      <strong>Senha:</strong> 11 números do CPF (apenas números)
                     </p>
                   </div>
                 </div>
@@ -655,7 +655,7 @@ const Login = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="senha">Senha (CPF ou Matrícula)</Label>
+                  <Label htmlFor="senha">Senha (CPF - 11 números)</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
@@ -663,16 +663,17 @@ const Login = () => {
                       type="password"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      placeholder="Apenas números"
+                      placeholder="00000000000"
                       value={senha}
                       onChange={(e) => setSenha(e.target.value.replace(/\D/g, ''))}
                       className="pl-10"
+                      maxLength={11}
                       required
                       autoComplete="current-password"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Digite seu CPF ou matrícula (apenas números, sem pontos ou traços)
+                    Digite os 11 números do seu CPF (sem pontos ou traços)
                   </p>
                 </div>
 
