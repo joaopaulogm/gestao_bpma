@@ -51,6 +51,7 @@ const UploadSchemas = lazy(() => import(/* webpackChunkName: "upload-schemas" */
 const AtividadesPrevencao = lazy(() => import(/* webpackChunkName: "atividades-prevencao" */ '@/pages/AtividadesPrevencao'));
 const DashboardPublico = lazy(() => import(/* webpackChunkName: "dashboard-publico" */ '@/pages/DashboardPublico'));
 const MonitorarRAPs = lazy(() => import(/* webpackChunkName: "monitorar-raps" */ '@/pages/MonitorarRAPs'));
+const ControleOS = lazy(() => import(/* webpackChunkName: "controle-os" */ '@/pages/ControleOS'));
 
 // Legal pages
 const PoliticaPrivacidade = lazy(() => import(/* webpackChunkName: "politica-privacidade" */ '@/pages/PoliticaPrivacidade'));
@@ -130,6 +131,7 @@ function App() {
               <Route path="/secao-operacional/flora-cadastro/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/flora-cadastrada" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/monitorar-raps" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><MonitorarRAPs /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/controle-os" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ControleOS /></SidebarLayout></ProtectedRoute>} />
               
               {/* Seção Pessoas */}
               <Route path="/secao-pessoas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><SecaoPessoas /></SidebarLayout></ProtectedRoute>} />

@@ -1717,6 +1717,175 @@ export type Database = {
           },
         ]
       }
+      fat_ordens_servico: {
+        Row: {
+          chefe_operacoes_id: string | null
+          comandante_id: string | null
+          confidence_score: number | null
+          created_at: string
+          data_evento: string
+          drive_file_id: string | null
+          drive_file_name: string | null
+          drive_folder_path: string | null
+          endereco: string | null
+          extracted_data: Json | null
+          horario_inicio: string | null
+          horario_termino: string | null
+          id: string
+          latitude: number | null
+          local_evento: string | null
+          longitude: number | null
+          missao_policiamento: string | null
+          numero_evento: string | null
+          numero_os: string
+          origem_registro: string | null
+          prescricoes_demais: string | null
+          prescricoes_s1: string | null
+          prescricoes_s2: string | null
+          prescricoes_s3: string | null
+          prescricoes_s4: string | null
+          referencia_sei: string | null
+          regiao_administrativa_id: string | null
+          situacao: string | null
+          tipo_servico: string | null
+          uniforme_equipamento: string | null
+          updated_at: string
+        }
+        Insert: {
+          chefe_operacoes_id?: string | null
+          comandante_id?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          data_evento: string
+          drive_file_id?: string | null
+          drive_file_name?: string | null
+          drive_folder_path?: string | null
+          endereco?: string | null
+          extracted_data?: Json | null
+          horario_inicio?: string | null
+          horario_termino?: string | null
+          id?: string
+          latitude?: number | null
+          local_evento?: string | null
+          longitude?: number | null
+          missao_policiamento?: string | null
+          numero_evento?: string | null
+          numero_os: string
+          origem_registro?: string | null
+          prescricoes_demais?: string | null
+          prescricoes_s1?: string | null
+          prescricoes_s2?: string | null
+          prescricoes_s3?: string | null
+          prescricoes_s4?: string | null
+          referencia_sei?: string | null
+          regiao_administrativa_id?: string | null
+          situacao?: string | null
+          tipo_servico?: string | null
+          uniforme_equipamento?: string | null
+          updated_at?: string
+        }
+        Update: {
+          chefe_operacoes_id?: string | null
+          comandante_id?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          data_evento?: string
+          drive_file_id?: string | null
+          drive_file_name?: string | null
+          drive_folder_path?: string | null
+          endereco?: string | null
+          extracted_data?: Json | null
+          horario_inicio?: string | null
+          horario_termino?: string | null
+          id?: string
+          latitude?: number | null
+          local_evento?: string | null
+          longitude?: number | null
+          missao_policiamento?: string | null
+          numero_evento?: string | null
+          numero_os?: string
+          origem_registro?: string | null
+          prescricoes_demais?: string | null
+          prescricoes_s1?: string | null
+          prescricoes_s2?: string | null
+          prescricoes_s3?: string | null
+          prescricoes_s4?: string | null
+          referencia_sei?: string | null
+          regiao_administrativa_id?: string | null
+          situacao?: string | null
+          tipo_servico?: string | null
+          uniforme_equipamento?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_ordens_servico_chefe_operacoes_id_fkey"
+            columns: ["chefe_operacoes_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_ordens_servico_comandante_id_fkey"
+            columns: ["comandante_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_ordens_servico_regiao_administrativa_id_fkey"
+            columns: ["regiao_administrativa_id"]
+            isOneToOne: false
+            referencedRelation: "dim_regiao_administrativa"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_os_efetivo: {
+        Row: {
+          created_at: string
+          efetivo_id: string
+          funcao: string | null
+          id: string
+          observacoes: string | null
+          os_id: string
+          viatura: string | null
+        }
+        Insert: {
+          created_at?: string
+          efetivo_id: string
+          funcao?: string | null
+          id?: string
+          observacoes?: string | null
+          os_id: string
+          viatura?: string | null
+        }
+        Update: {
+          created_at?: string
+          efetivo_id?: string
+          funcao?: string | null
+          id?: string
+          observacoes?: string | null
+          os_id?: string
+          viatura?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_os_efetivo_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_os_efetivo_os_id_fkey"
+            columns: ["os_id"]
+            isOneToOne: false
+            referencedRelation: "fat_ordens_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fat_registros_de_crime: {
         Row: {
           alteracao_visual: boolean | null
@@ -2855,6 +3024,45 @@ export type Database = {
           mensagem?: string | null
           status?: string | null
           tipo?: string | null
+        }
+        Relationships: []
+      }
+      os_processadas: {
+        Row: {
+          confidence_score: number | null
+          drive_file_id: string
+          drive_file_name: string
+          drive_folder_path: string | null
+          error_message: string | null
+          extracted_data: Json | null
+          id: string
+          numero_os: string | null
+          processed_at: string
+          status: string | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          drive_file_id: string
+          drive_file_name: string
+          drive_folder_path?: string | null
+          error_message?: string | null
+          extracted_data?: Json | null
+          id?: string
+          numero_os?: string | null
+          processed_at?: string
+          status?: string | null
+        }
+        Update: {
+          confidence_score?: number | null
+          drive_file_id?: string
+          drive_file_name?: string
+          drive_folder_path?: string | null
+          error_message?: string | null
+          extracted_data?: Json | null
+          id?: string
+          numero_os?: string | null
+          processed_at?: string
+          status?: string | null
         }
         Relationships: []
       }
