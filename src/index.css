@@ -1,9 +1,9 @@
-/* Apple HIG - SF Pro Font (fallback to Inter) */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Apple HIG - SF Pro Font (fallback to Inter) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -259,11 +259,11 @@
 
 /* Apple HIG - Dashboard Card Styles */
 .dashboard-card {
-  @apply rounded-xl transition-all duration-250;
+  @apply rounded-xl transition-all duration-300;
   background: hsl(var(--card));
   border: 0.5px solid hsl(var(--border));
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Level 2 elevation */
-  transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .dashboard-card:hover {

@@ -13,7 +13,7 @@ const corsHeaders = {
 
 interface ActionPayload {
   action: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 serve(async (req) => {
@@ -87,14 +87,14 @@ serve(async (req) => {
       );
     }
 
-    let result: any;
+    let result: unknown;
 
     // Handle different actions
     switch (action) {
       case "abono_upsert": {
         // Resolve efetivo_id from matricula if needed
-        let efetivoId = data.efetivo_id;
-        if (!efetivoId && data.matricula) {
+        let efetivoId = typeof data.efetivo_id === 'string' ? data.efetivo_id : undefined;
+        if (!efetivoId && data.matricula && typeof data.matricula === 'string') {
           const { data: efetivo, error: efetivoError } = await serviceClient
             .from("dim_efetivo")
             .select("id")
@@ -110,7 +110,10 @@ serve(async (req) => {
           efetivoId = efetivo.id;
         }
 
-        if (!efetivoId || !data.ano || !data.mes) {
+        const ano = typeof data.ano === 'number' ? data.ano : undefined;
+        const mes = typeof data.mes === 'number' ? data.mes : undefined;
+
+        if (!efetivoId || !ano || !mes) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required fields: efetivo_id/matricula, ano, mes" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -121,9 +124,9 @@ serve(async (req) => {
           .from("fat_abono")
           .upsert({
             efetivo_id: efetivoId,
-            ano: data.ano,
-            mes: data.mes,
-            observacao: data.observacao || null,
+            ano: ano,
+            mes: mes,
+            observacao: (data.observacao && typeof data.observacao === 'string') ? data.observacao : null,
             updated_at: new Date().toISOString(),
           }, {
             onConflict: "efetivo_id,ano,mes",
@@ -137,8 +140,8 @@ serve(async (req) => {
       }
 
       case "restricao_upsert": {
-        let efetivoId = data.efetivo_id;
-        if (!efetivoId && data.matricula) {
+        let efetivoId = typeof data.efetivo_id === 'string' ? data.efetivo_id : undefined;
+        if (!efetivoId && data.matricula && typeof data.matricula === 'string') {
           const { data: efetivo, error: efetivoError } = await serviceClient
             .from("dim_efetivo")
             .select("id")
@@ -154,7 +157,10 @@ serve(async (req) => {
           efetivoId = efetivo.id;
         }
 
-        if (!efetivoId || !data.tipo_restricao || !data.data_inicio) {
+        const tipoRestricao = typeof data.tipo_restricao === 'string' ? data.tipo_restricao : undefined;
+        const dataInicioRaw = data.data_inicio;
+
+        if (!efetivoId || !tipoRestricao || !dataInicioRaw) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required fields: efetivo_id/matricula, tipo_restricao, data_inicio" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -162,8 +168,10 @@ serve(async (req) => {
         }
 
         // Normalize dates
-        let dataInicio = new Date(data.data_inicio);
-        let dataFim = data.data_fim ? new Date(data.data_fim) : null;
+        const dataInicioStr = typeof dataInicioRaw === 'string' ? dataInicioRaw : String(dataInicioRaw);
+        const dataInicio = new Date(dataInicioStr);
+        const dataFimStr = data.data_fim ? (typeof data.data_fim === 'string' ? data.data_fim : String(data.data_fim)) : null;
+        let dataFim = dataFimStr ? new Date(dataFimStr) : null;
         
         // If data_fim < data_inicio, set data_fim = data_inicio
         if (dataFim && dataFim < dataInicio) {
@@ -177,10 +185,10 @@ serve(async (req) => {
           .upsert({
             efetivo_id: efetivoId,
             ano: ano,
-            tipo_restricao: data.tipo_restricao,
+            tipo_restricao: tipoRestricao,
             data_inicio: dataInicio.toISOString().split("T")[0],
             data_fim: dataFim ? dataFim.toISOString().split("T")[0] : null,
-            observacao: data.observacao || null,
+            observacao: (data.observacao && typeof data.observacao === 'string') ? data.observacao : null,
             updated_at: new Date().toISOString(),
           }, {
             onConflict: "efetivo_id,ano,tipo_restricao,data_inicio,data_fim_norm",
@@ -194,8 +202,8 @@ serve(async (req) => {
       }
 
       case "licenca_upsert": {
-        let efetivoId = data.efetivo_id;
-        if (!efetivoId && data.matricula) {
+        let efetivoId = typeof data.efetivo_id === 'string' ? data.efetivo_id : undefined;
+        if (!efetivoId && data.matricula && typeof data.matricula === 'string') {
           const { data: efetivo, error: efetivoError } = await serviceClient
             .from("dim_efetivo")
             .select("id")
@@ -211,7 +219,9 @@ serve(async (req) => {
           efetivoId = efetivo.id;
         }
 
-        if (!efetivoId || !data.data_inicio) {
+        const dataInicioRaw = data.data_inicio;
+
+        if (!efetivoId || !dataInicioRaw) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required fields: efetivo_id/matricula, data_inicio" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -219,8 +229,10 @@ serve(async (req) => {
         }
 
         // Normalize dates
-        let dataInicio = new Date(data.data_inicio);
-        let dataFim = data.data_fim ? new Date(data.data_fim) : null;
+        const dataInicioStr = typeof dataInicioRaw === 'string' ? dataInicioRaw : String(dataInicioRaw);
+        const dataInicio = new Date(dataInicioStr);
+        const dataFimStr = data.data_fim ? (typeof data.data_fim === 'string' ? data.data_fim : String(data.data_fim)) : null;
+        let dataFim = dataFimStr ? new Date(dataFimStr) : null;
         
         // If data_fim < data_inicio, set data_fim = data_inicio
         if (dataFim && dataFim < dataInicio) {
@@ -236,10 +248,10 @@ serve(async (req) => {
             ano: ano,
             data_inicio: dataInicio.toISOString().split("T")[0],
             data_fim: dataFim ? dataFim.toISOString().split("T")[0] : null,
-            dias: data.dias || null,
-            tipo: data.tipo || "LICENÇA MÉDICA",
-            cid: data.cid || null,
-            observacao: data.observacao || null,
+            dias: (data.dias && typeof data.dias === 'number') ? data.dias : null,
+            tipo: (data.tipo && typeof data.tipo === 'string') ? data.tipo : "LICENÇA MÉDICA",
+            cid: (data.cid && typeof data.cid === 'string') ? data.cid : null,
+            observacao: (data.observacao && typeof data.observacao === 'string') ? data.observacao : null,
             updated_at: new Date().toISOString(),
           }, {
             onConflict: "efetivo_id,data_inicio,data_fim_norm",
@@ -253,15 +265,16 @@ serve(async (req) => {
       }
 
       case "equipe_membro_upsert": {
-        if (!data.equipe_id) {
+        const equipeId = typeof data.equipe_id === 'string' ? data.equipe_id : undefined;
+        if (!equipeId) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required field: equipe_id" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        let efetivoId = data.efetivo_id;
-        if (!efetivoId && data.matricula) {
+        let efetivoId = typeof data.efetivo_id === 'string' ? data.efetivo_id : undefined;
+        if (!efetivoId && data.matricula && typeof data.matricula === 'string') {
           const { data: efetivo, error: efetivoError } = await serviceClient
             .from("dim_efetivo")
             .select("id")
@@ -287,9 +300,9 @@ serve(async (req) => {
         const { data: membroData, error: membroError } = await serviceClient
           .from("fat_equipe_membros")
           .upsert({
-            equipe_id: data.equipe_id,
+            equipe_id: equipeId,
             efetivo_id: efetivoId,
-            funcao: data.funcao || null,
+            funcao: (data.funcao && typeof data.funcao === 'string') ? data.funcao : null,
           }, {
             onConflict: "equipe_id,efetivo_id",
           })
@@ -302,15 +315,19 @@ serve(async (req) => {
       }
 
       case "campanha_membro_upsert": {
-        if (!data.equipe_id || !data.unidade || !data.ano) {
+        const equipeId = typeof data.equipe_id === 'string' ? data.equipe_id : undefined;
+        const unidade = typeof data.unidade === 'string' ? data.unidade : undefined;
+        const ano = typeof data.ano === 'number' ? data.ano : undefined;
+
+        if (!equipeId || !unidade || !ano) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required fields: equipe_id, unidade, ano" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        let efetivoId = data.efetivo_id;
-        if (!efetivoId && data.matricula) {
+        let efetivoId = typeof data.efetivo_id === 'string' ? data.efetivo_id : undefined;
+        if (!efetivoId && data.matricula && typeof data.matricula === 'string') {
           const { data: efetivo, error: efetivoError } = await serviceClient
             .from("dim_efetivo")
             .select("id")
@@ -336,11 +353,11 @@ serve(async (req) => {
         const { data: membroData, error: membroError } = await serviceClient
           .from("fat_campanha_membros")
           .upsert({
-            equipe_id: data.equipe_id,
+            equipe_id: equipeId,
             efetivo_id: efetivoId,
-            unidade: data.unidade,
-            ano: data.ano,
-            funcao: data.funcao || null,
+            unidade: unidade,
+            ano: ano,
+            funcao: (data.funcao && typeof data.funcao === 'string') ? data.funcao : null,
           }, {
             onConflict: "equipe_id,efetivo_id,ano,unidade",
           })
@@ -353,21 +370,29 @@ serve(async (req) => {
       }
 
       case "campanha_alteracao_insert": {
-        if (!data.data || !data.unidade || !data.equipe_nova_id) {
+        const dataStr = typeof data.data === 'string' ? data.data : undefined;
+        const unidade = typeof data.unidade === 'string' ? data.unidade : undefined;
+        const equipeNovaId = typeof data.equipe_nova_id === 'string' ? data.equipe_nova_id : undefined;
+
+        if (!dataStr || !unidade || !equipeNovaId) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required fields: data, unidade, equipe_nova_id" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
+        const equipeOriginalId = (data.equipe_original_id && typeof data.equipe_original_id === 'string') 
+          ? data.equipe_original_id 
+          : null;
+
         const { data: alteracaoData, error: alteracaoError } = await serviceClient
           .from("fat_campanha_alteracoes")
           .insert({
-            data: data.data,
-            unidade: data.unidade,
-            equipe_original_id: data.equipe_original_id || null,
-            equipe_nova_id: data.equipe_nova_id,
-            motivo: data.motivo || null,
+            data: dataStr,
+            unidade: unidade,
+            equipe_original_id: equipeOriginalId,
+            equipe_nova_id: equipeNovaId,
+            motivo: (data.motivo && typeof data.motivo === 'string') ? data.motivo : null,
             created_by: user.id,
           })
           .select()
@@ -379,7 +404,21 @@ serve(async (req) => {
       }
 
       case "abono_delete": {
-        if (!data.id && (!data.efetivo_id || !data.ano || !data.mes)) {
+        const id = typeof data.id === 'string' && data.id.trim() ? data.id.trim() : undefined;
+        const efetivoId =
+          typeof data.efetivo_id === 'string' && data.efetivo_id.trim()
+            ? data.efetivo_id.trim()
+            : undefined;
+        const ano =
+          typeof data.ano === 'number' && Number.isInteger(data.ano)
+            ? data.ano
+            : undefined;
+        const mes =
+          typeof data.mes === 'number' && Number.isInteger(data.mes)
+            ? data.mes
+            : undefined;
+
+        if (!id && (!efetivoId || !ano || !mes)) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required fields: id or (efetivo_id, ano, mes)" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -387,10 +426,20 @@ serve(async (req) => {
         }
 
         let query = serviceClient.from("fat_abono").delete();
-        if (data.id) {
-          query = query.eq("id", data.id);
-        } else {
-          query = query.eq("efetivo_id", data.efetivo_id).eq("ano", data.ano).eq("mes", data.mes);
+        let filterApplied = false;
+        if (id) {
+          query = query.eq("id", id);
+          filterApplied = true;
+        } else if (efetivoId && ano && mes) {
+          query = query.eq("efetivo_id", efetivoId).eq("ano", ano).eq("mes", mes);
+          filterApplied = true;
+        }
+
+        if (!filterApplied) {
+          return new Response(
+            JSON.stringify({ ok: false, error: "Invalid delete filter" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
 
         const { error: deleteError } = await query;
@@ -400,7 +449,8 @@ serve(async (req) => {
       }
 
       case "restricao_delete": {
-        if (!data.id) {
+        const id = typeof data.id === 'string' ? data.id : undefined;
+        if (!id) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required field: id" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -410,7 +460,7 @@ serve(async (req) => {
         const { error: deleteError } = await serviceClient
           .from("fat_restricoes")
           .delete()
-          .eq("id", data.id);
+          .eq("id", id);
 
         if (deleteError) throw deleteError;
         result = { success: true };
@@ -418,7 +468,8 @@ serve(async (req) => {
       }
 
       case "licenca_delete": {
-        if (!data.id) {
+        const id = typeof data.id === 'string' ? data.id : undefined;
+        if (!id) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required field: id" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -428,7 +479,7 @@ serve(async (req) => {
         const { error: deleteError } = await serviceClient
           .from("fat_licencas_medicas")
           .delete()
-          .eq("id", data.id);
+          .eq("id", id);
 
         if (deleteError) throw deleteError;
         result = { success: true };
@@ -436,7 +487,8 @@ serve(async (req) => {
       }
 
       case "ferias_delete": {
-        if (!data.id) {
+        const id = typeof data.id === 'string' ? data.id : undefined;
+        if (!id) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required field: id" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -446,7 +498,7 @@ serve(async (req) => {
         const { error: deleteError } = await serviceClient
           .from("fat_ferias")
           .delete()
-          .eq("id", data.id);
+          .eq("id", id);
 
         if (deleteError) throw deleteError;
         result = { success: true };
@@ -454,7 +506,12 @@ serve(async (req) => {
       }
 
       case "ferias_insert": {
-        if (!data.efetivo_id || !data.ano || !data.mes_inicio || !data.dias) {
+        const efetivoId = typeof data.efetivo_id === 'string' ? data.efetivo_id : undefined;
+        const ano = typeof data.ano === 'number' ? data.ano : undefined;
+        const mesInicio = typeof data.mes_inicio === 'number' ? data.mes_inicio : undefined;
+        const dias = typeof data.dias === 'number' ? data.dias : undefined;
+
+        if (!efetivoId || !ano || !mesInicio || !dias) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required fields: efetivo_id, ano, mes_inicio, dias" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -464,12 +521,12 @@ serve(async (req) => {
         const { data: feriasData, error: feriasError } = await serviceClient
           .from("fat_ferias")
           .insert({
-            efetivo_id: data.efetivo_id,
-            ano: data.ano,
-            mes_inicio: data.mes_inicio,
-            dias: data.dias,
-            tipo: data.tipo || "INTEGRAL",
-            observacao: data.observacao || null,
+            efetivo_id: efetivoId,
+            ano: ano,
+            mes_inicio: mesInicio,
+            dias: dias,
+            tipo: (data.tipo && typeof data.tipo === 'string') ? data.tipo : "INTEGRAL",
+            observacao: (data.observacao && typeof data.observacao === 'string') ? data.observacao : null,
           })
           .select()
           .single();
@@ -480,26 +537,41 @@ serve(async (req) => {
       }
 
       case "ferias_update": {
-        if (!data.id) {
+        const id = typeof data.id === 'string' ? data.id : undefined;
+        if (!id) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required field: id" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        const updateData: any = {
+        const updateData: {
+          updated_at: string;
+          mes_inicio?: number;
+          dias?: number;
+          tipo?: string;
+          observacao?: string | null;
+        } = {
           updated_at: new Date().toISOString(),
         };
 
-        if (data.mes_inicio !== undefined) updateData.mes_inicio = data.mes_inicio;
-        if (data.dias !== undefined) updateData.dias = data.dias;
-        if (data.tipo !== undefined) updateData.tipo = data.tipo;
-        if (data.observacao !== undefined) updateData.observacao = data.observacao;
+        if (data.mes_inicio !== undefined && typeof data.mes_inicio === 'number') {
+          updateData.mes_inicio = data.mes_inicio;
+        }
+        if (data.dias !== undefined && typeof data.dias === 'number') {
+          updateData.dias = data.dias;
+        }
+        if (data.tipo !== undefined && typeof data.tipo === 'string') {
+          updateData.tipo = data.tipo;
+        }
+        if (data.observacao !== undefined) {
+          updateData.observacao = data.observacao === null ? null : String(data.observacao);
+        }
 
         const { data: feriasData, error: feriasError } = await serviceClient
           .from("fat_ferias")
           .update(updateData)
-          .eq("id", data.id)
+          .eq("id", id)
           .select()
           .single();
 
@@ -509,7 +581,8 @@ serve(async (req) => {
       }
 
       case "campanha_membro_delete": {
-        if (!data.id) {
+        const id = typeof data.id === 'string' ? data.id : undefined;
+        if (!id) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required field: id" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -519,7 +592,7 @@ serve(async (req) => {
         const { error: deleteError } = await serviceClient
           .from("fat_campanha_membros")
           .delete()
-          .eq("id", data.id);
+          .eq("id", id);
 
         if (deleteError) throw deleteError;
         result = { success: true };
@@ -527,21 +600,29 @@ serve(async (req) => {
       }
 
       case "campanha_membro_update": {
-        if (!data.id) {
+        const id = typeof data.id === 'string' ? data.id : undefined;
+        if (!id) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required field: id" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        const updateData: any = {};
-        if (data.equipe_id !== undefined) updateData.equipe_id = data.equipe_id;
-        if (data.funcao !== undefined) updateData.funcao = data.funcao;
+        const updateData: {
+          equipe_id?: string;
+          funcao?: string | null;
+        } = {};
+        if (data.equipe_id !== undefined && typeof data.equipe_id === 'string') {
+          updateData.equipe_id = data.equipe_id;
+        }
+        if (data.funcao !== undefined) {
+          updateData.funcao = data.funcao === null ? null : String(data.funcao);
+        }
 
         const { data: membroData, error: membroError } = await serviceClient
           .from("fat_campanha_membros")
           .update(updateData)
-          .eq("id", data.id)
+          .eq("id", id)
           .select()
           .single();
 
@@ -551,7 +632,10 @@ serve(async (req) => {
       }
 
       case "campanha_alteracao_delete": {
-        if (!data.data || !data.unidade) {
+        const dataStr = typeof data.data === 'string' ? data.data : undefined;
+        const unidade = typeof data.unidade === 'string' ? data.unidade : undefined;
+
+        if (!dataStr || !unidade) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required fields: data, unidade" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -561,8 +645,8 @@ serve(async (req) => {
         const { error: deleteError } = await serviceClient
           .from("fat_campanha_alteracoes")
           .delete()
-          .eq("data", data.data)
-          .eq("unidade", data.unidade);
+          .eq("data", dataStr)
+          .eq("unidade", unidade);
 
         if (deleteError) throw deleteError;
         result = { success: true };
@@ -570,7 +654,10 @@ serve(async (req) => {
       }
 
       case "equipe_insert": {
-        if (!data.nome || !data.grupamento) {
+        const nome = typeof data.nome === 'string' ? data.nome : undefined;
+        const grupamento = typeof data.grupamento === 'string' ? data.grupamento : undefined;
+
+        if (!nome || !grupamento) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required fields: nome, grupamento" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -580,10 +667,10 @@ serve(async (req) => {
         const { data: equipeData, error: equipeError } = await serviceClient
           .from("dim_equipes")
           .insert({
-            nome: data.nome,
-            grupamento: data.grupamento,
-            escala: data.escala || null,
-            servico: data.servico || null,
+            nome: nome,
+            grupamento: grupamento,
+            escala: (data.escala && typeof data.escala === 'string') ? data.escala : null,
+            servico: (data.servico && typeof data.servico === 'string') ? data.servico : null,
           })
           .select()
           .single();
@@ -594,26 +681,41 @@ serve(async (req) => {
       }
 
       case "equipe_update": {
-        if (!data.id) {
+        const id = typeof data.id === 'string' ? data.id : undefined;
+        if (!id) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required field: id" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        const updateData: any = {
+        const updateData: {
+          updated_at: string;
+          nome?: string;
+          grupamento?: string;
+          escala?: string | null;
+          servico?: string | null;
+        } = {
           updated_at: new Date().toISOString(),
         };
 
-        if (data.nome !== undefined) updateData.nome = data.nome;
-        if (data.grupamento !== undefined) updateData.grupamento = data.grupamento;
-        if (data.escala !== undefined) updateData.escala = data.escala;
-        if (data.servico !== undefined) updateData.servico = data.servico;
+        if (data.nome !== undefined && typeof data.nome === 'string') {
+          updateData.nome = data.nome;
+        }
+        if (data.grupamento !== undefined && typeof data.grupamento === 'string') {
+          updateData.grupamento = data.grupamento;
+        }
+        if (data.escala !== undefined) {
+          updateData.escala = data.escala === null ? null : String(data.escala);
+        }
+        if (data.servico !== undefined) {
+          updateData.servico = data.servico === null ? null : String(data.servico);
+        }
 
         const { data: equipeData, error: equipeError } = await serviceClient
           .from("dim_equipes")
           .update(updateData)
-          .eq("id", data.id)
+          .eq("id", id)
           .select()
           .single();
 
@@ -623,7 +725,8 @@ serve(async (req) => {
       }
 
       case "equipe_delete": {
-        if (!data.id) {
+        const id = typeof data.id === 'string' ? data.id : undefined;
+        if (!id) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required field: id" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -634,13 +737,13 @@ serve(async (req) => {
         await serviceClient
           .from("fat_equipe_membros")
           .delete()
-          .eq("equipe_id", data.id);
+          .eq("equipe_id", id);
 
         // Then delete equipe
         const { error: deleteError } = await serviceClient
           .from("dim_equipes")
           .delete()
-          .eq("id", data.id);
+          .eq("id", id);
 
         if (deleteError) throw deleteError;
         result = { success: true };
@@ -648,7 +751,17 @@ serve(async (req) => {
       }
 
       case "equipe_membro_delete": {
-        if (!data.id && (!data.equipe_id || !data.efetivo_id)) {
+        const id = typeof data.id === 'string' && data.id.trim() ? data.id.trim() : undefined;
+        const equipeId =
+          typeof data.equipe_id === 'string' && data.equipe_id.trim()
+            ? data.equipe_id.trim()
+            : undefined;
+        const efetivoId =
+          typeof data.efetivo_id === 'string' && data.efetivo_id.trim()
+            ? data.efetivo_id.trim()
+            : undefined;
+
+        if (!id && (!equipeId || !efetivoId)) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required fields: id or (equipe_id, efetivo_id)" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -656,10 +769,20 @@ serve(async (req) => {
         }
 
         let query = serviceClient.from("fat_equipe_membros").delete();
-        if (data.id) {
-          query = query.eq("id", data.id);
-        } else {
-          query = query.eq("equipe_id", data.equipe_id).eq("efetivo_id", data.efetivo_id);
+        let filterApplied = false;
+        if (id) {
+          query = query.eq("id", id);
+          filterApplied = true;
+        } else if (equipeId && efetivoId) {
+          query = query.eq("equipe_id", equipeId).eq("efetivo_id", efetivoId);
+          filterApplied = true;
+        }
+
+        if (!filterApplied) {
+          return new Response(
+            JSON.stringify({ ok: false, error: "Invalid delete filter" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
 
         const { error: deleteError } = await query;
@@ -669,7 +792,8 @@ serve(async (req) => {
       }
 
       case "equipe_membros_bulk_delete": {
-        if (!data.equipe_id) {
+        const equipeId = typeof data.equipe_id === 'string' ? data.equipe_id : undefined;
+        if (!equipeId) {
           return new Response(
             JSON.stringify({ ok: false, error: "Missing required field: equipe_id" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -679,7 +803,7 @@ serve(async (req) => {
         const { error: deleteError } = await serviceClient
           .from("fat_equipe_membros")
           .delete()
-          .eq("equipe_id", data.equipe_id);
+          .eq("equipe_id", equipeId);
 
         if (deleteError) throw deleteError;
         result = { success: true };
@@ -697,10 +821,11 @@ serve(async (req) => {
       JSON.stringify({ ok: true, data: result }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in admin-pessoas function:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return new Response(
-      JSON.stringify({ ok: false, error: error.message || "Internal server error" }),
+      JSON.stringify({ ok: false, error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -58,8 +58,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_fat_equipe_membros_unique
 ON public.fat_equipe_membros (equipe_id, efetivo_id);
 
 -- fat_campanha_membros: unique (equipe_id, efetivo_id, ano, unidade)
--- Nota: A tabela original tem UNIQUE(efetivo_id, unidade, ano), mas precisamos incluir equipe_id
--- Vamos criar um índice único que inclui equipe_id para permitir o mesmo efetivo em equipes diferentes
 DROP INDEX IF EXISTS idx_fat_campanha_membros_unique;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_fat_campanha_membros_unique 
 ON public.fat_campanha_membros (equipe_id, efetivo_id, ano, unidade);

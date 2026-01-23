@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://oiwwptnqaunsyhpkwbrz.supabase.co';
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   ok: boolean;
   data?: T;
   error?: string;
@@ -14,9 +14,9 @@ interface ApiResponse<T = any> {
 /**
  * Chama a Edge Function admin-pessoas com uma action específica
  */
-export async function callAdminPessoas<T = any>(
+export async function callAdminPessoas<T = unknown>(
   action: string,
-  payload: Record<string, any>
+  payload: Record<string, unknown>
 ): Promise<ApiResponse<T>> {
   try {
     // Get session token
@@ -49,11 +49,12 @@ export async function callAdminPessoas<T = any>(
     }
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error calling admin-pessoas:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Network error';
     return {
       ok: false,
-      error: error.message || 'Network error',
+      error: errorMessage,
     };
   }
 }

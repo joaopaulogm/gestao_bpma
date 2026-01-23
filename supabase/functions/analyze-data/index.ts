@@ -65,6 +65,16 @@ serve(async (req) => {
     console.log(`Authenticated user: ${user.id}`);
 
     const { year, month } = await req.json();
+    const monthNumber = month === undefined || month === null ? null : Number(month);
+    const hasValidMonth =
+      Number.isInteger(monthNumber) && monthNumber >= 0 && monthNumber <= 11;
+
+    if (month !== undefined && month !== null && !hasValidMonth) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid month. Use 0-11.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Fetch data from the registros table (RLS will apply based on user)
     let query = supabase
@@ -76,11 +86,11 @@ serve(async (req) => {
       const endDate = `${year}-12-31`
       query = query.gte('data', startDate).lte('data', endDate)
       
-      if (month !== null) {
-        const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`
-        const nextMonth = month === 11 
+      if (hasValidMonth && monthNumber !== null) {
+        const monthStart = `${year}-${String(monthNumber + 1).padStart(2, '0')}-01`
+        const nextMonth = monthNumber === 11 
           ? `${year + 1}-01-01`
-          : `${year}-${String(month + 2).padStart(2, '0')}-01`
+          : `${year}-${String(monthNumber + 2).padStart(2, '0')}-01`
         
         query = query.gte('data', monthStart).lt('data', nextMonth)
       }
@@ -103,7 +113,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({ 
           year: year,
-          month: month,
+          month: hasValidMonth ? monthNumber : null,
           data: registros 
         })
       })
