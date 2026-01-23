@@ -3266,6 +3266,53 @@ export type Database = {
         }
         Relationships: []
       }
+      notificacoes: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          dados_extras: Json | null
+          data_leitura: string | null
+          id: string
+          lida: boolean
+          mensagem: string
+          tipo: string
+          titulo: string
+          user_role_id: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          dados_extras?: Json | null
+          data_leitura?: string | null
+          id?: string
+          lida?: boolean
+          mensagem: string
+          tipo?: string
+          titulo: string
+          user_role_id?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          dados_extras?: Json | null
+          data_leitura?: string | null
+          id?: string
+          lida?: boolean
+          mensagem?: string
+          tipo?: string
+          titulo?: string
+          user_role_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_user_role_id_fkey"
+            columns: ["user_role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       os_processadas: {
         Row: {
           confidence_score: number | null
@@ -3753,6 +3800,7 @@ export type Database = {
           email: string | null
           equipe: string | null
           escala: string | null
+          foto_url: string | null
           grupamento: string | null
           id: string
           idade: number | null
@@ -3766,6 +3814,8 @@ export type Database = {
           porte_arma: string | null
           post_grad: string | null
           quadro: string | null
+          reset_token: string | null
+          reset_token_expires: string | null
           role: Database["public"]["Enums"]["app_role"]
           senha: string | null
           sexo: string | null
@@ -3790,6 +3840,7 @@ export type Database = {
           email?: string | null
           equipe?: string | null
           escala?: string | null
+          foto_url?: string | null
           grupamento?: string | null
           id?: string
           idade?: number | null
@@ -3803,6 +3854,8 @@ export type Database = {
           porte_arma?: string | null
           post_grad?: string | null
           quadro?: string | null
+          reset_token?: string | null
+          reset_token_expires?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           senha?: string | null
           sexo?: string | null
@@ -3827,6 +3880,7 @@ export type Database = {
           email?: string | null
           equipe?: string | null
           escala?: string | null
+          foto_url?: string | null
           grupamento?: string | null
           id?: string
           idade?: number | null
@@ -3840,6 +3894,8 @@ export type Database = {
           porte_arma?: string | null
           post_grad?: string | null
           quadro?: string | null
+          reset_token?: string | null
+          reset_token_expires?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           senha?: string | null
           sexo?: string | null
@@ -4164,6 +4220,10 @@ export type Database = {
       }
     }
     Functions: {
+      atualizar_foto_perfil: {
+        Args: { p_foto_url: string; p_user_role_id: string }
+        Returns: boolean
+      }
       atualizar_perfil_usuario: {
         Args: {
           p_bairro?: string
@@ -4183,6 +4243,20 @@ export type Database = {
       atualizar_senha_user_roles: {
         Args: { p_nova_senha: string; p_user_role_id: string }
         Returns: boolean
+      }
+      buscar_notificacoes_usuario: {
+        Args: { p_apenas_nao_lidas?: boolean; p_user_id: string }
+        Returns: {
+          categoria: string
+          created_at: string
+          dados_extras: Json
+          data_leitura: string
+          id: string
+          lida: boolean
+          mensagem: string
+          tipo: string
+          titulo: string
+        }[]
       }
       buscar_perfil_usuario: {
         Args: { p_user_id: string }
@@ -4219,6 +4293,17 @@ export type Database = {
           updated_at: string
           user_id: string
         }[]
+      }
+      criar_notificacao: {
+        Args: {
+          p_categoria?: string
+          p_dados_extras?: Json
+          p_mensagem: string
+          p_tipo?: string
+          p_titulo: string
+          p_user_role_id: string
+        }
+        Returns: string
       }
       exec_sql: { Args: { sql_query: string }; Returns: undefined }
       fn_nome_cientifico_prefix: { Args: { nome: string }; Returns: string }
@@ -4285,13 +4370,34 @@ export type Database = {
         }[]
       }
       make_slug: { Args: { txt: string }; Returns: string }
+      marcar_notificacao_lida: {
+        Args: { p_notificacao_id: string }
+        Returns: boolean
+      }
       month_to_int: { Args: { m: string }; Returns: number }
       norm_txt: { Args: { t: string }; Returns: string }
       normalize_text: { Args: { input_text: string }; Returns: string }
+      redefinir_senha_com_token: {
+        Args: { p_nova_senha: string; p_token: string }
+        Returns: {
+          mensagem: string
+          sucesso: boolean
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       slugify: { Args: { input: string }; Returns: string }
       slugify_pt: { Args: { input: string }; Returns: string }
+      solicitar_recuperacao_senha: {
+        Args: { p_cpf: string; p_matricula: string }
+        Returns: {
+          email: string
+          mensagem: string
+          nome: string
+          sucesso: boolean
+          user_role_id: string
+        }[]
+      }
       sync_abono_2026_from_stg: {
         Args: { p_source_sheet?: string }
         Returns: Json
