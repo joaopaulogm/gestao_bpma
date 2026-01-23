@@ -487,7 +487,7 @@ const Equipes: React.FC = () => {
           throw new Error(insertResult.error || 'Erro ao criar equipe');
         }
 
-        equipeId = insertResult.data?.id;
+        equipeId = (insertResult.data as { id?: string } | undefined)?.id;
       }
 
       // Add membros
