@@ -2,14 +2,11 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Usar variáveis de ambiente para proteger credenciais
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://oiwwptnqaunsyhpkwbrz.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pd3dwdG5xYXVuc3locGt3YnJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA3NjI2MzQsImV4cCI6MjA1NjMzODYzNH0.lK5-KS8bxrtQYJsCRNOeeqBS-9Fn0MMsIdolhkeApuE";
+// Usar valores fixos para o projeto Supabase conectado
+const SUPABASE_URL = "https://oiwwptnqaunsyhpkwbrz.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pd3dwdG5xYXVuc3locGt3YnJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA3NjI2MzQsImV4cCI6MjA1NjMzODYzNH0.lK5-KS8bxrtQYJsCRNOeeqBS-9Fn0MMsIdolhkeApuE";
 
-// Validação de variáveis de ambiente (mantém fallback sem quebrar o app)
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.warn('Supabase env vars ausentes. Usando valores de fallback.');
-}
+// Import the supabase client like this:
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

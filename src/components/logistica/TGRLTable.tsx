@@ -37,7 +37,7 @@ const TGRLTable: React.FC<TGRLTableProps> = ({ tgrl, onEdit, onDelete, onView })
         <TableHeader>
           <TableRow>
             <TableHead className="min-w-[100px]">Tombamento</TableHead>
-            <TableHead className="min-w-[200px]">Especificação do Bem</TableHead>
+            <TableHead className="min-w-[200px]">Descrição do Bem</TableHead>
             <TableHead className="min-w-[80px]">Subitem</TableHead>
             <TableHead className="min-w-[100px]">Valor</TableHead>
             <TableHead className="min-w-[100px]">Estado</TableHead>
@@ -51,8 +51,8 @@ const TGRLTable: React.FC<TGRLTableProps> = ({ tgrl, onEdit, onDelete, onView })
               <TableRow key={equipamento.id} className="hover:bg-muted/50">
                 <TableCell className="font-medium whitespace-nowrap">{equipamento.tombamento || '-'}</TableCell>
                 <TableCell>
-                  <div className="max-w-full truncate" title={equipamento.especificacao_bem}>
-                    {equipamento.especificacao_bem || '-'}
+                  <div className="max-w-full truncate" title={equipamento.descricao || equipamento.especificacao_bem}>
+                    {equipamento.descricao || equipamento.especificacao_bem || '-'}
                   </div>
                 </TableCell>
                 <TableCell className="whitespace-nowrap">{equipamento.subitem || '-'}</TableCell>
