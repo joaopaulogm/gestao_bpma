@@ -43,7 +43,7 @@ const HomeCard = ({
 const AtividadeOperacionalSection = () => <div className="space-y-3 sm:space-y-4">
     <div className="flex items-center gap-2 text-primary font-semibold px-1">
       <Lock className="h-4 w-4" />
-      <span className="text-xs sm:text-sm">Atividade Operacional</span>
+      <span className="text-xs sm:text-sm">Início</span>
     </div>
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
       <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
@@ -170,7 +170,7 @@ const Index = () => {
           </h1>
           <CheckeredDivider />
         </div>
-        <p className="text-[#071d49] text-base sm:text-lg px-4">Sistema de Gestão de Administrativa e Operacional</p>
+        <p className="text-muted-foreground text-base sm:text-lg px-4">Sistema de Gestão de Administrativa e Operacional</p>
       </div>
       
       <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8">
