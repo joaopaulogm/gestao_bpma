@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import NotificationsPopover from '@/components/NotificationsPopover';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -266,19 +267,22 @@ const Sidebar = () => {
       {/* User Info & Logout */}
       {isAuthenticated && (
         <div className="p-3 border-t border-sidebar-border">
-          {/* Link para Perfil */}
-          <Link 
-            to="/perfil" 
-            className={cn(
-              "flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all duration-150 mb-2",
-              isActive('/perfil') 
-                ? "bg-sidebar-active text-sidebar-active-foreground font-medium shadow-sm" 
-                : "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
-            )}
-          >
-            <User className="h-5 w-5 flex-shrink-0" />
-            {(isOpen || isMobile) && <span className="truncate">Meu Perfil</span>}
-          </Link>
+          {/* Notificações e Perfil */}
+          <div className="flex items-center gap-2 mb-2">
+            <NotificationsPopover />
+            <Link 
+              to="/perfil" 
+              className={cn(
+                "flex-1 flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all duration-150",
+                isActive('/perfil') 
+                  ? "bg-sidebar-active text-sidebar-active-foreground font-medium shadow-sm" 
+                  : "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              )}
+            >
+              <User className="h-5 w-5 flex-shrink-0" />
+              {(isOpen || isMobile) && <span className="truncate">Meu Perfil</span>}
+            </Link>
+          </div>
           
           {(isOpen || isMobile) && user?.email && (
             <div className="mb-2 px-3 text-xs text-sidebar-foreground/70 truncate">
