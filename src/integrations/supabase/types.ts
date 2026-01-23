@@ -430,6 +430,131 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_frota: {
+        Row: {
+          ano: number | null
+          capacidade_tanque: number | null
+          chassi: string | null
+          cor: string | null
+          created_at: string | null
+          data_aquisicao: string | null
+          foto_url: string | null
+          id: string
+          ipva_ano: number | null
+          km_atual: number | null
+          licenciamento_ano: number | null
+          localizacao: string | null
+          marca: string | null
+          modelo: string | null
+          numero_motor: string | null
+          observacoes: string | null
+          placa: string | null
+          prefixo: string
+          renavam: string | null
+          seguro_vigencia: string | null
+          situacao: string
+          tipo: string
+          tipo_combustivel: string | null
+          ultima_manutencao: string | null
+          updated_at: string | null
+          valor_aquisicao: number | null
+        }
+        Insert: {
+          ano?: number | null
+          capacidade_tanque?: number | null
+          chassi?: string | null
+          cor?: string | null
+          created_at?: string | null
+          data_aquisicao?: string | null
+          foto_url?: string | null
+          id?: string
+          ipva_ano?: number | null
+          km_atual?: number | null
+          licenciamento_ano?: number | null
+          localizacao?: string | null
+          marca?: string | null
+          modelo?: string | null
+          numero_motor?: string | null
+          observacoes?: string | null
+          placa?: string | null
+          prefixo: string
+          renavam?: string | null
+          seguro_vigencia?: string | null
+          situacao?: string
+          tipo?: string
+          tipo_combustivel?: string | null
+          ultima_manutencao?: string | null
+          updated_at?: string | null
+          valor_aquisicao?: number | null
+        }
+        Update: {
+          ano?: number | null
+          capacidade_tanque?: number | null
+          chassi?: string | null
+          cor?: string | null
+          created_at?: string | null
+          data_aquisicao?: string | null
+          foto_url?: string | null
+          id?: string
+          ipva_ano?: number | null
+          km_atual?: number | null
+          licenciamento_ano?: number | null
+          localizacao?: string | null
+          marca?: string | null
+          modelo?: string | null
+          numero_motor?: string | null
+          observacoes?: string | null
+          placa?: string | null
+          prefixo?: string
+          renavam?: string | null
+          seguro_vigencia?: string | null
+          situacao?: string
+          tipo?: string
+          tipo_combustivel?: string | null
+          ultima_manutencao?: string | null
+          updated_at?: string | null
+          valor_aquisicao?: number | null
+        }
+        Relationships: []
+      }
+      dim_frota_historico: {
+        Row: {
+          campo_alterado: string
+          created_at: string | null
+          frota_id: string | null
+          id: string
+          usuario_id: string | null
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          campo_alterado: string
+          created_at?: string | null
+          frota_id?: string | null
+          id?: string
+          usuario_id?: string | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          campo_alterado?: string
+          created_at?: string | null
+          frota_id?: string | null
+          id?: string
+          usuario_id?: string | null
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dim_frota_historico_frota_id_fkey"
+            columns: ["frota_id"]
+            isOneToOne: false
+            referencedRelation: "dim_frota"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dim_indicador_bpma: {
         Row: {
           categoria: string | null
@@ -532,6 +657,81 @@ export type Database = {
           inicio_mes?: string
           mes?: number
           mes_abreviacao?: string
+        }
+        Relationships: []
+      }
+      dim_tgrl: {
+        Row: {
+          ativo: boolean | null
+          categoria: string | null
+          created_at: string | null
+          data_aquisicao: string | null
+          descricao: string
+          estado_conservacao: string
+          fornecedor: string | null
+          foto_url: string | null
+          garantia_ate: string | null
+          id: string
+          localizacao: string | null
+          marca: string | null
+          modelo: string | null
+          nota_fiscal: string | null
+          numero_serie: string | null
+          observacoes: string | null
+          responsavel: string | null
+          tipo: string
+          tombamento: string
+          updated_at: string | null
+          valor_aquisicao: number | null
+          valor_atual: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria?: string | null
+          created_at?: string | null
+          data_aquisicao?: string | null
+          descricao: string
+          estado_conservacao?: string
+          fornecedor?: string | null
+          foto_url?: string | null
+          garantia_ate?: string | null
+          id?: string
+          localizacao?: string | null
+          marca?: string | null
+          modelo?: string | null
+          nota_fiscal?: string | null
+          numero_serie?: string | null
+          observacoes?: string | null
+          responsavel?: string | null
+          tipo?: string
+          tombamento: string
+          updated_at?: string | null
+          valor_aquisicao?: number | null
+          valor_atual?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string | null
+          created_at?: string | null
+          data_aquisicao?: string | null
+          descricao?: string
+          estado_conservacao?: string
+          fornecedor?: string | null
+          foto_url?: string | null
+          garantia_ate?: string | null
+          id?: string
+          localizacao?: string | null
+          marca?: string | null
+          modelo?: string | null
+          nota_fiscal?: string | null
+          numero_serie?: string | null
+          observacoes?: string | null
+          responsavel?: string | null
+          tipo?: string
+          tombamento?: string
+          updated_at?: string | null
+          valor_aquisicao?: number | null
+          valor_atual?: number | null
         }
         Relationships: []
       }
