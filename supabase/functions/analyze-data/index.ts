@@ -66,7 +66,7 @@ serve(async (req) => {
 
     const { year, month } = await req.json();
     const monthNumber = month === undefined || month === null ? null : Number(month);
-    const hasValidMonth =
+    const hasValidMonth = monthNumber !== null &&
       Number.isInteger(monthNumber) && monthNumber >= 0 && monthNumber <= 11;
 
     if (month !== undefined && month !== null && !hasValidMonth) {

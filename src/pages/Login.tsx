@@ -133,10 +133,13 @@ const Login = () => {
   // Buscar usuário por login e senha usando query direta
   const buscarUsuarioPorLoginSenha = async (loginInput: string, senhaInput: string): Promise<UsuarioPorLogin | null> => {
     const loginLower = loginInput.toLowerCase().trim();
-    const senhaLimpa = senhaInput.replace(/[^0-9]/g, '');
+    // Limpar senha: remover não-numéricos e zeros à esquerda
+    const senhaLimpa = senhaInput.replace(/[^0-9]/g, '').replace(/^0+/, '');
+    
+    console.log('Buscando usuário:', { login: loginLower, senhaLimpa });
     
     // Buscar primeiro por login
-    let query = supabase
+    const query = supabase
       .from('usuarios_por_login')
       .select(`
         id,
@@ -169,17 +172,21 @@ const Login = () => {
     }
 
     if (!data || data.length === 0) {
+      console.log('Usuário não encontrado');
       return null;
     }
 
     const usuario = data[0];
     
-    // Verificar senha (CPF ou matrícula)
-    const senhaDB = usuario.senha?.toString() || '';
-    const cpfDB = usuario.cpf?.toString() || '';
-    const matriculaDB = usuario.matricula || '';
+    // Verificar senha (CPF ou matrícula) - remover zeros à esquerda para comparação
+    const senhaDB = (usuario.senha?.toString() || '').replace(/^0+/, '');
+    const cpfDB = (usuario.cpf?.toString() || '').replace(/^0+/, '');
+    const matriculaDB = (usuario.matricula || '').replace(/^0+/, '');
+    
+    console.log('Comparando senhas:', { senhaLimpa, senhaDB, cpfDB, matriculaDB });
     
     if (senhaLimpa !== senhaDB && senhaLimpa !== cpfDB && senhaLimpa !== matriculaDB) {
+      console.log('Senha não confere');
       return null; // Senha não confere
     }
 
