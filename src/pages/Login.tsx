@@ -4,31 +4,29 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Lock, User, Link2, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { Lock, User, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle, Shield, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { handleSupabaseError } from '@/utils/errorHandler';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 
-interface UsuarioPorLogin {
+// Interface para usuário retornado das RPCs
+interface UserRoleData {
   id: string;
   user_id: string | null;
   efetivo_id: string | null;
-  nome: string;
-  login: string;
-  senha: string;
-  email: string | null;
+  nome: string | null;
+  nome_guerra: string | null;
   matricula: string | null;
   cpf: number | null;
-  role: string;
-  ativo: boolean | null;
-  nome_guerra: string | null;
+  email: string | null;
   post_grad: string | null;
   quadro: string | null;
   lotacao: string | null;
-  data_nascimento: string | null;
-  contato: string | null;
+  role: string;
+  ativo: boolean | null;
+  senha: string | null;
   vinculado_em: string | null;
 }
 
@@ -37,13 +35,19 @@ interface PasswordValidation {
   hasUppercase: boolean;
   hasNumber: boolean;
   hasSpecial: boolean;
-  hasMinLength: boolean;
+  hasValidLength: boolean;
 }
 
+// Estados do fluxo de login
+type LoginStep = 'login' | 'password-change' | 'google-link-offer';
+
 const Login = () => {
-  // Estado para login por credenciais (usuarios_por_login)
-  const [login, setLogin] = useState('');
-  const [senha, setSenha] = useState('');
+  // Estado para login
+  const [matricula, setMatricula] = useState('');
+  const [cpf, setCpf] = useState('');
+  
+  // Estado para login com senha (pós primeiro acesso)
+  const [senhaLogin, setSenhaLogin] = useState('');
   
   // Estado para login por email/senha (Supabase Auth)
   const [email, setEmail] = useState('');
@@ -52,23 +56,24 @@ const Login = () => {
   // Estado para alteração de senha
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [googleEmail, setGoogleEmail] = useState('');
   
+  // Estado geral
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [pendingUser, setPendingUser] = useState<UsuarioPorLogin | null>(null);
-  const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [showGoogleValidation, setShowGoogleValidation] = useState(false);
+  const [pendingUser, setPendingUser] = useState<UserRoleData | null>(null);
+  const [loginStep, setLoginStep] = useState<LoginStep>('login');
+  const [activeTab, setActiveTab] = useState<'primeiro-acesso' | 'senha' | 'email'>('primeiro-acesso');
+  
   const { login: authLogin, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Password validation
+  // Password validation (6-10 chars, lowercase, uppercase, number, special)
   const validatePassword = (pwd: string): PasswordValidation => ({
     hasLowercase: /[a-z]/.test(pwd),
     hasUppercase: /[A-Z]/.test(pwd),
     hasNumber: /[0-9]/.test(pwd),
-    hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
-    hasMinLength: pwd.length >= 8,
+    hasSpecial: /[!@#$%^&*(),.?":{}|<>\-_=+\[\]\\/'`~;]/.test(pwd),
+    hasValidLength: pwd.length >= 6 && pwd.length <= 10,
   });
 
   const passwordValidation = validatePassword(newPassword);
@@ -85,28 +90,25 @@ const Login = () => {
   // Check if user just linked account via Google OAuth
   React.useEffect(() => {
     const checkPendingLink = async () => {
-      const pendingEfetivoId = localStorage.getItem('pendingLinkEfetivoId');
-      if (!pendingEfetivoId) return;
+      const pendingUserRoleId = localStorage.getItem('pendingLinkUserRoleId');
+      if (!pendingUserRoleId) return;
 
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // Vincular usando query direta
-        const { error } = await supabase
-          .from('usuarios_por_login')
-          .update({
-            auth_user_id: session.user.id,
-            email: session.user.email,
-            vinculado_em: new Date().toISOString()
-          })
-          .eq('efetivo_id', pendingEfetivoId);
+        // Vincular usando RPC
+        const { data, error } = await (supabase as any).rpc('vincular_google_user_roles', {
+          p_user_role_id: pendingUserRoleId,
+          p_auth_user_id: session.user.id,
+          p_email: session.user.email
+        });
 
-        localStorage.removeItem('pendingLinkEfetivoId');
+        localStorage.removeItem('pendingLinkUserRoleId');
 
         if (error) {
-          toast.error('Erro ao vincular conta');
+          toast.error('Erro ao vincular conta Google');
           console.error('Link error:', error);
         } else {
-          toast.success('Conta vinculada com sucesso!');
+          toast.success('Conta Google vinculada com sucesso!');
           navigate('/');
         }
       }
@@ -115,7 +117,221 @@ const Login = () => {
     checkPendingLink();
   }, [navigate]);
 
-  // Login com email/senha do Supabase Auth
+  // ==================== PRIMEIRO ACESSO ====================
+  // Login = matrícula (apenas números)
+  // Senha = CPF (11 dígitos, apenas números)
+  const handlePrimeiroAcesso = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const matriculaLimpa = matricula.replace(/\D/g, '');
+      const cpfLimpo = cpf.replace(/\D/g, '');
+
+      if (!matriculaLimpa) {
+        toast.error('Digite sua matrícula (apenas números)');
+        return;
+      }
+
+      if (cpfLimpo.length !== 11) {
+        toast.error('O CPF deve ter exatamente 11 números');
+        return;
+      }
+
+      console.log('Verificando primeiro acesso:', { matricula: matriculaLimpa, cpfLength: cpfLimpo.length });
+
+      // Chamar RPC para verificar primeiro acesso
+      const { data, error } = await (supabase as any).rpc('verificar_primeiro_acesso', {
+        p_matricula: matriculaLimpa,
+        p_cpf: cpfLimpo,
+      });
+
+      if (error) {
+        console.error('Erro RPC verificar_primeiro_acesso:', error);
+        toast.error('Erro ao verificar credenciais');
+        return;
+      }
+
+      const usuario = Array.isArray(data) ? data[0] : data;
+
+      if (!usuario) {
+        toast.error('Matrícula ou CPF incorretos. Verifique os dados informados.');
+        return;
+      }
+
+      if (usuario.ativo === false) {
+        toast.error('Usuário desativado. Entre em contato com o administrador.');
+        return;
+      }
+
+      // Se já tem senha definida (hash bcrypt começa com $2)
+      const senhaIsHash = usuario.senha && usuario.senha.startsWith('$2');
+      if (senhaIsHash) {
+        toast.info('Você já alterou sua senha. Use a aba "Com Senha" para entrar.');
+        setActiveTab('senha');
+        return;
+      }
+
+      // Se já tem user_id vinculado (Google)
+      if (usuario.user_id) {
+        toast.info('Sua conta já está vinculada ao Google. Use o botão "Entrar com Google".');
+        return;
+      }
+
+      // Primeiro acesso - mostrar tela de alteração de senha
+      setPendingUser(usuario);
+      setLoginStep('password-change');
+      toast.success(`Bem-vindo(a), ${usuario.nome_guerra || usuario.nome}! Por favor, crie uma nova senha.`);
+    } catch (error: unknown) {
+      console.error('Primeiro acesso error:', error);
+      toast.error('Erro ao processar primeiro acesso');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ==================== LOGIN COM SENHA (pós primeiro acesso) ====================
+  const handleLoginComSenha = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const matriculaLimpa = matricula.replace(/\D/g, '');
+
+      if (!matriculaLimpa || !senhaLogin) {
+        toast.error('Preencha matrícula e senha');
+        return;
+      }
+
+      // Chamar RPC para validar login com senha
+      const { data, error } = await (supabase as any).rpc('validar_login_senha', {
+        p_matricula: matriculaLimpa,
+        p_senha: senhaLogin,
+      });
+
+      if (error) {
+        console.error('Erro RPC validar_login_senha:', error);
+        toast.error('Erro ao validar credenciais');
+        return;
+      }
+
+      const usuario = Array.isArray(data) ? data[0] : data;
+
+      if (!usuario) {
+        toast.error('Matrícula ou senha incorretos');
+        return;
+      }
+
+      if (usuario.ativo === false) {
+        toast.error('Usuário desativado. Entre em contato com o administrador.');
+        return;
+      }
+
+      // Se tem user_id, pode fazer login via Supabase Auth
+      if (usuario.user_id) {
+        // Usuário já vinculado ao Google, redirecionar
+        toast.success(`Bem-vindo(a), ${usuario.nome_guerra || usuario.nome}!`);
+        // Para login com senha quando já vinculado, precisamos de uma sessão
+        // Como não temos a senha do Supabase Auth, oferecemos Google
+        toast.info('Use o botão "Entrar com Google" para acessar sua conta vinculada.');
+        return;
+      }
+
+      // Login com senha válido, mas sem vínculo Google
+      // Oferecer vincular Google (opcional)
+      setPendingUser(usuario);
+      setLoginStep('google-link-offer');
+      toast.success(`Bem-vindo(a), ${usuario.nome_guerra || usuario.nome}!`);
+    } catch (error: unknown) {
+      console.error('Login com senha error:', error);
+      toast.error('Erro ao fazer login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ==================== ALTERAR SENHA ====================
+  const handlePasswordChange = async () => {
+    if (!pendingUser) return;
+    
+    if (!isPasswordValid) {
+      toast.error('A senha não atende aos requisitos');
+      return;
+    }
+    if (!passwordsMatch) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Salvar nova senha com hash bcrypt
+      const { data, error } = await (supabase as any).rpc('atualizar_senha_user_roles', {
+        p_user_role_id: pendingUser.id,
+        p_nova_senha: newPassword,
+      });
+
+      if (error) {
+        console.error('Erro ao atualizar senha:', error);
+        toast.error('Erro ao salvar nova senha');
+        return;
+      }
+
+      toast.success('Senha alterada com sucesso!');
+      
+      // Ir para oferta de vínculo Google
+      setLoginStep('google-link-offer');
+    } catch (error: unknown) {
+      console.error('Password change error:', error);
+      toast.error('Erro ao alterar senha');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ==================== VINCULAR GOOGLE ====================
+  const handleLinkGoogle = async () => {
+    if (!pendingUser) return;
+    
+    setIsGoogleLoading(true);
+
+    try {
+      // Salvar ID para vincular após retorno do OAuth
+      localStorage.setItem('pendingLinkUserRoleId', pendingUser.id);
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/login`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
+
+      if (error) {
+        localStorage.removeItem('pendingLinkUserRoleId');
+        toast.error(handleSupabaseError(error, 'vincular com Google'));
+      }
+    } catch (error: unknown) {
+      console.error('Google link error:', error);
+      toast.error('Erro ao vincular com Google');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleSkipGoogleLink = () => {
+    toast.success('Login realizado! Você pode vincular sua conta Google a qualquer momento.');
+    // Como não temos sessão Supabase Auth, resetar para login
+    resetToLogin();
+    setActiveTab('senha');
+    toast.info('Use a aba "Com Senha" para entrar com sua nova senha.');
+  };
+
+  // ==================== LOGIN COM EMAIL (Supabase Auth) ====================
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -130,232 +346,7 @@ const Login = () => {
     }
   };
 
-  // Buscar usuário por login e senha usando query direta
-  const buscarUsuarioPorLoginSenha = async (loginInput: string, senhaInput: string): Promise<UsuarioPorLogin | null> => {
-    const loginLower = loginInput.toLowerCase().trim();
-    // Limpar senha: manter zeros à esquerda (CPF tem 11 dígitos)
-    const senhaLimpa = senhaInput.replace(/[^0-9]/g, '');
-
-    // IMPORTANTE: usuarios_por_login está com RLS, então anon não consegue ler as linhas via REST
-    // Usamos RPC SECURITY DEFINER para validar credenciais no primeiro acesso.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc('get_usuario_by_login_senha', {
-      p_login: loginLower,
-      p_senha: senhaLimpa,
-    });
-
-    if (error) {
-      console.error('Erro ao validar login (RPC):', error);
-      return null;
-    }
-
-    const usuario = Array.isArray(data) ? data[0] : data;
-    if (!usuario) return null;
-
-    // Buscar role em efetivo_roles
-    let role = 'operador';
-    if (usuario.efetivo_id) {
-      const { data: roleData } = await supabase
-        .from('efetivo_roles')
-        .select('role')
-        .eq('efetivo_id', usuario.efetivo_id)
-        .order('role')
-        .limit(1);
-      
-      if (roleData && roleData.length > 0) {
-        role = roleData[0].role;
-      }
-    }
-
-    return {
-      id: usuario.id,
-      user_id: usuario.auth_user_id,
-      efetivo_id: usuario.efetivo_id,
-      nome: usuario.nome || '',
-      login: usuario.login || '',
-      senha: (usuario.senha || '').toString(),
-      email: usuario.email,
-      matricula: usuario.matricula,
-      cpf: usuario.cpf,
-      role: role,
-      ativo: usuario.ativo,
-      nome_guerra: usuario.nome_guerra,
-      post_grad: usuario.post_grad,
-      quadro: usuario.quadro,
-      lotacao: usuario.lotacao,
-      data_nascimento: usuario.data_nascimento,
-      contato: usuario.contato,
-      vinculado_em: usuario.vinculado_em
-    };
-  };
-
-  // Login com credenciais da tabela usuarios_por_login
-  const handleCredentialLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const senhaDigitada = senha.replace(/\D/g, '');
-      
-      if (!senhaDigitada) {
-        toast.error('Digite sua senha (CPF ou matrícula, apenas números).');
-        return;
-      }
-
-      console.log('Tentando buscar usuário:', {
-        login: login.toLowerCase().trim(),
-        senhaLength: senhaDigitada.length
-      });
-      
-      const usuario = await buscarUsuarioPorLoginSenha(login, senhaDigitada);
-
-      if (!usuario) {
-        toast.error('Login ou senha incorretos. Verifique se está usando o formato: primeiro_nome.ultimo_nome');
-        return;
-      }
-
-      if (usuario.ativo === false) {
-        toast.error('Usuário desativado. Entre em contato com o administrador.');
-        return;
-      }
-
-      // Se já tem user_id vinculado, redirecionar para login com Google
-      if (usuario.user_id) {
-        toast.info('Use o botão "Entrar com Google" ou a aba "E-mail" para acessar sua conta vinculada');
-        return;
-      }
-
-      // Primeiro acesso - mostrar tela de alteração de senha
-      setPendingUser(usuario);
-      setShowPasswordChange(true);
-      toast.success(`Bem-vindo, ${usuario.nome}! Por favor, altere sua senha.`);
-    } catch (error: unknown) {
-      console.error('Login error:', error);
-      toast.error('Erro ao fazer login');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle password change and save
-  const handlePasswordChangeSubmit = async () => {
-    if (!pendingUser) return;
-    if (!isPasswordValid) {
-      toast.error('A senha não atende aos requisitos');
-      return;
-    }
-    if (!passwordsMatch) {
-      toast.error('As senhas não coincidem');
-      return;
-    }
-
-    // Check if google email is provided and valid
-    const emailToUse = googleEmail.trim();
-    if (emailToUse && !emailToUse.endsWith('@gmail.com')) {
-      toast.error('Por favor, informe um e-mail do Google (@gmail.com)');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Atualizar email em usuarios_por_login
-      if (emailToUse && pendingUser.efetivo_id) {
-        const { error } = await supabase
-          .from('usuarios_por_login')
-          .update({ email: emailToUse })
-          .eq('efetivo_id', pendingUser.efetivo_id);
-
-        if (error) throw error;
-      }
-
-      // Now proceed to Google linking
-      localStorage.setItem('pendingLinkEfetivoId', pendingUser.efetivo_id || pendingUser.id);
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/login`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
-        }
-      });
-
-      if (error) {
-        localStorage.removeItem('pendingLinkEfetivoId');
-        toast.error(handleSupabaseError(error, 'vincular com Google'));
-      }
-    } catch (error: unknown) {
-      console.error('Password change error:', error);
-      toast.error('Erro ao processar alteração');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Google login with validation
-  const handleGoogleLoginWithValidation = async () => {
-    setShowGoogleValidation(true);
-  };
-
-  const handleValidateAndGoogleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const senhaDigitada = senha.replace(/\D/g, '');
-      
-      if (!senhaDigitada) {
-        toast.error('CPF incorreto. Digite apenas os números do seu CPF.');
-        return;
-      }
-
-      const usuario = await buscarUsuarioPorLoginSenha(login, senhaDigitada);
-
-      if (!usuario) {
-        toast.error('Login ou senha incorretos');
-        return;
-      }
-
-      if (usuario.ativo === false) {
-        toast.error('Usuário desativado. Entre em contato com o administrador.');
-        return;
-      }
-
-      // If already linked, just proceed with Google
-      if (usuario.user_id) {
-        const { error: googleError } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/`,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent',
-            }
-          }
-        });
-
-        if (googleError) {
-          toast.error(handleSupabaseError(googleError, 'fazer login com Google'));
-        }
-        return;
-      }
-
-      // First time - need password change
-      setPendingUser(usuario);
-      setShowGoogleValidation(false);
-      setShowPasswordChange(true);
-      toast.success(`Bem-vindo, ${usuario.nome}! Por favor, altere sua senha para continuar.`);
-    } catch (error: unknown) {
-      console.error('Validation error:', error);
-      toast.error('Erro ao validar credenciais');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // ==================== LOGIN DIRETO COM GOOGLE ====================
   const handleDirectGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
@@ -381,7 +372,17 @@ const Login = () => {
     }
   };
 
-  // Validation Rule Component
+  // ==================== RESET ====================
+  const resetToLogin = () => {
+    setLoginStep('login');
+    setPendingUser(null);
+    setNewPassword('');
+    setConfirmPassword('');
+    setCpf('');
+    setSenhaLogin('');
+  };
+
+  // ==================== COMPONENTES ====================
   const ValidationRule = ({ valid, text }: { valid: boolean; text: string }) => (
     <div className="flex items-center gap-2 text-xs">
       {valid ? (
@@ -393,8 +394,8 @@ const Login = () => {
     </div>
   );
 
-  // Password Change Screen
-  if (showPasswordChange && pendingUser) {
+  // ==================== TELA: ALTERAR SENHA ====================
+  if (loginStep === 'password-change' && pendingUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4">
         <Card className="w-full max-w-md border-border shadow-lg">
@@ -403,10 +404,10 @@ const Login = () => {
               <KeyRound className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             </div>
             <CardTitle className="text-xl sm:text-2xl font-bold text-foreground">
-              Alterar Senha
+              Criar Nova Senha
             </CardTitle>
             <CardDescription className="text-muted-foreground text-sm">
-              Olá, <span className="font-semibold">{pendingUser.nome}</span>!
+              Olá, <span className="font-semibold">{pendingUser.nome_guerra || pendingUser.nome}</span>!
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 px-4 sm:px-6">
@@ -414,7 +415,7 @@ const Login = () => {
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                 <p className="text-amber-700 dark:text-amber-400">
-                  Este é seu primeiro acesso. Por favor, crie uma nova senha seguindo as regras abaixo.
+                  Este é seu primeiro acesso. Crie uma senha segura seguindo as regras abaixo.
                 </p>
               </div>
             </div>
@@ -431,6 +432,7 @@ const Login = () => {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="pl-10"
+                    maxLength={10}
                   />
                 </div>
               </div>
@@ -446,6 +448,7 @@ const Login = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="pl-10"
+                    maxLength={10}
                   />
                 </div>
                 {confirmPassword && !passwordsMatch && (
@@ -456,58 +459,28 @@ const Login = () => {
               {/* Password Rules */}
               <div className="bg-muted/50 rounded-lg p-3 space-y-1">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Requisitos da senha:</p>
-                <ValidationRule valid={passwordValidation.hasMinLength} text="Mínimo de 8 caracteres" />
+                <ValidationRule valid={passwordValidation.hasValidLength} text="De 6 a 10 caracteres" />
                 <ValidationRule valid={passwordValidation.hasLowercase} text="Pelo menos uma letra minúscula" />
                 <ValidationRule valid={passwordValidation.hasUppercase} text="Pelo menos uma letra maiúscula" />
                 <ValidationRule valid={passwordValidation.hasNumber} text="Pelo menos um número" />
                 <ValidationRule valid={passwordValidation.hasSpecial} text="Pelo menos um caractere especial (!@#$%...)" />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="googleEmail">E-mail Google (opcional)</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="googleEmail"
-                    type="email"
-                    placeholder="seu.email@gmail.com"
-                    value={googleEmail}
-                    onChange={(e) => setGoogleEmail(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Informe caso seu e-mail Google seja diferente do cadastrado
-                </p>
-              </div>
             </div>
 
             <Button
               type="button"
-              className="w-full flex items-center justify-center gap-2"
-              onClick={handlePasswordChangeSubmit}
+              className="w-full"
+              onClick={handlePasswordChange}
               disabled={isLoading || !isPasswordValid || !passwordsMatch}
             >
-              <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              Continuar com Google
+              {isLoading ? 'Salvando...' : 'Salvar Nova Senha'}
             </Button>
 
             <Button
               type="button"
               variant="ghost"
               className="w-full text-sm"
-              onClick={() => {
-                setShowPasswordChange(false);
-                setPendingUser(null);
-                setNewPassword('');
-                setConfirmPassword('');
-                setGoogleEmail('');
-              }}
+              onClick={resetToLogin}
             >
               Voltar
             </Button>
@@ -517,83 +490,71 @@ const Login = () => {
     );
   }
 
-  // Google Validation Screen
-  if (showGoogleValidation) {
+  // ==================== TELA: OFERTA VÍNCULO GOOGLE ====================
+  if (loginStep === 'google-link-offer' && pendingUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4">
         <Card className="w-full max-w-md border-border shadow-lg">
           <CardHeader className="space-y-1 text-center pb-4 sm:pb-6 px-4 sm:px-6">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <Link2 className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
             </div>
             <CardTitle className="text-xl sm:text-2xl font-bold text-foreground">
-              Vincular Conta
+              Senha Criada!
             </CardTitle>
             <CardDescription className="text-muted-foreground text-sm">
-              Valide suas credenciais para vincular sua conta Google
+              Deseja vincular sua conta Google para facilitar o acesso?
             </CardDescription>
           </CardHeader>
-          <CardContent className="px-4 sm:px-6">
-            <form onSubmit={handleValidateAndGoogleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="linkLogin">Login</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="linkLogin"
-                    type="text"
-                    placeholder="primeiro_nome.ultimo_nome"
-                    value={login}
-                    onChange={(e) => setLogin(e.target.value)}
-                    className="pl-10"
-                    required
-                    autoComplete="username"
-                  />
+          <CardContent className="space-y-4 px-4 sm:px-6">
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm">
+              <div className="flex items-start gap-2">
+                <Link2 className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                <div className="text-blue-700 dark:text-blue-400">
+                  <p className="font-medium mb-1">Vantagens do vínculo Google:</p>
+                  <ul className="text-xs space-y-1 list-disc list-inside">
+                    <li>Login mais rápido com um clique</li>
+                    <li>Não precisa lembrar a senha</li>
+                    <li>Maior segurança com autenticação Google</li>
+                  </ul>
                 </div>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="linkSenha">CPF (apenas números)</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="linkSenha"
-                    type="password"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="00000000000"
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value.replace(/\D/g, ''))}
-                    className="pl-10"
-                    required
-                    autoComplete="current-password"
-                  />
-                </div>
-              </div>
+            </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Validando...' : 'Validar e Continuar'}
-              </Button>
+            <Button
+              type="button"
+              className="w-full flex items-center justify-center gap-2"
+              onClick={handleLinkGoogle}
+              disabled={isGoogleLoading}
+            >
+              <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              {isGoogleLoading ? 'Conectando...' : 'Vincular Conta Google'}
+            </Button>
 
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-sm"
-                onClick={() => {
-                  setShowGoogleValidation(false);
-                  setSenha('');
-                }}
-              >
-                Voltar
-              </Button>
-            </form>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleSkipGoogleLink}
+            >
+              Pular por agora
+            </Button>
+
+            <p className="text-xs text-center text-muted-foreground">
+              Você pode vincular sua conta Google a qualquer momento nas configurações.
+            </p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Main Login Screen
+  // ==================== TELA PRINCIPAL DE LOGIN ====================
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4">
       <Card className="w-full max-w-md border-border shadow-lg">
@@ -610,43 +571,42 @@ const Login = () => {
         </CardHeader>
 
         <CardContent className="px-4 sm:px-6">
-          <Tabs defaultValue="credentials" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="credentials" className="text-xs sm:text-sm">Primeiro Acesso</TabsTrigger>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsTrigger value="primeiro-acesso" className="text-xs sm:text-sm">1º Acesso</TabsTrigger>
+              <TabsTrigger value="senha" className="text-xs sm:text-sm">Com Senha</TabsTrigger>
               <TabsTrigger value="email" className="text-xs sm:text-sm">E-mail</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="credentials">
-              {/* Informativo sobre formato de login */}
+            {/* ========== PRIMEIRO ACESSO ========== */}
+            <TabsContent value="primeiro-acesso">
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4 text-sm">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
                   <div className="text-blue-700 dark:text-blue-400">
-                    <p className="font-medium mb-1">Como fazer login:</p>
+                    <p className="font-medium mb-1">Primeiro acesso ao sistema:</p>
                     <p className="text-xs">
-                      <strong>Login:</strong> primeiro_nome.ultimo_nome ou matrícula
+                      <strong>Login:</strong> Sua matrícula (apenas números)
                     </p>
                     <p className="text-xs mt-1">
-                      Ex: Maria da Silva → <code className="bg-blue-500/20 px-1 rounded">maria.silva</code>
-                    </p>
-                    <p className="text-xs mt-2">
-                      <strong>Senha:</strong> 11 números do CPF (apenas números)
+                      <strong>Senha:</strong> Seus 11 números do CPF
                     </p>
                   </div>
                 </div>
               </div>
 
-              <form onSubmit={handleCredentialLogin} className="space-y-4">
+              <form onSubmit={handlePrimeiroAcesso} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login">Login</Label>
+                  <Label htmlFor="matricula">Matrícula</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
-                      id="login"
+                      id="matricula"
                       type="text"
-                      placeholder="primeiro_nome.ultimo_nome"
-                      value={login}
-                      onChange={(e) => setLogin(e.target.value)}
+                      inputMode="numeric"
+                      placeholder="Apenas números da matrícula"
+                      value={matricula}
+                      onChange={(e) => setMatricula(e.target.value.replace(/\D/g, ''))}
                       className="pl-10"
                       required
                       autoComplete="username"
@@ -655,17 +615,17 @@ const Login = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="senha">Senha (CPF - 11 números)</Label>
+                  <Label htmlFor="cpf">CPF (11 números)</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
-                      id="senha"
+                      id="cpf"
                       type="password"
                       inputMode="numeric"
                       pattern="[0-9]*"
                       placeholder="00000000000"
-                      value={senha}
-                      onChange={(e) => setSenha(e.target.value.replace(/\D/g, ''))}
+                      value={cpf}
+                      onChange={(e) => setCpf(e.target.value.replace(/\D/g, ''))}
                       className="pl-10"
                       maxLength={11}
                       required
@@ -678,11 +638,69 @@ const Login = () => {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Entrando...' : 'Entrar'}
+                  {isLoading ? 'Verificando...' : 'Verificar Primeiro Acesso'}
                 </Button>
               </form>
             </TabsContent>
 
+            {/* ========== LOGIN COM SENHA ========== */}
+            <TabsContent value="senha">
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-4 text-sm">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                  <div className="text-green-700 dark:text-green-400">
+                    <p className="font-medium mb-1">Já alterou sua senha?</p>
+                    <p className="text-xs">
+                      Use sua matrícula e a nova senha que você criou.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handleLoginComSenha} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="matriculaSenha">Matrícula</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="matriculaSenha"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Apenas números da matrícula"
+                      value={matricula}
+                      onChange={(e) => setMatricula(e.target.value.replace(/\D/g, ''))}
+                      className="pl-10"
+                      required
+                      autoComplete="username"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="senhaLogin">Senha</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="senhaLogin"
+                      type="password"
+                      placeholder="Sua senha"
+                      value={senhaLogin}
+                      onChange={(e) => setSenhaLogin(e.target.value)}
+                      className="pl-10"
+                      maxLength={10}
+                      required
+                      autoComplete="current-password"
+                    />
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'Entrando...' : 'Entrar com Senha'}
+                </Button>
+              </form>
+            </TabsContent>
+
+            {/* ========== LOGIN COM E-MAIL ========== */}
             <TabsContent value="email">
               <form onSubmit={handleEmailLogin} className="space-y-4">
                 <div className="space-y-2">
@@ -738,7 +756,7 @@ const Login = () => {
           <Button
             variant="outline"
             className="w-full flex items-center justify-center gap-2"
-            onClick={handleGoogleLoginWithValidation}
+            onClick={handleDirectGoogleLogin}
             disabled={isGoogleLoading}
           >
             <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
@@ -750,16 +768,9 @@ const Login = () => {
             {isGoogleLoading ? 'Conectando...' : 'Entrar com Google'}
           </Button>
 
-          <div className="mt-3">
-            <Button
-              variant="link"
-              className="w-full text-xs text-muted-foreground"
-              onClick={handleDirectGoogleLogin}
-              disabled={isGoogleLoading}
-            >
-              Já tenho conta vinculada - Entrar direto com Google
-            </Button>
-          </div>
+          <p className="text-xs text-center text-muted-foreground mt-3">
+            Use Google se já vinculou sua conta anteriormente
+          </p>
         </CardContent>
 
         <CardFooter className="flex flex-col space-y-2 text-center text-xs text-muted-foreground px-4 sm:px-6">

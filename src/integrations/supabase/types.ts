@@ -3681,6 +3681,10 @@ export type Database = {
       }
     }
     Functions: {
+      atualizar_senha_user_roles: {
+        Args: { p_nova_senha: string; p_user_role_id: string }
+        Returns: boolean
+      }
       exec_sql: { Args: { sql_query: string }; Returns: undefined }
       fn_nome_cientifico_prefix: { Args: { nome: string }; Returns: string }
       forcar_sincronizacao_user_roles: {
@@ -3798,6 +3802,56 @@ export type Database = {
           p_tipo: string
         }
         Returns: string
+      }
+      validar_login_senha: {
+        Args: { p_matricula: string; p_senha: string }
+        Returns: {
+          ativo: boolean
+          efetivo_id: string
+          email: string
+          id: string
+          lotacao: string
+          matricula: string
+          nome: string
+          nome_guerra: string
+          post_grad: string
+          quadro: string
+          role: string
+          user_id: string
+          vinculado_em: string
+        }[]
+      }
+      verificar_primeiro_acesso: {
+        Args: { p_cpf: string; p_matricula: string }
+        Returns: {
+          ativo: boolean
+          cpf: number
+          efetivo_id: string
+          email: string
+          id: string
+          lotacao: string
+          matricula: string
+          nome: string
+          nome_guerra: string
+          post_grad: string
+          quadro: string
+          role: string
+          senha: string
+          user_id: string
+          vinculado_em: string
+        }[]
+      }
+      verificar_senha_alterada: {
+        Args: { p_user_role_id: string }
+        Returns: boolean
+      }
+      vincular_google_user_roles: {
+        Args: {
+          p_auth_user_id: string
+          p_email: string
+          p_user_role_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {
