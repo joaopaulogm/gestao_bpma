@@ -3376,6 +3376,7 @@ export type Database = {
           cpf: number | null
           data_inclusao: string | null
           data_nascimento: string | null
+          efetivo_id: string | null
           email: string | null
           id: string
           idade: number | null
@@ -3398,6 +3399,7 @@ export type Database = {
           cpf?: number | null
           data_inclusao?: string | null
           data_nascimento?: string | null
+          efetivo_id?: string | null
           email?: string | null
           id?: string
           idade?: number | null
@@ -3420,6 +3422,7 @@ export type Database = {
           cpf?: number | null
           data_inclusao?: string | null
           data_nascimento?: string | null
+          efetivo_id?: string | null
           email?: string | null
           id?: string
           idade?: number | null
@@ -3435,7 +3438,15 @@ export type Database = {
           sexo?: string | null
           vinculado_em?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_por_login_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -3607,6 +3618,18 @@ export type Database = {
     Functions: {
       exec_sql: { Args: { sql_query: string }; Returns: undefined }
       fn_nome_cientifico_prefix: { Args: { nome: string }; Returns: string }
+      forcar_sincronizacao_user_roles: {
+        Args: never
+        Returns: {
+          detalhes_erros: Json
+          roles_atualizados: number
+          roles_criados: number
+          usuarios_processados: number
+          usuarios_sem_auth_user_id: number
+          usuarios_sem_efetivo_id: number
+          usuarios_sem_matricula: number
+        }[]
+      }
       get_current_user_efetivo_id: { Args: never; Returns: string }
       has_role:
         | {
@@ -3620,6 +3643,21 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_allowed_user: { Args: { check_email: string }; Returns: boolean }
       jsonb_array_union_unique: { Args: { a: Json; b: Json }; Returns: Json }
+      listar_usuarios_sem_auth_user_id: {
+        Args: never
+        Returns: {
+          cpf: number
+          efetivo_id: string
+          email: string
+          id: string
+          login: string
+          matricula: string
+          nome: string
+          nome_efetivo: string
+          precisa_criar_auth: boolean
+          role_efetivo: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
       make_slug: { Args: { txt: string }; Returns: string }
       month_to_int: { Args: { m: string }; Returns: number }
       norm_txt: { Args: { t: string }; Returns: string }
