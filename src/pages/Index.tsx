@@ -147,19 +147,13 @@ const Index = () => {
               {isAdmin ? (
                 // Admin: mostrar TODAS as páginas
                 <>
-                  {/* Material de Apoio */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <div className="flex items-center gap-2 text-primary font-semibold px-1">
-                      <BookOpen className="h-4 w-4" />
-                      <span className="text-xs sm:text-sm">Material de Apoio</span>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-                      <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
-                      <HomeCard title="POP" icon={BookOpen} to="/material-apoio/pop" />
-                      <HomeCard title="Identificar Espécie" icon={BookOpen} to="/material-apoio/identificar-especie" />
-                      <HomeCard title="Manual RAP" icon={BookOpen} to="/material-apoio/manual-rap" />
-                      <HomeCard title="Ranking de Ocorrências" icon={Trophy} to="/ranking" />
-                    </div>
+                  {/* Atividade Operacional */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                    <HomeCard title="Material de Apoio" icon={BookOpen} to="/material-apoio" />
+                    <HomeCard title="POP" icon={BookOpen} to="/material-apoio/pop" />
+                    <HomeCard title="Identificar Espécie" icon={BookOpen} to="/material-apoio/identificar-especie" />
+                    <HomeCard title="Manual RAP" icon={BookOpen} to="/material-apoio/manual-rap" />
+                    <HomeCard title="Ranking de Ocorrências" icon={Trophy} to="/ranking" />
                   </div>
 
                   {/* Seção Operacional - Todas as páginas */}
