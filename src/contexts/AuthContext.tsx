@@ -42,7 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // SEGUNDO: Buscar role em user_roles usando query direta
+      // SEGUNDO: Buscar role em user_roles (tabela consolidada)
       const { data: userRoleData, error } = await supabase
         .from('user_roles')
         .select('role')
@@ -52,27 +52,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!error && userRoleData?.role) {
         console.log('Role obtido de user_roles:', userRoleData.role);
         return userRoleData.role as AppRole;
-      }
-
-      // TERCEIRO: Buscar via usuarios_por_login -> efetivo_roles
-      const { data: userLoginData } = await supabase
-        .from('usuarios_por_login')
-        .select('efetivo_id')
-        .eq('auth_user_id', userId)
-        .maybeSingle();
-
-      if (userLoginData?.efetivo_id) {
-        const { data: efetivoRoleData } = await supabase
-          .from('efetivo_roles')
-          .select('role')
-          .eq('efetivo_id', userLoginData.efetivo_id)
-          .order('role')
-          .limit(1);
-
-        if (efetivoRoleData && efetivoRoleData.length > 0) {
-          console.log('Role obtido de efetivo_roles:', efetivoRoleData[0].role);
-          return efetivoRoleData[0].role as AppRole;
-        }
       }
 
       console.log('Usando role padrão: operador');
