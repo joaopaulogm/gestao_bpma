@@ -90,13 +90,15 @@ const Login = () => {
 
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // Vincular usando função RPC (nova estrutura)
+        // Vincular usando query direta
         const { error } = await supabase
-          .rpc('vincular_user_id_ao_efetivo', {
-            p_efetivo_id: pendingEfetivoId,
-            p_auth_user_id: session.user.id,
-            p_email: session.user.email
-          });
+          .from('usuarios_por_login')
+          .update({
+            auth_user_id: session.user.id,
+            email: session.user.email,
+            vinculado_em: new Date().toISOString()
+          })
+          .eq('efetivo_id', pendingEfetivoId);
 
         localStorage.removeItem('pendingLinkEfetivoId');
 
@@ -121,11 +123,101 @@ const Login = () => {
     try {
       await authLogin(email, password);
       navigate('/');
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Error já tratado no authLogin
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Buscar usuário por login e senha usando query direta
+  const buscarUsuarioPorLoginSenha = async (loginInput: string, senhaInput: string): Promise<UsuarioPorLogin | null> => {
+    const loginLower = loginInput.toLowerCase().trim();
+    const senhaLimpa = senhaInput.replace(/[^0-9]/g, '');
+    
+    // Buscar primeiro por login
+    let query = supabase
+      .from('usuarios_por_login')
+      .select(`
+        id,
+        auth_user_id,
+        efetivo_id,
+        nome,
+        login,
+        senha,
+        email,
+        matricula,
+        cpf,
+        ativo,
+        nome_guerra,
+        post_grad,
+        quadro,
+        lotacao,
+        data_nascimento,
+        contato,
+        vinculado_em
+      `)
+      .eq('ativo', true)
+      .or(`login.eq.${loginLower},matricula.eq.${loginLower}`)
+      .limit(1);
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Erro ao buscar usuário:', error);
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      return null;
+    }
+
+    const usuario = data[0];
+    
+    // Verificar senha (CPF ou matrícula)
+    const senhaDB = usuario.senha?.toString() || '';
+    const cpfDB = usuario.cpf?.toString() || '';
+    const matriculaDB = usuario.matricula || '';
+    
+    if (senhaLimpa !== senhaDB && senhaLimpa !== cpfDB && senhaLimpa !== matriculaDB) {
+      return null; // Senha não confere
+    }
+
+    // Buscar role em efetivo_roles
+    let role = 'operador';
+    if (usuario.efetivo_id) {
+      const { data: roleData } = await supabase
+        .from('efetivo_roles')
+        .select('role')
+        .eq('efetivo_id', usuario.efetivo_id)
+        .order('role')
+        .limit(1);
+      
+      if (roleData && roleData.length > 0) {
+        role = roleData[0].role;
+      }
+    }
+
+    return {
+      id: usuario.id,
+      user_id: usuario.auth_user_id,
+      efetivo_id: usuario.efetivo_id,
+      nome: usuario.nome || '',
+      login: usuario.login || '',
+      senha: senhaDB,
+      email: usuario.email,
+      matricula: usuario.matricula,
+      cpf: usuario.cpf,
+      role: role,
+      ativo: usuario.ativo,
+      nome_guerra: usuario.nome_guerra,
+      post_grad: usuario.post_grad,
+      quadro: usuario.quadro,
+      lotacao: usuario.lotacao,
+      data_nascimento: usuario.data_nascimento,
+      contato: usuario.contato,
+      vinculado_em: usuario.vinculado_em
+    };
   };
 
   // Login com credenciais da tabela usuarios_por_login
@@ -134,48 +226,22 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Validar login e senha usando a função RPC que valida com efetivo_roles
       const senhaDigitada = senha.replace(/\D/g, '');
-      const senhaNumero = senhaDigitada ? BigInt(senhaDigitada) : null;
       
-      if (!senhaNumero) {
-        toast.error('CPF incorreto. Digite apenas os números do seu CPF, sem pontos ou traços.');
+      if (!senhaDigitada) {
+        toast.error('Digite sua senha (CPF ou matrícula, apenas números).');
         return;
       }
 
-      // Buscar usuário usando função RPC (nova estrutura consolidada)
-      // BigInt precisa ser passado como string para RPC do Supabase
-      const senhaParaRPC = senhaNumero.toString();
-      
       console.log('Tentando buscar usuário:', {
         login: login.toLowerCase().trim(),
-        senhaLength: senhaParaRPC.length,
-        senhaPreview: senhaParaRPC.substring(0, 3) + '...'
+        senhaLength: senhaDigitada.length
       });
       
-      const { data: usuarios, error: usuarioError } = await supabase
-        .rpc('get_usuario_by_login_senha', {
-          p_login: login.toLowerCase().trim(),
-          p_senha: senhaParaRPC
-        });
-
-      if (usuarioError) {
-        console.error('Erro ao buscar usuário:', usuarioError);
-        console.error('Detalhes do erro:', {
-          message: usuarioError.message,
-          details: usuarioError.details,
-          hint: usuarioError.hint,
-          code: usuarioError.code
-        });
-        
-        toast.error('Erro ao buscar usuário. Tente novamente.');
-        return;
-      }
-
-      const usuario = Array.isArray(usuarios) && usuarios.length > 0 ? usuarios[0] : null;
+      const usuario = await buscarUsuarioPorLoginSenha(login, senhaDigitada);
 
       if (!usuario) {
-        toast.error('Login não encontrado. Verifique se está usando o formato: primeiro_nome.ultimo_nome');
+        toast.error('Login ou senha incorretos. Verifique se está usando o formato: primeiro_nome.ultimo_nome');
         return;
       }
 
@@ -183,9 +249,6 @@ const Login = () => {
         toast.error('Usuário desativado. Entre em contato com o administrador.');
         return;
       }
-
-      // A senha já foi validada pela função RPC get_usuario_by_login_senha
-      // O role já vem no objeto usuario (nova estrutura)
 
       // Se já tem user_id vinculado, redirecionar para login com Google
       if (usuario.user_id) {
@@ -197,7 +260,7 @@ const Login = () => {
       setPendingUser(usuario);
       setShowPasswordChange(true);
       toast.success(`Bem-vindo, ${usuario.nome}! Por favor, altere sua senha.`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
       toast.error('Erro ao fazer login');
     } finally {
@@ -227,21 +290,12 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Update the password in usuarios_por_login (store as hash of the new password digits)
-      const newSenhaDigits = newPassword.replace(/\D/g, '');
-      const updateData: any = {};
-      
-      if (emailToUse) {
-        updateData.email = emailToUse;
-      }
-
-      // Atualizar email em user_roles (nova estrutura)
-      if (Object.keys(updateData).length > 0 && pendingUser.efetivo_id) {
+      // Atualizar email em usuarios_por_login
+      if (emailToUse && pendingUser.efetivo_id) {
         const { error } = await supabase
-          .from('user_roles')
-          .update(updateData)
-          .eq('efetivo_id', pendingUser.efetivo_id)
-          .eq('ativo', true);
+          .from('usuarios_por_login')
+          .update({ email: emailToUse })
+          .eq('efetivo_id', pendingUser.efetivo_id);
 
         if (error) throw error;
       }
@@ -264,7 +318,7 @@ const Login = () => {
         localStorage.removeItem('pendingLinkEfetivoId');
         toast.error(handleSupabaseError(error, 'vincular com Google'));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Password change error:', error);
       toast.error('Erro ao processar alteração');
     } finally {
@@ -282,30 +336,19 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Validar login e senha
       const senhaDigitada = senha.replace(/\D/g, '');
-      const senhaNumero = senhaDigitada ? BigInt(senhaDigitada) : null;
       
-      if (!senhaNumero) {
+      if (!senhaDigitada) {
         toast.error('CPF incorreto. Digite apenas os números do seu CPF.');
         return;
       }
 
-      // Buscar usuário usando função RPC (nova estrutura)
-      const senhaParaRPC2 = senhaNumero.toString();
-      
-      const { data: usuarios, error } = await supabase
-        .rpc('get_usuario_by_login_senha', {
-          p_login: login.toLowerCase().trim(),
-          p_senha: senhaParaRPC2
-        });
+      const usuario = await buscarUsuarioPorLoginSenha(login, senhaDigitada);
 
-      if (error || !usuarios || usuarios.length === 0) {
+      if (!usuario) {
         toast.error('Login ou senha incorretos');
         return;
       }
-
-      const usuario = usuarios[0];
 
       if (usuario.ativo === false) {
         toast.error('Usuário desativado. Entre em contato com o administrador.');
@@ -336,7 +379,7 @@ const Login = () => {
       setShowGoogleValidation(false);
       setShowPasswordChange(true);
       toast.success(`Bem-vindo, ${usuario.nome}! Por favor, altere sua senha para continuar.`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Validation error:', error);
       toast.error('Erro ao validar credenciais');
     } finally {
@@ -361,9 +404,9 @@ const Login = () => {
       if (error) {
         toast.error(handleSupabaseError(error, 'fazer login com Google'));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Google login error:', error);
-      toast.error(handleSupabaseError(error, 'fazer login com Google'));
+      toast.error('Erro ao fazer login com Google');
     } finally {
       setIsGoogleLoading(false);
     }
@@ -482,13 +525,13 @@ const Login = () => {
                 <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              {isLoading ? 'Processando...' : 'Salvar e Vincular com Google'}
+              Continuar com Google
             </Button>
 
             <Button
               type="button"
               variant="ghost"
-              className="w-full text-xs sm:text-sm"
+              className="w-full text-sm"
               onClick={() => {
                 setShowPasswordChange(false);
                 setPendingUser(null);
@@ -515,58 +558,66 @@ const Login = () => {
               <Link2 className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             </div>
             <CardTitle className="text-xl sm:text-2xl font-bold text-foreground">
-              Confirmar Identidade
+              Vincular Conta
             </CardTitle>
             <CardDescription className="text-muted-foreground text-sm">
-              Para continuar com o login Google, confirme suas credenciais
+              Valide suas credenciais para vincular sua conta Google
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 px-4 sm:px-6">
+          <CardContent className="px-4 sm:px-6">
             <form onSubmit={handleValidateAndGoogleLogin} className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="linkLogin">Login</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
+                    id="linkLogin"
                     type="text"
-                    placeholder="Login (nome.sobrenome)"
+                    placeholder="primeiro_nome.ultimo_nome"
                     value={login}
                     onChange={(e) => setLogin(e.target.value)}
                     className="pl-10"
                     required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    type="password"
-                    placeholder="Senha (CPF)"
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                    className="pl-10"
-                    required
+                    autoComplete="username"
                   />
                 </div>
               </div>
               
+              <div className="space-y-2">
+                <Label htmlFor="linkSenha">CPF (apenas números)</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    id="linkSenha"
+                    type="password"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="00000000000"
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value.replace(/\D/g, ''))}
+                    className="pl-10"
+                    required
+                    autoComplete="current-password"
+                  />
+                </div>
+              </div>
+
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Verificando...' : 'Confirmar e Continuar'}
+                {isLoading ? 'Validando...' : 'Validar e Continuar'}
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-sm"
+                onClick={() => {
+                  setShowGoogleValidation(false);
+                  setSenha('');
+                }}
+              >
+                Voltar
               </Button>
             </form>
-
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full text-xs sm:text-sm"
-              onClick={() => {
-                setShowGoogleValidation(false);
-                setLogin('');
-                setSenha('');
-              }}
-            >
-              Voltar
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -582,18 +633,141 @@ const Login = () => {
             <Lock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
           </div>
           <CardTitle className="text-xl sm:text-2xl font-bold text-foreground">
-            Atividade Operacional
+            Gestão BPMA
           </CardTitle>
           <CardDescription className="text-muted-foreground text-sm">
-            Acesso restrito a usuários autorizados
+            Sistema de Gestão do Batalhão de Polícia Militar Ambiental
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 px-4 sm:px-6">
-          {/* Google Login Button */}
+
+        <CardContent className="px-4 sm:px-6">
+          <Tabs defaultValue="credentials" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="credentials" className="text-xs sm:text-sm">Primeiro Acesso</TabsTrigger>
+              <TabsTrigger value="email" className="text-xs sm:text-sm">E-mail</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="credentials">
+              {/* Informativo sobre formato de login */}
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4 text-sm">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                  <div className="text-blue-700 dark:text-blue-400">
+                    <p className="font-medium mb-1">Formato do Login:</p>
+                    <p className="text-xs">
+                      Use <strong>primeiro_nome.ultimo_nome</strong>
+                    </p>
+                    <p className="text-xs mt-1">
+                      Ex: João Paulo G. Maciel → <code className="bg-blue-500/20 px-1 rounded">joao.maciel</code>
+                    </p>
+                    <p className="text-xs mt-1">
+                      Ou use sua <strong>matrícula</strong> como login.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handleCredentialLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="login">Login</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="login"
+                      type="text"
+                      placeholder="primeiro_nome.ultimo_nome"
+                      value={login}
+                      onChange={(e) => setLogin(e.target.value)}
+                      className="pl-10"
+                      required
+                      autoComplete="username"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="senha">Senha (CPF ou Matrícula)</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="senha"
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Apenas números"
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value.replace(/\D/g, ''))}
+                      className="pl-10"
+                      required
+                      autoComplete="current-password"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Digite seu CPF ou matrícula (apenas números, sem pontos ou traços)
+                  </p>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'Entrando...' : 'Entrar'}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="email">
+              <form onSubmit={handleEmailLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-mail</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="seu.email@gmail.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10"
+                      required
+                      autoComplete="email"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="********"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10"
+                      required
+                      autoComplete="current-password"
+                    />
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'Entrando...' : 'Entrar com E-mail'}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+
+          <div className="relative my-4 sm:my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Ou</span>
+            </div>
+          </div>
+
           <Button
-            type="button"
             variant="outline"
-            className="w-full flex items-center justify-center gap-2 h-10 sm:h-11 text-sm sm:text-base"
+            className="w-full flex items-center justify-center gap-2"
             onClick={handleGoogleLoginWithValidation}
             disabled={isGoogleLoading}
           >
@@ -606,137 +780,20 @@ const Login = () => {
             {isGoogleLoading ? 'Conectando...' : 'Entrar com Google'}
           </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">ou</span>
-            </div>
+          <div className="mt-3">
+            <Button
+              variant="link"
+              className="w-full text-xs text-muted-foreground"
+              onClick={handleDirectGoogleLogin}
+              disabled={isGoogleLoading}
+            >
+              Já tenho conta vinculada - Entrar direto com Google
+            </Button>
           </div>
-
-          <Tabs defaultValue="email" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="email" className="text-xs sm:text-sm">
-                <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                E-mail
-              </TabsTrigger>
-              <TabsTrigger value="credenciais" className="text-xs sm:text-sm">
-                <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                Primeiro Acesso
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Login por E-mail/Senha (Supabase Auth) */}
-            <TabsContent value="email" className="mt-4">
-              <form onSubmit={handleEmailLogin} className="space-y-3 sm:space-y-4">
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      type="email"
-                      placeholder="E-mail"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      type="password"
-                      placeholder="Senha"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full h-10 sm:h-11 text-sm sm:text-base"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Entrando...' : 'Entrar'}
-                </Button>
-              </form>
-            </TabsContent>
-
-            {/* Login por Credenciais (usuarios_por_login) */}
-            <TabsContent value="credenciais" className="mt-4">
-              <form onSubmit={handleCredentialLogin} className="space-y-3 sm:space-y-4">
-                {/* Alerta informativo sobre formato */}
-                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-3 text-xs">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-                    <div className="text-blue-700 dark:text-blue-300">
-                      <p className="font-medium mb-1">Formato do Login:</p>
-                      <p><strong>primeiro_nome.ultimo_nome</strong></p>
-                      <p className="text-blue-600 dark:text-blue-400 mt-1">
-                        Ex: Para "JOÃO CARLOS DA SILVA", use: <strong>joao.silva</strong>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="loginInput" className="text-xs font-medium">Login</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      id="loginInput"
-                      type="text"
-                      placeholder="primeiro.ultimo (ex: joao.silva)"
-                      value={login}
-                      onChange={(e) => setLogin(e.target.value.toLowerCase().trim())}
-                      className="pl-10 h-10 sm:h-11 text-sm sm:text-base lowercase"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="senhaInput" className="text-xs font-medium">Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      id="senhaInput"
-                      type="password"
-                      placeholder="CPF (somente números)"
-                      value={senha}
-                      onChange={(e) => setSenha(e.target.value.replace(/\D/g, ''))}
-                      className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
-                      maxLength={11}
-                      required
-                    />
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">
-                    Digite seu CPF sem pontos ou traços
-                  </p>
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full h-10 sm:h-11 text-sm sm:text-base"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Verificando...' : 'Primeiro Acesso'}
-                </Button>
-                <p className="text-xs text-center text-muted-foreground mt-2">
-                  Use esta opção apenas se nunca acessou o sistema antes.
-                </p>
-              </form>
-            </TabsContent>
-          </Tabs>
         </CardContent>
-        <CardFooter className="text-center text-xs sm:text-sm text-muted-foreground pt-0 px-4 sm:px-6">
-          <p className="w-full">
-            Este sistema é de uso exclusivo para membros autorizados do SOI/BPMA.
-          </p>
+
+        <CardFooter className="flex flex-col space-y-2 text-center text-xs text-muted-foreground px-4 sm:px-6">
+          <p>© 2025 BPMA - Todos os direitos reservados</p>
         </CardFooter>
       </Card>
     </div>

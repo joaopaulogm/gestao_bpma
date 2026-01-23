@@ -42,34 +42,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // SEGUNDO: Buscar role através da função RPC (nova estrutura consolidada)
-      const { data, error } = await supabase
-        .rpc('get_role_by_auth_user_id', { p_auth_user_id: userId });
+      // SEGUNDO: Buscar role em user_roles usando query direta
+      const { data: userRoleData, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching user role via RPC:', error);
-        // Fallback: tentar buscar diretamente em user_roles (nova estrutura)
-        try {
-          const { data: userRoleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', userId)
-            .eq('ativo', true)
-            .maybeSingle();
-
-          if (userRoleData?.role) {
-            return userRoleData.role as AppRole;
-          }
-        } catch (fallbackError) {
-          console.error('Fallback role fetch error:', fallbackError);
-        }
-        return 'operador'; // Default role
+      if (!error && userRoleData?.role) {
+        console.log('Role obtido de user_roles:', userRoleData.role);
+        return userRoleData.role as AppRole;
       }
 
-      // RPC retorna o valor diretamente (não um objeto)
-      const role = (data as AppRole) || 'operador';
-      console.log('Role obtido via RPC:', role);
-      return role;
+      // TERCEIRO: Buscar via usuarios_por_login -> efetivo_roles
+      const { data: userLoginData } = await supabase
+        .from('usuarios_por_login')
+        .select('efetivo_id')
+        .eq('auth_user_id', userId)
+        .maybeSingle();
+
+      if (userLoginData?.efetivo_id) {
+        const { data: efetivoRoleData } = await supabase
+          .from('efetivo_roles')
+          .select('role')
+          .eq('efetivo_id', userLoginData.efetivo_id)
+          .order('role')
+          .limit(1);
+
+        if (efetivoRoleData && efetivoRoleData.length > 0) {
+          console.log('Role obtido de efetivo_roles:', efetivoRoleData[0].role);
+          return efetivoRoleData[0].role as AppRole;
+        }
+      }
+
+      console.log('Usando role padrão: operador');
+      return 'operador';
     } catch (error) {
       console.error('Error fetching user role:', error);
       return 'operador';
@@ -123,10 +130,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       toast.success('Login realizado com sucesso!');
-    } catch (error: any) {
-      console.error('Login error:', error.message);
-      const errorMessage = handleSupabaseError(error, 'fazer login');
-      toast.error(errorMessage);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      console.error('Login error:', errorMessage);
+      const handledError = handleSupabaseError(error as Error, 'fazer login');
+      toast.error(handledError);
       throw error;
     }
   };
@@ -138,9 +146,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       toast.success('Logout realizado com sucesso');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Logout error:', error);
-      toast.error(`Erro ao fazer logout: ${error.message}`);
+      toast.error(`Erro ao fazer logout: ${errorMessage}`);
     }
   };
 
