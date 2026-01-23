@@ -4,17 +4,23 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-all duration-200 ease-apple focus:outline-none focus:ring-2 focus:ring-ring/50 focus:ring-offset-2",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+          "border-transparent bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-sm hover:shadow-md",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "border-border/40 bg-secondary/80 backdrop-blur-sm text-secondary-foreground hover:bg-secondary",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
+          "border-transparent bg-gradient-to-r from-destructive to-destructive/90 text-destructive-foreground shadow-sm",
+        outline: "text-foreground border-border/50 bg-background/60 backdrop-blur-sm hover:bg-muted/60",
+        success:
+          "border-transparent bg-gradient-to-r from-success to-success/90 text-success-foreground shadow-sm",
+        warning:
+          "border-transparent bg-gradient-to-r from-warning to-warning/90 text-warning-foreground shadow-sm",
+        accent:
+          "border-transparent bg-gradient-to-r from-accent to-accent/90 text-accent-foreground shadow-sm",
       },
     },
     defaultVariants: {

@@ -13,8 +13,12 @@ const TableCard = React.forwardRef<HTMLDivElement, TableCardProps>(
     <div
       ref={ref}
       className={cn(
-        "bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200 p-4 sm:p-5",
-        onClick && "cursor-pointer hover:border-primary/30",
+        "bg-card/90 backdrop-blur-sm rounded-2xl",
+        "border border-border/40",
+        "shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]",
+        "transition-all duration-300 ease-apple",
+        "p-3 sm:p-4",
+        onClick && "cursor-pointer hover:border-primary/30 hover:translate-y-[-1px]",
         className
       )}
       onClick={onClick}
@@ -163,11 +167,9 @@ export interface TableCardBadgeProps {
 const TableCardBadge = ({ children, variant = "default", className }: TableCardBadgeProps) => {
   return (
     <Badge
-      variant={variant === "success" || variant === "warning" ? "default" : variant}
+      variant={variant === "success" ? "success" : variant === "warning" ? "warning" : variant}
       className={cn(
-        variant === "success" && "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))] border-transparent",
-        variant === "warning" && "bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] border-transparent",
-        "rounded-md px-2.5 py-0.5 text-xs font-medium",
+        "rounded-lg px-2 py-0.5 text-xs font-medium",
         className
       )}
     >
