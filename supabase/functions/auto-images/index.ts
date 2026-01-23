@@ -219,14 +219,18 @@ Deno.serve(async (req) => {
     ) => {
       console.log(`Processing ${tipoLocal} species without images...`)
 
-      // Query species without images AND that haven't been marked as failed/not found
-      const { data: speciesList, error } = await supabase
+      // Query species without images; em PostgREST o segundo .or() substitui o primeiro,
+      // portanto usamos só .or(hasNoImagesFilter) e filtramos imagens_status em código.
+      const { data: rawList, error } = await supabase
         .from(table)
         .select('id, nome_cientifico, nome_popular, imagens_status')
         .or(hasNoImagesFilter)
-        .or('imagens_status.is.null,imagens_status.eq.pendente')
-        .not('imagens_status', 'in', '("nao_encontrado","erro")')
-        .limit(processLimit)
+        .limit(processLimit * 3);
+
+      const speciesList = (rawList || []).filter(
+        (s: { imagens_status?: string | null }) =>
+          s.imagens_status == null || s.imagens_status === 'pendente'
+      ).slice(0, processLimit)
 
       if (error) {
         console.error(`${tipoLocal} query error:`, error)

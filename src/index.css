@@ -651,51 +651,6 @@
   @apply bg-primary text-primary-foreground shadow-md;
 }
 
-/* Mapbox custom styles */
-@layer components {
-  .mapboxgl-popup {
-    font-family: inherit;
-  }
-
-  .mapboxgl-popup-content {
-    border-radius: 1rem;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-    border: 1px solid hsl(var(--border) / 0.5);
-    background: hsl(var(--background) / 0.95);
-    backdrop-filter: blur(16px);
-    color: hsl(var(--foreground));
-    max-width: 280px;
-  }
-
-  .hotspot-popup .mapboxgl-popup-content {
-    padding: 12px;
-  }
-
-  .mapboxgl-popup-close-button {
-    color: hsl(var(--muted-foreground));
-    font-size: 18px;
-    padding: 4px;
-    transition: all 0.2s;
-  }
-
-  .mapboxgl-popup-close-button:hover {
-    color: hsl(var(--foreground));
-    background: hsl(var(--muted) / 0.8);
-    border-radius: 6px;
-  }
-
-  .mapboxgl-ctrl-group button {
-    background: hsl(var(--background) / 0.9);
-    backdrop-filter: blur(8px);
-    color: hsl(var(--foreground));
-    border: 1px solid hsl(var(--border) / 0.5);
-    transition: all 0.2s;
-  }
-
-  .mapboxgl-ctrl-group button:hover {
-    background: hsl(var(--muted) / 0.9);
-  }
-}
 
 /* Typography - Experimental & Bold */
 .display-title {

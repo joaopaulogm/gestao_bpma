@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Lock, User, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle, Shield, Link2, Eye, EyeOff } from 'lucide-react';
+import { Lock, User, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle, Shield, Link2, Eye, EyeOff, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { handleSupabaseError } from '@/utils/errorHandler';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import logoBPMA from '@/assets/logo-bpma.png';
 
 // Interface para usuário retornado das RPCs
@@ -71,10 +72,14 @@ const GlassInput = ({
     <Input
       {...props}
       type={props.type === 'password' && showPassword ? 'text' : props.type}
-      className={`pl-10 ${onTogglePassword ? 'pr-10' : ''} bg-white/20 border-white/30 text-white placeholder:text-white/50 
-                 hover:bg-white/25 hover:border-white/40
-                 focus:bg-white/25 focus:border-[#ffcc00]/50 focus:ring-[#ffcc00]/20
-                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffcc00]/20
+      className={`pl-10 ${onTogglePassword ? 'pr-10' : ''} 
+                 bg-black/25 border-white/25
+                 !text-white placeholder:text-white/50 caret-[#ffcc00]
+                 hover:bg-black/30 hover:border-white/35
+                 focus:bg-black/30 focus:border-[#ffcc00]/50 focus:ring-[#ffcc00]/20
+                 focus-visible:outline-none focus-visible:bg-black/30 focus-visible:border-[#ffcc00]/50 focus-visible:ring-2 focus-visible:ring-[#ffcc00]/20
+                 [&:-webkit-autofill]:![-webkit-text-fill-color:white]
+                 [&:-webkit-autofill]:![-webkit-box-shadow:0_0_0_1000px_rgba(7,29,73,0.5)_inset]
                  transition-colors rounded-lg h-11`}
     />
     {onTogglePassword && (
@@ -118,6 +123,10 @@ const Login = () => {
   const [pendingUser, setPendingUser] = useState<UserRoleData | null>(null);
   const [loginStep, setLoginStep] = useState<LoginStep>('login');
   const [activeTab, setActiveTab] = useState<'primeiro-acesso' | 'senha' | 'email'>('senha');
+  
+  // Estado para modais
+  const [openPolitica, setOpenPolitica] = useState(false);
+  const [openTermos, setOpenTermos] = useState(false);
   
   // Estado para recuperação de senha
   const [recoveryMatricula, setRecoveryMatricula] = useState('');
@@ -1157,10 +1166,291 @@ const Login = () => {
         </p>
 
         {/* Footer */}
-        <div className="mt-6 pt-4 border-t border-white/10 text-center">
+        <div className="mt-6 pt-4 border-t border-white/10 text-center space-y-2">
+          <div className="flex items-center justify-center gap-4 text-xs">
+            <button
+              type="button"
+              onClick={() => setOpenPolitica(true)}
+              className="text-white/60 hover:text-[#ffcc00] transition-colors cursor-pointer underline-offset-2 hover:underline"
+            >
+              Política de Privacidade
+            </button>
+            <span className="text-white/40">•</span>
+            <button
+              type="button"
+              onClick={() => setOpenTermos(true)}
+              className="text-white/60 hover:text-[#ffcc00] transition-colors cursor-pointer underline-offset-2 hover:underline"
+            >
+              Termos de Uso
+            </button>
+          </div>
           <p className="text-xs text-white/40">© 2025 BPMA - Todos os direitos reservados</p>
         </div>
       </GlassCard>
+
+      {/* Modal Política de Privacidade */}
+      <Dialog open={openPolitica} onOpenChange={setOpenPolitica}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-2xl">
+              <Shield className="h-6 w-6 text-[#ffcc00]" />
+              Política de Privacidade
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Última atualização: {new Date().toLocaleDateString('pt-BR')}
+            </p>
+          </DialogHeader>
+          <div className="prose prose-sm max-w-none space-y-6 text-foreground mt-4">
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">1. Introdução</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                O Sistema de Gestão do BPMA (Batalhão de Polícia Militar Ambiental) está comprometido com a proteção 
+                da privacidade e dos dados pessoais de seus usuários. Esta Política de Privacidade descreve como 
+                coletamos, usamos, armazenamos e protegemos suas informações pessoais em conformidade com a 
+                Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">2. Dados Coletados</h2>
+              <p className="text-muted-foreground leading-relaxed mb-3">
+                Coletamos os seguintes tipos de dados pessoais:
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
+                <li><strong>Dados de Identificação:</strong> Nome completo, nome de guerra, matrícula, posto/graduação.</li>
+                <li><strong>Dados de Contato:</strong> E-mail institucional utilizado para autenticação.</li>
+                <li><strong>Dados Funcionais:</strong> Lotação, equipe, função, escala de serviço.</li>
+                <li><strong>Dados de Acesso:</strong> Endereço IP, data e hora de acesso, navegador utilizado.</li>
+                <li><strong>Dados Operacionais:</strong> Registros de ocorrências, resgates e atividades de prevenção.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">3. Finalidade da Coleta</h2>
+              <p className="text-muted-foreground leading-relaxed mb-3">
+                Os dados coletados são utilizados para:
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
+                <li>Autenticação e controle de acesso ao sistema.</li>
+                <li>Registro e acompanhamento de ocorrências ambientais.</li>
+                <li>Gestão de escalas, férias, abonos e licenças do efetivo.</li>
+                <li>Geração de relatórios estatísticos e dashboards operacionais.</li>
+                <li>Melhoria contínua dos serviços prestados.</li>
+                <li>Cumprimento de obrigações legais e regulatórias.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">4. Compartilhamento de Dados</h2>
+              <p className="text-muted-foreground leading-relaxed mb-3">
+                Os dados podem ser compartilhados com:
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
+                <li><strong>Órgãos da Administração Pública:</strong> Quando necessário para cumprimento de obrigações legais.</li>
+                <li><strong>Supabase Inc.:</strong> Provedor de infraestrutura de banco de dados e autenticação.</li>
+                <li><strong>Lovable:</strong> Plataforma de hospedagem e desenvolvimento da aplicação.</li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed mt-3">
+                Não comercializamos ou compartilhamos dados pessoais com terceiros para fins de marketing.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">5. Armazenamento e Segurança</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Os dados são armazenados em servidores seguros com criptografia em trânsito (HTTPS/TLS) e em repouso. 
+                Utilizamos Row Level Security (RLS) para garantir que cada usuário acesse apenas os dados pertinentes 
+                à sua função. O acesso aos dados é restrito a usuários autenticados e autorizados.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">6. Direitos do Titular</h2>
+              <p className="text-muted-foreground leading-relaxed mb-3">
+                Em conformidade com a LGPD, você possui os seguintes direitos:
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
+                <li><strong>Acesso:</strong> Solicitar informações sobre seus dados pessoais armazenados.</li>
+                <li><strong>Correção:</strong> Solicitar a correção de dados incompletos, inexatos ou desatualizados.</li>
+                <li><strong>Eliminação:</strong> Solicitar a exclusão de dados pessoais, quando aplicável.</li>
+                <li><strong>Portabilidade:</strong> Solicitar a transferência de seus dados para outro serviço.</li>
+                <li><strong>Revogação:</strong> Revogar o consentimento a qualquer momento.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">7. Retenção de Dados</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Os dados pessoais são retidos pelo tempo necessário para cumprimento das finalidades descritas 
+                nesta política, respeitando os prazos legais de guarda de documentos públicos e registros operacionais.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">8. Contato</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Para exercer seus direitos ou esclarecer dúvidas sobre esta política, entre em contato com 
+                o Encarregado de Dados (DPO) através dos canais oficiais do BPMA.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">9. Alterações nesta Política</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Esta política pode ser atualizada periodicamente. Recomendamos que você a revise regularmente 
+                para se manter informado sobre como protegemos seus dados.
+              </p>
+            </section>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Termos de Uso */}
+      <Dialog open={openTermos} onOpenChange={setOpenTermos}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-2xl">
+              <FileText className="h-6 w-6 text-[#ffcc00]" />
+              Termos de Uso
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Última atualização: {new Date().toLocaleDateString('pt-BR')}
+            </p>
+          </DialogHeader>
+          <div className="prose prose-sm max-w-none space-y-6 text-foreground mt-4">
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">1. Aceitação dos Termos</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Ao acessar e utilizar o Sistema de Gestão do BPMA, você concorda em cumprir e estar vinculado 
+                a estes Termos de Uso. Se você não concordar com qualquer parte destes termos, não deve utilizar 
+                este sistema.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">2. Descrição do Serviço</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                O Sistema de Gestão do BPMA é uma plataforma digital destinada ao gerenciamento de ocorrências 
+                ambientais, controle de efetivo, escalas de serviço e atividades operacionais do Batalhão de 
+                Polícia Militar Ambiental. O sistema é de uso exclusivo para fins institucionais.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">3. Elegibilidade e Acesso</h2>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
+                <li>O acesso ao sistema é restrito a integrantes do BPMA devidamente cadastrados.</li>
+                <li>Cada usuário é responsável por manter a confidencialidade de suas credenciais de acesso.</li>
+                <li>O compartilhamento de senhas ou credenciais é estritamente proibido.</li>
+                <li>O acesso pode ser revogado a qualquer momento pela administração do sistema.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">4. Regras de Conduta</h2>
+              <p className="text-muted-foreground leading-relaxed mb-3">
+                Ao utilizar este sistema, você concorda em NÃO:
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
+                <li>Inserir informações falsas, imprecisas ou enganosas nos registros.</li>
+                <li>Acessar dados ou funcionalidades não autorizadas para seu nível de acesso.</li>
+                <li>Tentar contornar ou violar os mecanismos de segurança do sistema.</li>
+                <li>Realizar ataques cibernéticos, incluindo DDoS, injeção de código ou phishing.</li>
+                <li>Utilizar o sistema para fins não relacionados às atividades do BPMA.</li>
+                <li>Copiar, modificar ou distribuir conteúdo do sistema sem autorização.</li>
+                <li>Utilizar scripts automatizados, bots ou ferramentas de scraping.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">5. Direitos Autorais e Propriedade Intelectual</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Todo o conteúdo do sistema, incluindo textos, imagens, logotipos, ícones, gráficos, 
+                layouts e código-fonte, é protegido por direitos autorais e pertence ao BPMA ou seus 
+                licenciadores. A reprodução, distribuição ou modificação não autorizada é proibida.
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mt-3">
+                <li>O brasão e símbolos do BPMA são de uso exclusivo institucional.</li>
+                <li>Os dados estatísticos gerados podem ser utilizados apenas para fins oficiais.</li>
+                <li>Relatórios exportados devem ser tratados como documentos institucionais.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">6. Responsabilidades do Usuário</h2>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
+                <li>Manter suas credenciais de acesso seguras e não compartilhá-las.</li>
+                <li>Inserir informações precisas e verídicas em todos os registros.</li>
+                <li>Reportar imediatamente qualquer suspeita de uso não autorizado da sua conta.</li>
+                <li>Utilizar o sistema de acordo com as normas e regulamentos do BPMA.</li>
+                <li>Manter o sigilo das informações operacionais acessadas através do sistema.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">7. Limitação de Responsabilidade</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                O BPMA não se responsabiliza por:
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mt-3">
+                <li>Interrupções temporárias no serviço devido a manutenção ou problemas técnicos.</li>
+                <li>Perdas de dados decorrentes de falhas no dispositivo do usuário.</li>
+                <li>Danos causados por uso indevido do sistema pelo usuário.</li>
+                <li>Ações de terceiros que violem a segurança do sistema.</li>
+                <li>Incompatibilidade com navegadores ou dispositivos não suportados.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">8. Disponibilidade do Sistema</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Embora nos esforcemos para manter o sistema disponível 24/7, não garantimos disponibilidade 
+                ininterrupta. O sistema pode ficar indisponível para manutenção programada ou emergencial, 
+                atualizações de segurança ou por motivos de força maior.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">9. Penalidades</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                O descumprimento destes termos pode resultar em:
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mt-3">
+                <li>Suspensão temporária do acesso ao sistema.</li>
+                <li>Revogação permanente das credenciais de acesso.</li>
+                <li>Aplicação de sanções administrativas conforme regulamento interno.</li>
+                <li>Responsabilização civil e criminal, quando aplicável.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">10. Modificações nos Termos</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Reservamo-nos o direito de modificar estes Termos de Uso a qualquer momento. 
+                Alterações significativas serão comunicadas através do próprio sistema. O uso 
+                continuado após modificações constitui aceitação dos novos termos.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">11. Legislação Aplicável</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Estes termos são regidos pelas leis da República Federativa do Brasil. 
+                Quaisquer disputas serão resolvidas no foro da Justiça Militar ou Civil, 
+                conforme a natureza da questão.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-3">12. Contato</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Para dúvidas sobre estes Termos de Uso, entre em contato através dos 
+                canais oficiais do BPMA.
+              </p>
+            </section>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

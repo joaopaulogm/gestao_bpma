@@ -98,56 +98,53 @@ serve(async (req) => {
 
     const results = { processed: 0, updated: 0, errors: [] as string[], hasMore: false };
 
+    // Usa dim_especies_fauna e dim_especies_flora (tabelas fauna/flora não existem no schema)
     if (tipo === 'fauna') {
       const { data: records } = await supabase
-        .from('fauna')
-        .select('id, nome_popular, id_dim_especie_fauna')
+        .from('dim_especies_fauna')
+        .select('id, nome_popular')
         .range(offset, offset + BATCH_SIZE - 1);
 
       if (records?.length) {
         results.hasMore = records.length === BATCH_SIZE;
-        
+
         for (const rec of records) {
           results.processed++;
           const slug = slugify(rec.nome_popular || '');
           const images = await findImages(supabase, 'imagens-fauna', slug);
-          
+
           if (images.length > 0 && !dryRun) {
-            if (rec.id_dim_especie_fauna) {
-              await supabase.from('dim_especies_fauna').update({
-                foto_principal_path: images[0],
-                fotos_paths: images,
-                foto_status: 'pendente'
-              }).eq('id', rec.id_dim_especie_fauna);
-            }
-            await supabase.from('fauna').update({ imagens: images }).eq('id', rec.id);
+            await supabase.from('dim_especies_fauna').update({
+              imagens: images,
+              foto_principal_path: images[0],
+              fotos_paths: images,
+              foto_status: 'pendente'
+            }).eq('id', rec.id);
             results.updated++;
           }
         }
       }
     } else if (tipo === 'flora') {
       const { data: records } = await supabase
-        .from('flora')
-        .select('id, nome_popular, id_dim_especie_flora')
+        .from('dim_especies_flora')
+        .select('id, nome_popular')
         .range(offset, offset + BATCH_SIZE - 1);
 
       if (records?.length) {
         results.hasMore = records.length === BATCH_SIZE;
-        
+
         for (const rec of records) {
           results.processed++;
           const slug = slugify(rec.nome_popular || '');
           const images = await findImages(supabase, 'imagens-flora', slug);
-          
+
           if (images.length > 0 && !dryRun) {
-            if (rec.id_dim_especie_flora) {
-              await supabase.from('dim_especies_flora').update({
-                foto_principal_path: images[0],
-                fotos_paths: images,
-                foto_status: 'pendente'
-              }).eq('id', rec.id_dim_especie_flora);
-            }
-            await supabase.from('flora').update({ imagens: images }).eq('id', rec.id);
+            await supabase.from('dim_especies_flora').update({
+              imagens: images,
+              foto_principal_path: images[0],
+              fotos_paths: images,
+              foto_status: 'pendente'
+            }).eq('id', rec.id);
             results.updated++;
           }
         }

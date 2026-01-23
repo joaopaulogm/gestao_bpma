@@ -87,7 +87,7 @@ const PoliticaCookies: React.FC = () => {
               </p>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2 mt-3">
                 <li><strong>Supabase:</strong> Para autenticação e gerenciamento de sessão.</li>
-                <li><strong>Mapbox/Google Maps:</strong> Para exibição de mapas e geolocalização.</li>
+                <li><strong>Google Maps:</strong> Para exibição de mapas e geolocalização.</li>
               </ul>
             </section>
 

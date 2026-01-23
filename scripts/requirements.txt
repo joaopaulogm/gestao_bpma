@@ -1,0 +1,5 @@
+# Scripts Python — dependências
+# Uso: pip install -r scripts/requirements.txt
+
+pandas>=2.0.0
+openpyxl>=3.1.0

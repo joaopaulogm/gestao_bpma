@@ -6,9 +6,14 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const SUPABASE_URL = "https://oiwwptnqaunsyhpkwbrz.supabase.co";
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pd3dwdG5xYXVuc3locGt3YnJ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MDc2MjYzNCwiZXhwIjoyMDU2MzM4NjM0fQ.X2JGeeM9J8ejHSN8gqFT5XsSX3EhXhV-9JVGhHuO7kc";
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+if (!SUPABASE_URL) {
+  console.error('❌ ERRO: A variável de ambiente SUPABASE_URL não está definida!');
+  console.error('Ex: $env:SUPABASE_URL="https://seu-projeto.supabase.co"');
+  process.exit(1);
+}
 if (!SUPABASE_SERVICE_KEY) {
   console.error('❌ ERRO: A variável de ambiente SUPABASE_SERVICE_ROLE_KEY não está definida!');
   console.error('\nPor favor, defina a variável antes de executar:');

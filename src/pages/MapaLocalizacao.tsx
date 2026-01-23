@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import KmlLayerControls, { KML_LAYERS, KmlLayer } from '@/components/mapa/KmlLayerControls';
 import AreaVerificationGrid from '@/components/mapa/AreaVerificationGrid';
+import { kml as kmlToGeoJSON } from '@tmcw/togeojson';
 
 interface Coordenadas {
   latitude: number;
@@ -26,20 +27,38 @@ const MapaLocalizacao: React.FC = () => {
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
   
-  // KML Layers state
+  // KML Layers state — usamos Data em vez de KmlLayer para funcionar em localhost e produção
+  // (KmlLayer faz o fetch nos servidores do Google, que não alcançam localhost)
   const [layers, setLayers] = useState<KmlLayer[]>(KML_LAYERS);
   const [loadingLayers, setLoadingLayers] = useState<string[]>([]);
-  const kmlLayersRef = useRef<Map<string, google.maps.KmlLayer>>(new Map());
+  const kmlLayersRef = useRef<Map<string, google.maps.Data>>(new Map());
 
   // Carregar Google Maps
   useEffect(() => {
     const loadGoogleMaps = async () => {
       try {
         const response = await supabase.functions.invoke('get-google-maps-token');
-        if (response.error) throw response.error;
+        
+        if (response.error) {
+          console.error('Erro ao obter token Google Maps:', response.error);
+          const errorMsg = response.error.message || 'Erro desconhecido';
+          
+          if (errorMsg.includes('not configured') || errorMsg.includes('not set')) {
+            setError('GOOGLE_MAPS_API_KEY não configurado. Configure no Supabase Dashboard → Edge Functions → Secrets.');
+          } else if (response.error.status === 500) {
+            setError('Erro no servidor ao obter chave da API. Verifique os logs da Edge Function.');
+          } else {
+            setError(`Erro ao obter chave da API: ${errorMsg}`);
+          }
+          return;
+        }
         
         const apiKey = response.data?.token;
-        if (!apiKey) throw new Error('Token não encontrado');
+        if (!apiKey) {
+          console.error('Token Google Maps não encontrado na resposta:', response.data);
+          setError('Chave da API não retornada pela Edge Function. Verifique se GOOGLE_MAPS_API_KEY está configurado no Supabase.');
+          return;
+        }
 
         // Verificar se já está carregado
         if (window.google?.maps) {
@@ -51,12 +70,19 @@ const MapaLocalizacao: React.FC = () => {
         script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker&v=weekly`;
         script.async = true;
         script.defer = true;
-        script.onload = () => setMapLoaded(true);
-        script.onerror = () => setError('Erro ao carregar o mapa');
+        script.onload = () => {
+          console.log('Google Maps carregado com sucesso');
+          setMapLoaded(true);
+        };
+        script.onerror = (err) => {
+          console.error('Erro ao carregar script Google Maps:', err);
+          setError('Erro ao carregar o Google Maps. Verifique a chave da API e a conexão.');
+        };
         document.head.appendChild(script);
       } catch (err) {
         console.error('Erro ao carregar Google Maps:', err);
-        setError('Erro ao carregar o mapa');
+        const errorMsg = err instanceof Error ? err.message : 'Erro desconhecido';
+        setError(`Erro ao carregar o mapa: ${errorMsg}`);
       }
     };
 
@@ -72,7 +98,6 @@ const MapaLocalizacao: React.FC = () => {
       mapInstanceRef.current = new google.maps.Map(mapRef.current, {
         center: dfCenter,
         zoom: 11,
-        mapId: 'mapa-localizacao',
         mapTypeId: 'hybrid',
         mapTypeControl: true,
         streetViewControl: false,
@@ -84,14 +109,14 @@ const MapaLocalizacao: React.FC = () => {
   // Cleanup KML layers on unmount
   useEffect(() => {
     return () => {
-      kmlLayersRef.current.forEach((layer) => {
-        layer.setMap(null);
+      kmlLayersRef.current.forEach((data) => {
+        data.setMap(null);
       });
       kmlLayersRef.current.clear();
     };
   }, []);
 
-  // Toggle KML layer
+  // Toggle KML layer — fetch no browser + Data (funciona em localhost e produção)
   const toggleLayer = useCallback(async (layerId: string) => {
     const map = mapInstanceRef.current;
     if (!map || !mapLoaded) {
@@ -104,61 +129,53 @@ const MapaLocalizacao: React.FC = () => {
 
     // Se a camada já está visível, remover
     if (layer.visible) {
-      const existingLayer = kmlLayersRef.current.get(layerId);
-      if (existingLayer) {
-        existingLayer.setMap(null);
+      const existing = kmlLayersRef.current.get(layerId);
+      if (existing) {
+        existing.setMap(null);
         kmlLayersRef.current.delete(layerId);
       }
-      
       setLayers(prev => prev.map(l => 
         l.id === layerId ? { ...l, visible: false } : l
       ));
       return;
     }
 
-    // Carregar a camada KML
     setLoadingLayers(prev => [...prev, layerId]);
 
     try {
-      const baseUrl = window.location.origin;
-      const kmlUrl = `${baseUrl}${layer.file}`;
+      const url = `${window.location.origin}${layer.file}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      console.log('Carregando KML:', kmlUrl);
+      const text = await res.text();
+      const doc = new DOMParser().parseFromString(text, 'text/xml');
+      const geojson = kmlToGeoJSON(doc, { skipNullGeometry: true });
 
-      const kmlLayer = new google.maps.KmlLayer({
-        url: kmlUrl,
-        map: map,
-        preserveViewport: true,
-        suppressInfoWindows: false,
-      });
+      if (!geojson?.features?.length) {
+        toast.error(`"${layer.name}" sem geometrias válidas`);
+        return;
+      }
 
-      kmlLayer.addListener('status_changed', () => {
-        const status = kmlLayer.getStatus();
-        console.log(`KML ${layer.name} status:`, status);
-        
-        if (status === 'OK') {
-          kmlLayersRef.current.set(layerId, kmlLayer);
-          setLayers(prev => prev.map(l => 
-            l.id === layerId ? { ...l, visible: true } : l
-          ));
-          toast.success(`"${layer.name}" carregada`);
-        } else {
-          console.error(`Erro KML ${layer.name}:`, status);
-          kmlLayer.setMap(null);
-          
-          if (status === 'FETCH_ERROR') {
-            toast.error('Publique o app para usar camadas KML', { duration: 4000 });
-          } else {
-            toast.error(`Erro: ${status}`);
-          }
-        }
-        
-        setLoadingLayers(prev => prev.filter(id => id !== layerId));
-      });
+      const dataLayer = new google.maps.Data();
+      dataLayer.setStyle(() => ({
+        fillColor: layer.color,
+        fillOpacity: 0.25,
+        strokeColor: layer.color,
+        strokeWeight: 2,
+        strokeOpacity: 0.9,
+      }));
+      dataLayer.addGeoJson(geojson);
+      dataLayer.setMap(map);
 
-    } catch (error) {
-      console.error(`Erro ao carregar camada ${layer.name}:`, error);
+      kmlLayersRef.current.set(layerId, dataLayer);
+      setLayers(prev => prev.map(l => 
+        l.id === layerId ? { ...l, visible: true } : l
+      ));
+      toast.success(`"${layer.name}" carregada`);
+    } catch (err) {
+      console.error(`Erro ao carregar camada ${layer.name}:`, err);
       toast.error(`Erro ao carregar "${layer.name}"`);
+    } finally {
       setLoadingLayers(prev => prev.filter(id => id !== layerId));
     }
   }, [mapLoaded, layers]);
@@ -249,9 +266,9 @@ const MapaLocalizacao: React.FC = () => {
         toast.error('Erro ao obter localização');
       },
       {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
+        enableHighAccuracy: false, // Usar false para funcionar mesmo sem GPS (usa WiFi/rede)
+        timeout: 10000,
+        maximumAge: 60000, // Aceitar localização com até 1 minuto de idade
       }
     );
   }, []);
@@ -344,8 +361,18 @@ const MapaLocalizacao: React.FC = () => {
               {!mapLoaded && (
                 <div className="flex items-center justify-center h-full bg-muted/20">
                   <div className="text-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">Carregando mapa...</p>
+                    {error ? (
+                      <>
+                        <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-2" />
+                        <p className="text-sm font-medium text-destructive mb-1">Erro ao carregar mapa</p>
+                        <p className="text-xs text-muted-foreground max-w-md px-4">{error}</p>
+                      </>
+                    ) : (
+                      <>
+                        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">Carregando mapa...</p>
+                      </>
+                    )}
                   </div>
                 </div>
               )}

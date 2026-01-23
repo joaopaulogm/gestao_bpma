@@ -2,13 +2,18 @@ import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-const SUPABASE_URL = "https://oiwwptnqaunsyhpkwbrz.supabase.co";
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+if (!SUPABASE_URL) {
+  console.error('ERRO: A variável de ambiente SUPABASE_URL não está definida!');
+  console.error('Ex.: $env:SUPABASE_URL="https://xxx.supabase.co"');
+  process.exit(1);
+}
 
 if (!SUPABASE_SERVICE_KEY) {
   console.error('ERRO: A variável de ambiente SUPABASE_SERVICE_ROLE_KEY não está definida!');
-  console.error('Por favor, defina a variável antes de executar o script:');
-  console.error('$env:SUPABASE_SERVICE_ROLE_KEY="sua-chave-aqui"');
+  console.error('Ex.: $env:SUPABASE_SERVICE_ROLE_KEY="sua-chave-aqui"');
   process.exit(1);
 }
 

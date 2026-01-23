@@ -2,10 +2,16 @@ import pandas as pd
 import sys
 import os
 
-excel_path = r'C:\Users\joaop\BPMA\Resumos Estatísticas 2025 a 2020.xlsx'
+# Caminho: 1º argumento, 2º env EXCEL_PATH, 3º default
+excel_path = (
+    sys.argv[1] if len(sys.argv) > 1 else
+    os.environ.get('EXCEL_PATH', r'C:\Users\joaop\BPMA\Resumos Estatísticas 2025 a 2020.xlsx')
+)
 
 if not os.path.exists(excel_path):
     print(f"Arquivo não encontrado: {excel_path}")
+    print("Uso: python analyze_excel.py [caminho.xlsx]")
+    print("Ou: EXCEL_PATH=caminho.xlsx python analyze_excel.py")
     sys.exit(1)
 
 try:

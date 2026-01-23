@@ -3,9 +3,6 @@ project_id = "oiwwptnqaunsyhpkwbrz"
 [functions.analyze-data]
 verify_jwt = false
 
-[functions.get-mapbox-token]
-verify_jwt = false
-
 [functions.get-drive-image]
 verify_jwt = false
 

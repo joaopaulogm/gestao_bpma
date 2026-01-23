@@ -23,7 +23,17 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
     const fetchToken = async () => {
       try {
         const { data, error } = await supabase.functions.invoke('get-google-maps-token');
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao obter token Google Maps:', error);
+          if (error.message?.includes('not configured') || error.message?.includes('not set')) {
+            console.error('GOOGLE_MAPS_API_KEY não configurado no Supabase. Configure em Dashboard → Edge Functions → Secrets.');
+          }
+          return;
+        }
+        if (!data?.token) {
+          console.error('Token não retornado pela Edge Function');
+          return;
+        }
         setApiKey(data.token);
       } catch (error) {
         console.error('Failed to fetch Google Maps API key:', error);
@@ -55,7 +65,6 @@ const BrazilHeatmap = ({ data }: BrazilHeatmapProps) => {
           zoom: 9,
           minZoom: 7,
           maxZoom: 18,
-          mapId: 'HOTSPOTS_MAP',
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: true,

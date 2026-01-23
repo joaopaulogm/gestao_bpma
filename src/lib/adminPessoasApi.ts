@@ -1,9 +1,7 @@
 // Utility para chamadas à Edge Function admin-pessoas
 // Centraliza todas as operações de escrita do módulo Seção Pessoas
 
-import { supabase } from '@/integrations/supabase/client';
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://oiwwptnqaunsyhpkwbrz.supabase.co';
+import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 
 interface ApiResponse<T = unknown> {
   ok: boolean;

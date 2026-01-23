@@ -11,7 +11,6 @@ import CookieConsentBanner from '@/components/CookieConsentBanner';
 const Index = lazy(() => import(/* webpackChunkName: "index" */ '@/pages/Index'));
 const DashboardOperacional = lazy(() => import(/* webpackChunkName: "dashboard-operacional" */ '@/pages/DashboardOperacional'));
 const Hotspots = lazy(() => import(/* webpackChunkName: "hotspots" */ '@/pages/Hotspots'));
-const Registros = lazy(() => import(/* webpackChunkName: "registros" */ '@/pages/Registros'));
 const RegistrosCrimes = lazy(() => import(/* webpackChunkName: "registros-crimes" */ '@/pages/RegistrosCrimes'));
 const RegistrosCrimesComuns = lazy(() => import(/* webpackChunkName: "registros-crimes-comuns" */ '@/pages/RegistrosCrimesComuns'));
 const RegistrosPrevencao = lazy(() => import(/* webpackChunkName: "registros-prevencao" */ '@/pages/RegistrosPrevencao'));
@@ -138,7 +137,6 @@ function App() {
               <Route path="/secao-operacional/flora-cadastrada" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/monitorar-raps" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><MonitorarRAPs /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/controle-os" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ControleOS /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/registros-unificados" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistrosUnificados /></SidebarLayout></ProtectedRoute>} />
               
               {/* Seção Pessoas */}
               <Route path="/secao-pessoas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><SecaoPessoas /></SidebarLayout></ProtectedRoute>} />

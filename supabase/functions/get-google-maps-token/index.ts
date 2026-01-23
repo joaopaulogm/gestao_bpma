@@ -8,6 +8,10 @@ const getAllowedOrigin = (requestOrigin: string | null): string => {
     'https://gestao-bpma.lovable.app',
     'http://localhost:5173',
     'http://localhost:3000',
+    'http://localhost:8080',
+    'http://localhost:8081',
+    'http://127.0.0.1:8080',
+    'http://127.0.0.1:8081',
   ];
   
   if (requestOrigin && allowedOrigins.some(origin => requestOrigin.startsWith(origin.replace(/\/$/, '')))) {
