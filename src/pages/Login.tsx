@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Lock, User, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle, Shield, Link2 } from 'lucide-react';
+import { Lock, User, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle, Shield, Link2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { handleSupabaseError } from '@/utils/errorHandler';
@@ -56,6 +56,13 @@ const Login = () => {
   // Estado para alteração de senha
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // Estado para mostrar/ocultar senhas
+  const [showCpf, setShowCpf] = useState(false);
+  const [showSenhaLogin, setShowSenhaLogin] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Estado geral
   const [isLoading, setIsLoading] = useState(false);
@@ -408,15 +415,34 @@ const Login = () => {
     </div>
   );
 
-  // Glass Input Component
-  const GlassInput = ({ icon: Icon, ...props }: { icon: React.ElementType } & React.ComponentProps<typeof Input>) => (
+  // Glass Input Component with password toggle
+  const GlassInput = ({ 
+    icon: Icon, 
+    showPassword, 
+    onTogglePassword,
+    ...props 
+  }: { 
+    icon: React.ElementType;
+    showPassword?: boolean;
+    onTogglePassword?: () => void;
+  } & React.ComponentProps<typeof Input>) => (
     <div className="relative">
-      <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#ffcc00]" />
+      <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#ffcc00] z-10" />
       <Input
         {...props}
-        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 
-                   focus:border-[#ffcc00]/50 focus:ring-[#ffcc00]/20 rounded-lg h-11"
+        type={props.type === 'password' && showPassword ? 'text' : props.type}
+        className={`pl-10 ${onTogglePassword ? 'pr-10' : ''} bg-white/10 border-white/20 text-white placeholder:text-white/50 
+                   focus:border-[#ffcc00]/50 focus:ring-[#ffcc00]/20 rounded-lg h-11`}
       />
+      {onTogglePassword && (
+        <button
+          type="button"
+          onClick={onTogglePassword}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-[#ffcc00] transition-colors z-10"
+        >
+          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      )}
     </div>
   );
 
@@ -461,6 +487,8 @@ const Login = () => {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 maxLength={10}
+                showPassword={showNewPassword}
+                onTogglePassword={() => setShowNewPassword(!showNewPassword)}
               />
             </div>
 
@@ -473,6 +501,8 @@ const Login = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 maxLength={10}
+                showPassword={showConfirmPassword}
+                onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
               />
               {confirmPassword && !passwordsMatch && (
                 <p className="text-xs text-red-400">As senhas não coincidem</p>
@@ -673,6 +703,8 @@ const Login = () => {
                   maxLength={11}
                   required
                   autoComplete="current-password"
+                  showPassword={showCpf}
+                  onTogglePassword={() => setShowCpf(!showCpf)}
                 />
                 <p className="text-xs text-white/50">
                   Digite os 11 números do seu CPF (sem pontos ou traços)
@@ -731,6 +763,8 @@ const Login = () => {
                   maxLength={10}
                   required
                   autoComplete="current-password"
+                  showPassword={showSenhaLogin}
+                  onTogglePassword={() => setShowSenhaLogin(!showSenhaLogin)}
                 />
               </div>
 
@@ -772,6 +806,8 @@ const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
+                  showPassword={showPassword}
+                  onTogglePassword={() => setShowPassword(!showPassword)}
                 />
               </div>
 
