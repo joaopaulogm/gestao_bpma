@@ -630,14 +630,14 @@ const SecaoLogistica: React.FC = () => {
                     className="w-full sm:flex-1 sm:max-w-xs"
                   />
                   <Select
-                    value={frotaFiltros.situacao}
-                    onValueChange={(value) => setFrotaFiltros({ ...frotaFiltros, situacao: value })}
+                    value={frotaFiltros.situacao || 'all'}
+                    onValueChange={(value) => setFrotaFiltros({ ...frotaFiltros, situacao: value === 'all' ? '' : value })}
                   >
                     <SelectTrigger className="w-full sm:w-[180px]">
                       <SelectValue placeholder="Situação" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todas</SelectItem>
+                      <SelectItem value="all">Todas</SelectItem>
                       <SelectItem value="Disponível">Disponível</SelectItem>
                       <SelectItem value="Indisponível">Indisponível</SelectItem>
                       <SelectItem value="Baixada">Baixada</SelectItem>
@@ -789,14 +789,14 @@ const SecaoLogistica: React.FC = () => {
                     className="max-w-xs"
                   />
                   <Select
-                    value={tgrlFiltros.estado_conservacao}
-                    onValueChange={(value) => setTGRLFiltros({ ...tgrlFiltros, estado_conservacao: value })}
+                    value={tgrlFiltros.estado_conservacao || 'all'}
+                    onValueChange={(value) => setTGRLFiltros({ ...tgrlFiltros, estado_conservacao: value === 'all' ? '' : value })}
                   >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Estado" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value="BOM">Bom</SelectItem>
                       <SelectItem value="REGULAR">Regular</SelectItem>
                       <SelectItem value="RUIM">Ruim</SelectItem>
