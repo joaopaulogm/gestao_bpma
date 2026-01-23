@@ -56,7 +56,7 @@ const FrotaTable: React.FC<FrotaTableProps> = ({ frota, onEdit, onDelete, onView
                 <TableCell className="whitespace-nowrap">{veiculo.placa || '-'}</TableCell>
                 <TableCell className="whitespace-nowrap">{veiculo.localizacao || '-'}</TableCell>
                 <TableCell className="whitespace-nowrap">
-                  {veiculo.km_hm_atual ? veiculo.km_hm_atual.toLocaleString('pt-BR') : '-'}
+                  {(veiculo.km_atual || veiculo.km_hm_atual) ? (veiculo.km_atual || veiculo.km_hm_atual)?.toLocaleString('pt-BR') : '-'}
                 </TableCell>
                 <TableCell>
                   <Badge variant={getSituacaoBadgeVariant(veiculo.situacao)} className="w-fit">

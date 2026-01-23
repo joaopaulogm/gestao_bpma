@@ -1,5 +1,7 @@
 // ==================== TIPOS ====================
 
+import { supabase } from '@/integrations/supabase/client';
+
 export interface Frota {
   id: string;
   created_at?: string;
@@ -12,20 +14,25 @@ export interface Frota {
   emprego?: string;
   marca?: string;
   modelo?: string;
-  ano_fabricacao?: string;
+  ano?: number;
   localizacao?: string;
   situacao?: string;
   motivo_baixa?: string;
-  km_hm_atual?: number;
+  km_atual?: number;
   km_proxima_troca_pneu?: number;
-  km_hm_proxima_revisao?: number;
-  data_ultima_troca_pneu?: string;
+  km_proxima_revisao?: number;
+  data_troca_pneu?: string;
   modelo_pneu?: string;
   tombamento_kit_sinalizador?: string;
   tombamento_radio?: string;
   numero_serie_radio?: string;
   responsavel?: string;
   observacoes?: string;
+  // Aliases para compatibilidade
+  ano_fabricacao?: string;
+  km_hm_atual?: number;
+  km_hm_proxima_revisao?: number;
+  data_ultima_troca_pneu?: string;
 }
 
 export interface TGRL {
@@ -34,13 +41,16 @@ export interface TGRL {
   updated_at?: string;
   tombamento: string;
   subitem?: string;
-  especificacao_bem: string;
+  descricao: string;
   chassi_serie?: string;
-  valor?: number;
+  valor_aquisicao?: number;
   estado_conservacao?: string;
   localizacao?: string;
   situacao?: string;
   observacoes?: string;
+  // Aliases para compatibilidade
+  especificacao_bem?: string;
+  valor?: number;
 }
 
 export interface FrotaHistorico {
@@ -48,173 +58,9 @@ export interface FrotaHistorico {
   frota_id: string;
   created_at?: string;
   usuario_id?: string;
-  km_hm_atual?: number;
-  situacao?: string;
-  motivo_baixa?: string;
-  localizacao?: string;
-  responsavel?: string;
-  km_proxima_troca_pneu?: number;
-  km_hm_proxima_revisao?: number;
-  data_ultima_troca_pneu?: string;
-  observacoes?: string;
-  tipo_atualizacao?: string;
-  observacao_mudanca?: string;
-}
-
-// ==================== CONFIGURAÇÃO ====================
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://oiwwptnqaunsyhpkwbrz.supabase.co';
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pd3dwdG5xYXVuc3locGt3YnJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA3NjI2MzQsImV4cCI6MjA1NjMzODYzNH0.lK5-KS8bxrtQYJsCRNOeeqBS-9Fn0MMsIdolhkeApuE';
-
-interface SupabaseResponse<T> {
-  data: T | null;
-  error: { message: string; code?: string } | null;
-}
-
-async function supabaseQuery<T>(
-  table: string, 
-  options?: {
-    select?: string;
-    filters?: Record<string, string | number>;
-    order?: { column: string; ascending?: boolean };
-    single?: boolean;
-    eq?: Record<string, string | number>;
-    ilike?: Record<string, string>;
-  }
-): Promise<SupabaseResponse<T>> {
-  try {
-    let url = `${SUPABASE_URL}/rest/v1/${table}`;
-    const params: string[] = [];
-    
-    if (options?.select) {
-      params.push(`select=${encodeURIComponent(options.select)}`);
-    } else {
-      params.push('select=*');
-    }
-    
-    if (options?.eq) {
-      for (const [key, value] of Object.entries(options.eq)) {
-        params.push(`${key}=eq.${encodeURIComponent(String(value))}`);
-      }
-    }
-    
-    if (options?.ilike) {
-      for (const [key, value] of Object.entries(options.ilike)) {
-        params.push(`${key}=ilike.${encodeURIComponent(value)}`);
-      }
-    }
-    
-    if (options?.order) {
-      params.push(`order=${options.order.column}.${options.order.ascending ? 'asc' : 'desc'}`);
-    }
-    
-    if (params.length > 0) {
-      url += '?' + params.join('&');
-    }
-    
-    const headers: Record<string, string> = {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': 'application/json',
-    };
-    
-    if (options?.single) {
-      headers['Accept'] = 'application/vnd.pgrst.object+json';
-    }
-    
-    const response = await fetch(url, { method: 'GET', headers });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { data: null, error: { message: errorText, code: String(response.status) } };
-    }
-    
-    const data = await response.json();
-    return { data: data as T, error: null };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido';
-    return { data: null, error: { message } };
-  }
-}
-
-async function supabaseInsert<T>(table: string, record: Record<string, unknown>): Promise<SupabaseResponse<T>> {
-  try {
-    const url = `${SUPABASE_URL}/rest/v1/${table}?select=*`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation',
-      },
-      body: JSON.stringify(record),
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { data: null, error: { message: errorText, code: String(response.status) } };
-    }
-    
-    const data = await response.json();
-    return { data: Array.isArray(data) ? data[0] : data, error: null };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido';
-    return { data: null, error: { message } };
-  }
-}
-
-async function supabaseUpdate<T>(table: string, id: string, updates: Record<string, unknown>): Promise<SupabaseResponse<T>> {
-  try {
-    const url = `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}&select=*`;
-    
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation',
-      },
-      body: JSON.stringify(updates),
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { data: null, error: { message: errorText, code: String(response.status) } };
-    }
-    
-    const data = await response.json();
-    return { data: Array.isArray(data) ? data[0] : data, error: null };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido';
-    return { data: null, error: { message } };
-  }
-}
-
-async function supabaseDelete(table: string, id: string): Promise<{ error: { message: string } | null }> {
-  try {
-    const url = `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`;
-    
-    const response = await fetch(url, {
-      method: 'DELETE',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-      },
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { error: { message: errorText } };
-    }
-    
-    return { error: null };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido';
-    return { error: { message } };
-  }
+  campo_alterado: string;
+  valor_anterior?: string;
+  valor_novo?: string;
 }
 
 // ==================== FROTA ====================
@@ -226,37 +72,29 @@ export const buscarFrota = async (filtros?: {
   localizacao?: string;
 }): Promise<Frota[]> => {
   try {
-    const eq: Record<string, string> = {};
-    const ilike: Record<string, string> = {};
-    
+    let query = supabase.from('dim_frota').select('*').order('prefixo', { ascending: true });
+
     if (filtros?.prefixo) {
-      ilike.prefixo = `*${filtros.prefixo}*`;
+      query = query.ilike('prefixo', `%${filtros.prefixo}%`);
     }
     if (filtros?.situacao) {
-      eq.situacao = filtros.situacao;
+      query = query.eq('situacao', filtros.situacao);
     }
     if (filtros?.tipo) {
-      eq.tipo = filtros.tipo;
+      query = query.eq('tipo', filtros.tipo);
     }
     if (filtros?.localizacao) {
-      eq.localizacao = filtros.localizacao;
+      query = query.eq('localizacao', filtros.localizacao);
     }
 
-    const { data, error } = await supabaseQuery<Frota[]>('dim_frota', {
-      order: { column: 'prefixo', ascending: true },
-      eq: Object.keys(eq).length > 0 ? eq : undefined,
-      ilike: Object.keys(ilike).length > 0 ? ilike : undefined,
-    });
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar frota:', error);
-      if (error.message?.includes('does not exist') || error.code === '42P01') {
-        return [];
-      }
       return [];
     }
 
-    return data || [];
+    return (data as Frota[]) || [];
   } catch (error) {
     console.error('Erro ao buscar frota:', error);
     return [];
@@ -265,17 +103,14 @@ export const buscarFrota = async (filtros?: {
 
 export const buscarFrotaPorId = async (id: string): Promise<Frota | null> => {
   try {
-    const { data, error } = await supabaseQuery<Frota>('dim_frota', {
-      eq: { id },
-      single: true,
-    });
+    const { data, error } = await supabase.from('dim_frota').select('*').eq('id', id).single();
 
     if (error) {
       console.error('Erro ao buscar veículo:', error);
       return null;
     }
 
-    return data;
+    return data as Frota;
   } catch (error) {
     console.error('Erro ao buscar veículo:', error);
     return null;
@@ -284,17 +119,14 @@ export const buscarFrotaPorId = async (id: string): Promise<Frota | null> => {
 
 export const buscarFrotaPorPrefixo = async (prefixo: string): Promise<Frota | null> => {
   try {
-    const { data, error } = await supabaseQuery<Frota>('dim_frota', {
-      eq: { prefixo },
-      single: true,
-    });
+    const { data, error } = await supabase.from('dim_frota').select('*').eq('prefixo', prefixo).single();
 
     if (error) {
       console.error('Erro ao buscar veículo por prefixo:', error);
       return null;
     }
 
-    return data;
+    return data as Frota;
   } catch (error) {
     console.error('Erro ao buscar veículo por prefixo:', error);
     return null;
@@ -303,14 +135,14 @@ export const buscarFrotaPorPrefixo = async (prefixo: string): Promise<Frota | nu
 
 export const criarFrota = async (frota: Omit<Frota, 'id' | 'created_at' | 'updated_at'>): Promise<Frota | null> => {
   try {
-    const { data, error } = await supabaseInsert<Frota>('dim_frota', frota as Record<string, unknown>);
+    const { data, error } = await supabase.from('dim_frota').insert(frota as any).select().single();
 
     if (error) {
       console.error('Erro ao criar veículo:', error);
       return null;
     }
 
-    return data;
+    return data as Frota;
   } catch (error) {
     console.error('Erro ao criar veículo:', error);
     return null;
@@ -322,7 +154,12 @@ export const atualizarFrota = async (
   atualizacoes: Partial<Frota>
 ): Promise<Frota | null> => {
   try {
-    const { data, error } = await supabaseUpdate<Frota>('dim_frota', id, atualizacoes as Record<string, unknown>);
+    const { data, error } = await supabase
+      .from('dim_frota')
+      .update(atualizacoes as any)
+      .eq('id', id)
+      .select()
+      .single();
 
     if (error) {
       console.error('Erro ao atualizar veículo:', error);
@@ -330,11 +167,11 @@ export const atualizarFrota = async (
     }
 
     // Registrar no histórico se houver mudanças relevantes
-    if (atualizacoes.km_hm_atual || atualizacoes.situacao || atualizacoes.localizacao) {
+    if (atualizacoes.km_atual || atualizacoes.situacao || atualizacoes.localizacao) {
       await criarFrotaHistorico(id, atualizacoes);
     }
 
-    return data;
+    return data as Frota;
   } catch (error) {
     console.error('Erro ao atualizar veículo:', error);
     return null;
@@ -343,7 +180,7 @@ export const atualizarFrota = async (
 
 export const deletarFrota = async (id: string): Promise<boolean> => {
   try {
-    const { error } = await supabaseDelete('dim_frota', id);
+    const { error } = await supabase.from('dim_frota').delete().eq('id', id);
 
     if (error) {
       console.error('Erro ao deletar veículo:', error);
@@ -362,23 +199,29 @@ export const criarFrotaHistorico = async (
   mudancas: Partial<Frota>
 ): Promise<FrotaHistorico | null> => {
   try {
+    // Determinar qual campo foi alterado
+    const campoAlterado = mudancas.km_atual ? 'km_atual' : 
+                         mudancas.situacao ? 'situacao' :
+                         mudancas.localizacao ? 'localizacao' : 'outro';
+
     const historico = {
       frota_id: frotaId,
-      ...mudancas,
-      tipo_atualizacao: mudancas.km_hm_atual ? 'km' : 
-                       mudancas.situacao ? 'situacao' :
-                       mudancas.localizacao ? 'localizacao' :
-                       'outro',
+      campo_alterado: campoAlterado,
+      valor_novo: String(mudancas[campoAlterado as keyof Frota] || ''),
     };
 
-    const { data, error } = await supabaseInsert<FrotaHistorico>('fat_frota_historico', historico);
+    const { data, error } = await supabase
+      .from('dim_frota_historico')
+      .insert(historico)
+      .select()
+      .single();
 
     if (error) {
       console.error('Erro ao criar histórico:', error);
       return null;
     }
 
-    return data;
+    return data as FrotaHistorico;
   } catch (error) {
     console.error('Erro ao criar histórico:', error);
     return null;
@@ -387,17 +230,18 @@ export const criarFrotaHistorico = async (
 
 export const buscarFrotaHistorico = async (frotaId: string): Promise<FrotaHistorico[]> => {
   try {
-    const { data, error } = await supabaseQuery<FrotaHistorico[]>('fat_frota_historico', {
-      eq: { frota_id: frotaId },
-      order: { column: 'created_at', ascending: false },
-    });
+    const { data, error } = await supabase
+      .from('dim_frota_historico')
+      .select('*')
+      .eq('frota_id', frotaId)
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Erro ao buscar histórico:', error);
       return [];
     }
 
-    return data || [];
+    return (data as FrotaHistorico[]) || [];
   } catch (error) {
     console.error('Erro ao buscar histórico:', error);
     return [];
@@ -413,37 +257,29 @@ export const buscarTGRL = async (filtros?: {
   estado_conservacao?: string;
 }): Promise<TGRL[]> => {
   try {
-    const eq: Record<string, string> = {};
-    const ilike: Record<string, string> = {};
-    
+    let query = supabase.from('dim_tgrl').select('*').order('tombamento', { ascending: true });
+
     if (filtros?.tombamento) {
-      ilike.tombamento = `*${filtros.tombamento}*`;
+      query = query.ilike('tombamento', `%${filtros.tombamento}%`);
     }
     if (filtros?.subitem) {
-      eq.subitem = filtros.subitem;
+      query = query.eq('subitem', filtros.subitem);
     }
     if (filtros?.localizacao) {
-      eq.localizacao = filtros.localizacao;
+      query = query.eq('localizacao', filtros.localizacao);
     }
     if (filtros?.estado_conservacao) {
-      eq.estado_conservacao = filtros.estado_conservacao;
+      query = query.eq('estado_conservacao', filtros.estado_conservacao);
     }
 
-    const { data, error } = await supabaseQuery<TGRL[]>('dim_tgrl', {
-      order: { column: 'tombamento', ascending: true },
-      eq: Object.keys(eq).length > 0 ? eq : undefined,
-      ilike: Object.keys(ilike).length > 0 ? ilike : undefined,
-    });
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar TGRL:', error);
-      if (error.message?.includes('does not exist') || error.code === '42P01') {
-        return [];
-      }
       return [];
     }
 
-    return data || [];
+    return (data as TGRL[]) || [];
   } catch (error) {
     console.error('Erro ao buscar TGRL:', error);
     return [];
@@ -452,17 +288,14 @@ export const buscarTGRL = async (filtros?: {
 
 export const buscarTGRLPorId = async (id: string): Promise<TGRL | null> => {
   try {
-    const { data, error } = await supabaseQuery<TGRL>('dim_tgrl', {
-      eq: { id },
-      single: true,
-    });
+    const { data, error } = await supabase.from('dim_tgrl').select('*').eq('id', id).single();
 
     if (error) {
       console.error('Erro ao buscar equipamento:', error);
       return null;
     }
 
-    return data;
+    return data as TGRL;
   } catch (error) {
     console.error('Erro ao buscar equipamento:', error);
     return null;
@@ -471,17 +304,14 @@ export const buscarTGRLPorId = async (id: string): Promise<TGRL | null> => {
 
 export const buscarTGRLPorTombamento = async (tombamento: string): Promise<TGRL | null> => {
   try {
-    const { data, error } = await supabaseQuery<TGRL>('dim_tgrl', {
-      eq: { tombamento },
-      single: true,
-    });
+    const { data, error } = await supabase.from('dim_tgrl').select('*').eq('tombamento', tombamento).single();
 
     if (error) {
       console.error('Erro ao buscar equipamento por tombamento:', error);
       return null;
     }
 
-    return data;
+    return data as TGRL;
   } catch (error) {
     console.error('Erro ao buscar equipamento por tombamento:', error);
     return null;
@@ -490,14 +320,14 @@ export const buscarTGRLPorTombamento = async (tombamento: string): Promise<TGRL 
 
 export const criarTGRL = async (tgrl: Omit<TGRL, 'id' | 'created_at' | 'updated_at'>): Promise<TGRL | null> => {
   try {
-    const { data, error } = await supabaseInsert<TGRL>('dim_tgrl', tgrl as Record<string, unknown>);
+    const { data, error } = await supabase.from('dim_tgrl').insert(tgrl as any).select().single();
 
     if (error) {
       console.error('Erro ao criar equipamento:', error);
       return null;
     }
 
-    return data;
+    return data as TGRL;
   } catch (error) {
     console.error('Erro ao criar equipamento:', error);
     return null;
@@ -509,14 +339,19 @@ export const atualizarTGRL = async (
   atualizacoes: Partial<TGRL>
 ): Promise<TGRL | null> => {
   try {
-    const { data, error } = await supabaseUpdate<TGRL>('dim_tgrl', id, atualizacoes as Record<string, unknown>);
+    const { data, error } = await supabase
+      .from('dim_tgrl')
+      .update(atualizacoes as any)
+      .eq('id', id)
+      .select()
+      .single();
 
     if (error) {
       console.error('Erro ao atualizar equipamento:', error);
       return null;
     }
 
-    return data;
+    return data as TGRL;
   } catch (error) {
     console.error('Erro ao atualizar equipamento:', error);
     return null;
@@ -525,7 +360,7 @@ export const atualizarTGRL = async (
 
 export const deletarTGRL = async (id: string): Promise<boolean> => {
   try {
-    const { error } = await supabaseDelete('dim_tgrl', id);
+    const { error } = await supabase.from('dim_tgrl').delete().eq('id', id);
 
     if (error) {
       console.error('Erro ao deletar equipamento:', error);
@@ -552,9 +387,9 @@ export interface EstatisticasFrota {
 
 export const buscarEstatisticasFrota = async (): Promise<EstatisticasFrota> => {
   try {
-    const { data, error } = await supabaseQuery<{ situacao?: string; tipo?: string; localizacao?: string }[]>('dim_frota', {
-      select: 'situacao,tipo,localizacao',
-    });
+    const { data, error } = await supabase
+      .from('dim_frota')
+      .select('situacao,tipo,localizacao');
 
     if (error) {
       console.error('Erro ao buscar estatísticas:', error);
@@ -570,9 +405,9 @@ export const buscarEstatisticasFrota = async (): Promise<EstatisticasFrota> => {
 
     const typedData = data || [];
     const total = typedData.length;
-    const disponiveis = typedData.filter(v => v.situacao === 'Disponível').length;
-    const indisponiveis = typedData.filter(v => v.situacao === 'Indisponível').length;
-    const baixadas = typedData.filter(v => v.situacao === 'Baixada').length;
+    const disponiveis = typedData.filter(v => v.situacao?.toLowerCase() === 'disponível').length;
+    const indisponiveis = typedData.filter(v => v.situacao?.toLowerCase() === 'indisponível').length;
+    const baixadas = typedData.filter(v => v.situacao?.toLowerCase() === 'baixada' || v.situacao?.toLowerCase() === 'descarga').length;
 
     const porTipo: Record<string, number> = {};
     const porLocalizacao: Record<string, number> = {};
@@ -616,9 +451,9 @@ export interface EstatisticasTGRL {
 
 export const buscarEstatisticasTGRL = async (): Promise<EstatisticasTGRL> => {
   try {
-    const { data, error } = await supabaseQuery<{ estado_conservacao?: string; localizacao?: string; valor?: number }[]>('dim_tgrl', {
-      select: 'estado_conservacao,localizacao,valor',
-    });
+    const { data, error } = await supabase
+      .from('dim_tgrl')
+      .select('estado_conservacao,localizacao,valor_aquisicao');
 
     if (error) {
       console.error('Erro ao buscar estatísticas TGRL:', error);
@@ -632,7 +467,7 @@ export const buscarEstatisticasTGRL = async (): Promise<EstatisticasTGRL> => {
 
     const typedData = data || [];
     const total = typedData.length;
-    const valorTotal = typedData.reduce((sum, item) => sum + (item.valor || 0), 0);
+    const valorTotal = typedData.reduce((sum, item) => sum + (item.valor_aquisicao || 0), 0);
 
     const porEstado: Record<string, number> = {};
     const porLocalizacao: Record<string, number> = {};

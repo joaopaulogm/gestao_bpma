@@ -215,16 +215,25 @@ const SecaoLogistica: React.FC = () => {
   // Handlers para TGRL
   const handleCriarTGRL = async () => {
     try {
-      if (!tgrlForm.tombamento || !tgrlForm.especificacao_bem) {
-        toast.error('Tombamento e especificação são obrigatórios');
+      // Aceita descricao ou especificacao_bem para compatibilidade
+      const descricao = tgrlForm.descricao || tgrlForm.especificacao_bem;
+      if (!tgrlForm.tombamento || !descricao) {
+        toast.error('Tombamento e descrição são obrigatórios');
         return;
       }
 
+      // Mapeia especificacao_bem para descricao antes de enviar
+      const dadosParaEnviar = {
+        ...tgrlForm,
+        descricao: descricao,
+      };
+      delete (dadosParaEnviar as any).especificacao_bem;
+
       if (editingId) {
-        await atualizarTGRL(editingId, tgrlForm);
+        await atualizarTGRL(editingId, dadosParaEnviar);
         toast.success('Equipamento atualizado com sucesso');
       } else {
-        await criarTGRL(tgrlForm as any);
+        await criarTGRL(dadosParaEnviar as any);
         toast.success('Equipamento cadastrado com sucesso');
       }
 
@@ -701,10 +710,10 @@ const SecaoLogistica: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-2 col-span-2">
-                          <Label>Especificação do Bem *</Label>
+                          <Label>Descrição do Bem *</Label>
                           <Textarea
-                            value={tgrlForm.especificacao_bem || ''}
-                            onChange={(e) => setTGRLForm({ ...tgrlForm, especificacao_bem: e.target.value })}
+                            value={tgrlForm.descricao || tgrlForm.especificacao_bem || ''}
+                            onChange={(e) => setTGRLForm({ ...tgrlForm, descricao: e.target.value })}
                           />
                         </div>
                         <div className="space-y-2">
