@@ -16,7 +16,8 @@ import {
   Wrench,
   Trophy,
   Menu,
-  X
+  X,
+  User
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,11 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+
+  // Determinar quais seções mostrar com base no role
+  const showSecaoOperacional = isAdmin || userRole === 'secao_operacional';
+  const showSecaoPessoas = isAdmin || userRole === 'secao_pessoas';
+  const showSecaoLogistica = isAdmin || userRole === 'secao_logistica';
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -119,24 +125,32 @@ const Sidebar = () => {
         
         <Separator className="my-4 bg-sidebar-border" />
         
-        {/* Restricted Area */}
-        <div className="mb-2">
-          <div className="flex items-center gap-3 py-2 px-3 text-primary font-semibold">
-            <Lock className="h-5 w-5 flex-shrink-0" />
-            {(isOpen || isMobile) && <span className="text-sm truncate">Atividade Operacional</span>}
-          </div>
-          
-          <ul className="space-y-1 mt-1">
-            {!isAuthenticated ? (
+        {/* Área Restrita */}
+        {!isAuthenticated ? (
+          <div className="mb-2">
+            <div className="flex items-center gap-3 py-2 px-3 text-primary font-semibold">
+              <Lock className="h-5 w-5 flex-shrink-0" />
+              {(isOpen || isMobile) && <span className="text-sm truncate">Área Restrita</span>}
+            </div>
+            <ul className="space-y-1 mt-1">
               <li>
                 <Link to="/login" className={linkClasses('/login', true)}>
                   <LogIn className="h-5 w-5 flex-shrink-0" />
                   {(isOpen || isMobile) && <span className="truncate">Fazer Login</span>}
                 </Link>
               </li>
-            ) : (
-              <>
-                {/* Operador level - all authenticated users */}
+            </ul>
+          </div>
+        ) : (
+          <>
+            {/* Atividade Operacional - TODOS os usuários autenticados */}
+            <div className="mb-2">
+              <div className="flex items-center gap-3 py-2 px-3 text-primary font-semibold">
+                <Lock className="h-5 w-5 flex-shrink-0" />
+                {(isOpen || isMobile) && <span className="text-sm truncate">Atividade Operacional</span>}
+              </div>
+              
+              <ul className="space-y-1 mt-1">
                 <li>
                   <Link to="/resgate-cadastro" className={linkClasses('/resgate-cadastro', true)}>
                     <Clipboard className="h-5 w-5 flex-shrink-0" />
@@ -171,55 +185,101 @@ const Sidebar = () => {
                     {(isOpen || isMobile) && <span className="truncate">Ranking de Ocorrências</span>}
                   </Link>
                 </li>
-                
-                {/* Seção Operacional */}
-                {hasAccess(['secao_operacional']) && (
+              </ul>
+            </div>
+
+            {/* Seção Operacional - apenas secao_operacional ou admin */}
+            {showSecaoOperacional && (
+              <div className="mb-2">
+                <div className="flex items-center gap-3 py-2 px-3 text-primary font-semibold">
+                  <Briefcase className="h-5 w-5 flex-shrink-0" />
+                  {(isOpen || isMobile) && <span className="text-sm truncate">Seção Operacional</span>}
+                </div>
+                <ul className="space-y-1 mt-1">
                   <li>
                     <Link to="/secao-operacional" className={linkClasses('/secao-operacional', true)}>
                       <Briefcase className="h-5 w-5 flex-shrink-0" />
-                      {(isOpen || isMobile) && <span className="truncate">Seção Operacional</span>}
+                      {(isOpen || isMobile) && <span className="truncate">Menu Principal</span>}
                     </Link>
                   </li>
-                )}
-                
-                {/* Seção de Pessoas */}
-                {hasAccess(['secao_pessoas']) && (
+                </ul>
+              </div>
+            )}
+            
+            {/* Seção de Pessoas - apenas secao_pessoas ou admin */}
+            {showSecaoPessoas && (
+              <div className="mb-2">
+                <div className="flex items-center gap-3 py-2 px-3 text-primary font-semibold">
+                  <Users className="h-5 w-5 flex-shrink-0" />
+                  {(isOpen || isMobile) && <span className="text-sm truncate">Seção de Pessoas</span>}
+                </div>
+                <ul className="space-y-1 mt-1">
                   <li>
                     <Link to="/secao-pessoas" className={linkClasses('/secao-pessoas', true)}>
                       <Users className="h-5 w-5 flex-shrink-0" />
-                      {(isOpen || isMobile) && <span className="truncate">Seção de Pessoas</span>}
+                      {(isOpen || isMobile) && <span className="truncate">Menu Principal</span>}
                     </Link>
                   </li>
-                )}
-                
-                {/* Seção de Logística */}
-                {hasAccess(['secao_logistica']) && (
+                </ul>
+              </div>
+            )}
+            
+            {/* Seção de Logística - apenas secao_logistica ou admin */}
+            {showSecaoLogistica && (
+              <div className="mb-2">
+                <div className="flex items-center gap-3 py-2 px-3 text-primary font-semibold">
+                  <Wrench className="h-5 w-5 flex-shrink-0" />
+                  {(isOpen || isMobile) && <span className="text-sm truncate">Seção de Logística</span>}
+                </div>
+                <ul className="space-y-1 mt-1">
                   <li>
                     <Link to="/secao-logistica" className={linkClasses('/secao-logistica', true)}>
                       <Wrench className="h-5 w-5 flex-shrink-0" />
-                      {(isOpen || isMobile) && <span className="truncate">Seção de Logística</span>}
+                      {(isOpen || isMobile) && <span className="truncate">Menu Principal</span>}
                     </Link>
                   </li>
-                )}
-                
-                {/* Admin only */}
-                {isAdmin && (
+                </ul>
+              </div>
+            )}
+            
+            {/* Administração - apenas admin */}
+            {isAdmin && (
+              <div className="mb-2">
+                <div className="flex items-center gap-3 py-2 px-3 text-primary font-semibold">
+                  <Settings className="h-5 w-5 flex-shrink-0" />
+                  {(isOpen || isMobile) && <span className="text-sm truncate">Administração</span>}
+                </div>
+                <ul className="space-y-1 mt-1">
                   <li>
                     <Link to="/gerenciar-permissoes" className={linkClasses('/gerenciar-permissoes', true)}>
                       <Settings className="h-5 w-5 flex-shrink-0" />
                       {(isOpen || isMobile) && <span className="truncate">Gerenciar Permissões</span>}
                     </Link>
                   </li>
-                )}
-              </>
+                </ul>
+              </div>
             )}
-          </ul>
-        </div>
+          </>
+        )}
       </nav>
       
       {/* User Info & Logout */}
       {isAuthenticated && (
         <div className="p-3 border-t border-sidebar-border">
+          {/* Link para Perfil */}
+          <Link 
+            to="/perfil" 
+            className={cn(
+              "flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all duration-150 mb-2",
+              isActive('/perfil') 
+                ? "bg-sidebar-active text-sidebar-active-foreground font-medium shadow-sm" 
+                : "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            )}
+          >
+            <User className="h-5 w-5 flex-shrink-0" />
+            {(isOpen || isMobile) && <span className="truncate">Meu Perfil</span>}
+          </Link>
+          
           {(isOpen || isMobile) && user?.email && (
             <div className="mb-2 px-3 text-xs text-sidebar-foreground/70 truncate">
               {user.email}

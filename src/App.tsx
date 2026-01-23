@@ -53,6 +53,7 @@ const DashboardPublico = lazy(() => import(/* webpackChunkName: "dashboard-publi
 const MonitorarRAPs = lazy(() => import(/* webpackChunkName: "monitorar-raps" */ '@/pages/MonitorarRAPs'));
 const ControleOS = lazy(() => import(/* webpackChunkName: "controle-os" */ '@/pages/ControleOS'));
 const RegistrosUnificados = lazy(() => import(/* webpackChunkName: "registros-unificados" */ '@/pages/RegistrosUnificados'));
+const Perfil = lazy(() => import(/* webpackChunkName: "perfil" */ '@/pages/Perfil'));
 
 // Legal pages
 const PoliticaPrivacidade = lazy(() => import(/* webpackChunkName: "politica-privacidade" */ '@/pages/PoliticaPrivacidade'));
@@ -100,6 +101,7 @@ function App() {
               <Route path="/material-apoio/manual-rap" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><ManualRAP /></SidebarLayout></ProtectedRoute>} />
               <Route path="/ranking" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><RankingOcorrencias /></SidebarLayout></ProtectedRoute>} />
               <Route path="/atividades-prevencao" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><AtividadesPrevencao /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/perfil" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><Perfil /></SidebarLayout></ProtectedRoute>} />
               {/* Admin only */}
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />
               <Route path="/upload-schemas" element={<ProtectedRoute requireAdmin><UploadSchemas /></ProtectedRoute>} />
