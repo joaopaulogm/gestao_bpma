@@ -73,21 +73,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTimeout(() => {
             fetchUserRole(session.user.id).then(setUserRole);
           }, 0);
-          // Limpar sessão temporária se existir
-          sessionStorage.removeItem('tempAuthUser');
+          // Limpar sessão local se existir (Google OAuth tem prioridade)
+          localStorage.removeItem('bpma_auth_user');
         } else {
-          // Verificar se há sessão temporária (login com matrícula/senha sem Google)
-          const tempAuthUser = sessionStorage.getItem('tempAuthUser');
-          if (tempAuthUser) {
+          // Verificar se há sessão local (login com matrícula/senha)
+          const localAuthUser = localStorage.getItem('bpma_auth_user');
+          if (localAuthUser) {
             try {
-              const tempUser = JSON.parse(tempAuthUser);
+              const localUser = JSON.parse(localAuthUser);
               setUser({
-                id: tempUser.id,
-                email: tempUser.email || '',
+                id: localUser.id,
+                email: localUser.email || '',
               });
-              setUserRole((tempUser.role as AppRole) || 'operador');
+              setUserRole((localUser.role as AppRole) || 'operador');
             } catch (e) {
-              console.error('Error parsing temp auth user:', e);
+              console.error('Error parsing local auth user:', e);
+              localStorage.removeItem('bpma_auth_user');
               setUser(null);
               setUserRole(null);
             }
@@ -100,6 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
+    // Verificar sessão Supabase primeiro
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser({
@@ -107,21 +109,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: session.user.email || '',
         });
         fetchUserRole(session.user.id).then(setUserRole);
-        // Limpar sessão temporária se existir
-        sessionStorage.removeItem('tempAuthUser');
+        // Limpar sessão local se existir
+        localStorage.removeItem('bpma_auth_user');
       } else {
-        // Verificar se há sessão temporária (login com matrícula/senha sem Google)
-        const tempAuthUser = sessionStorage.getItem('tempAuthUser');
-        if (tempAuthUser) {
+        // Verificar se há sessão local (login com matrícula/senha - persistente)
+        const localAuthUser = localStorage.getItem('bpma_auth_user');
+        if (localAuthUser) {
           try {
-            const tempUser = JSON.parse(tempAuthUser);
+            const localUser = JSON.parse(localAuthUser);
             setUser({
-              id: tempUser.id,
-              email: tempUser.email || '',
+              id: localUser.id,
+              email: localUser.email || '',
             });
-            setUserRole((tempUser.role as AppRole) || 'operador');
+            setUserRole((localUser.role as AppRole) || 'operador');
           } catch (e) {
-            console.error('Error parsing temp auth user:', e);
+            console.error('Error parsing local auth user:', e);
+            localStorage.removeItem('bpma_auth_user');
           }
         }
       }
@@ -156,12 +159,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      // Limpar sessão temporária (login com matrícula/senha)
-      sessionStorage.removeItem('tempAuthUser');
+      // Limpar sessão local (login com matrícula/senha)
+      localStorage.removeItem('bpma_auth_user');
       
       const { error } = await supabase.auth.signOut();
       if (error) {
-        throw error;
+        // Ignorar erro se não havia sessão Supabase
+        console.log('Supabase signOut info:', error.message);
       }
       
       // Limpar estados locais
@@ -170,9 +174,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast.success('Logout realizado com sucesso');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Logout error:', error);
-      toast.error(`Erro ao fazer logout: ${errorMessage}`);
+      // Mesmo com erro, limpar sessão local
+      localStorage.removeItem('bpma_auth_user');
+      setUser(null);
+      setUserRole(null);
+      toast.success('Logout realizado');
     }
   };
 

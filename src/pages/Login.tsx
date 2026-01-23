@@ -39,7 +39,7 @@ interface PasswordValidation {
 }
 
 // Estados do fluxo de login
-type LoginStep = 'login' | 'password-change' | 'google-link-offer';
+type LoginStep = 'login' | 'password-change' | 'google-link-offer' | 'password-recovery' | 'password-reset';
 
 // Glassmorphism Card Component - FORA do componente para evitar re-render
 const GlassCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
@@ -118,6 +118,15 @@ const Login = () => {
   const [pendingUser, setPendingUser] = useState<UserRoleData | null>(null);
   const [loginStep, setLoginStep] = useState<LoginStep>('login');
   const [activeTab, setActiveTab] = useState<'primeiro-acesso' | 'senha' | 'email'>('senha');
+  
+  // Estado para recuperação de senha
+  const [recoveryMatricula, setRecoveryMatricula] = useState('');
+  const [recoveryCpf, setRecoveryCpf] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [showResetNewPassword, setShowResetNewPassword] = useState(false);
+  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
   
   const { login: authLogin, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -382,17 +391,17 @@ const Login = () => {
 
   const handleSkipGoogleLink = () => {
     // Login realizado com sucesso - redirecionar para página inicial
-    // O usuário fez login com matrícula/senha, então está autenticado no sistema
+    // O usuário fez login com matrícula/senha - sessão PERMANENTE
     toast.success('Login realizado com sucesso!');
     
-    // Armazenar informações do usuário na sessão local para permitir navegação
+    // Armazenar informações do usuário em localStorage (sessão permanente)
     if (pendingUser) {
-      // Salvar dados do usuário para uso temporário
-      sessionStorage.setItem('tempAuthUser', JSON.stringify({
+      localStorage.setItem('bpma_auth_user', JSON.stringify({
         id: pendingUser.id,
         nome: pendingUser.nome,
         nome_guerra: pendingUser.nome_guerra,
         matricula: pendingUser.matricula,
+        email: pendingUser.email,
         role: pendingUser.role
       }));
     }
@@ -450,6 +459,111 @@ const Login = () => {
     setConfirmPassword('');
     setCpf('');
     setSenhaLogin('');
+    setRecoveryMatricula('');
+    setRecoveryCpf('');
+    setResetToken('');
+    setResetNewPassword('');
+    setResetConfirmPassword('');
+  };
+
+  // ==================== RECUPERAÇÃO DE SENHA ====================
+  const handlePasswordRecovery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const matriculaLimpa = recoveryMatricula.replace(/[^0-9Xx]/g, '').toUpperCase();
+      const cpfLimpo = recoveryCpf.replace(/\D/g, '');
+
+      if (!matriculaLimpa) {
+        toast.error('Digite sua matrícula');
+        return;
+      }
+
+      if (cpfLimpo.length !== 11) {
+        toast.error('O CPF deve ter exatamente 11 números');
+        return;
+      }
+
+      const { data, error } = await (supabase as any).rpc('solicitar_recuperacao_senha', {
+        p_matricula: matriculaLimpa,
+        p_cpf: cpfLimpo,
+      });
+
+      if (error) {
+        console.error('Erro RPC recuperação:', error);
+        toast.error('Erro ao processar recuperação');
+        return;
+      }
+
+      const resultado = Array.isArray(data) ? data[0] : data;
+
+      if (!resultado?.sucesso) {
+        toast.error(resultado?.mensagem || 'Matrícula ou CPF não encontrados');
+        return;
+      }
+
+      // Token gerado com sucesso
+      setResetToken(resultado.mensagem); // O token vem no campo mensagem
+      setPendingUser({
+        id: resultado.user_role_id,
+        nome: resultado.nome,
+        email: resultado.email,
+      } as any);
+      setLoginStep('password-reset');
+      toast.success(`Verificação concluída, ${resultado.nome}! Crie sua nova senha.`);
+    } catch (error) {
+      console.error('Password recovery error:', error);
+      toast.error('Erro ao recuperar senha');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    const resetValidation = validatePassword(resetNewPassword);
+    const isResetPasswordValid = Object.values(resetValidation).every(Boolean);
+    const resetPasswordsMatch = resetNewPassword === resetConfirmPassword && resetConfirmPassword.length > 0;
+
+    if (!isResetPasswordValid) {
+      toast.error('A senha não atende aos requisitos');
+      return;
+    }
+    if (!resetPasswordsMatch) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await (supabase as any).rpc('redefinir_senha_com_token', {
+        p_token: resetToken,
+        p_nova_senha: resetNewPassword,
+      });
+
+      if (error) {
+        console.error('Erro ao redefinir senha:', error);
+        toast.error('Erro ao redefinir senha');
+        return;
+      }
+
+      const resultado = Array.isArray(data) ? data[0] : data;
+
+      if (!resultado?.sucesso) {
+        toast.error(resultado?.mensagem || 'Token inválido ou expirado');
+        return;
+      }
+
+      toast.success('Senha redefinida com sucesso! Faça login com sua nova senha.');
+      resetToLogin();
+      setActiveTab('senha');
+    } catch (error) {
+      console.error('Password reset error:', error);
+      toast.error('Erro ao redefinir senha');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // ==================== COMPONENTES ====================
@@ -634,6 +748,160 @@ const Login = () => {
     );
   }
 
+  // ==================== TELA: RECUPERAÇÃO DE SENHA (Etapa 1 - Verificar identidade) ====================
+  if (loginStep === 'password-recovery') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6"
+           style={{ background: 'linear-gradient(135deg, #071d49 0%, #0a2a5e 50%, #071d49 100%)' }}>
+        <GlassCard className="w-full max-w-md p-6 sm:p-8">
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/30 to-orange-500/10 
+                            border-2 border-orange-500/50 flex items-center justify-center">
+              <KeyRound className="h-10 w-10 text-orange-400" />
+            </div>
+          </div>
+
+          <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">
+            Recuperar Senha
+          </h2>
+          <p className="text-white/70 text-center text-sm mb-6">
+            Informe sua matrícula e CPF para verificar sua identidade
+          </p>
+
+          <form onSubmit={handlePasswordRecovery} className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-white/80 text-sm">Matrícula</Label>
+              <GlassInput
+                icon={User}
+                type="text"
+                placeholder="Números da matrícula (e X se houver)"
+                value={recoveryMatricula}
+                onChange={(e) => setRecoveryMatricula(e.target.value.toUpperCase())}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-white/80 text-sm">CPF</Label>
+              <GlassInput
+                icon={Lock}
+                type="text"
+                placeholder="11 dígitos do CPF"
+                value={recoveryCpf}
+                onChange={(e) => setRecoveryCpf(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                maxLength={11}
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-11 bg-gradient-to-r from-[#ffcc00] to-[#e6b800] hover:from-[#e6b800] hover:to-[#cc9900] 
+                         text-[#071d49] font-semibold"
+            >
+              {isLoading ? 'Verificando...' : 'Verificar Identidade'}
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full text-white/70 hover:text-white hover:bg-white/10"
+              onClick={resetToLogin}
+            >
+              Voltar ao Login
+            </Button>
+          </form>
+        </GlassCard>
+      </div>
+    );
+  }
+
+  // ==================== TELA: REDEFINIR SENHA (Etapa 2) ====================
+  if (loginStep === 'password-reset') {
+    const resetValidation = validatePassword(resetNewPassword);
+    const isResetValid = Object.values(resetValidation).every(Boolean);
+    const resetMatch = resetNewPassword === resetConfirmPassword && resetConfirmPassword.length > 0;
+
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6"
+           style={{ background: 'linear-gradient(135deg, #071d49 0%, #0a2a5e 50%, #071d49 100%)' }}>
+        <GlassCard className="w-full max-w-md p-6 sm:p-8">
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#ffcc00]/30 to-[#ffcc00]/10 
+                            border-2 border-[#ffcc00]/50 flex items-center justify-center">
+              <KeyRound className="h-10 w-10 text-[#ffcc00]" />
+            </div>
+          </div>
+
+          <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">
+            Nova Senha
+          </h2>
+          <p className="text-white/70 text-center text-sm mb-6">
+            Crie uma nova senha segura
+          </p>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-white/80 text-sm">Nova Senha</Label>
+              <GlassInput
+                icon={Lock}
+                type="password"
+                placeholder="Digite sua nova senha"
+                value={resetNewPassword}
+                onChange={(e) => setResetNewPassword(e.target.value)}
+                maxLength={10}
+                showPassword={showResetNewPassword}
+                onTogglePassword={() => setShowResetNewPassword(!showResetNewPassword)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-white/80 text-sm">Confirmar Senha</Label>
+              <GlassInput
+                icon={Lock}
+                type="password"
+                placeholder="Confirme sua nova senha"
+                value={resetConfirmPassword}
+                onChange={(e) => setResetConfirmPassword(e.target.value)}
+                maxLength={10}
+                showPassword={showResetConfirmPassword}
+                onTogglePassword={() => setShowResetConfirmPassword(!showResetConfirmPassword)}
+              />
+            </div>
+
+            {/* Validação */}
+            <div className="bg-white/5 rounded-lg p-3 space-y-1">
+              <ValidationRule valid={resetValidation.hasValidLength} text="6-10 caracteres" />
+              <ValidationRule valid={resetValidation.hasLowercase} text="Letra minúscula" />
+              <ValidationRule valid={resetValidation.hasUppercase} text="Letra maiúscula" />
+              <ValidationRule valid={resetValidation.hasNumber} text="Número" />
+              <ValidationRule valid={resetValidation.hasSpecial} text="Caractere especial" />
+              <ValidationRule valid={resetMatch} text="Senhas coincidem" />
+            </div>
+
+            <Button
+              type="button"
+              disabled={isLoading || !isResetValid || !resetMatch}
+              onClick={handlePasswordReset}
+              className="w-full h-11 bg-gradient-to-r from-[#ffcc00] to-[#e6b800] hover:from-[#e6b800] hover:to-[#cc9900] 
+                         text-[#071d49] font-semibold disabled:opacity-50"
+            >
+              {isLoading ? 'Salvando...' : 'Redefinir Senha'}
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full text-white/70 hover:text-white hover:bg-white/10"
+              onClick={resetToLogin}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </GlassCard>
+      </div>
+    );
+  }
+
   // ==================== TELA PRINCIPAL DE LOGIN ====================
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6"
@@ -795,6 +1063,14 @@ const Login = () => {
               >
                 {isLoading ? 'Entrando...' : 'Entrar com Senha'}
               </Button>
+
+              <button
+                type="button"
+                onClick={() => setLoginStep('password-recovery')}
+                className="w-full text-sm text-white/60 hover:text-[#ffcc00] transition-colors mt-2"
+              >
+                Esqueci minha senha
+              </button>
             </form>
           </TabsContent>
 
