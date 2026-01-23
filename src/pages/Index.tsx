@@ -149,7 +149,6 @@ const AdministracaoSection = () => (
     </div>
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
       <HomeCard title="Gerenciar Permissões" icon={Settings} to="/gerenciar-permissoes" />
-      <HomeCard title="Upload Schemas" icon={Upload} to="/upload-schemas" />
     </div>
   </div>
 );
