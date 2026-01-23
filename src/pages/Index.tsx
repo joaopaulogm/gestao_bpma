@@ -88,17 +88,13 @@ const SecaoOperacionalSection = () => (
     </div>
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
       <HomeCard title="Dashboard Operacional" icon={BarChart3} to="/secao-operacional/dashboard" />
-      <HomeCard title="Registros de Resgates" icon={Clipboard} to="/secao-operacional/registros-resgates" />
-      <HomeCard title="Registros Crimes Ambientais" icon={Shield} to="/secao-operacional/registros-crimes-ambientais" />
-      <HomeCard title="Registros Crimes Comuns" icon={Gavel} to="/secao-operacional/registros-crimes-comuns" />
-      <HomeCard title="Registros Prevenção" icon={HeartHandshake} to="/secao-operacional/registros-prevencao" />
+      <HomeCard title="Registros" icon={Clipboard} to="/secao-operacional/registros" />
       <HomeCard title="Hotspots" icon={Trophy} to="/secao-operacional/hotspots" />
       <HomeCard title="Relatórios" icon={FileText} to="/secao-operacional/relatorios" />
       <HomeCard title="Fauna Cadastro" icon={Clipboard} to="/secao-operacional/fauna-cadastro" />
       <HomeCard title="Fauna Cadastrada" icon={Database} to="/secao-operacional/fauna-cadastrada" />
       <HomeCard title="Flora Cadastro" icon={Clipboard} to="/secao-operacional/flora-cadastro" />
       <HomeCard title="Flora Cadastrada" icon={Database} to="/secao-operacional/flora-cadastrada" />
-      <HomeCard title="Bens Apreendidos" icon={Shield} to="/secao-operacional/bens-apreendidos" />
       <HomeCard title="Monitorar RAPs" icon={Briefcase} to="/secao-operacional/monitorar-raps" />
     </div>
   </div>

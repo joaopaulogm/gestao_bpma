@@ -121,13 +121,14 @@ function App() {
               <Route path="/secao-operacional/dashboard-historico" element={<Navigate to="/secao-operacional/dashboard" replace />} />
               <Route path="/secao-operacional/dashboard-antigo" element={<Navigate to="/secao-operacional/dashboard" replace />} />
               <Route path="/secao-operacional/hotspots" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Hotspots /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/registros-resgates" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Registros /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/registros-crimes-ambientais" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistrosCrimes /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/registros-crimes-comuns" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistrosCrimesComuns /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/registros-prevencao" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistrosPrevencao /></SidebarLayout></ProtectedRoute>} />
-              {/* Redirecionamentos para manter compatibilidade */}
-              <Route path="/secao-operacional/registros" element={<Navigate to="/secao-operacional/registros-resgates" replace />} />
-              <Route path="/secao-operacional/registros-crimes" element={<Navigate to="/secao-operacional/registros-crimes-ambientais" replace />} />
+              {/* Página Unificada de Registros */}
+              <Route path="/secao-operacional/registros" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistrosUnificados /></SidebarLayout></ProtectedRoute>} />
+              {/* Redirecionamentos para compatibilidade */}
+              <Route path="/secao-operacional/registros-resgates" element={<Navigate to="/secao-operacional/registros" replace />} />
+              <Route path="/secao-operacional/registros-crimes-ambientais" element={<Navigate to="/secao-operacional/registros" replace />} />
+              <Route path="/secao-operacional/registros-crimes-comuns" element={<Navigate to="/secao-operacional/registros" replace />} />
+              <Route path="/secao-operacional/registros-prevencao" element={<Navigate to="/secao-operacional/registros" replace />} />
+              <Route path="/secao-operacional/registros-unificados" element={<Navigate to="/secao-operacional/registros" replace />} />
               <Route path="/secao-operacional/relatorios" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Relatorios /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/bens-apreendidos" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><BensApreendidosCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/flora-cadastro" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
