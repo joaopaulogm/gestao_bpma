@@ -8,7 +8,8 @@ import { ptBR } from 'date-fns/locale';
 import { 
   Search, Filter, Eye, Edit, Trash2, 
   Bird, TreePine, AlertTriangle, Shield, Loader2,
-  ChevronDown, FileText, Calendar
+  ChevronDown, FileText, Calendar, Plus, MoreHorizontal,
+  Check, X as XIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,10 +23,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-// Dialog components removed - not needed
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import DeleteConfirmationDialog from '@/components/fauna/DeleteConfirmationDialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 // Type-safe wrapper para queries em tabelas não tipadas
 const supabaseAny = supabase as any;
@@ -84,9 +93,10 @@ interface Button3DProps {
   variant: 'view' | 'edit' | 'delete';
   onClick: () => void;
   disabled?: boolean;
+  size?: 'sm' | 'md';
 }
 
-const Button3D: React.FC<Button3DProps> = ({ variant, onClick, disabled }) => {
+const Button3D: React.FC<Button3DProps> = ({ variant, onClick, disabled, size = 'md' }) => {
   const configs = {
     view: {
       icon: Eye,
@@ -94,7 +104,7 @@ const Button3D: React.FC<Button3DProps> = ({ variant, onClick, disabled }) => {
       shadow: 'shadow-[0_4px_0_0_#1e40af]',
       hover: 'hover:from-blue-500 hover:to-blue-700',
       active: 'active:translate-y-1 active:shadow-[0_0px_0_0_#1e40af]',
-      label: 'Visualizar',
+      label: 'Ver',
     },
     edit: {
       icon: Edit,
@@ -116,14 +126,16 @@ const Button3D: React.FC<Button3DProps> = ({ variant, onClick, disabled }) => {
 
   const config = configs[variant];
   const Icon = config.icon;
+  const sizeClasses = size === 'sm' ? 'px-2 py-1.5 text-xs gap-1' : 'px-3 py-2 text-sm gap-1.5';
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'flex items-center gap-1.5 px-3 py-2 rounded-lg text-white text-sm font-medium',
+        'flex items-center rounded-lg text-white font-medium',
         'transition-all duration-150 transform',
+        sizeClasses,
         config.bg,
         config.shadow,
         config.hover,
@@ -131,86 +143,39 @@ const Button3D: React.FC<Button3DProps> = ({ variant, onClick, disabled }) => {
         disabled && 'opacity-50 cursor-not-allowed'
       )}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className={size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
       <span className="hidden sm:inline">{config.label}</span>
     </button>
   );
 };
 
-// ==================== CARD DE REGISTRO ====================
+// ==================== STATUS BADGE ====================
 
-interface RegistroCardProps {
-  title: string;
-  subtitle?: string;
-  date: string;
-  badges?: Array<{ label: string; variant?: 'default' | 'secondary' | 'destructive' | 'outline' }>;
-  fields: Array<{ label: string; value: string | number | undefined }>;
-  onView: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-}
-
-const RegistroCard: React.FC<RegistroCardProps> = ({
-  title,
-  subtitle,
-  date,
-  badges = [],
-  fields,
-  onView,
-  onEdit,
-  onDelete,
+const StatusBadge: React.FC<{ status: string; variant?: 'success' | 'warning' | 'error' | 'default' }> = ({ 
+  status, 
+  variant = 'default' 
 }) => {
+  const variants = {
+    success: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    warning: 'bg-amber-100 text-amber-700 border-amber-200',
+    error: 'bg-red-100 text-red-700 border-red-200',
+    default: 'bg-slate-100 text-slate-700 border-slate-200',
+  };
+
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary/50 hover:border-l-primary">
-      <CardContent className="p-4">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          {/* Conteúdo principal */}
-          <div className="flex-1 space-y-3">
-            {/* Header */}
-            <div className="flex flex-wrap items-start gap-2">
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground truncate">{title}</h3>
-                {subtitle && (
-                  <p className="text-sm text-muted-foreground italic truncate">{subtitle}</p>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Calendar className="h-3.5 w-3.5" />
-                <span>{date}</span>
-              </div>
-            </div>
-            
-            {/* Badges */}
-            {badges.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {badges.map((badge, index) => (
-                  <Badge key={index} variant={badge.variant || 'secondary'} className="text-xs">
-                    {badge.label}
-                  </Badge>
-                ))}
-              </div>
-            )}
-            
-            {/* Fields */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 text-sm">
-              {fields.slice(0, 6).map((field, index) => (
-                <div key={index} className="space-y-0.5">
-                  <span className="text-xs text-muted-foreground">{field.label}</span>
-                  <p className="font-medium truncate">{field.value || '-'}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Ações */}
-          <div className="flex sm:flex-col gap-2">
-            <Button3D variant="view" onClick={onView} />
-            <Button3D variant="edit" onClick={onEdit} />
-            <Button3D variant="delete" onClick={onDelete} />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <span className={cn(
+      'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border',
+      variants[variant]
+    )}>
+      <span className={cn(
+        'w-1.5 h-1.5 rounded-full',
+        variant === 'success' && 'bg-emerald-500',
+        variant === 'warning' && 'bg-amber-500',
+        variant === 'error' && 'bg-red-500',
+        variant === 'default' && 'bg-slate-500',
+      )} />
+      {status}
+    </span>
   );
 };
 
@@ -223,6 +188,7 @@ const RegistrosUnificados: React.FC = () => {
   const [filterAno, setFilterAno] = useState('all');
   const [filterMes, setFilterMes] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   
   // Estados de dados
   const [faunaRegistros, setFaunaRegistros] = useState<RegistroFauna[]>([]);
@@ -265,6 +231,11 @@ const RegistrosUnificados: React.FC = () => {
     { value: '11', label: 'Novembro' },
     { value: '12', label: 'Dezembro' },
   ];
+
+  // Limpar seleção ao trocar de aba
+  useEffect(() => {
+    setSelectedItems(new Set());
+  }, [activeTab]);
 
   // Carregar cache de dimensões
   useEffect(() => {
@@ -501,6 +472,22 @@ const RegistrosUnificados: React.FC = () => {
     }
   };
 
+  const formatDateRelative = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) return 'Hoje';
+      if (diffDays === 1) return 'Ontem';
+      if (diffDays < 7) return `${diffDays} dias atrás`;
+      
+      return format(date, 'dd MMM, yyyy', { locale: ptBR });
+    } catch {
+      return dateStr;
+    }
+  };
+
   const handleView = (type: string, id: string) => {
     navigate(`/registro-detalhes/${id}`);
   };
@@ -589,6 +576,41 @@ const RegistrosUnificados: React.FC = () => {
     );
   };
 
+  const toggleSelectItem = (id: string) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedItems(newSelected);
+  };
+
+  const toggleSelectAll = (ids: string[]) => {
+    if (selectedItems.size === ids.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(ids));
+    }
+  };
+
+  const handleNewRecord = () => {
+    switch (activeTab) {
+      case 'fauna':
+        navigate('/resgate-cadastro');
+        break;
+      case 'crimes-ambientais':
+        navigate('/crimes-ambientais');
+        break;
+      case 'crimes-comuns':
+        navigate('/crimes-comuns');
+        break;
+      case 'prevencao':
+        navigate('/secao-operacional/atividades-prevencao');
+        break;
+    }
+  };
+
   const tabStats = useMemo(() => ({
     fauna: faunaRegistros.length,
     crimesAmbientais: crimesAmbientais.length,
@@ -596,278 +618,572 @@ const RegistrosUnificados: React.FC = () => {
     prevencao: prevencaoRegistros.length,
   }), [faunaRegistros, crimesAmbientais, crimesComuns, prevencaoRegistros]);
 
+  const getStatusVariant = (status: string | undefined): 'success' | 'warning' | 'error' | 'default' => {
+    if (!status) return 'default';
+    const lower = status.toLowerCase();
+    if (lower.includes('solto') || lower.includes('encaminhado') || lower.includes('liberado')) return 'success';
+    if (lower.includes('óbito') || lower.includes('morte') || lower.includes('apreensão')) return 'error';
+    if (lower.includes('ferido') || lower.includes('tratamento')) return 'warning';
+    return 'default';
+  };
+
+  // Renderização de tabela para cada tipo
+  const renderFaunaTable = () => {
+    const filteredData = getFilteredData(faunaRegistros, ['especie_nome', 'especie_cientifico', 'regiao']);
+    const allIds = filteredData.map(r => r.id);
+
+    if (loadingFauna) {
+      return (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
+
+    if (filteredData.length === 0) {
+      return (
+        <div className="text-center py-12 text-muted-foreground">
+          <Bird className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>Nenhum registro de fauna encontrado</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-lg border bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="w-12">
+                <Checkbox 
+                  checked={selectedItems.size === allIds.length && allIds.length > 0}
+                  onCheckedChange={() => toggleSelectAll(allIds)}
+                />
+              </TableHead>
+              <TableHead>ID</TableHead>
+              <TableHead>Espécie</TableHead>
+              <TableHead className="hidden md:table-cell">Status</TableHead>
+              <TableHead className="hidden lg:table-cell">Quantidade</TableHead>
+              <TableHead className="hidden sm:table-cell">Data</TableHead>
+              <TableHead className="hidden lg:table-cell">Última Atualização</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredData.map((registro, index) => (
+              <TableRow 
+                key={registro.id}
+                className={cn(
+                  "transition-colors",
+                  selectedItems.has(registro.id) && "bg-primary/5"
+                )}
+              >
+                <TableCell>
+                  <Checkbox 
+                    checked={selectedItems.has(registro.id)}
+                    onCheckedChange={() => toggleSelectItem(registro.id)}
+                  />
+                </TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  #{String(index + 1).padStart(5, '0')}
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <p className="font-medium">{registro.especie_nome}</p>
+                    {registro.especie_cientifico && (
+                      <p className="text-xs text-muted-foreground italic">{registro.especie_cientifico}</p>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <StatusBadge 
+                    status={registro.destinacao || 'Pendente'} 
+                    variant={getStatusVariant(registro.destinacao)}
+                  />
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  {registro.quantidade || 1}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  {formatDate(registro.data)}
+                </TableCell>
+                <TableCell className="hidden lg:table-cell text-muted-foreground text-sm">
+                  {formatDateRelative(registro.data)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button3D size="sm" variant="view" onClick={() => handleView('fauna', registro.id)} />
+                    <Button3D size="sm" variant="edit" onClick={() => handleEdit('fauna', registro.id)} />
+                    <Button3D size="sm" variant="delete" onClick={() => handleDeleteClick('fauna', registro.id)} />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
+  const renderCrimesAmbientaisTable = () => {
+    const filteredData = getFilteredData(crimesAmbientais, ['tipo_crime', 'regiao']);
+    const allIds = filteredData.map(r => r.id);
+
+    if (loadingCrimesAmbientais) {
+      return (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
+
+    if (filteredData.length === 0) {
+      return (
+        <div className="text-center py-12 text-muted-foreground">
+          <TreePine className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>Nenhum registro de crime ambiental encontrado</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-lg border bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="w-12">
+                <Checkbox 
+                  checked={selectedItems.size === allIds.length && allIds.length > 0}
+                  onCheckedChange={() => toggleSelectAll(allIds)}
+                />
+              </TableHead>
+              <TableHead>ID</TableHead>
+              <TableHead>Tipo de Crime</TableHead>
+              <TableHead className="hidden md:table-cell">Status</TableHead>
+              <TableHead className="hidden lg:table-cell">Região</TableHead>
+              <TableHead className="hidden sm:table-cell">Data</TableHead>
+              <TableHead className="hidden lg:table-cell">Última Atualização</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredData.map((registro, index) => (
+              <TableRow 
+                key={registro.id}
+                className={cn(
+                  "transition-colors",
+                  selectedItems.has(registro.id) && "bg-primary/5"
+                )}
+              >
+                <TableCell>
+                  <Checkbox 
+                    checked={selectedItems.has(registro.id)}
+                    onCheckedChange={() => toggleSelectItem(registro.id)}
+                  />
+                </TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  #{String(index + 1).padStart(5, '0')}
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <p className="font-medium">{registro.tipo_crime || 'Crime Ambiental'}</p>
+                    {registro.procedimento && (
+                      <p className="text-xs text-muted-foreground">{registro.procedimento}</p>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <StatusBadge 
+                    status={registro.ocorreu_apreensao ? 'Apreensão' : registro.desfecho || 'Registrado'} 
+                    variant={registro.ocorreu_apreensao ? 'error' : 'default'}
+                  />
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  {registro.regiao || '-'}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  {formatDate(registro.data)}
+                </TableCell>
+                <TableCell className="hidden lg:table-cell text-muted-foreground text-sm">
+                  {formatDateRelative(registro.data)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button3D size="sm" variant="view" onClick={() => handleView('crimes-ambientais', registro.id)} />
+                    <Button3D size="sm" variant="edit" onClick={() => handleEdit('crimes-ambientais', registro.id)} />
+                    <Button3D size="sm" variant="delete" onClick={() => handleDeleteClick('crimes-ambientais', registro.id)} />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
+  const renderCrimesComunsTable = () => {
+    const filteredData = getFilteredData(crimesComuns, ['natureza_crime', 'tipo_penal', 'regiao']);
+    const allIds = filteredData.map(r => r.id);
+
+    if (loadingCrimesComuns) {
+      return (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
+
+    if (filteredData.length === 0) {
+      return (
+        <div className="text-center py-12 text-muted-foreground">
+          <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>Nenhum registro de crime comum encontrado</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-lg border bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="w-12">
+                <Checkbox 
+                  checked={selectedItems.size === allIds.length && allIds.length > 0}
+                  onCheckedChange={() => toggleSelectAll(allIds)}
+                />
+              </TableHead>
+              <TableHead>ID</TableHead>
+              <TableHead>Natureza</TableHead>
+              <TableHead className="hidden md:table-cell">Status</TableHead>
+              <TableHead className="hidden lg:table-cell">Vítimas</TableHead>
+              <TableHead className="hidden sm:table-cell">Data</TableHead>
+              <TableHead className="hidden lg:table-cell">Última Atualização</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredData.map((registro, index) => (
+              <TableRow 
+                key={registro.id}
+                className={cn(
+                  "transition-colors",
+                  selectedItems.has(registro.id) && "bg-primary/5"
+                )}
+              >
+                <TableCell>
+                  <Checkbox 
+                    checked={selectedItems.has(registro.id)}
+                    onCheckedChange={() => toggleSelectItem(registro.id)}
+                  />
+                </TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  #{String(index + 1).padStart(5, '0')}
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <p className="font-medium">{registro.natureza_crime || registro.tipo_penal || 'Crime Comum'}</p>
+                    {registro.local_especifico && (
+                      <p className="text-xs text-muted-foreground">{registro.local_especifico}</p>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <StatusBadge 
+                    status={registro.desfecho || 'Registrado'} 
+                    variant={getStatusVariant(registro.desfecho)}
+                  />
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  {registro.vitimas || 0}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  {formatDate(registro.data)}
+                </TableCell>
+                <TableCell className="hidden lg:table-cell text-muted-foreground text-sm">
+                  {formatDateRelative(registro.data)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button3D size="sm" variant="view" onClick={() => handleView('crimes-comuns', registro.id)} />
+                    <Button3D size="sm" variant="edit" onClick={() => handleEdit('crimes-comuns', registro.id)} />
+                    <Button3D size="sm" variant="delete" onClick={() => handleDeleteClick('crimes-comuns', registro.id)} />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
+  const renderPrevencaoTable = () => {
+    const filteredData = getFilteredData(prevencaoRegistros, ['tipo_atividade', 'categoria', 'regiao']);
+    const allIds = filteredData.map(r => r.id);
+
+    if (loadingPrevencao) {
+      return (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
+
+    if (filteredData.length === 0) {
+      return (
+        <div className="text-center py-12 text-muted-foreground">
+          <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>Nenhum registro de prevenção encontrado</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-lg border bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="w-12">
+                <Checkbox 
+                  checked={selectedItems.size === allIds.length && allIds.length > 0}
+                  onCheckedChange={() => toggleSelectAll(allIds)}
+                />
+              </TableHead>
+              <TableHead>ID</TableHead>
+              <TableHead>Atividade</TableHead>
+              <TableHead className="hidden md:table-cell">Categoria</TableHead>
+              <TableHead className="hidden lg:table-cell">Público</TableHead>
+              <TableHead className="hidden sm:table-cell">Data</TableHead>
+              <TableHead className="hidden lg:table-cell">Última Atualização</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredData.map((registro, index) => (
+              <TableRow 
+                key={registro.id}
+                className={cn(
+                  "transition-colors",
+                  selectedItems.has(registro.id) && "bg-primary/5"
+                )}
+              >
+                <TableCell>
+                  <Checkbox 
+                    checked={selectedItems.has(registro.id)}
+                    onCheckedChange={() => toggleSelectItem(registro.id)}
+                  />
+                </TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  #{String(index + 1).padStart(5, '0')}
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <p className="font-medium">{registro.tipo_atividade || 'Atividade'}</p>
+                    {registro.regiao && (
+                      <p className="text-xs text-muted-foreground">{registro.regiao}</p>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <Badge variant="secondary">{registro.categoria || '-'}</Badge>
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  {registro.publico || 0}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  {formatDate(registro.data)}
+                </TableCell>
+                <TableCell className="hidden lg:table-cell text-muted-foreground text-sm">
+                  {formatDateRelative(registro.data)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button3D size="sm" variant="view" onClick={() => handleView('prevencao', registro.id)} />
+                    <Button3D size="sm" variant="edit" onClick={() => handleEdit('prevencao', registro.id)} />
+                    <Button3D size="sm" variant="delete" onClick={() => handleDeleteClick('prevencao', registro.id)} />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
   return (
     <Layout title="Registros" showBackButton>
-      <div className="space-y-6">
-        {/* Header com filtros */}
-        <Card>
-          <CardHeader className="pb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                Central de Registros
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="gap-2"
-                >
-                  <Filter className="h-4 w-4" />
-                  Filtros
-                  <ChevronDown className={cn('h-4 w-4 transition-transform', showFilters && 'rotate-180')} />
-                </Button>
-              </div>
-            </div>
-            
-            {/* Filtros expandíveis */}
-            {showFilters && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 pt-4 border-t">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Buscar</label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Pesquisar..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Ano</label>
-                  <Select value={filterAno} onValueChange={setFilterAno}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos os anos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os anos</SelectItem>
-                      {anos.map(ano => (
-                        <SelectItem key={ano} value={ano}>{ano}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Mês</label>
-                  <Select value={filterMes} onValueChange={setFilterMes}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos os meses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os meses</SelectItem>
-                      {meses.map(mes => (
-                        <SelectItem key={mes.value} value={mes.value}>{mes.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
-          </CardHeader>
-        </Card>
-
-        {/* Tabs */}
+      <div className="space-y-4">
+        {/* Tabs estilo moderno */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid grid-cols-2 lg:grid-cols-4 h-auto p-1 gap-1">
-            <TabsTrigger 
-              value="fauna" 
-              className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              <Bird className="h-4 w-4" />
-              <span className="hidden sm:inline">Resgate de Fauna</span>
-              <span className="sm:hidden">Fauna</span>
-              <Badge variant="secondary" className="ml-1 text-xs">{tabStats.fauna}</Badge>
-            </TabsTrigger>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* Tab triggers no estilo da imagem */}
+            <TabsList className="h-auto p-1 bg-muted/50 rounded-full inline-flex w-auto">
+              <TabsTrigger 
+                value="fauna" 
+                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all"
+              >
+                <Bird className="h-4 w-4" />
+                <span className="hidden sm:inline">Fauna</span>
+                <Badge variant="secondary" className="ml-1 text-xs rounded-full bg-background/50">
+                  {tabStats.fauna}
+                </Badge>
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="crimes-ambientais" 
+                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all"
+              >
+                <TreePine className="h-4 w-4" />
+                <span className="hidden sm:inline">Ambientais</span>
+                <Badge variant="secondary" className="ml-1 text-xs rounded-full bg-background/50">
+                  {tabStats.crimesAmbientais}
+                </Badge>
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="crimes-comuns" 
+                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all"
+              >
+                <AlertTriangle className="h-4 w-4" />
+                <span className="hidden sm:inline">Comuns</span>
+                <Badge variant="secondary" className="ml-1 text-xs rounded-full bg-background/50">
+                  {tabStats.crimesComuns}
+                </Badge>
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="prevencao" 
+                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all"
+              >
+                <Shield className="h-4 w-4" />
+                <span className="hidden sm:inline">Prevenção</span>
+                <Badge variant="secondary" className="ml-1 text-xs rounded-full bg-background/50">
+                  {tabStats.prevencao}
+                </Badge>
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Ações */}
+            <div className="flex items-center gap-2">
+              {/* Pesquisa */}
+              <div className="relative flex-1 sm:flex-none sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Filtrar registros..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 rounded-full bg-muted/50 border-0 focus-visible:ring-1"
+                />
+              </div>
+              
+              {/* Botão Novo */}
+              <Button 
+                onClick={handleNewRecord}
+                className="rounded-full bg-primary hover:bg-primary/90 shadow-md gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Novo Registro</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Filtros expandidos inline */}
+          <div className="flex flex-wrap items-center gap-3">
+            <Select value={filterAno} onValueChange={setFilterAno}>
+              <SelectTrigger className="w-32 rounded-full bg-muted/50 border-0">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {anos.map(ano => (
+                  <SelectItem key={ano} value={ano}>{ano}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             
-            <TabsTrigger 
-              value="crimes-ambientais" 
-              className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              <TreePine className="h-4 w-4" />
-              <span className="hidden sm:inline">Crimes Ambientais</span>
-              <span className="sm:hidden">Ambientais</span>
-              <Badge variant="secondary" className="ml-1 text-xs">{tabStats.crimesAmbientais}</Badge>
-            </TabsTrigger>
-            
-            <TabsTrigger 
-              value="crimes-comuns" 
-              className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              <AlertTriangle className="h-4 w-4" />
-              <span className="hidden sm:inline">Crimes Comuns</span>
-              <span className="sm:hidden">Comuns</span>
-              <Badge variant="secondary" className="ml-1 text-xs">{tabStats.crimesComuns}</Badge>
-            </TabsTrigger>
-            
-            <TabsTrigger 
-              value="prevencao" 
-              className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              <Shield className="h-4 w-4" />
-              <span className="hidden sm:inline">Prevenção</span>
-              <span className="sm:hidden">Prevenção</span>
-              <Badge variant="secondary" className="ml-1 text-xs">{tabStats.prevencao}</Badge>
-            </TabsTrigger>
-          </TabsList>
+            <Select value={filterMes} onValueChange={setFilterMes}>
+              <SelectTrigger className="w-36 rounded-full bg-muted/50 border-0">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {meses.map(mes => (
+                  <SelectItem key={mes.value} value={mes.value}>{mes.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Conteúdo das Tabs */}
-          <TabsContent value="fauna" className="space-y-4">
-            {loadingFauna ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <ScrollArea className="h-[calc(100vh-400px)]">
-                <div className="space-y-3 pr-4">
-                  {getFilteredData(faunaRegistros, ['especie_nome', 'especie_cientifico', 'regiao']).map(registro => (
-                    <RegistroCard
-                      key={registro.id}
-                      title={registro.especie_nome || 'Espécie não identificada'}
-                      subtitle={registro.especie_cientifico}
-                      date={formatDate(registro.data)}
-                      badges={[
-                        ...(registro.classe ? [{ label: registro.classe }] : []),
-                        ...(registro.atropelamento ? [{ label: 'Atropelamento', variant: 'destructive' as const }] : []),
-                      ]}
-                      fields={[
-                        { label: 'Quantidade', value: registro.quantidade },
-                        { label: 'Região', value: registro.regiao },
-                        { label: 'Destinação', value: registro.destinacao },
-                        { label: 'Estado de Saúde', value: registro.estado_saude },
-                      ]}
-                      onView={() => handleView('fauna', registro.id)}
-                      onEdit={() => handleEdit('fauna', registro.id)}
-                      onDelete={() => handleDeleteClick('fauna', registro.id)}
-                    />
-                  ))}
-                  {faunaRegistros.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Bird className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Nenhum registro de fauna encontrado</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            )}
+          <TabsContent value="fauna" className="mt-0">
+            <ScrollArea className="h-[calc(100vh-320px)]">
+              {renderFaunaTable()}
+            </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="crimes-ambientais" className="space-y-4">
-            {loadingCrimesAmbientais ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <ScrollArea className="h-[calc(100vh-400px)]">
-                <div className="space-y-3 pr-4">
-                  {getFilteredData(crimesAmbientais, ['tipo_crime', 'regiao']).map(registro => (
-                    <RegistroCard
-                      key={registro.id}
-                      title={registro.tipo_crime || 'Crime Ambiental'}
-                      date={formatDate(registro.data)}
-                      badges={[
-                        ...(registro.ocorreu_apreensao ? [{ label: 'Apreensão', variant: 'destructive' as const }] : []),
-                        ...(registro.desfecho ? [{ label: registro.desfecho }] : []),
-                      ]}
-                      fields={[
-                        { label: 'Região', value: registro.regiao },
-                        { label: 'Procedimento', value: registro.procedimento },
-                      ]}
-                      onView={() => handleView('crimes-ambientais', registro.id)}
-                      onEdit={() => handleEdit('crimes-ambientais', registro.id)}
-                      onDelete={() => handleDeleteClick('crimes-ambientais', registro.id)}
-                    />
-                  ))}
-                  {crimesAmbientais.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <TreePine className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Nenhum registro de crime ambiental encontrado</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            )}
+          <TabsContent value="crimes-ambientais" className="mt-0">
+            <ScrollArea className="h-[calc(100vh-320px)]">
+              {renderCrimesAmbientaisTable()}
+            </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="crimes-comuns" className="space-y-4">
-            {loadingCrimesComuns ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <ScrollArea className="h-[calc(100vh-400px)]">
-                <div className="space-y-3 pr-4">
-                  {getFilteredData(crimesComuns, ['natureza_crime', 'tipo_penal', 'regiao']).map(registro => (
-                    <RegistroCard
-                      key={registro.id}
-                      title={registro.natureza_crime || registro.tipo_penal || 'Crime Comum'}
-                      date={formatDate(registro.data)}
-                      badges={[
-                        ...(registro.desfecho ? [{ label: registro.desfecho }] : []),
-                      ]}
-                      fields={[
-                        { label: 'Região', value: registro.regiao },
-                        { label: 'Local', value: registro.local_especifico },
-                        { label: 'Vítimas', value: registro.vitimas },
-                        { label: 'Suspeitos', value: registro.suspeitos },
-                      ]}
-                      onView={() => handleView('crimes-comuns', registro.id)}
-                      onEdit={() => handleEdit('crimes-comuns', registro.id)}
-                      onDelete={() => handleDeleteClick('crimes-comuns', registro.id)}
-                    />
-                  ))}
-                  {crimesComuns.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Nenhum registro de crime comum encontrado</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            )}
+          <TabsContent value="crimes-comuns" className="mt-0">
+            <ScrollArea className="h-[calc(100vh-320px)]">
+              {renderCrimesComunsTable()}
+            </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="prevencao" className="space-y-4">
-            {loadingPrevencao ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <ScrollArea className="h-[calc(100vh-400px)]">
-                <div className="space-y-3 pr-4">
-                  {getFilteredData(prevencaoRegistros, ['tipo_atividade', 'categoria', 'regiao']).map(registro => (
-                    <RegistroCard
-                      key={registro.id}
-                      title={registro.tipo_atividade || 'Atividade de Prevenção'}
-                      date={formatDate(registro.data)}
-                      badges={[
-                        ...(registro.categoria ? [{ label: registro.categoria }] : []),
-                      ]}
-                      fields={[
-                        { label: 'Região', value: registro.regiao },
-                        { label: 'Público Atingido', value: registro.publico },
-                        { label: 'Observações', value: registro.observacoes?.substring(0, 50) },
-                      ]}
-                      onView={() => handleView('prevencao', registro.id)}
-                      onEdit={() => handleEdit('prevencao', registro.id)}
-                      onDelete={() => handleDeleteClick('prevencao', registro.id)}
-                    />
-                  ))}
-                  {prevencaoRegistros.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Nenhum registro de prevenção encontrado</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            )}
+          <TabsContent value="prevencao" className="mt-0">
+            <ScrollArea className="h-[calc(100vh-320px)]">
+              {renderPrevencaoTable()}
+            </ScrollArea>
           </TabsContent>
         </Tabs>
+
+        {/* Barra de ações flutuante quando há itens selecionados */}
+        {selectedItems.size > 0 && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+            <div className="flex items-center gap-3 bg-foreground text-background px-6 py-3 rounded-full shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+              <button 
+                onClick={() => setSelectedItems(new Set())}
+                className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <XIcon className="h-4 w-4" />
+              </button>
+              <span className="font-medium">{selectedItems.size} selecionados</span>
+              
+              <div className="w-px h-6 bg-white/20" />
+              
+              <button className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 rounded-full transition-colors">
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="text-sm">Mais</span>
+              </button>
+              
+              <button className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 rounded-full transition-colors">
+                <Edit className="h-4 w-4" />
+                <span className="text-sm">Editar</span>
+              </button>
+              
+              <button 
+                className="flex items-center gap-2 px-4 py-1.5 bg-red-500 hover:bg-red-600 rounded-full transition-colors"
+                onClick={() => {
+                  if (selectedItems.size === 1) {
+                    const id = Array.from(selectedItems)[0];
+                    handleDeleteClick(activeTab, id);
+                  } else {
+                    toast.error('Selecione apenas um item para excluir');
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="text-sm">Excluir</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Dialog de confirmação de exclusão */}
