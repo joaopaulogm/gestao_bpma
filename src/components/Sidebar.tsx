@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  Clipboard, 
+import type { LucideIcon } from 'lucide-react';
+import {
+  Clipboard,
   LogOut,
   Home,
   Lock,
@@ -10,6 +11,7 @@ import {
   LogIn,
   Shield,
   Users,
+  User,
   BookOpen,
   Settings,
   Briefcase,
@@ -17,45 +19,174 @@ import {
   Trophy,
   Menu,
   X,
-  User
+  ChevronDown,
+  FileText,
+  Search,
+  PawPrint,
+  Leaf,
+  TreePine,
+  List,
+  BarChart3,
+  MapPin,
+  Package,
+  FolderOpen,
+  FileCheck,
+  Calendar,
+  Palmtree,
+  Gift,
+  UsersRound,
+  Target,
+  Camera,
+  ClipboardList,
+  UserMinus,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
-import NotificationsPopover from '@/components/NotificationsPopover';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from '@/components/ui/tooltip';
+import NotificationsPopover from '@/components/NotificationsPopover';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import type { Database } from '@/integrations/supabase/types';
+
+type AppRole = Database['public']['Enums']['app_role'];
+
+interface NavItem {
+  path: string;
+  label: string;
+  icon: LucideIcon;
+  roles?: (AppRole | 'guest')[];
+  children?: NavItem[];
+}
+
+interface NavSection {
+  title: string;
+  icon?: LucideIcon;
+  items: NavItem[];
+}
+
+const NAVY = '#071d49';
+const GOLD = '#ffcc00';
+
+const navSections: NavSection[] = [
+  {
+    title: 'Início',
+    items: [{ path: '/inicio', label: 'Página Inicial', icon: Home }],
+  },
+  {
+    title: 'Atividade Operacional',
+    icon: Lock,
+    items: [
+      { path: '/login', label: 'Fazer Login', icon: LogIn, roles: ['guest'] },
+      { path: '/resgate-cadastro', label: 'Resgate de Fauna', icon: Clipboard, roles: ['operador'] },
+      { path: '/crimes-ambientais', label: 'Crimes Ambientais', icon: Shield, roles: ['operador'] },
+      { path: '/crimes-comuns', label: 'Crimes Comuns', icon: Shield, roles: ['operador'] },
+      {
+        path: '/material-apoio',
+        label: 'Material de Apoio',
+        icon: BookOpen,
+        roles: ['operador'],
+        children: [
+          { path: '/material-apoio/pop', label: 'POP', icon: FileText },
+          { path: '/material-apoio/identificar-especie', label: 'Identificar Espécie', icon: Search },
+          { path: '/material-apoio/manual-rap', label: 'Manual RAP', icon: BookOpen },
+        ],
+      },
+      { path: '/ranking', label: 'Ranking de Ocorrências', icon: Trophy, roles: ['operador'] },
+      { path: '/atividades-prevencao', label: 'Atividades Prevenção', icon: Shield, roles: ['operador'] },
+    ],
+  },
+  {
+    title: 'Seção Operacional',
+    icon: Briefcase,
+    items: [
+      {
+        path: '/secao-operacional',
+        label: 'Seção Operacional',
+        icon: Briefcase,
+        roles: ['secao_operacional'],
+        children: [
+          { path: '/secao-operacional/dashboard', label: 'Dashboard', icon: BarChart3 },
+          { path: '/secao-operacional/resgate-cadastro', label: 'Resgate', icon: Clipboard },
+          { path: '/secao-operacional/crimes-ambientais', label: 'Crimes Ambientais', icon: Shield },
+          { path: '/secao-operacional/crimes-comuns', label: 'Crimes Comuns', icon: Shield },
+          { path: '/secao-operacional/atividades-prevencao', label: 'Atividades Prevenção', icon: Shield },
+          { path: '/secao-operacional/fauna-cadastro', label: 'Fauna — Cadastrar', icon: PawPrint },
+          { path: '/secao-operacional/fauna-cadastrada', label: 'Fauna — Cadastrada', icon: List },
+          { path: '/secao-operacional/flora-cadastro', label: 'Flora — Cadastrar', icon: Leaf },
+          { path: '/secao-operacional/flora-cadastrada', label: 'Flora — Cadastrada', icon: TreePine },
+          { path: '/secao-operacional/registros-resgates', label: 'Registros — Resgates', icon: ClipboardList },
+          { path: '/secao-operacional/registros-crimes-ambientais', label: 'Registros — Crimes Amb.', icon: List },
+          { path: '/secao-operacional/registros-crimes-comuns', label: 'Registros — Crimes Comuns', icon: List },
+          { path: '/secao-operacional/registros-prevencao', label: 'Registros — Prevenção', icon: List },
+          { path: '/secao-operacional/registros-unificados', label: 'Registros Unificados', icon: FolderOpen },
+          { path: '/secao-operacional/hotspots', label: 'Hotspots', icon: MapPin },
+          { path: '/secao-operacional/bens-apreendidos', label: 'Bens Apreendidos', icon: Package },
+          { path: '/secao-operacional/relatorios', label: 'Relatórios', icon: FileText },
+          { path: '/secao-operacional/monitorar-raps', label: 'Monitorar RAPs', icon: Camera },
+          { path: '/secao-operacional/controle-os', label: 'Controle OS', icon: FileCheck },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Seção Pessoas',
+    icon: Users,
+    items: [
+      {
+        path: '/secao-pessoas',
+        label: 'Seção Pessoas',
+        icon: Users,
+        roles: ['secao_pessoas'],
+        children: [
+          { path: '/secao-pessoas/efetivo', label: 'Efetivo', icon: UsersRound },
+          { path: '/secao-pessoas/equipes', label: 'Equipes', icon: Users },
+          { path: '/secao-pessoas/escalas', label: 'Escalas', icon: Calendar },
+          { path: '/secao-pessoas/afastamentos', label: 'Afastamentos', icon: UserMinus },
+          { path: '/secao-pessoas/licencas', label: 'Licenças', icon: FileCheck },
+          { path: '/secao-pessoas/ferias', label: 'Férias', icon: Palmtree },
+          { path: '/secao-pessoas/abono', label: 'Abono', icon: Gift },
+          { path: '/secao-pessoas/campanha', label: 'Campanha', icon: Target },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Seção Logística',
+    icon: Wrench,
+    items: [
+      { path: '/secao-logistica', label: 'Seção Logística', icon: Wrench, roles: ['secao_logistica'] },
+    ],
+  },
+  {
+    title: 'Administração',
+    icon: Settings,
+    items: [
+      { path: '/gerenciar-permissoes', label: 'Gerenciar Permissões', icon: Settings, roles: ['admin'] },
+    ],
+  },
+];
 
 const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(false); // Inicia fechada
-  const [isHovered, setIsHovered] = useState(false);
-  const [isPinned, setIsPinned] = useState(false); // Permite fixar aberta
+  const [isOpen, setIsOpen] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const { isAuthenticated, isAdmin, userRole, hasAccess, user, logout } = useAuth();
+  const [openKeys, setOpenKeys] = useState<Set<string>>(() => new Set());
+  const [indicatorStyle, setIndicatorStyle] = useState({ top: 0, height: 36, opacity: 0 });
+  const navRef = useRef<HTMLElement | null>(null);
+  const { isAuthenticated, isAdmin, hasAccess, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // A sidebar está expandida se estiver fixada OU sendo hovereada
-  const isExpanded = isPinned || isHovered;
-
-  // Determinar quais seções mostrar com base no role
-  const showSecaoOperacional = isAdmin || userRole === 'secao_operacional';
-  const showSecaoPessoas = isAdmin || userRole === 'secao_pessoas';
-  const showSecaoLogistica = isAdmin || userRole === 'secao_logistica';
-
-  // Close mobile menu on route change
   useEffect(() => {
     setIsMobileOpen(false);
   }, [location.pathname]);
 
-  // Close mobile menu on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setIsMobileOpen(false);
@@ -64,8 +195,9 @@ const Sidebar = () => {
     return () => document.removeEventListener('keydown', handleEscape);
   }, []);
 
-  const togglePin = () => {
-    setIsPinned(!isPinned);
+  const toggleSidebar = () => {
+    if (isMobile) setIsMobileOpen(!isMobileOpen);
+    else setIsOpen(!isOpen);
   };
 
   const handleLogout = async () => {
@@ -73,321 +205,275 @@ const Sidebar = () => {
     navigate('/login');
   };
 
-  const isActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(path + '/');
+  const isActive = (path: string) =>
+    location.pathname === path || (path !== '/' && path !== '/inicio' && location.pathname.startsWith(path + '/'));
+
+  const showItem = (item: NavItem): boolean => {
+    if (item.roles?.includes('guest')) return !isAuthenticated;
+    if (item.roles?.includes('admin')) return isAdmin;
+    if (item.roles?.length) return hasAccess(item.roles as AppRole[]);
+    return true;
   };
 
-  // Link com tooltip para quando sidebar está colapsada
-  const SidebarLink = ({ 
-    to, 
-    icon: Icon, 
-    label, 
-    indented = false 
-  }: { 
-    to: string; 
-    icon: React.ElementType; 
-    label: string; 
-    indented?: boolean;
-  }) => {
-    const linkContent = (
-      <Link 
-        to={to} 
+  const toggleOpen = (key: string) => {
+    setOpenKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const isChildActive = (path: string) =>
+    path !== '/' && (location.pathname === path || location.pathname.startsWith(path + '/'));
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const pathname = location.pathname;
+    const links = nav.querySelectorAll<HTMLAnchorElement>('a[data-path]');
+    let best: { el: HTMLAnchorElement; path: string } | null = null;
+    for (const el of links) {
+      const path = el.getAttribute('data-path') || '';
+      const match = pathname === path || (path !== '/' && path !== '/inicio' && pathname.startsWith(path + '/'));
+      if (match && (!best || path.length > best.path.length)) best = { el, path };
+    }
+    if (!best) {
+      setIndicatorStyle((s) => ({ ...s, opacity: 0 }));
+      return;
+    }
+    const navRect = nav.getBoundingClientRect();
+    const linkRect = best.el.getBoundingClientRect();
+    const top = linkRect.top - navRect.top + nav.scrollTop;
+    const height = linkRect.height;
+    setIndicatorStyle({ top, height, opacity: 1 });
+  }, [location.pathname, openKeys, isOpen, isMobile]);
+
+  const NavLink = ({ item, isChild = false }: { item: NavItem; isChild?: boolean }) => {
+    const active = isActive(item.path);
+    const Icon = item.icon;
+    return (
+      <Link
+        to={item.path}
+        data-path={item.path}
         className={cn(
-          "flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-150 min-h-[44px]",
-          indented && isExpanded && "ml-3",
-          isActive(to) 
-            ? "bg-sidebar-active text-sidebar-active-foreground font-medium shadow-sm" 
-            : "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-[0.98]"
+          'sidebar-nav-link group relative flex items-center gap-3 py-2.5 pl-3 pr-4 min-h-[44px] rounded-r-2xl transition-all duration-300 ease-out',
+          isChild && 'pl-6',
+          active && 'sidebar-nav-link--active'
         )}
       >
-        <Icon className="h-5 w-5 flex-shrink-0" />
-        {isExpanded && <span className="truncate whitespace-nowrap">{label}</span>}
+        <span
+          className={cn(
+            'absolute inset-y-0 left-0 rounded-r-2xl transition-all duration-300 ease-out sidebar-blob',
+            active ? 'bg-[#ffcc00]/25' : 'bg-[#ffcc00]/0 group-hover:bg-[#ffcc00]/15'
+          )}
+          aria-hidden
+        />
+        <span className="relative z-10 flex items-center gap-3 min-w-0">
+          <Icon className={cn('h-5 w-5 flex-shrink-0 transition-colors duration-200', active ? 'text-[#ffcc00]' : 'text-white/90 group-hover:text-[#ffcc00]')} />
+          {(isOpen || isMobile) && <span className="truncate text-sm font-medium text-white/95 group-hover:text-white">{item.label}</span>}
+        </span>
       </Link>
     );
-
-    // Mostrar tooltip apenas quando sidebar está colapsada
-    if (!isExpanded) {
-      return (
-        <Tooltip delayDuration={100}>
-          <TooltipTrigger asChild>
-            {linkContent}
-          </TooltipTrigger>
-          <TooltipContent side="right" className="font-medium">
-            {label}
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
-    return linkContent;
   };
 
-  // Header de seção com ícone
-  const SectionHeader = ({ 
-    icon: Icon, 
-    label 
-  }: { 
-    icon: React.ElementType; 
-    label: string; 
-  }) => {
-    if (!isExpanded) {
+  const renderItem = (item: NavItem, isChild = false) => {
+    if (!showItem(item)) return null;
+
+    if (item.children?.length) {
+      const hasVisibleChild = item.children.some((c) => showItem(c));
+      if (!hasVisibleChild) return null;
+
+      const key = item.path;
+      const childActive = isChildActive(item.path);
+      const isOpenCollapse = openKeys.has(key) || childActive;
+      const showSub = isOpen || isMobile;
+
       return (
-        <Tooltip delayDuration={100}>
-          <TooltipTrigger asChild>
-            <div className="flex items-center justify-center py-2 px-3 text-primary">
-              <Icon className="h-5 w-5 flex-shrink-0" />
+        <li key={item.path} className="list-none">
+          <Collapsible open={isOpenCollapse} onOpenChange={() => toggleOpen(key)}>
+            <div className="flex items-center rounded-r-2xl">
+              <div className="flex-1 min-w-0">
+                <NavLink item={item} />
+              </div>
+              {showSub && (
+                <CollapsibleTrigger asChild>
+                  <button
+                    className={cn(
+                      'p-2 mr-1 rounded-lg text-white/70 hover:text-[#ffcc00] hover:bg-white/5 transition-all duration-200 flex-shrink-0',
+                      isOpenCollapse && 'text-[#ffcc00]'
+                    )}
+                    aria-label={isOpenCollapse ? 'Recolher' : 'Expandir'}
+                  >
+                    <ChevronDown className={cn('h-4 w-4 transition-transform duration-200', isOpenCollapse && 'rotate-180')} />
+                  </button>
+                </CollapsibleTrigger>
+              )}
             </div>
-          </TooltipTrigger>
-          <TooltipContent side="right" className="font-semibold">
-            {label}
-          </TooltipContent>
-        </Tooltip>
+            {showSub && (
+              <CollapsibleContent>
+                <ul className="mt-0.5 space-y-0.5 pl-0 overflow-hidden animate-in slide-in-from-top-1 duration-200">
+                  {item.children.filter(showItem).map((ch) => (
+                    <li key={ch.path} className="list-none">
+                      <NavLink item={ch} isChild />
+                    </li>
+                  ))}
+                </ul>
+              </CollapsibleContent>
+            )}
+          </Collapsible>
+        </li>
       );
     }
 
     return (
-      <div className="flex items-center gap-3 py-2 px-3 text-primary font-semibold">
-        <Icon className="h-5 w-5 flex-shrink-0" />
-        <span className="text-sm truncate whitespace-nowrap">{label}</span>
-      </div>
+      <li key={item.path} className="list-none">
+        <NavLink item={item} isChild={isChild} />
+      </li>
     );
   };
 
   const sidebarContent = (
     <TooltipProvider>
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 h-16">
-        {isExpanded && (
-          <div className="flex-1 text-center overflow-hidden">
-            <span className="font-bold text-lg whitespace-nowrap">Gestão - BPMA</span>
-          </div>
-        )}
-        {!isMobile && (
-          <button 
-            onClick={togglePin} 
-            className={cn(
-              "p-2 rounded-lg hover:bg-sidebar-accent transition-colors flex-shrink-0",
-              !isExpanded && "mx-auto"
-            )}
-            aria-label={isPinned ? "Desafixar menu" : "Fixar menu"}
-          >
-            {isPinned ? (
-              <ChevronLeft className="h-5 w-5" />
-            ) : (
-              <ChevronRight className="h-5 w-5" />
-            )}
-          </button>
-        )}
-        {isMobile && (
-          <button 
-            onClick={() => setIsMobileOpen(false)} 
-            className="p-2 rounded-lg hover:bg-sidebar-accent transition-colors flex-shrink-0"
-            aria-label="Fechar menu"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        )}
-      </div>
-      
-      <Separator className="bg-sidebar-border" />
-      
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-3">
-        <ul className="space-y-1">
-          <li>
-            <SidebarLink to="/inicio" icon={Home} label="Página Inicial" />
-          </li>
-        </ul>
-        
-        <Separator className="my-4 bg-sidebar-border" />
-        
-        {/* Área Restrita */}
-        {!isAuthenticated ? (
-          <div className="mb-2">
-            <SectionHeader icon={Lock} label="Área Restrita" />
-            <ul className="space-y-1 mt-1">
-              <li>
-                <SidebarLink to="/login" icon={LogIn} label="Fazer Login" indented />
-              </li>
-            </ul>
-          </div>
-        ) : (
-          <>
-            {/* Atividade Operacional - TODOS os usuários autenticados */}
-            <div className="mb-2">
-              <SectionHeader icon={Lock} label="Atividade Operacional" />
-              
-              <ul className="space-y-1 mt-1">
-                <li>
-                  <SidebarLink to="/resgate-cadastro" icon={Clipboard} label="Resgate de Fauna" indented />
-                </li>
-                <li>
-                  <SidebarLink to="/crimes-ambientais" icon={Shield} label="Crimes Ambientais" indented />
-                </li>
-                <li>
-                  <SidebarLink to="/crimes-comuns" icon={Shield} label="Crimes Comuns" indented />
-                </li>
-                <li>
-                  <SidebarLink to="/material-apoio" icon={BookOpen} label="Material de Apoio" indented />
-                </li>
-                <li>
-                  <SidebarLink to="/ranking" icon={Trophy} label="Ranking de Ocorrências" indented />
-                </li>
-              </ul>
+      <div className="relative flex flex-col h-full pl-1">
+        <div className="flex items-center justify-between p-4 flex-shrink-0">
+          {(isOpen || isMobile) && (
+            <div className="flex-1 text-center">
+              <span className="font-bold text-lg text-white">Gestão - BPMA</span>
             </div>
+          )}
+          {!isMobile && (
+            <button
+              onClick={toggleSidebar}
+              className="p-2 rounded-xl text-white/80 hover:text-[#ffcc00] hover:bg-white/10 transition-all duration-200 flex-shrink-0"
+              aria-label={isOpen ? 'Colapsar menu' : 'Expandir menu'}
+            >
+              {isOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+            </button>
+          )}
+          {isMobile && (
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="p-2 rounded-xl text-white/80 hover:text-[#ffcc00] hover:bg-white/10 transition-all"
+              aria-label="Fechar menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
 
-            {/* Seção Operacional - apenas secao_operacional ou admin */}
-            {showSecaoOperacional && (
-              <div className="mb-2">
-                <SectionHeader icon={Briefcase} label="Seção Operacional" />
-                <ul className="space-y-1 mt-1">
-                  <li>
-                    <SidebarLink to="/secao-operacional" icon={Briefcase} label="Menu Principal" indented />
-                  </li>
-                </ul>
-              </div>
+        <nav ref={navRef} className="flex-1 overflow-y-auto py-3 pr-2 relative sidebar-nav">
+          <span
+            className="absolute left-0 w-1 rounded-r-md bg-[#ffcc00] z-20 transition-[top,height,opacity] duration-300 ease-out"
+            style={{ top: indicatorStyle.top, height: indicatorStyle.height, opacity: indicatorStyle.opacity }}
+            aria-hidden
+          />
+          <div className="pl-2 space-y-4">
+            {navSections.map((sec) => {
+              const visibleItems = sec.items.filter(showItem);
+              if (!visibleItems.length) return null;
+              return (
+                <div key={sec.title} className="space-y-1">
+                  {(isOpen || isMobile) && (
+                    <div className="flex items-center gap-2 py-1.5 px-3">
+                      {sec.icon && <sec.icon className="h-4 w-4 text-[#ffcc00]/90 flex-shrink-0" />}
+                      <span className="text-xs font-semibold uppercase tracking-wider text-white/70">{sec.title}</span>
+                    </div>
+                  )}
+                  <ul className="space-y-0.5">
+                    {visibleItems.map((item) => renderItem(item))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </nav>
+
+        {isAuthenticated && (
+          <div className="p-3 border-t border-white/10 flex-shrink-0">
+            <div className={cn('flex items-center gap-2 mb-2', !(isOpen || isMobile) && 'justify-center')}>
+              <NotificationsPopover />
+              {(isOpen || isMobile) ? (
+                <Link
+                  to="/perfil"
+                  className={cn(
+                    'flex-1 flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all',
+                    isActive('/perfil') ? 'bg-[#ffcc00]/20 text-[#ffcc00]' : 'text-white/90 hover:bg-white/10 hover:text-white'
+                  )}
+                >
+                  <User className="h-5 w-5 flex-shrink-0" />
+                  <span className="truncate">Meu Perfil</span>
+                </Link>
+              ) : (
+                <Tooltip delayDuration={100}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      to="/perfil"
+                      className={cn(
+                        'flex items-center justify-center p-2.5 rounded-xl transition-all',
+                        isActive('/perfil') ? 'bg-[#ffcc00]/20 text-[#ffcc00]' : 'text-white/90 hover:bg-white/10'
+                      )}
+                    >
+                      <User className="h-5 w-5" />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">Meu Perfil</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+            {(isOpen || isMobile) && user?.email && (
+              <div className="mb-2 px-3 text-xs text-white/60 truncate">{user.email}</div>
             )}
-            
-            {/* Seção de Pessoas - apenas secao_pessoas ou admin */}
-            {showSecaoPessoas && (
-              <div className="mb-2">
-                <SectionHeader icon={Users} label="Seção de Pessoas" />
-                <ul className="space-y-1 mt-1">
-                  <li>
-                    <SidebarLink to="/secao-pessoas" icon={Users} label="Menu Principal" indented />
-                  </li>
-                </ul>
-              </div>
-            )}
-            
-            {/* Seção de Logística - apenas secao_logistica ou admin */}
-            {showSecaoLogistica && (
-              <div className="mb-2">
-                <SectionHeader icon={Wrench} label="Seção de Logística" />
-                <ul className="space-y-1 mt-1">
-                  <li>
-                    <SidebarLink to="/secao-logistica" icon={Wrench} label="Menu Principal" indented />
-                  </li>
-                </ul>
-              </div>
-            )}
-            
-            {/* Administração - apenas admin */}
-            {isAdmin && (
-              <div className="mb-2">
-                <SectionHeader icon={Settings} label="Administração" />
-                <ul className="space-y-1 mt-1">
-                  <li>
-                    <SidebarLink to="/gerenciar-permissoes" icon={Settings} label="Gerenciar Permissões" indented />
-                  </li>
-                </ul>
-              </div>
-            )}
-          </>
-        )}
-      </nav>
-      
-      {/* User Info & Logout */}
-      {isAuthenticated && (
-        <div className="p-3 border-t border-sidebar-border">
-          {/* Notificações e Perfil */}
-          <div className={cn("flex items-center gap-2 mb-2", !isExpanded && "flex-col")}>
-            <NotificationsPopover />
-            {isExpanded ? (
-              <Link 
-                to="/perfil" 
-                className={cn(
-                  "flex-1 flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-150",
-                  isActive('/perfil') 
-                    ? "bg-sidebar-active text-sidebar-active-foreground font-medium shadow-sm" 
-                    : "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                )}
+            {(isOpen || isMobile) ? (
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-white/90 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                onClick={handleLogout}
               >
-                <User className="h-5 w-5 flex-shrink-0" />
-                <span className="truncate">Meu Perfil</span>
-              </Link>
+                <LogOut className="h-5 w-5 mr-2" />
+                Sair
+              </Button>
             ) : (
               <Tooltip delayDuration={100}>
                 <TooltipTrigger asChild>
-                  <Link 
-                    to="/perfil" 
-                    className={cn(
-                      "flex items-center justify-center p-2.5 rounded-xl transition-all duration-150",
-                      isActive('/perfil') 
-                        ? "bg-sidebar-active text-sidebar-active-foreground font-medium shadow-sm" 
-                        : "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                    )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-full text-white/90 hover:text-red-300 hover:bg-red-500/10"
+                    onClick={handleLogout}
                   >
-                    <User className="h-5 w-5 flex-shrink-0" />
-                  </Link>
+                    <LogOut className="h-5 w-5" />
+                  </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right">Meu Perfil</TooltipContent>
+                <TooltipContent side="right">Sair</TooltipContent>
               </Tooltip>
             )}
           </div>
-          
-          {isExpanded && user?.email && (
-            <div className="mb-2 px-3 text-xs text-sidebar-foreground/70 truncate">
-              {user.email}
-            </div>
-          )}
-          
-          {isExpanded ? (
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-5 w-5 mr-2" />
-              Sair
-            </Button>
-          ) : (
-            <Tooltip delayDuration={100}>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Sair</TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </TooltipProvider>
   );
 
-  // Mobile: render hamburger button and overlay drawer
   if (isMobile) {
     return (
       <>
-        {/* Mobile hamburger button */}
-        <button 
-          onClick={() => setIsMobileOpen(true)} 
-          className="fixed top-4 left-4 z-40 p-2 rounded-lg bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors"
+        <button
+          onClick={() => setIsMobileOpen(true)}
+          className="fixed top-4 left-4 z-40 p-2 rounded-xl shadow-lg transition-all hover:scale-105"
+          style={{ background: NAVY, color: GOLD }}
           aria-label="Abrir menu"
         >
           <Menu className="h-6 w-6" />
         </button>
-        
-        {/* Overlay */}
         {isMobileOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 z-40 animate-fade-in"
-            onClick={() => setIsMobileOpen(false)}
-          />
+          <div className="fixed inset-0 bg-black/50 z-40 animate-fade-in" onClick={() => setIsMobileOpen(false)} />
         )}
-        
-        {/* Mobile drawer */}
-        <aside 
+        <aside
           className={cn(
-            "fixed top-0 left-0 h-screen bg-sidebar text-sidebar-foreground z-50 flex flex-col border-r border-sidebar-border transition-transform duration-200 ease-out w-72 shadow-lg",
-            isMobileOpen ? "translate-x-0" : "-translate-x-full"
+            'fixed top-0 left-0 h-screen z-50 flex flex-col w-72 shadow-2xl transition-transform duration-300 ease-out rounded-r-2xl overflow-hidden',
+            isMobileOpen ? 'translate-x-0' : '-translate-x-full'
           )}
+          style={{ background: NAVY }}
         >
           {sidebarContent}
         </aside>
@@ -395,15 +481,13 @@ const Sidebar = () => {
     );
   }
 
-  // Desktop: sidebar com hover-to-expand
   return (
-    <aside 
+    <aside
       className={cn(
-        "h-screen bg-sidebar text-sidebar-foreground transition-all duration-300 ease-out flex flex-col border-r border-sidebar-border shadow-sm",
-        isExpanded ? "w-64" : "w-[68px]"
+        'h-screen flex flex-col transition-[width] duration-300 ease-out overflow-hidden rounded-r-2xl relative',
+        isOpen ? 'w-72' : 'w-[4.5rem]'
       )}
-      onMouseEnter={() => !isPinned && setIsHovered(true)}
-      onMouseLeave={() => !isPinned && setIsHovered(false)}
+      style={{ background: NAVY }}
     >
       {sidebarContent}
     </aside>

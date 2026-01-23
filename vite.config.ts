@@ -4,6 +4,9 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
+  optimizeDeps: {
+    include: ['@googlemaps/js-api-loader'],
+  },
   server: {
     host: "::",
     port: 8080,
@@ -33,6 +36,8 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // Garante resolução do ESM (evita falha com "exports" em alguns ambientes)
+      "@googlemaps/js-api-loader": path.resolve(__dirname, "node_modules/@googlemaps/js-api-loader/dist/index.js"),
     },
   },
 }));

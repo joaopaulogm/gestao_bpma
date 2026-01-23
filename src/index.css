@@ -2,8 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Apple HIG - SF Pro Font (fallback to Inter) */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Apple HIG - SF Pro Font (fallback to Inter): carregado via <link> em index.html */
 
 @layer base {
   :root {
@@ -290,6 +289,21 @@
   }
 }
 
+/* Sidebar - estilo blob, cores navy #071d49 e gold #ffcc00 */
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-nav::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 204, 0, 0.35);
+  border-radius: 3px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 204, 0, 0.55);
+}
 /* Apple HIG - Custom Animations */
 /* Smooth, natural animations with proper easing */
 
