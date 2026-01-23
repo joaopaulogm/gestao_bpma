@@ -438,23 +438,34 @@ export type Database = {
           cor: string | null
           created_at: string | null
           data_aquisicao: string | null
+          data_troca_pneu: string | null
+          emprego: string | null
           foto_url: string | null
           id: string
           ipva_ano: number | null
           km_atual: number | null
+          km_proxima_revisao: number | null
+          km_proxima_troca_pneu: number | null
           licenciamento_ano: number | null
           localizacao: string | null
           marca: string | null
           modelo: string | null
+          modelo_pneu: string | null
+          motivo_baixa: string | null
           numero_motor: string | null
+          numero_serie_radio: string | null
           observacoes: string | null
           placa: string | null
           prefixo: string
           renavam: string | null
+          responsavel: string | null
           seguro_vigencia: string | null
           situacao: string
           tipo: string
           tipo_combustivel: string | null
+          tombamento: string | null
+          tombamento_kit_sinalizador: string | null
+          tombamento_radio: string | null
           ultima_manutencao: string | null
           updated_at: string | null
           valor_aquisicao: number | null
@@ -466,23 +477,34 @@ export type Database = {
           cor?: string | null
           created_at?: string | null
           data_aquisicao?: string | null
+          data_troca_pneu?: string | null
+          emprego?: string | null
           foto_url?: string | null
           id?: string
           ipva_ano?: number | null
           km_atual?: number | null
+          km_proxima_revisao?: number | null
+          km_proxima_troca_pneu?: number | null
           licenciamento_ano?: number | null
           localizacao?: string | null
           marca?: string | null
           modelo?: string | null
+          modelo_pneu?: string | null
+          motivo_baixa?: string | null
           numero_motor?: string | null
+          numero_serie_radio?: string | null
           observacoes?: string | null
           placa?: string | null
           prefixo: string
           renavam?: string | null
+          responsavel?: string | null
           seguro_vigencia?: string | null
           situacao?: string
           tipo?: string
           tipo_combustivel?: string | null
+          tombamento?: string | null
+          tombamento_kit_sinalizador?: string | null
+          tombamento_radio?: string | null
           ultima_manutencao?: string | null
           updated_at?: string | null
           valor_aquisicao?: number | null
@@ -494,23 +516,34 @@ export type Database = {
           cor?: string | null
           created_at?: string | null
           data_aquisicao?: string | null
+          data_troca_pneu?: string | null
+          emprego?: string | null
           foto_url?: string | null
           id?: string
           ipva_ano?: number | null
           km_atual?: number | null
+          km_proxima_revisao?: number | null
+          km_proxima_troca_pneu?: number | null
           licenciamento_ano?: number | null
           localizacao?: string | null
           marca?: string | null
           modelo?: string | null
+          modelo_pneu?: string | null
+          motivo_baixa?: string | null
           numero_motor?: string | null
+          numero_serie_radio?: string | null
           observacoes?: string | null
           placa?: string | null
           prefixo?: string
           renavam?: string | null
+          responsavel?: string | null
           seguro_vigencia?: string | null
           situacao?: string
           tipo?: string
           tipo_combustivel?: string | null
+          tombamento?: string | null
+          tombamento_kit_sinalizador?: string | null
+          tombamento_radio?: string | null
           ultima_manutencao?: string | null
           updated_at?: string | null
           valor_aquisicao?: number | null
@@ -664,6 +697,7 @@ export type Database = {
         Row: {
           ativo: boolean | null
           categoria: string | null
+          chassi_serie: string | null
           created_at: string | null
           data_aquisicao: string | null
           descricao: string
@@ -676,9 +710,10 @@ export type Database = {
           marca: string | null
           modelo: string | null
           nota_fiscal: string | null
-          numero_serie: string | null
           observacoes: string | null
           responsavel: string | null
+          situacao: string | null
+          subitem: string | null
           tipo: string
           tombamento: string
           updated_at: string | null
@@ -688,6 +723,7 @@ export type Database = {
         Insert: {
           ativo?: boolean | null
           categoria?: string | null
+          chassi_serie?: string | null
           created_at?: string | null
           data_aquisicao?: string | null
           descricao: string
@@ -700,9 +736,10 @@ export type Database = {
           marca?: string | null
           modelo?: string | null
           nota_fiscal?: string | null
-          numero_serie?: string | null
           observacoes?: string | null
           responsavel?: string | null
+          situacao?: string | null
+          subitem?: string | null
           tipo?: string
           tombamento: string
           updated_at?: string | null
@@ -712,6 +749,7 @@ export type Database = {
         Update: {
           ativo?: boolean | null
           categoria?: string | null
+          chassi_serie?: string | null
           created_at?: string | null
           data_aquisicao?: string | null
           descricao?: string
@@ -724,9 +762,10 @@ export type Database = {
           marca?: string | null
           modelo?: string | null
           nota_fiscal?: string | null
-          numero_serie?: string | null
           observacoes?: string | null
           responsavel?: string | null
+          situacao?: string | null
+          subitem?: string | null
           tipo?: string
           tombamento?: string
           updated_at?: string | null
