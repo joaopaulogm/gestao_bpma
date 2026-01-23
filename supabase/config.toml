@@ -35,3 +35,9 @@ verify_jwt = false
 
 [functions.refresh-dashboard-views]
 verify_jwt = false
+
+[functions.process-os-folder]
+verify_jwt = false
+
+[functions.admin-pessoas]
+verify_jwt = true

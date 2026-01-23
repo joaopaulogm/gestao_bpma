@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PlusCircle, List, BarChart, MapPin, Table, FileText, Package, Leaf, FolderSearch, Bird, AlertTriangle, Shield, TreePine, ExternalLink, Copy, Check } from 'lucide-react';
+import { PlusCircle, List, BarChart, MapPin, Table, FileText, Package, Leaf, FolderSearch, Bird, AlertTriangle, Shield, TreePine, ExternalLink, Copy, Check, ClipboardList } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Briefcase } from 'lucide-react';
@@ -25,6 +25,7 @@ const menuItems = [
   { title: 'Fauna Cadastrada', description: 'Listar espécies de fauna', icon: List, path: '/secao-operacional/fauna-cadastrada' },
   { title: 'Cadastrar Flora', description: 'Registrar espécies de flora', icon: Leaf, path: '/secao-operacional/flora-cadastro' },
   { title: 'Flora Cadastrada', description: 'Listar espécies de flora', icon: List, path: '/secao-operacional/flora-cadastrada' },
+  { title: 'Controle de OS', description: 'Gerenciar Ordens de Serviço', icon: ClipboardList, path: '/secao-operacional/controle-os' },
   { title: 'Monitorar RAPs', description: 'Processar RAPs automaticamente', icon: FolderSearch, path: '/secao-operacional/monitorar-raps' },
 ];
 
