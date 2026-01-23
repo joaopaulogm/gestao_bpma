@@ -586,13 +586,17 @@ serve(async (req) => {
         console.error(`[process-os-folder] Error processing ${file.name}:`, error);
         
         // Log error in os_processadas
-        await supabase.from('os_processadas').insert({
-          drive_file_id: file.id,
-          drive_file_name: file.name,
-          drive_folder_path: folderPath,
-          status: 'error',
-          error_message: error instanceof Error ? error.message : 'Unknown error'
-        }).catch(e => console.error('Failed to log error:', e));
+        try {
+          await supabase.from('os_processadas').insert({
+            drive_file_id: file.id,
+            drive_file_name: file.name,
+            drive_folder_path: folderPath,
+            status: 'error',
+            error_message: error instanceof Error ? error.message : 'Unknown error'
+          });
+        } catch (logError) {
+          console.error('Failed to log error:', logError);
+        }
         
         results.push({ 
           file: file.name, 
