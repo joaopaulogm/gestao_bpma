@@ -41,6 +41,51 @@ interface PasswordValidation {
 // Estados do fluxo de login
 type LoginStep = 'login' | 'password-change' | 'google-link-offer';
 
+// Glassmorphism Card Component - FORA do componente para evitar re-render
+const GlassCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+  <div className={`
+    relative backdrop-blur-xl bg-white/10 
+    border border-white/20 rounded-2xl 
+    shadow-[0_8px_32px_rgba(0,0,0,0.3)]
+    ${className}
+  `}>
+    {children}
+  </div>
+);
+
+// Glass Input Component - FORA do componente para evitar re-render e perda de foco
+interface GlassInputProps extends React.ComponentProps<typeof Input> {
+  icon: React.ElementType;
+  showPassword?: boolean;
+  onTogglePassword?: () => void;
+}
+
+const GlassInput = ({ 
+  icon: Icon, 
+  showPassword, 
+  onTogglePassword,
+  ...props 
+}: GlassInputProps) => (
+  <div className="relative">
+    <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#ffcc00] z-10" />
+    <Input
+      {...props}
+      type={props.type === 'password' && showPassword ? 'text' : props.type}
+      className={`pl-10 ${onTogglePassword ? 'pr-10' : ''} bg-white/10 border-white/20 text-white placeholder:text-white/50 
+                 focus:border-[#ffcc00]/50 focus:ring-[#ffcc00]/20 rounded-lg h-11`}
+    />
+    {onTogglePassword && (
+      <button
+        type="button"
+        onClick={onTogglePassword}
+        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-[#ffcc00] transition-colors z-10"
+      >
+        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    )}
+  </div>
+);
+
 const Login = () => {
   // Estado para login
   const [matricula, setMatricula] = useState('');
@@ -400,49 +445,6 @@ const Login = () => {
         <XCircle className="h-3 w-3 text-white/40" />
       )}
       <span className={valid ? 'text-green-400' : 'text-white/60'}>{text}</span>
-    </div>
-  );
-
-  // Glassmorphism Card Component
-  const GlassCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-    <div className={`
-      relative backdrop-blur-xl bg-white/10 
-      border border-white/20 rounded-2xl 
-      shadow-[0_8px_32px_rgba(0,0,0,0.3)]
-      ${className}
-    `}>
-      {children}
-    </div>
-  );
-
-  // Glass Input Component with password toggle
-  const GlassInput = ({ 
-    icon: Icon, 
-    showPassword, 
-    onTogglePassword,
-    ...props 
-  }: { 
-    icon: React.ElementType;
-    showPassword?: boolean;
-    onTogglePassword?: () => void;
-  } & React.ComponentProps<typeof Input>) => (
-    <div className="relative">
-      <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#ffcc00] z-10" />
-      <Input
-        {...props}
-        type={props.type === 'password' && showPassword ? 'text' : props.type}
-        className={`pl-10 ${onTogglePassword ? 'pr-10' : ''} bg-white/10 border-white/20 text-white placeholder:text-white/50 
-                   focus:border-[#ffcc00]/50 focus:ring-[#ffcc00]/20 rounded-lg h-11`}
-      />
-      {onTogglePassword && (
-        <button
-          type="button"
-          onClick={onTogglePassword}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-[#ffcc00] transition-colors z-10"
-        >
-          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        </button>
-      )}
     </div>
   );
 
