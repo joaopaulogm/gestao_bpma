@@ -49,19 +49,19 @@ const HomeCard = ({ title, icon: Icon, to }: HomeCardProps) => {
   return (
     <Link 
       to={to}
-      className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 p-1 rounded-xl 
+      className="flex flex-col items-center justify-center gap-0.5 p-0.5 rounded-xl 
         bg-primary border border-primary/50
         shadow-[0_4px_0_0_#041230,0_6px_10px_rgba(0,0,0,0.3)]
         hover:shadow-[0_2px_0_0_#041230,0_4px_8px_rgba(0,0,0,0.2),0_0_15px_rgba(255,204,0,0.4)]
         hover:translate-y-[2px]
         active:shadow-[0_0px_0_0_#041230,0_2px_4px_rgba(0,0,0,0.1)]
         active:translate-y-[4px]
-        transition-all duration-150 aspect-square min-h-[50px] sm:min-h-[65px]"
+        transition-all duration-150 aspect-square min-h-[40px] sm:min-h-[52px]"
     >
-      <div className="p-0.5 sm:p-1 rounded-md bg-accent/10 shrink-0">
-        <Icon className="h-5 w-5 sm:h-7 sm:w-7 text-accent" />
+      <div className="p-0.5 rounded-md bg-accent/10 shrink-0">
+        <Icon className="h-4 w-4 sm:h-6 sm:w-6 text-accent" />
       </div>
-      <span className="text-[8px] sm:text-[10px] font-semibold text-center text-primary-foreground leading-tight break-words hyphens-auto px-0.5 line-clamp-2">{title}</span>
+      <span className="text-[7px] sm:text-[9px] font-semibold text-center text-primary-foreground leading-tight break-words hyphens-auto px-0.5 line-clamp-2">{title}</span>
     </Link>
   );
 };
