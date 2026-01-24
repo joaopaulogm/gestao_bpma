@@ -8,6 +8,7 @@ import SidebarLayout from '@/components/SidebarLayout';
 import CookieConsentBanner from '@/components/CookieConsentBanner';
 
 // Lazy load all pages
+const LandingPage = lazy(() => import(/* webpackChunkName: "landing" */ '@/pages/LandingPage'));
 const Index = lazy(() => import(/* webpackChunkName: "index" */ '@/pages/Index'));
 const DashboardOperacional = lazy(() => import(/* webpackChunkName: "dashboard-operacional" */ '@/pages/DashboardOperacional'));
 const Hotspots = lazy(() => import(/* webpackChunkName: "hotspots" */ '@/pages/Hotspots'));
@@ -86,8 +87,8 @@ function App() {
               <Route path="/politica-cookies" element={<PoliticaCookies />} />
               <Route path="/termos-uso" element={<TermosUso />} />
               
-              {/* Redireciona / para /inicio */}
-              <Route path="/" element={<Navigate to="/inicio" replace />} />
+              {/* Página inicial pública - sem login */}
+              <Route path="/" element={<LandingPage />} />
               <Route path="/inicio" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><Index /></SidebarLayout></ProtectedRoute>} />
               
               {/* Operador level - requires authentication */}
