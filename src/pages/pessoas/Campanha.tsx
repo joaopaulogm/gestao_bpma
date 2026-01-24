@@ -294,6 +294,7 @@ const Campanha: React.FC = () => {
           currentDate={currentDate}
           onDateChange={handleDateChange}
           getDayCounts={getDayCounts}
+          getTeamsForDay={getTeamsForDay}
           isFeriado={isFeriado}
           onDayClick={handleDayClick}
           hasAlteracaoInDay={hasAlteracaoInDay}

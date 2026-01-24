@@ -27,8 +27,9 @@ import {
   LayoutGrid,
   Edit2,
   Building2,
+  AlertCircle,
 } from 'lucide-react';
-import { DayCounts, STATUS_COLORS, TeamType, UnitType } from '@/hooks/useCampanhaCalendar';
+import { DayCounts, STATUS_COLORS, TeamType, UnitType, TeamForDay } from '@/hooks/useCampanhaCalendar';
 
 type ViewMode = 'month' | 'week' | 'day' | 'year';
 
@@ -56,6 +57,8 @@ interface CampanhaCalendarViewProps {
   onMonthSelectFromYear?: (date: Date) => void;
   /** Conteúdo da vista Dia; se não for passado, usa o bloco padrão com "Ver detalhes do dia" */
   renderDayView?: () => React.ReactNode;
+  /** Retorna as equipes e membros escalados no dia; usado na vista mês para listar policiais e sinalizar impedidos (ex. férias) */
+  getTeamsForDay?: (date: Date) => TeamForDay[];
 }
 
 export const CampanhaCalendarView: React.FC<CampanhaCalendarViewProps> = ({
@@ -71,6 +74,7 @@ export const CampanhaCalendarView: React.FC<CampanhaCalendarViewProps> = ({
   hasAlteracao,
   onMonthSelectFromYear,
   renderDayView,
+  getTeamsForDay: getTeamsForDayProp,
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('month');
 
@@ -192,6 +196,10 @@ export const CampanhaCalendarView: React.FC<CampanhaCalendarViewProps> = ({
               const isWeekendDay = isWeekend(day);
               const isTodayDate = isToday(day);
               const counts = isCurrentMonth ? getDayCounts(day) : { apto: 0, impedido: 0, restricao: 0, atestado: 0, voluntario: 0, previsao: 0, total: 0 };
+              const teams = (isCurrentMonth && getTeamsForDayProp) ? getTeamsForDayProp(day) : [];
+              const allMembros = teams.flatMap(t => t.membros);
+              const unicos = allMembros.filter((m, i, arr) => arr.findIndex(x => x.efetivo_id === m.efetivo_id) === i);
+              const MAX_NAMES = 5;
 
               return (
                 <button
@@ -199,7 +207,7 @@ export const CampanhaCalendarView: React.FC<CampanhaCalendarViewProps> = ({
                   onClick={() => isCurrentMonth && onDayClick(day)}
                   disabled={!isCurrentMonth}
                   className={`
-                    min-h-[80px] p-2 text-left transition-all relative
+                    min-h-[112px] p-2 text-left transition-all relative
                     ${!isCurrentMonth 
                       ? 'bg-muted/20 text-muted-foreground/40 cursor-default' 
                       : isHoliday
@@ -213,7 +221,7 @@ export const CampanhaCalendarView: React.FC<CampanhaCalendarViewProps> = ({
                 >
                   <div className="flex items-center justify-center gap-0.5">
                     <span className={`
-                      text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full
+                      text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full shrink-0
                       ${isTodayDate 
                         ? 'bg-primary text-primary-foreground' 
                         : isHoliday 
@@ -230,6 +238,29 @@ export const CampanhaCalendarView: React.FC<CampanhaCalendarViewProps> = ({
                   
                   {isCurrentMonth && counts.total > 0 && (
                     <StatusDots counts={counts} />
+                  )}
+
+                  {/* Policiais escalados no dia: nome e sinalização de impedidos (férias, etc.) */}
+                  {isCurrentMonth && unicos.length > 0 && (
+                    <div className="mt-1 space-y-0.5 overflow-hidden">
+                      {unicos.slice(0, MAX_NAMES).map((m) => {
+                        const impedido = m.status === 'impedido';
+                        const nome = m.efetivo?.nome_guerra || m.efetivo?.nome || '—';
+                        return (
+                          <div
+                            key={m.id}
+                            className={`text-[10px] truncate flex items-center gap-0.5 ${impedido ? 'text-red-600 line-through' : 'text-foreground/90'}`}
+                            title={impedido ? `Impedido de escalar: ${m.statusReason || 'férias/abono'}` : nome}
+                          >
+                            {impedido && <AlertCircle className="h-2.5 w-2.5 shrink-0 text-red-500" />}
+                            <span className="truncate">{nome}</span>
+                          </div>
+                        );
+                      })}
+                      {unicos.length > MAX_NAMES && (
+                        <div className="text-[10px] text-muted-foreground">+{unicos.length - MAX_NAMES}</div>
+                      )}
+                    </div>
                   )}
                 </button>
               );
