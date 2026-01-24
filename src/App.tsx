@@ -131,6 +131,7 @@ function App() {
               <Route path="/secao-operacional/registros-crimes-comuns" element={<Navigate to="/secao-operacional/registros" replace />} />
               <Route path="/secao-operacional/registros-prevencao" element={<Navigate to="/secao-operacional/registros" replace />} />
               <Route path="/secao-operacional/registros-unificados" element={<Navigate to="/secao-operacional/registros" replace />} />
+              <Route path="/registros" element={<Navigate to="/secao-operacional/registros" replace />} />
               <Route path="/secao-operacional/relatorios" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Relatorios /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/bens-apreendidos" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><BensApreendidosCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/flora-cadastro" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />

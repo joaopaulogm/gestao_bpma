@@ -312,7 +312,7 @@ export const useResgateFormSubmitEdit = (
         toast.success('Registro atualizado com sucesso!');
       }
       
-      navigate('/registros');
+      navigate('/secao-operacional/registros');
     } catch (error) {
       console.error('Erro ao atualizar registro:', error);
       toast.error('Erro ao atualizar o registro');

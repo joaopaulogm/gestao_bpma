@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Lock, User, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle, Shield, Link2, Eye, EyeOff, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { handleSupabaseError } from '@/utils/errorHandler';
+import { handleSupabaseError, getOAuthLinkErrorMessage } from '@/utils/errorHandler';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -160,6 +160,21 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // Detectar erro na URL ao voltar do OAuth (hash ou query)
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash ? new URLSearchParams(window.location.hash.replace('#', '?')) : new URLSearchParams();
+    const err = params.get('error') || hash.get('error');
+    const desc = params.get('error_description') || hash.get('error_description') || '';
+    if (err) {
+      const text = getOAuthLinkErrorMessage({ message: desc || err, error: err });
+      toast.error(text);
+      console.error('OAuth return error:', err, desc);
+      // Limpar URL sem recarregar
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   // Check if user just linked account via Google OAuth
   React.useEffect(() => {
     const checkPendingLink = async () => {
@@ -178,8 +193,9 @@ const Login = () => {
         localStorage.removeItem('pendingLinkUserRoleId');
 
         if (error) {
-          toast.error('Erro ao vincular conta Google');
-          console.error('Link error:', error);
+          const msg = getOAuthLinkErrorMessage(error);
+          toast.error(msg);
+          console.error('vincular_google_user_roles error:', error);
         } else {
           toast.success('Conta Google vinculada com sucesso!');
           navigate('/inicio');
@@ -397,11 +413,12 @@ const Login = () => {
 
       if (error) {
         localStorage.removeItem('pendingLinkUserRoleId');
-        toast.error(handleSupabaseError(error, 'vincular com Google'));
+        toast.error(getOAuthLinkErrorMessage(error));
+        console.error('signInWithOAuth (link) error:', error);
       }
     } catch (error: unknown) {
       console.error('Google link error:', error);
-      toast.error('Erro ao vincular com Google');
+      toast.error(getOAuthLinkErrorMessage(error));
     } finally {
       setIsGoogleLoading(false);
     }

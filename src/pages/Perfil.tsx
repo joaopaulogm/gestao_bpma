@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getOAuthLinkErrorMessage } from '@/utils/errorHandler';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,44 +93,66 @@ const Perfil = () => {
   const [uf, setUf] = useState('');
 
   useEffect(() => {
+    // Se há vínculo Google pendente, não chamar fetchPerfil aqui: checkPendingLink
+    // vai rodar a RPC primeiro (para preencher user_id) e depois chama fetchPerfil.
+    // Caso contrário a RLS bloqueia o SELECT (user_id ainda null).
+    if (localStorage.getItem('pendingLinkUserRoleId')) return;
     fetchPerfil();
   }, [user?.id]);
 
   const fetchPerfil = async () => {
-    // Buscar perfil do localStorage ou do Supabase
-    const localAuth = localStorage.getItem('bpma_auth_user');
-    let userId = user?.id;
-    
-    if (!userId && localAuth) {
-      try {
-        const localUser = JSON.parse(localAuth);
-        userId = localUser.id;
-      } catch (e) {
-        console.error('Error parsing local auth:', e);
-      }
-    }
-
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-    
     setLoading(true);
     try {
-      // Buscar direto da tabela user_roles pelo ID
+      const localAuth = localStorage.getItem('bpma_auth_user');
+      const pendingLink = localStorage.getItem('pendingLinkUserRoleId');
+      let userId: string | undefined = user?.id;
+
+      if (!userId) {
+        const { data: { session } } = await supabase.auth.getSession();
+        userId = session?.user?.id ?? undefined;
+      }
+      if (!userId && localAuth) {
+        try {
+          const localUser = JSON.parse(localAuth);
+          userId = localUser.id;
+        } catch (e) {
+          console.error('Error parsing local auth:', e);
+        }
+      }
+
+      // user_roles.id: ao voltar do OAuth de vínculo, o id está em pendingLink;
+      // com sessão Supabase/Google, user.id é auth.users.id; com login local, user.id é user_roles.id
+      let userRoleId: string | null = pendingLink || null;
+
+      if (!userRoleId && userId) {
+        const { data: roleRow, error: roleError } = await supabase
+          .from('user_roles')
+          .select('id')
+          .or(`id.eq.${userId},user_id.eq.${userId}`)
+          .maybeSingle();
+        if (roleError) {
+          console.error('Erro ao buscar user_role por user_id:', roleError);
+        } else if (roleRow?.id) {
+          userRoleId = roleRow.id;
+        }
+      }
+
+      if (!userRoleId) {
+        return;
+      }
+
       const { data, error } = await supabase
         .from('user_roles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', userRoleId)
         .maybeSingle();
 
       if (error) throw error;
-      
+
       if (data) {
         const perfilData = data as unknown as PerfilData;
         setPerfil(perfilData);
-        
-        // Preencher campos editáveis
+
         setNome(perfilData.nome || '');
         setTelefone(perfilData.telefone || perfilData.contato || '');
         setEmail(perfilData.email || '');
@@ -268,17 +291,32 @@ const Perfil = () => {
 
       if (error) {
         localStorage.removeItem('pendingLinkUserRoleId');
-        toast.error('Erro ao vincular com Google');
+        toast.error(getOAuthLinkErrorMessage(error));
+        console.error('signInWithOAuth (link) error:', error);
       }
     } catch (error) {
       console.error('Google link error:', error);
-      toast.error('Erro ao vincular com Google');
+      toast.error(getOAuthLinkErrorMessage(error));
     } finally {
       setLinkingGoogle(false);
     }
   };
 
-  // Verificar vínculo Google pendente
+  // Detectar erro na URL ao voltar do OAuth
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash ? new URLSearchParams(window.location.hash.replace('#', '?')) : new URLSearchParams();
+    const err = params.get('error') || hash.get('error');
+    const desc = params.get('error_description') || hash.get('error_description') || '';
+    if (err) {
+      toast.error(getOAuthLinkErrorMessage({ message: desc || err, error: err }));
+      console.error('OAuth return error:', err, desc);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  // Verificar vínculo Google pendente: rodar a RPC antes de buscar o perfil.
+  // A RLS em user_roles exige user_id = auth.uid(); só após a RPC o SELECT é permitido.
   useEffect(() => {
     const checkPendingLink = async () => {
       const pendingUserRoleId = localStorage.getItem('pendingLinkUserRoleId');
@@ -295,11 +333,17 @@ const Perfil = () => {
         localStorage.removeItem('pendingLinkUserRoleId');
 
         if (error) {
-          toast.error('Erro ao vincular conta Google');
+          toast.error(getOAuthLinkErrorMessage(error));
+          console.error('vincular_google_user_roles error:', error);
+          setLoading(false);
         } else {
           toast.success('Conta Google vinculada com sucesso!');
           fetchPerfil();
         }
+      } else {
+        // Sem sessão após redirect (improvável): remove pendência e tenta fetch (ex.: localAuth)
+        localStorage.removeItem('pendingLinkUserRoleId');
+        fetchPerfil();
       }
     };
 

@@ -329,7 +329,7 @@ const ImportarDados = () => {
             <Button onClick={processImport} disabled={!file || isProcessing} className="bg-secondary hover:bg-secondary/90">
               {isProcessing ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Importando...</> : <><CheckCircle className="h-4 w-4 mr-2" />Iniciar Importação</>}
             </Button>
-            <Button variant="outline" onClick={() => navigate('/registros')} disabled={isProcessing}>Ver Registros</Button>
+            <Button variant="outline" onClick={() => navigate('/secao-operacional/registros')} disabled={isProcessing}>Ver Registros</Button>
           </div>
         </CardContent>
       </Card>

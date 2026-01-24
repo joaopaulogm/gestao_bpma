@@ -93,7 +93,7 @@ export const useResgateFormEdit = (
       toast.error('Erro ao carregar os dados do registro');
       
       setTimeout(() => {
-        navigate('/registros');
+        navigate('/secao-operacional/registros');
       }, 2000);
     }
   };

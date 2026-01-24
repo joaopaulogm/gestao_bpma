@@ -18,7 +18,7 @@ const RegistroNotFound = () => {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button
               variant="default"
-              onClick={() => navigate('/registros')}
+              onClick={() => navigate('/secao-operacional/registros')}
               className="flex items-center gap-2"
             >
               <List className="h-4 w-4" />

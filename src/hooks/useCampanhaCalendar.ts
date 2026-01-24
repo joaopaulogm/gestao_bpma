@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 // Types
 export type TeamType = 'Alfa' | 'Bravo' | 'Charlie' | 'Delta';
 export type UnitType = 'Guarda' | 'Armeiro' | 'RP Ambiental' | 'GOC' | 'Lacustre' | 'GTA';
+export type AdminSectionType = 'SEÇÃO SOI' | 'SEÇÃO SP' | 'SEÇÃO SLOG' | 'SEÇÃO SJD' | 'SEÇÃO SVG' | 'SEÇÃO SECRIMPO' | 'SEÇÃO GARAGEM' | 'SEÇÃO PROJETOS' | 'SECRETARIA';
 export type MemberStatus = 'apto' | 'impedido' | 'restricao' | 'atestado' | 'voluntario' | 'previsao';
 
 // Unit configuration - teams and rotation
@@ -113,6 +114,8 @@ const UNIT_TO_GRUPAMENTO: Record<UnitType, string> = {
   'GTA': 'GTA',
 };
 
+export const ADMIN_SECTIONS: AdminSectionType[] = ['SEÇÃO SOI', 'SEÇÃO SP', 'SEÇÃO SLOG', 'SEÇÃO SJD', 'SEÇÃO SVG', 'SEÇÃO SECRIMPO', 'SEÇÃO GARAGEM', 'SEÇÃO PROJETOS', 'SECRETARIA'];
+
 // Feriados nacionais
 const feriados: Record<number, string[]> = {
   2025: [
@@ -124,6 +127,11 @@ const feriados: Record<number, string[]> = {
     '2026-01-01', '2026-02-16', '2026-02-17', '2026-04-03', '2026-04-21',
     '2026-05-01', '2026-06-04', '2026-09-07', '2026-10-12', '2026-11-02',
     '2026-11-15', '2026-11-20', '2026-12-25',
+  ],
+  2027: [
+    '2027-01-01', '2027-02-09', '2027-02-10', '2027-03-26', '2027-04-21',
+    '2027-05-01', '2027-05-27', '2027-09-07', '2027-10-12', '2027-11-02',
+    '2027-11-15', '2027-11-20', '2027-12-25',
   ],
 };
 
@@ -300,6 +308,30 @@ export const useCampanhaCalendar = (year: number, month: number) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     return feriados[year]?.includes(dateStr) || false;
   }, [year]);
+
+  // Check if administrative works on this day (Seg–Sex, exceto feriados)
+  const administrativoTrabalha = useCallback((date: Date): boolean => {
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) return false;
+    if (isFeriado(date)) return false;
+    return true;
+  }, [isFeriado]);
+
+  // Check if there's an alteration for a date/unit
+  const hasAlteracao = useCallback((date: Date, unidade: UnitType): boolean => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return alteracoes.some((a: any) => a.data === dateStr && a.unidade === unidade);
+  }, [alteracoes]);
+
+  // Get members for an admin section (equipes como SEÇÃO SOI, etc.)
+  const getMembrosForAdminSection = useCallback((section: AdminSectionType): any[] => {
+    const equipe = equipesReais.find((e: any) =>
+      e.nome?.toUpperCase() === section.toUpperCase() ||
+      e.nome?.toUpperCase().includes(section.toUpperCase().replace('SEÇÃO ', ''))
+    );
+    if (!equipe) return [];
+    return membrosReais.filter((m: any) => m.equipe_id === equipe.id);
+  }, [equipesReais, membrosReais]);
 
   // Get members for a team and unit
   const getMembrosForTeam = useCallback((teamName: TeamType | null, unidade: UnitType): any[] => {
@@ -652,6 +684,26 @@ export const useCampanhaCalendar = (year: number, month: number) => {
     }
   }, [getTeamId, fetchData]);
 
+  // Remove alteration
+  const removeAlteracao = useCallback(async (date: Date, unidade: UnitType): Promise<boolean> => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    try {
+      const { error } = await supabase
+        .from('fat_campanha_alteracoes')
+        .delete()
+        .eq('data', dateStr)
+        .eq('unidade', unidade);
+      if (error) throw error;
+      await fetchData();
+      toast.success('Alteração removida');
+      return true;
+    } catch (error) {
+      console.error('Erro ao remover alteração:', error);
+      toast.error('Erro ao remover alteração');
+      return false;
+    }
+  }, [fetchData]);
+
   return {
     loading,
     equipes,
@@ -660,15 +712,22 @@ export const useCampanhaCalendar = (year: number, month: number) => {
     TEAMS,
     UNITS,
     isFeriado,
+    administrativoTrabalha,
     getTeamForDate,
     getTeamsForDay,
     getDayCounts,
     getMemberStatus,
+    getMembrosForTeam,
     vacationQuota,
     saveVolunteer,
     removeVolunteer,
     getVolunteersForDate,
     saveAlteracao,
+    removeAlteracao,
+    hasAlteracao,
+    ADMIN_SECTIONS,
+    getMembrosForAdminSection,
+    getTeamName,
     fetchData,
   };
 };
