@@ -171,7 +171,7 @@ export const useCampanhaCalendar = (year: number, month: number) => {
           equipe:dim_equipes(id, nome, grupamento)
         `),
         supabase.from('fat_ferias').select('*').eq('ano', year),
-        supabase.from('fat_ferias_parcelas').select('*, fat_ferias!inner(efetivo_id, ano)'),
+        supabase.from('fat_ferias_parcelas').select('*, fat_ferias!inner(efetivo_id, ano)').eq('fat_ferias.ano', year),
         supabase.from('fat_abono').select('*').eq('ano', year),
         supabase.from('fat_licencas_medicas').select('*').eq('ano', year),
         supabase.from('fat_restricoes').select('*').eq('ano', year),
@@ -387,8 +387,9 @@ export const useCampanhaCalendar = (year: number, month: number) => {
 
     // Priority 1: Check férias parcelas with specific dates (impedido)
     const parcelaRecord = feriasParcelas.find(p => {
-      // Check if efetivo_id matches (fat_ferias relationship)
+      // Check if efetivo_id matches and ano is from the date (fat_ferias relationship)
       if (p.fat_ferias?.efetivo_id !== efetivoId) return false;
+      if (p.fat_ferias?.ano !== getYear(date)) return false;
       if (!p.data_inicio || !p.data_fim) return false;
       
       try {
@@ -582,9 +583,9 @@ export const useCampanhaCalendar = (year: number, month: number) => {
     const monthAbbreviations = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
     const currentMonthAbbrev = monthAbbreviations[month]; // month is 0-indexed
 
-    // Filter parcelas for current month
+    // Filter parcelas for current month and campaign year
     const parcelasDoMes = feriasParcelas.filter(p => 
-      p.mes?.toUpperCase() === currentMonthAbbrev
+      p.fat_ferias?.ano === year && p.mes?.toUpperCase() === currentMonthAbbrev
     );
 
     // PREVISTO: total de dias das parcelas planejadas para o mês
@@ -607,7 +608,7 @@ export const useCampanhaCalendar = (year: number, month: number) => {
       saldo,
       isOverLimit: previsto > VACATION_QUOTA_PER_MONTH,
     };
-  }, [feriasParcelas, month]);
+  }, [feriasParcelas, month, year]);
 
   // Save alteration
   const saveAlteracao = useCallback(async (
