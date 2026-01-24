@@ -10,6 +10,7 @@ type User = {
   id: string;
   email: string;
   role?: AppRole;
+  hasGoogleLink?: boolean;
 };
 
 type AuthContextType = {
@@ -21,6 +22,7 @@ type AuthContextType = {
   userRole: AppRole | null;
   isAdmin: boolean;
   hasAccess: (requiredRoles: AppRole[]) => boolean;
+  hasGoogleLink: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<AppRole | null>(null);
+  const [hasGoogleLink, setHasGoogleLink] = useState(false);
 
   const fetchUserRole = async (userId: string): Promise<AppRole | null> => {
     try {
@@ -63,12 +66,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Handler para sessão local (login com matrícula/senha)
-  const handleLocalAuthChange = (userData: { id: string; email?: string; role?: string }) => {
+  const handleLocalAuthChange = (userData: { id: string; email?: string; role?: string; hasGoogleLink?: boolean }) => {
     setUser({
       id: userData.id,
       email: userData.email || '',
+      hasGoogleLink: userData.hasGoogleLink || false,
     });
     setUserRole((userData.role as AppRole) || 'operador');
+    setHasGoogleLink(userData.hasGoogleLink || false);
     setLoading(false);
   };
 
@@ -85,7 +90,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser({
             id: session.user.id,
             email: session.user.email || '',
+            hasGoogleLink: true,
           });
+          setHasGoogleLink(true);
           setTimeout(() => {
             fetchUserRole(session.user.id).then(setUserRole);
           }, 0);
@@ -103,10 +110,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               localStorage.removeItem('bpma_auth_user');
               setUser(null);
               setUserRole(null);
+              setHasGoogleLink(false);
             }
           } else {
             setUser(null);
             setUserRole(null);
+            setHasGoogleLink(false);
           }
         }
         setLoading(false);
@@ -216,6 +225,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userRole,
     isAdmin,
     hasAccess,
+    hasGoogleLink,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -302,21 +302,30 @@ const Login = () => {
         return;
       }
 
-      // Se tem user_id, pode fazer login via Supabase Auth
-      if (usuario.user_id) {
-        // Usuário já vinculado ao Google, redirecionar
-        toast.success(`Bem-vindo(a), ${usuario.nome_guerra || usuario.nome}!`);
-        // Para login com senha quando já vinculado, precisamos de uma sessão
-        // Como não temos a senha do Supabase Auth, oferecemos Google
-        toast.info('Use o botão "Entrar com Google" para acessar sua conta vinculada.');
-        return;
-      }
-
-      // Login com senha válido, mas sem vínculo Google
-      // Oferecer vincular Google (opcional)
-      setPendingUser(usuario);
-      setLoginStep('google-link-offer');
+      // Login válido - salvar sessão e redirecionar
+      // O usuário pode vincular Google a qualquer momento via Perfil
+      const hasGoogleLinked = !!usuario.user_id;
+      
+      const userData = {
+        id: usuario.id,
+        nome: usuario.nome,
+        nome_guerra: usuario.nome_guerra,
+        matricula: usuario.matricula,
+        email: usuario.email,
+        role: usuario.role,
+        hasGoogleLink: hasGoogleLinked,
+      };
+      localStorage.setItem('bpma_auth_user', JSON.stringify(userData));
+      
+      // Disparar evento para AuthContext reagir imediatamente
+      window.dispatchEvent(new CustomEvent('bpma_local_auth_changed', { detail: userData }));
+      
       toast.success(`Bem-vindo(a), ${usuario.nome_guerra || usuario.nome}!`);
+      
+      // Redirecionar para página inicial
+      setTimeout(() => {
+        navigate('/inicio');
+      }, 100);
     } catch (error: unknown) {
       console.error('Login com senha error:', error);
       toast.error('Erro ao fazer login');
