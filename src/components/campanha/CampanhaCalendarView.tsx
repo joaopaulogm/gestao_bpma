@@ -232,7 +232,9 @@ export const CampanhaCalendarView: React.FC<CampanhaCalendarViewProps> = ({
                       {format(day, 'd')}
                     </span>
                     {isCurrentMonth && hasAlteracaoInDay?.(day) && (
-                      <Edit2 className="h-3 w-3 text-amber-500 shrink-0" title="Alteração manual" />
+                      <span title="Alteração manual">
+                        <Edit2 className="h-3 w-3 text-amber-500 shrink-0" />
+                      </span>
                     )}
                   </div>
                   
@@ -252,7 +254,7 @@ export const CampanhaCalendarView: React.FC<CampanhaCalendarViewProps> = ({
                             className={`text-[10px] truncate flex items-center gap-0.5 ${impedido ? 'text-red-600 line-through' : 'text-foreground/90'}`}
                             title={impedido ? `Impedido de escalar: ${m.statusReason || 'férias/abono'}` : nome}
                           >
-                            {impedido && <AlertCircle className="h-2.5 w-2.5 shrink-0 text-red-500" />}
+                            {impedido && <AlertCircle className="h-2.5 w-2.5 shrink-0 text-red-500" aria-label="Impedido" />}
                             <span className="truncate">{nome}</span>
                           </div>
                         );

@@ -63,7 +63,6 @@ const Campanha: React.FC = () => {
     loading,
     efetivo,
     equipes,
-    configs,
     isFeriado,
     getDayCounts,
     getTeamsForDay,
@@ -176,14 +175,13 @@ const Campanha: React.FC = () => {
 
   const hasAlteracaoInDay = useCallback((date: Date) => UNITS.some(u => hasAlteracao(date, u)), [UNITS, hasAlteracao]);
 
-  // Configuração inicial para o card 1º de janeiro
+  // Configuração inicial para o card 1º de janeiro (usa valores padrão)
   const configInicial = useMemo(() => {
     return UNITS.map(u => {
-      const c = configs.find((x: any) => x.unidade === u);
-      const nome = c ? (getTeamName(c.equipe_inicial_id) || defaultInitialTeams[u]) : defaultInitialTeams[u];
+      const nome = defaultInitialTeams[u];
       return { unidade: u, equipe: nome };
     });
-  }, [UNITS, configs, getTeamName]);
+  }, [UNITS]);
 
   if (loading) {
     return (
