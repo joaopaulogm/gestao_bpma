@@ -25,6 +25,7 @@ export interface EspecieItem {
   quantidadeFilhote: number;
   quantidadeJovem: number;
   quantidadeTotal: number;
+  desfechoResgate: string;
   destinacao: string;
   numeroTermoEntrega: string;
   horaGuardaCEAPA: string;
@@ -72,6 +73,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
   const [especieSearchById, setEspecieSearchById] = useState<Record<string, string>>({});
   const [estadosSaude, setEstadosSaude] = useState<DimensionItem[]>([]);
   const [estagiosVida, setEstagiosVida] = useState<DimensionItem[]>([]);
+  const [desfechosResgate, setDesfechosResgate] = useState<DimensionItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -142,13 +144,15 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
         }
 
         // Fetch dimension tables
-        const [estadosSaudeRes, estagiosVidaRes] = await Promise.all([
+        const [estadosSaudeRes, estagiosVidaRes, desfechosResgateRes] = await Promise.all([
           supabase.from('dim_estado_saude').select('id, nome').order('nome', { ascending: true }),
-          supabase.from('dim_estagio_vida').select('id, nome').order('nome', { ascending: true })
+          supabase.from('dim_estagio_vida').select('id, nome').order('nome', { ascending: true }),
+          supabase.from('dim_desfecho_resgates').select('id, nome').eq('tipo', 'resgate').order('nome', { ascending: true })
         ]);
 
         if (estadosSaudeRes.data) setEstadosSaude(estadosSaudeRes.data);
         if (estagiosVidaRes.data) setEstagiosVida(estagiosVidaRes.data);
+        if (desfechosResgateRes.data) setDesfechosResgate(desfechosResgateRes.data);
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
       }
@@ -195,6 +199,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
       quantidadeFilhote: 0,
       quantidadeJovem: 0,
       quantidadeTotal: 0,
+      desfechoResgate: '',
       destinacao: '',
       numeroTermoEntrega: '',
       horaGuardaCEAPA: '',
@@ -657,6 +662,27 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                   readOnly
                   className="bg-muted text-center font-semibold"
                 />
+              </FormField>
+            </div>
+
+            {/* Desfecho do Resgate */}
+            <div className="md:col-span-2 pt-4 border-t mt-4">
+              <FormField id={`desfechoResgate-${especie.id}`} label="Desfecho do Resgate" required={!isEvadido}>
+                <Select
+                  value={especie.desfechoResgate}
+                  onValueChange={(value) => handleEspecieChange(especie.id, 'desfechoResgate', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o desfecho" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {desfechosResgate.map((desfecho) => (
+                      <SelectItem key={desfecho.id} value={desfecho.nome}>
+                        {desfecho.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormField>
             </div>
 

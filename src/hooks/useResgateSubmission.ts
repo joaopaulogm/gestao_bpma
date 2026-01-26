@@ -220,7 +220,12 @@ export const useResgateSubmission = () => {
           especieDetalhes = await buscarEspeciePorId(especie.especieId);
         }
 
-        // Buscar IDs das dimensões específicas da espécie (incluindo destinação)
+        // Buscar IDs das dimensões específicas da espécie (incluindo destinação e desfecho)
+        // Se a espécie tiver um desfechoResgate definido, usar esse; caso contrário, usar o do registro principal
+        const especieDesfechoId = especie.desfechoResgate 
+          ? await buscarIdPorNome('dim_desfecho_resgates', especie.desfechoResgate)
+          : desfechoId;
+
         const [estadoSaudeId, estagioVidaId, destinacaoId] = await Promise.all([
           buscarIdPorNome('dim_estado_saude', especie.estadoSaude),
           buscarIdPorNome('dim_estagio_vida', especie.estagioVida),
@@ -239,7 +244,7 @@ export const useResgateSubmission = () => {
           estadoSaudeId,
           estagioVidaId,
           destinacaoId,
-          desfechoId
+          especieDesfechoId
         );
 
         const { data: insertedRecord, error } = await supabaseAny
