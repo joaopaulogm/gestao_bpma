@@ -544,12 +544,16 @@ const RegistrosUnificados: React.FC = () => {
         return dateB - dateA;
       });
       
+      console.log(`✅ [Fauna] Dados enriquecidos e prontos para exibição: ${enriched.length} registros`);
+      console.log(`📋 [Fauna] Primeiros 3 registros enriquecidos:`, enriched.slice(0, 3));
       setFaunaRegistros(enriched);
+      console.log(`✅ [Fauna] Estado faunaRegistros atualizado com ${enriched.length} registros`);
     } catch (error) {
-      console.error('Erro ao carregar fauna:', error);
+      console.error('❌ [Fauna] Erro ao carregar fauna:', error);
       toast.error('Erro ao carregar registros de fauna');
     } finally {
       setLoadingFauna(false);
+      console.log('✅ [Fauna] Loading finalizado');
     }
   };
 
@@ -889,13 +893,19 @@ const RegistrosUnificados: React.FC = () => {
   };
 
   const getFilteredData = (data: any[], searchFields: string[]) => {
-    if (!searchTerm) return data;
+    console.log(`🔍 [getFilteredData] Entrada: data.length=${data.length}, searchTerm="${searchTerm}", searchFields=`, searchFields);
+    if (!searchTerm) {
+      console.log(`✅ [getFilteredData] Sem termo de busca, retornando todos os ${data.length} registros`);
+      return data;
+    }
     const term = searchTerm.toLowerCase();
-    return data.filter(item => 
+    const filtered = data.filter(item => 
       searchFields.some(field => 
         String(item[field] || '').toLowerCase().includes(term)
       )
     );
+    console.log(`✅ [getFilteredData] Filtrado: ${filtered.length} de ${data.length} registros`);
+    return filtered;
   };
 
   const toggleSelectItem = (id: string) => {
@@ -936,7 +946,9 @@ const RegistrosUnificados: React.FC = () => {
 
   // Renderização de tabela para cada tipo
   const renderFaunaTable = () => {
+    console.log(`🔍 [renderFaunaTable] faunaRegistros.length: ${faunaRegistros.length}, searchTerm: "${searchTerm}"`);
     const filteredData = getFilteredData(faunaRegistros, ['especie_nome', 'especie_cientifico', 'regiao']);
+    console.log(`🔍 [renderFaunaTable] filteredData.length: ${filteredData.length}`);
     const allIds = filteredData.map(r => r.id);
 
     if (loadingFauna) {
