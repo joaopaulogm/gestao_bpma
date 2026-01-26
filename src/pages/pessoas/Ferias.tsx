@@ -135,7 +135,8 @@ const Ferias: React.FC = () => {
   const [mesSelecionado, setMesSelecionado] = useState<number | null>(null);
   const [ferias, setFerias] = useState<FeriasData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [ano, setAno] = useState(new Date().getFullYear());
+  // Iniciar com 2025 por padrão (ano mais comum com dados)
+  const [ano, setAno] = useState(2025);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPolicial, setEditingPolicial] = useState<FeriasData | null>(null);
   const [parcelas, setParcelas] = useState<ParcelaInfo[]>([{ mes: 1, dias: 30 }]);
@@ -154,6 +155,7 @@ const Ferias: React.FC = () => {
       
       // Buscar dados de fat_ferias com join em dim_efetivo
       // O join padrão do Supabase já é LEFT JOIN, então não precisa especificar
+      // Remover filtro de ano temporariamente para ver todos os dados disponíveis
       const { data: feriasData, error: feriasError } = await supabase
         .from('fat_ferias')
         .select(`
@@ -162,6 +164,19 @@ const Ferias: React.FC = () => {
         `)
         .eq('ano', ano)
         .order('mes_inicio', { ascending: true });
+      
+      // Se não encontrar dados no ano selecionado, buscar todos os anos para debug
+      if ((feriasData?.length || 0) === 0) {
+        console.warn(`⚠️ Nenhum registro encontrado para o ano ${ano}. Buscando todos os anos para debug...`);
+        const { data: allData } = await supabase
+          .from('fat_ferias')
+          .select('ano')
+          .order('ano', { ascending: false })
+          .limit(100);
+        
+        const anosDisponiveis = [...new Set((allData || []).map((f: any) => f.ano))];
+        console.log(`📊 Anos disponíveis na tabela fat_ferias:`, anosDisponiveis);
+      }
 
       if (feriasError) {
         console.error('❌ Erro ao buscar fat_ferias:', feriasError);
