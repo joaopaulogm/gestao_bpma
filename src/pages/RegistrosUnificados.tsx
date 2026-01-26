@@ -411,16 +411,23 @@ const RegistrosUnificados: React.FC = () => {
       // Determinar quais tabelas buscar baseado no filtro de ano (igual à página Registros.tsx)
       let tabelas: string[] = [];
       
+      // Usar view unificada para anos históricos (2020-2024) quando possível
+      let usarViewHistorica = false;
+      let anoFiltrado: number | null = null;
+      
       if (filterAno === 'all') {
         // Se não há filtro de ano, carregar apenas as mais recentes (2024 e 2025) inicialmente
         tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025', 'fat_resgates_diarios_2024'];
       } else {
         const ano = parseInt(filterAno);
+        anoFiltrado = ano;
         // Carregar apenas a tabela do ano selecionado
         if (ano === 2025) {
           tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025'];
         } else if (ano >= 2020 && ano <= 2024) {
-          tabelas = [`fat_resgates_diarios_${ano}`];
+          // Usar view unificada para anos históricos
+          usarViewHistorica = true;
+          tabelas = ['vw_resgates_basicos_union'];
         } else if (ano >= 2026) {
           // Para 2026 ou anos futuros, buscar apenas em fat_registros_de_resgate
           tabelas = ['fat_registros_de_resgate'];
@@ -457,8 +464,57 @@ const RegistrosUnificados: React.FC = () => {
         try {
           console.log(`🔍 [Fauna] Buscando de ${tabela}...`);
           
-          // Para tabelas históricas (2020-2024), usar campos diferentes
-          if (tabela.startsWith('fat_resgates_diarios_202') && parseInt(tabela.slice(-4)) <= 2024) {
+          // Para view unificada de histórico (vw_resgates_basicos_union)
+          if (tabela === 'vw_resgates_basicos_union') {
+            let query = supabaseAny
+              .from(tabela)
+              .select('ano, data, especie_id, total_resgates, nome_popular_raw, nome_cientifico, classe_taxonomica')
+              .order('data', { ascending: false });
+            
+            // Aplicar filtros de data
+            if (anoFiltrado !== null) {
+              const startDate = `${anoFiltrado}-01-01`;
+              const endDate = `${anoFiltrado}-12-31`;
+              query = query.gte('data', startDate).lte('data', endDate);
+            }
+            if (filterMes !== 'all' && anoFiltrado !== null) {
+              const mes = parseInt(filterMes);
+              const startDate = `${anoFiltrado}-${String(mes).padStart(2, '0')}-01`;
+              const lastDay = new Date(anoFiltrado, mes, 0).getDate();
+              const endDate = `${anoFiltrado}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+              query = query.gte('data', startDate).lte('data', endDate);
+            }
+            
+            const { data, error } = await query;
+            
+            if (error) {
+              console.error(`❌ [Fauna] Erro ao buscar de ${tabela}:`, error);
+              return;
+            }
+            
+            // Normalizar dados da view para o formato esperado
+            const normalized = (data || []).map((r: any) => ({
+              id: `vw-${r.ano}-${r.data}-${r.especie_id || 'unknown'}-${Math.random().toString(36).substring(7)}`,
+              data: r.data,
+              especie_id: r.especie_id,
+              quantidade: r.total_resgates || 0,
+              quantidade_total: r.total_resgates || 0,
+              regiao_administrativa_id: null,
+              destinacao_id: null,
+              estado_saude_id: null,
+              atropelamento: false,
+              created_at: r.data,
+              // Dados diretos para enriquecimento
+              nome_popular: r.nome_popular_raw,
+              nome_cientifico: r.nome_cientifico,
+              classe_taxonomica: r.classe_taxonomica,
+            }));
+            
+            allRegistros.push(...normalized);
+            console.log(`✅ [Fauna] ${tabela}: ${normalized.length} registros encontrados`);
+          }
+          // Para tabelas históricas individuais (2020-2024), usar campos diferentes
+          else if (tabela.startsWith('fat_resgates_diarios_202') && parseInt(tabela.slice(-4)) <= 2024) {
             let query = supabaseAny
               .from(tabela)
               .select('id, data_ocorrencia, especie_id, quantidade_resgates, nome_popular, nome_cientifico, classe_taxonomica')
