@@ -215,6 +215,7 @@ const Ferias: React.FC = () => {
       });
 
       console.log(`📊 Dados enriquecidos: ${feriasEnriquecidas.length} registros processados`);
+      console.log(`📋 Primeiros 3 registros:`, feriasEnriquecidas.slice(0, 3));
       setFerias(feriasEnriquecidas);
     } catch (error) {
       console.error('❌ Erro ao carregar férias:', error);
@@ -243,7 +244,10 @@ const Ferias: React.FC = () => {
 
   // Parse all ferias to extract parcelas - usar parcelas_detalhadas se disponível, senão parse do observacao
   const feriasWithParcelas = useMemo(() => {
-    console.log(`📋 Processando ${ferias.length} registros de férias...`);
+    console.log(`📋 Processando ${ferias.length} registros de férias para extrair parcelas...`);
+    if (ferias.length === 0) {
+      console.warn(`⚠️ Nenhum registro de férias encontrado! Verifique se há dados no ano ${ano}`);
+    }
     return ferias.map(f => {
       if (!f.efetivo) {
         console.warn(`⚠️ Registro de férias sem efetivo (ID: ${f.id}, efetivo_id: ${f.efetivo_id}):`, f);
@@ -282,9 +286,11 @@ const Ferias: React.FC = () => {
 
   // Summary by month - counts each parcel separately
   const summaryByMonth = useMemo(() => {
+    console.log(`📅 Criando summary por mês de ${feriasWithParcelas.length} registros com parcelas...`);
     const summary: Record<number, { ferias: FeriasData; parcela: ParcelaInfo; parcelaIndex: number; totalParcelas: number }[]> = {};
     for (let i = 1; i <= 12; i++) { summary[i] = []; }
     
+    let totalParcelasProcessadas = 0;
     feriasWithParcelas.forEach(item => {
       item.parcelas.forEach((parcela, idx) => {
         // Garantir que mes seja um número válido entre 1 e 12
@@ -296,10 +302,19 @@ const Ferias: React.FC = () => {
             parcelaIndex: idx,
             totalParcelas: item.parcelas.length
           });
+          totalParcelasProcessadas++;
         } else {
-          console.warn(`⚠️ Parcela com mês inválido:`, { mes: parcela.mes, feriasId: item.ferias.id });
+          console.warn(`⚠️ Parcela com mês inválido:`, { mes: parcela.mes, tipo: typeof parcela.mes, feriasId: item.ferias.id, efetivo: item.ferias.efetivo?.nome_guerra });
         }
       });
+    });
+    
+    console.log(`✅ Summary criado: ${totalParcelasProcessadas} parcelas distribuídas pelos meses`);
+    Object.keys(summary).forEach(mes => {
+      const count = summary[parseInt(mes)].length;
+      if (count > 0) {
+        console.log(`  📆 ${MESES[parseInt(mes) - 1]}: ${count} parcelas`);
+      }
     });
     
     // Sort each month by posto
