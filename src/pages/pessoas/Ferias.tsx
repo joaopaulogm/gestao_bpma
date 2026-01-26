@@ -135,7 +135,7 @@ const Ferias: React.FC = () => {
   const [mesSelecionado, setMesSelecionado] = useState<number | null>(null);
   const [ferias, setFerias] = useState<FeriasData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [ano, setAno] = useState(2025);
+  const [ano, setAno] = useState(new Date().getFullYear());
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPolicial, setEditingPolicial] = useState<FeriasData | null>(null);
   const [parcelas, setParcelas] = useState<ParcelaInfo[]>([{ mes: 1, dias: 30 }]);
@@ -153,14 +153,15 @@ const Ferias: React.FC = () => {
       console.log(`🔍 Buscando férias do ano ${ano}...`);
       
       // Buscar dados de fat_ferias com join em dim_efetivo
+      // Usar LEFT JOIN para incluir registros mesmo sem efetivo_id
       const { data: feriasData, error: feriasError } = await supabase
         .from('fat_ferias')
         .select(`
           *,
-          efetivo:dim_efetivo(id, matricula, posto_graduacao, nome_guerra, nome, quadro)
+          efetivo:dim_efetivo!left(id, matricula, posto_graduacao, nome_guerra, nome, quadro)
         `)
         .eq('ano', ano)
-        .order('mes_inicio');
+        .order('mes_inicio', { ascending: true });
 
       if (feriasError) {
         console.error('❌ Erro ao buscar fat_ferias:', feriasError);
@@ -213,9 +214,10 @@ const Ferias: React.FC = () => {
         };
       });
 
+      console.log(`📊 Dados enriquecidos: ${feriasEnriquecidas.length} registros processados`);
       setFerias(feriasEnriquecidas);
     } catch (error) {
-      console.error('Erro ao carregar férias:', error);
+      console.error('❌ Erro ao carregar férias:', error);
       toast.error('Erro ao carregar férias');
     } finally {
       setLoading(false);

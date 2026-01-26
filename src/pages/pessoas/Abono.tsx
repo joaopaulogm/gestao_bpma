@@ -68,7 +68,7 @@ const Abono: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedYear] = useState(2026);
+  const [selectedYear] = useState(new Date().getFullYear());
   const [selectedMes, setSelectedMes] = useState(new Date().getMonth() + 1);
   const [abonoData, setAbonoData] = useState<any[]>([]);
   
@@ -87,6 +87,7 @@ const Abono: React.FC = () => {
       console.log(`🔍 Buscando abono do ano ${selectedYear}...`);
       
       // Buscar dados de fat_abono com join em dim_efetivo
+      // Usar LEFT JOIN para incluir registros mesmo sem efetivo_id
       const { data: abonoData, error: abonoError } = await supabase
         .from('fat_abono')
         .select(`
@@ -112,10 +113,10 @@ const Abono: React.FC = () => {
           parcela3_fim,
           parcela3_dias,
           observacao,
-          efetivo:dim_efetivo(id, matricula, nome, nome_guerra, posto_graduacao)
+          efetivo:dim_efetivo!left(id, matricula, nome, nome_guerra, posto_graduacao)
         `)
         .eq('ano', selectedYear)
-        .order('mes');
+        .order('mes', { ascending: true });
       
       if (abonoError) {
         console.error('❌ Erro ao buscar fat_abono:', abonoError);
@@ -140,9 +141,10 @@ const Abono: React.FC = () => {
         console.warn('Não foi possível carregar dados de staging (pode ser restrito a admin):', stgErr);
       }
 
+      console.log(`📊 Dados processados: ${abonoData?.length || 0} registros de abono`);
       setAbonoData(abonoData || []);
     } catch (error) {
-      console.error('Erro ao carregar dados de abono:', error);
+      console.error('❌ Erro ao carregar dados de abono:', error);
       toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
