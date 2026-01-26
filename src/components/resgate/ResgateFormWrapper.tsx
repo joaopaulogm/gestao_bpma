@@ -92,4 +92,3 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
 };
 
 export default ResgateFormWrapper;
-
