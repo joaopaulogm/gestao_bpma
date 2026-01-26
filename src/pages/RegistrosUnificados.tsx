@@ -377,6 +377,7 @@ const RegistrosUnificados: React.FC = () => {
   const loadFaunaData = async () => {
     setLoadingFauna(true);
     try {
+      console.log('🔍 [Fauna] Iniciando busca em fat_registros_de_resgate...');
       let query = supabaseAny
         .from('fat_registros_de_resgate')
         .select('id, data, especie_id, quantidade, quantidade_total, regiao_administrativa_id, destinacao_id, estado_saude_id, atropelamento, created_at')
@@ -385,15 +386,28 @@ const RegistrosUnificados: React.FC = () => {
       // Aplicar filtros de data apenas se não for "all"
       query = buildDateFilters(query, 'data');
       
+      console.log('🔍 [Fauna] Executando query...', { filterAno, filterMes });
       // Remover limite para buscar todos os registros (ou aumentar significativamente)
       const { data, error } = await query;
 
       if (error) {
-        console.error('Erro na query de fauna:', error);
+        console.error('❌ [Fauna] Erro na query de fauna:', error);
+        console.error('❌ [Fauna] Detalhes do erro:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        toast.error(`Erro ao carregar registros de fauna: ${error.message}`);
         throw error;
       }
       
-      console.log(`✅ Carregados ${data?.length || 0} registros de fauna da tabela fat_registros_de_resgate`);
+      console.log(`✅ [Fauna] Carregados ${data?.length || 0} registros de fauna da tabela fat_registros_de_resgate`);
+      if (data && data.length > 0) {
+        console.log('📋 [Fauna] Primeiros 3 registros:', data.slice(0, 3));
+      } else {
+        console.warn('⚠️ [Fauna] Nenhum registro encontrado na tabela fat_registros_de_resgate');
+      }
 
       const enriched: RegistroFauna[] = (data || []).map((r: any) => {
         const especie = dimensionCache?.especies.get(r.especie_id);
@@ -423,20 +437,34 @@ const RegistrosUnificados: React.FC = () => {
   const loadCrimesAmbientaisData = async () => {
     setLoadingCrimesAmbientais(true);
     try {
+      console.log('🔍 [Crimes Ambientais] Iniciando busca em fat_registros_de_crime...');
       let query = supabase
         .from('fat_registros_de_crime')
         .select('id, data, tipo_crime_id, enquadramento_id, regiao_administrativa_id, ocorreu_apreensao, procedimento_legal, desfecho_id, created_at')
         .order('data', { ascending: false });
 
       query = buildDateFilters(query, 'data');
+      console.log('🔍 [Crimes Ambientais] Executando query...', { filterAno, filterMes });
       const { data, error } = await query;
 
       if (error) {
-        console.error('Erro na query de crimes ambientais:', error);
+        console.error('❌ [Crimes Ambientais] Erro na query de crimes ambientais:', error);
+        console.error('❌ [Crimes Ambientais] Detalhes do erro:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        toast.error(`Erro ao carregar registros de crimes ambientais: ${error.message}`);
         throw error;
       }
       
-      console.log(`✅ Carregados ${data?.length || 0} registros de crimes ambientais da tabela fat_registros_de_crime`);
+      console.log(`✅ [Crimes Ambientais] Carregados ${data?.length || 0} registros de crimes ambientais da tabela fat_registros_de_crime`);
+      if (data && data.length > 0) {
+        console.log('📋 [Crimes Ambientais] Primeiros 3 registros:', data.slice(0, 3));
+      } else {
+        console.warn('⚠️ [Crimes Ambientais] Nenhum registro encontrado na tabela fat_registros_de_crime');
+      }
 
       const enriched: RegistroCrimeAmbiental[] = (data || []).map((r: any) => ({
         id: r.id,
@@ -460,13 +488,32 @@ const RegistrosUnificados: React.FC = () => {
   const loadCrimesComunsData = async () => {
     setLoadingCrimesComuns(true);
     try {
+      console.log('🔍 [Crimes Comuns] Iniciando busca em fat_crimes_comuns...');
       let query = supabase
         .from('fat_crimes_comuns')
         .select('id, data, natureza_crime, tipo_penal_id, regiao_administrativa_id, local_especifico, vitimas_envolvidas, suspeitos_envolvidos, desfecho_id, created_at')
         .order('data', { ascending: false });
 
       query = buildDateFilters(query, 'data');
+      console.log('🔍 [Crimes Comuns] Executando query...', { filterAno, filterMes });
       const { data, error } = await query;
+      
+      if (error) {
+        console.error('❌ [Crimes Comuns] Erro na query:', error);
+        console.error('❌ [Crimes Comuns] Detalhes do erro:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        toast.error(`Erro ao carregar registros de crimes comuns: ${error.message}`);
+        throw error;
+      }
+      
+      console.log(`✅ [Crimes Comuns] Carregados ${data?.length || 0} registros de crimes comuns`);
+      if (data && data.length === 0) {
+        console.warn('⚠️ [Crimes Comuns] Nenhum registro encontrado na tabela fat_crimes_comuns');
+      }
 
       if (error) {
         console.error('Erro na query de crimes comuns:', error);
