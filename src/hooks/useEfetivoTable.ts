@@ -92,7 +92,7 @@ export const useEfetivoTable = () => {
         .from('dim_efetivo')
         .select(`
           *,
-          user_roles:user_roles!user_roles_efetivo_id_fkey(
+          user_roles(
             id,
             role,
             login,
