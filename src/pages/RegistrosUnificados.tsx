@@ -434,6 +434,11 @@ const RegistrosUnificados: React.FC = () => {
           console.log('📅 [Fauna] Anos encontrados nos dados:', anosEncontrados);
         } else {
           console.warn('⚠️ [Fauna] ATENÇÃO: Nenhum registro encontrado na tabela fat_registros_de_resgate SEM filtros!');
+          console.warn('⚠️ [Fauna] Possíveis causas:');
+          console.warn('   1. Não há dados na tabela fat_registros_de_resgate');
+          console.warn('   2. Problema de permissões RLS (Row Level Security) bloqueando acesso');
+          console.warn('   3. Tabela não existe ou nome incorreto');
+          console.warn('   4. Usuário não tem permissão para ler a tabela');
         }
       }
       
