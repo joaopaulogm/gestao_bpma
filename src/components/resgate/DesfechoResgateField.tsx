@@ -7,7 +7,6 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import FormField from './FormField';
-import FormSection from './FormSection';
 import { buscarDesfechosResgate, DesfechoItem } from '@/services/dimensionService';
 
 interface DesfechoResgateFieldProps {
@@ -37,31 +36,29 @@ const DesfechoResgateField: React.FC<DesfechoResgateFieldProps> = ({
   }, []);
 
   return (
-    <FormSection>
-      <FormField 
-        id="desfechoResgate" 
-        label="Desfecho do Resgate" 
-        error={error}
-        required={required}
+    <FormField 
+      id="desfechoResgate" 
+      label="Desfecho do Resgate" 
+      error={error}
+      required={required}
+    >
+      <Select 
+        onValueChange={onDesfechoChange}
+        value={desfechoResgate}
+        disabled={loading}
       >
-        <Select 
-          onValueChange={onDesfechoChange}
-          value={desfechoResgate}
-          disabled={loading}
-        >
-          <SelectTrigger className={error ? "border-red-500" : ""}>
-            <SelectValue placeholder={loading ? "Carregando..." : "Selecione o desfecho"} />
-          </SelectTrigger>
-          <SelectContent>
-            {desfechos.map((desfecho) => (
-              <SelectItem key={desfecho.id} value={desfecho.nome}>
-                {desfecho.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FormField>
-    </FormSection>
+        <SelectTrigger className={error ? "border-red-500" : ""}>
+          <SelectValue placeholder={loading ? "Carregando..." : "Selecione o desfecho"} />
+        </SelectTrigger>
+        <SelectContent>
+          {desfechos.map((desfecho) => (
+            <SelectItem key={desfecho.id} value={desfecho.nome}>
+              {desfecho.nome}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </FormField>
   );
 };
 

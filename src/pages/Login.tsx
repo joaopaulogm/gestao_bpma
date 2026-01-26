@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Lock, User, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle, Shield, Link2, Eye, EyeOff, FileText } from 'lucide-react';
+import { Lock, User, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle, Eye, EyeOff, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { handleSupabaseError, getOAuthLinkErrorMessage } from '@/utils/errorHandler';
+import { handleSupabaseError } from '@/utils/errorHandler';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -40,7 +40,7 @@ interface PasswordValidation {
 }
 
 // Estados do fluxo de login
-type LoginStep = 'login' | 'password-change' | 'google-link-offer' | 'password-recovery' | 'password-reset';
+type LoginStep = 'login' | 'password-change' | 'password-recovery' | 'password-reset';
 
 // Glassmorphism Card Component - FORA do componente para evitar re-render
 const GlassCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
@@ -119,7 +119,6 @@ const Login = () => {
   
   // Estado geral
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [pendingUser, setPendingUser] = useState<UserRoleData | null>(null);
   const [loginStep, setLoginStep] = useState<LoginStep>('login');
   const [activeTab, setActiveTab] = useState<'primeiro-acesso' | 'senha' | 'email'>('senha');
@@ -160,51 +159,7 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Detectar erro na URL ao voltar do OAuth (hash ou query)
-  React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const hash = window.location.hash ? new URLSearchParams(window.location.hash.replace('#', '?')) : new URLSearchParams();
-    const err = params.get('error') || hash.get('error');
-    const desc = params.get('error_description') || hash.get('error_description') || '';
-    if (err) {
-      const text = getOAuthLinkErrorMessage({ message: desc || err, error: err });
-      toast.error(text);
-      console.error('OAuth return error:', err, desc);
-      // Limpar URL sem recarregar
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
 
-  // Check if user just linked account via Google OAuth
-  React.useEffect(() => {
-    const checkPendingLink = async () => {
-      const pendingUserRoleId = localStorage.getItem('pendingLinkUserRoleId');
-      if (!pendingUserRoleId) return;
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // Vincular usando RPC
-        const { data, error } = await (supabase as any).rpc('vincular_google_user_roles', {
-          p_user_role_id: pendingUserRoleId,
-          p_auth_user_id: session.user.id,
-          p_email: session.user.email
-        });
-
-        localStorage.removeItem('pendingLinkUserRoleId');
-
-        if (error) {
-          const msg = getOAuthLinkErrorMessage(error);
-          toast.error(msg);
-          console.error('vincular_google_user_roles error:', error);
-        } else {
-          toast.success('Conta Google vinculada com sucesso!');
-          navigate('/inicio');
-        }
-      }
-    };
-
-    checkPendingLink();
-  }, [navigate]);
 
   // ==================== PRIMEIRO ACESSO ====================
   // Login = matrícula (números e letra X)
@@ -262,11 +217,6 @@ const Login = () => {
         return;
       }
 
-      // Se já tem user_id vinculado (Google)
-      if (usuario.user_id) {
-        toast.info('Sua conta já está vinculada ao Google. Use o botão "Entrar com Google".');
-        return;
-      }
 
       // Primeiro acesso - mostrar tela de alteração de senha
       setPendingUser(usuario);
@@ -319,9 +269,6 @@ const Login = () => {
       }
 
       // Login válido - salvar sessão e redirecionar
-      // O usuário pode vincular Google a qualquer momento via Perfil
-      const hasGoogleLinked = !!usuario.user_id;
-      
       const userData = {
         id: usuario.id,
         nome: usuario.nome,
@@ -329,7 +276,6 @@ const Login = () => {
         matricula: usuario.matricula,
         email: usuario.email,
         role: usuario.role,
-        hasGoogleLink: hasGoogleLinked,
       };
       localStorage.setItem('bpma_auth_user', JSON.stringify(userData));
       
@@ -380,8 +326,27 @@ const Login = () => {
 
       toast.success('Senha alterada com sucesso!');
       
-      // Ir para oferta de vínculo Google
-      setLoginStep('google-link-offer');
+      // Login realizado com sucesso - redirecionar para página inicial
+      if (pendingUser) {
+        // Salvar sessão no localStorage
+        const userData = {
+          id: pendingUser.id,
+          nome: pendingUser.nome,
+          nome_guerra: pendingUser.nome_guerra,
+          matricula: pendingUser.matricula,
+          email: pendingUser.email,
+          role: pendingUser.role
+        };
+        localStorage.setItem('bpma_auth_user', JSON.stringify(userData));
+        
+        // Disparar evento para AuthContext reagir imediatamente
+        window.dispatchEvent(new CustomEvent('bpma_local_auth_changed', { detail: userData }));
+      }
+      
+      // Redirecionar para página inicial
+      setTimeout(() => {
+        navigate('/inicio');
+      }, 100);
     } catch (error: unknown) {
       console.error('Password change error:', error);
       toast.error('Erro ao alterar senha');
@@ -390,63 +355,6 @@ const Login = () => {
     }
   };
 
-  // ==================== VINCULAR GOOGLE ====================
-  const handleLinkGoogle = async () => {
-    if (!pendingUser) return;
-    
-    setIsGoogleLoading(true);
-
-    try {
-      // Salvar ID para vincular após retorno do OAuth
-      localStorage.setItem('pendingLinkUserRoleId', pendingUser.id);
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/login`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
-        }
-      });
-
-      if (error) {
-        localStorage.removeItem('pendingLinkUserRoleId');
-        toast.error(getOAuthLinkErrorMessage(error));
-        console.error('signInWithOAuth (link) error:', error);
-      }
-    } catch (error: unknown) {
-      console.error('Google link error:', error);
-      toast.error(getOAuthLinkErrorMessage(error));
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
-
-  const handleSkipGoogleLink = () => {
-    // Login realizado com sucesso - redirecionar para página inicial
-    // O usuário fez login com matrícula/senha - sessão PERMANENTE
-    
-    if (pendingUser) {
-      // Salvar sessão no localStorage
-      const userData = {
-        id: pendingUser.id,
-        nome: pendingUser.nome,
-        nome_guerra: pendingUser.nome_guerra,
-        matricula: pendingUser.matricula,
-        email: pendingUser.email,
-        role: pendingUser.role
-      };
-      localStorage.setItem('bpma_auth_user', JSON.stringify(userData));
-      
-      // Disparar evento para AuthContext reagir imediatamente
-      window.dispatchEvent(new CustomEvent('bpma_local_auth_changed', { detail: userData }));
-    }
-    
-    toast.success('Login realizado com sucesso!');
-    
-    // Usar setTimeout para garantir que o AuthContext processe o evento antes do navigate
     setTimeout(() => {
       navigate('/inicio');
     }, 100);
@@ -467,31 +375,6 @@ const Login = () => {
     }
   };
 
-  // ==================== LOGIN DIRETO COM GOOGLE ====================
-  const handleDirectGoogleLogin = async () => {
-    setIsGoogleLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/inicio`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
-        }
-      });
-
-      if (error) {
-        toast.error(handleSupabaseError(error, 'fazer login com Google'));
-      }
-    } catch (error: unknown) {
-      console.error('Google login error:', error);
-      toast.error('Erro ao fazer login com Google');
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
 
   // ==================== RESET ====================
   const resetToLogin = () => {
@@ -718,77 +601,6 @@ const Login = () => {
     );
   }
 
-  // ==================== TELA: OFERTA VÍNCULO GOOGLE ====================
-  if (loginStep === 'google-link-offer' && pendingUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6"
-           style={{ background: 'linear-gradient(135deg, #071d49 0%, #0a2a5e 50%, #071d49 100%)' }}>
-        <GlassCard className="w-full max-w-md p-6 sm:p-8">
-          {/* Avatar */}
-          <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500/30 to-green-500/10 
-                            border-2 border-green-500/50 flex items-center justify-center">
-              <Shield className="h-10 w-10 text-green-400" />
-            </div>
-          </div>
-
-          <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">
-            Senha Criada!
-          </h2>
-          <p className="text-white/70 text-center text-sm mb-6">
-            Deseja vincular sua conta Google para facilitar o acesso?
-          </p>
-
-          {/* Info Box */}
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-6 text-sm">
-            <div className="flex items-start gap-2">
-              <Link2 className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
-              <div className="text-blue-300">
-                <p className="font-medium mb-1">Vantagens do vínculo Google:</p>
-                <ul className="text-xs space-y-1 list-disc list-inside text-blue-300/80">
-                  <li>Login mais rápido com um clique</li>
-                  <li>Não precisa lembrar a senha</li>
-                  <li>Maior segurança com autenticação Google</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <Button
-              type="button"
-              className="w-full h-11 bg-gradient-to-r from-[#ffcc00] to-[#e6b800] hover:from-[#e6b800] hover:to-[#cc9900] 
-                         text-[#071d49] font-semibold rounded-lg shadow-lg shadow-[#ffcc00]/20
-                         transition-all duration-300 hover:shadow-[#ffcc00]/40 flex items-center justify-center gap-2"
-              onClick={handleLinkGoogle}
-              disabled={isGoogleLoading}
-            >
-              <svg className="h-5 w-5" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              {isGoogleLoading ? 'Conectando...' : 'Vincular Conta Google'}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-11 bg-transparent border-white/20 text-white hover:bg-white/10"
-              onClick={handleSkipGoogleLink}
-            >
-              Pular por agora
-            </Button>
-
-            <p className="text-xs text-center text-white/50">
-              Você pode vincular sua conta Google a qualquer momento nas configurações.
-            </p>
-          </div>
-        </GlassCard>
-      </div>
-    );
-  }
 
   // ==================== TELA: RECUPERAÇÃO DE SENHA (Etapa 1 - Verificar identidade) ====================
   if (loginStep === 'password-recovery') {
@@ -1160,36 +972,6 @@ const Login = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Divider */}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-white/20" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-transparent px-2 text-white/50">Ou</span>
-          </div>
-        </div>
-
-        {/* Google Login */}
-        <Button
-          variant="outline"
-          className="w-full h-11 bg-white/10 border-white/20 text-white hover:bg-white/20 
-                     flex items-center justify-center gap-2 rounded-lg"
-          onClick={handleDirectGoogleLogin}
-          disabled={isGoogleLoading}
-        >
-          <svg className="h-5 w-5" viewBox="0 0 24 24">
-            <path fill="#EA4335" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#4285F4" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          {isGoogleLoading ? 'Conectando...' : 'Entrar com Google'}
-        </Button>
-
-        <p className="text-xs text-center text-white/40 mt-3">
-          Use Google se já vinculou sua conta anteriormente
-        </p>
 
         {/* Footer */}
         <div className="mt-6 pt-4 border-t border-white/10 text-center space-y-2">

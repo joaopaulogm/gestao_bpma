@@ -84,7 +84,7 @@ const DestinacaoField: React.FC<DestinacaoFieldProps> = ({
       </FormField>
       
       {(destinacao === 'CETAS/IBAMA' || destinacao === 'HFAUS/IBRAM' || destinacao === 'HVet/UnB') && (
-        <FormField id="numeroTermoEntrega" label="Nº Termo de Entrega" error={numeroTermoEntregaError} required={required}>
+        <FormField id="numeroTermoEntrega" label="Nº Termo de Entrega" error={numeroTermoEntregaError} required={false}>
           <Input
             id="numeroTermoEntrega"
             name="numeroTermoEntrega"

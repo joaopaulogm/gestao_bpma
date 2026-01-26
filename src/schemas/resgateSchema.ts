@@ -49,6 +49,17 @@ export const resgateSchema = z
     tipoAreaId: z.string().optional(),
   })
   .superRefine((data, ctx) => {
+    // Validação específica para Resgate de Fauna
+    if (data.origem === "Resgate de Fauna") {
+      if (!data.desfechoResgate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Desfecho do Resgate é obrigatório",
+          path: ["desfechoResgate"],
+        });
+      }
+    }
+
     // Validação específica para Apreensão (mantida)
     if (data.origem === "Apreensão") {
       if (!data.desfechoApreensao) {

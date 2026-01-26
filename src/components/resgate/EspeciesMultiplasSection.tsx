@@ -685,7 +685,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                 </FormField>
 
                 {(especie.destinacao === 'CETAS/IBAMA' || especie.destinacao === 'HFAUS/IBRAM' || especie.destinacao === 'HVet/UnB') && (
-                  <FormField id={`numeroTermoEntrega-${especie.id}`} label="Nº Termo de Entrega" required={!isEvadido}>
+                  <FormField id={`numeroTermoEntrega-${especie.id}`} label="Nº Termo de Entrega" required={false}>
                     <Input
                       value={especie.numeroTermoEntrega}
                       onChange={(e) => handleEspecieChange(especie.id, 'numeroTermoEntrega', e.target.value)}
