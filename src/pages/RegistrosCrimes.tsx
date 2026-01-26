@@ -6,7 +6,10 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { handleSupabaseError } from '@/utils/errorHandler';
-import { Search, Filter, Download, Eye, Edit, Trash2 } from 'lucide-react';
+import { Search, Filter, Download, Eye, Edit, Trash2, Calendar } from 'lucide-react';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -46,6 +49,8 @@ interface RegistroCrime {
   qtd_liberados_maior?: number;
   qtd_liberados_menor?: number;
   desfecho?: { nome: string };
+  horario_acionamento?: string;
+  horario_desfecho?: string;
   created_at?: string;
 }
 
@@ -53,6 +58,7 @@ const RegistrosCrimes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterAno, setFilterAno] = useState('all');
   const [filterMes, setFilterMes] = useState('all');
+  const [filterData, setFilterData] = useState<Date | undefined>(undefined);
   const [filterRegiao, setFilterRegiao] = useState('all');
   const [filterTipoCrime, setFilterTipoCrime] = useState('all');
   const [filterApreensao, setFilterApreensao] = useState('all');
@@ -109,6 +115,8 @@ const RegistrosCrimes = () => {
           qtd_detidos_menor,
           qtd_liberados_maior,
           qtd_liberados_menor,
+          horario_acionamento,
+          horario_desfecho,
           created_at
         `)
         .order('data', { ascending: false });
@@ -187,6 +195,24 @@ const RegistrosCrimes = () => {
       return (registroDate.getMonth() + 1).toString() === filterMes;
     })();
 
+    // Filtro por data específica - comparar apenas YYYY-MM-DD para evitar problemas de timezone
+    const matchesData = !filterData || (() => {
+      if (!registro.data) return false;
+      try {
+        // Converter data do registro para YYYY-MM-DD
+        const registroDate = new Date(registro.data);
+        if (isNaN(registroDate.getTime())) return false;
+        const registroDateStr = registroDate.toISOString().split('T')[0];
+        
+        // Converter data do filtro para YYYY-MM-DD
+        const filterDateStr = filterData.toISOString().split('T')[0];
+        
+        return registroDateStr === filterDateStr;
+      } catch {
+        return false;
+      }
+    })();
+
     // Filtro por região
     const matchesRegiao = filterRegiao === 'all' || 
       registro.regiao_administrativa?.nome === filterRegiao ||
@@ -205,6 +231,7 @@ const RegistrosCrimes = () => {
     return matchesSearch && 
            matchesAno && 
            matchesMes && 
+           matchesData &&
            matchesRegiao && 
            matchesTipoCrime && 
            matchesApreensao;
@@ -352,9 +379,9 @@ const RegistrosCrimes = () => {
 
         {/* Filtros */}
         {showFilters && (
-          <Card>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <Card className="bg-gradient-to-br from-card/95 via-card/90 to-card/95 border-border/50 shadow-sm">
+            <CardContent className="p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Ano</label>
                   <Select value={filterAno} onValueChange={setFilterAno}>
@@ -383,6 +410,45 @@ const RegistrosCrimes = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Data Específica</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !filterData && "text-muted-foreground"
+                        )}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {filterData ? format(filterData, "dd/MM/yyyy", { locale: ptBR }) : "Selecione uma data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={filterData}
+                        onSelect={setFilterData}
+                        initialFocus
+                        locale={ptBR}
+                      />
+                      {filterData && (
+                        <div className="p-3 border-t">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => setFilterData(undefined)}
+                          >
+                            Limpar filtro
+                          </Button>
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div>
@@ -445,21 +511,21 @@ const RegistrosCrimes = () => {
             <p className="text-muted-foreground text-sm">Nenhum registro encontrado</p>
           </div>
         ) : (
-          <div className="w-full space-y-4">
+          <div className="w-full space-y-3 sm:space-y-4">
             {filteredRegistros.map((registro) => (
-              <TableCard key={registro.id}>
+              <TableCard key={registro.id} className="group">
                 <TableCardHeader>
                   <TableCardTitle subtitle={registro.tipo_area?.["Tipo de Área"] || undefined}>
                     {registro.tipo_crime?.["Tipo de Crime"] || 'Crime não especificado'}
                   </TableCardTitle>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {registro.ocorreu_apreensao ? (
-                      <TableCardBadge variant="success">Apreensão</TableCardBadge>
+                      <TableCardBadge variant="success" className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20">Apreensão</TableCardBadge>
                     ) : (
-                      <TableCardBadge variant="outline">Sem apreensão</TableCardBadge>
+                      <TableCardBadge variant="outline" className="bg-slate-100/50 text-slate-600 border-slate-200">Sem apreensão</TableCardBadge>
                     )}
                     {registro.desfecho?.nome && (
-                      <TableCardBadge variant="default">{registro.desfecho.nome}</TableCardBadge>
+                      <TableCardBadge variant="default" className="bg-blue-500/10 text-blue-700 border-blue-500/20">{registro.desfecho.nome}</TableCardBadge>
                     )}
                   </div>
                 </TableCardHeader>
@@ -468,7 +534,21 @@ const RegistrosCrimes = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <TableCardField
                       label="Data"
-                      value={formatDate(registro.data)}
+                      value={
+                        <div className="flex flex-col gap-1">
+                          <span className="font-semibold text-foreground">{formatDate(registro.data)}</span>
+                          {registro.horario_acionamento && (
+                            <span className="text-xs text-muted-foreground">
+                              Acionamento: {registro.horario_acionamento.substring(0, 5)}
+                            </span>
+                          )}
+                          {registro.horario_desfecho && (
+                            <span className="text-xs text-muted-foreground">
+                              Término: {registro.horario_desfecho.substring(0, 5)}
+                            </span>
+                          )}
+                        </div>
+                      }
                     />
                     <TableCardField
                       label="Região"

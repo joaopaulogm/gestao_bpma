@@ -36,6 +36,8 @@ interface RegistroCrime {
   qtd_liberados_maior?: number;
   qtd_liberados_menor?: number;
   desfecho_id?: string;
+  horario_acionamento?: string;
+  horario_desfecho?: string;
 }
 
 interface CrimeAmbientalEditDialogProps {
@@ -61,11 +63,23 @@ const CrimeAmbientalEditDialog: React.FC<CrimeAmbientalEditDialogProps> = ({
     latitude: '',
     longitude: '',
     ocorreu_apreensao: false,
+    horario_acionamento: '',
+    horario_desfecho: '',
   });
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (registro) {
+      // Converter horários do formato TIME do PostgreSQL para formato HH:MM
+      const formatTime = (time: string | undefined) => {
+        if (!time) return '';
+        // Se já está no formato HH:MM, retornar
+        if (time.match(/^\d{2}:\d{2}$/)) return time;
+        // Se está no formato HH:MM:SS, pegar apenas HH:MM
+        if (time.match(/^\d{2}:\d{2}:\d{2}/)) return time.substring(0, 5);
+        return '';
+      };
+
       setFormData({
         id: registro.id,
         data: registro.data?.split('T')[0] || '',
@@ -79,6 +93,8 @@ const CrimeAmbientalEditDialog: React.FC<CrimeAmbientalEditDialogProps> = ({
         qtd_detidos_menor: registro.qtd_detidos_menor || 0,
         qtd_liberados_maior: registro.qtd_liberados_maior || 0,
         qtd_liberados_menor: registro.qtd_liberados_menor || 0,
+        horario_acionamento: formatTime(registro.horario_acionamento),
+        horario_desfecho: formatTime(registro.horario_desfecho),
       });
     }
   }, [registro]);
@@ -112,6 +128,8 @@ const CrimeAmbientalEditDialog: React.FC<CrimeAmbientalEditDialogProps> = ({
           qtd_detidos_menor: formData.qtd_detidos_menor || 0,
           qtd_liberados_maior: formData.qtd_liberados_maior || 0,
           qtd_liberados_menor: formData.qtd_liberados_menor || 0,
+          horario_acionamento: formData.horario_acionamento || null,
+          horario_desfecho: formData.horario_desfecho || null,
         })
         .eq('id', registro.id);
 
@@ -155,6 +173,27 @@ const CrimeAmbientalEditDialog: React.FC<CrimeAmbientalEditDialogProps> = ({
                 type="date"
                 value={formData.data}
                 onChange={(e) => setFormData({ ...formData, data: e.target.value })}
+                disabled={!isEditable}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Horário de Acionamento</Label>
+              <Input
+                type="time"
+                value={formData.horario_acionamento || ''}
+                onChange={(e) => setFormData({ ...formData, horario_acionamento: e.target.value })}
+                disabled={!isEditable}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Horário de Término/Desfecho</Label>
+              <Input
+                type="time"
+                value={formData.horario_desfecho || ''}
+                onChange={(e) => setFormData({ ...formData, horario_desfecho: e.target.value })}
                 disabled={!isEditable}
               />
             </div>

@@ -13,18 +13,24 @@ const TableCard = React.forwardRef<HTMLDivElement, TableCardProps>(
     <div
       ref={ref}
       className={cn(
-        "bg-card/90 backdrop-blur-sm rounded-2xl",
-        "border border-border/40",
-        "shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]",
-        "transition-all duration-300 ease-apple",
-        "p-3 sm:p-4",
-        onClick && "cursor-pointer hover:border-primary/30 hover:translate-y-[-1px]",
+        "bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-sm rounded-xl",
+        "border border-border/50 shadow-sm",
+        "hover:shadow-lg hover:border-primary/20",
+        "transition-all duration-200 ease-out",
+        "p-4 sm:p-5",
+        "relative overflow-hidden",
+        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/0 before:via-primary/0 before:to-primary/0",
+        "hover:before:from-primary/5 hover:before:via-primary/3 hover:before:to-primary/0",
+        "before:transition-all before:duration-300",
+        onClick && "cursor-pointer hover:translate-y-[-2px]",
         className
       )}
       onClick={onClick}
       {...props}
     >
-      {children}
+      <div className="relative z-10">
+        {children}
+      </div>
     </div>
   )
 )
@@ -38,7 +44,7 @@ const TableCardHeader = React.forwardRef<HTMLDivElement, TableCardHeaderProps>(
   ({ className, children, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("flex items-start justify-between gap-4 mb-3", className)}
+      className={cn("flex items-start justify-between gap-4 mb-4 pb-3 border-b border-border/30", className)}
       {...props}
     >
       {children}
@@ -55,11 +61,12 @@ export interface TableCardTitleProps extends React.HTMLAttributes<HTMLDivElement
 const TableCardTitle = React.forwardRef<HTMLDivElement, TableCardTitleProps>(
   ({ className, children, subtitle, ...props }, ref) => (
     <div ref={ref} className={cn("flex-1 min-w-0", className)} {...props}>
-      <div className="font-semibold text-sm sm:text-base text-foreground mb-1">
+      <div className="font-bold text-base sm:text-lg text-foreground mb-1.5 tracking-tight">
         {children}
       </div>
       {subtitle && (
-        <div className="text-xs text-muted-foreground flex items-center gap-2">
+        <div className="text-xs sm:text-sm text-muted-foreground/80 flex items-center gap-2 font-medium">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary/40"></span>
           {subtitle}
         </div>
       )}
@@ -186,7 +193,7 @@ const TableCardActions = React.forwardRef<HTMLDivElement, TableCardActionsProps>
   ({ className, children, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("flex items-center justify-end gap-2 pt-2 border-t border-border/50", className)}
+      className={cn("flex items-center justify-end gap-2 pt-3 mt-3 border-t border-border/40", className)}
       {...props}
     >
       {children}
