@@ -153,12 +153,12 @@ const Ferias: React.FC = () => {
       console.log(`🔍 Buscando férias do ano ${ano}...`);
       
       // Buscar dados de fat_ferias com join em dim_efetivo
-      // Usar LEFT JOIN para incluir registros mesmo sem efetivo_id
+      // O join padrão do Supabase já é LEFT JOIN, então não precisa especificar
       const { data: feriasData, error: feriasError } = await supabase
         .from('fat_ferias')
         .select(`
           *,
-          efetivo:dim_efetivo!left(id, matricula, posto_graduacao, nome_guerra, nome, quadro)
+          efetivo:dim_efetivo(id, matricula, posto_graduacao, nome_guerra, nome, quadro)
         `)
         .eq('ano', ano)
         .order('mes_inicio', { ascending: true });
@@ -243,23 +243,39 @@ const Ferias: React.FC = () => {
 
   // Parse all ferias to extract parcelas - usar parcelas_detalhadas se disponível, senão parse do observacao
   const feriasWithParcelas = useMemo(() => {
+    console.log(`📋 Processando ${ferias.length} registros de férias...`);
     return ferias.map(f => {
+      if (!f.efetivo) {
+        console.warn(`⚠️ Registro de férias sem efetivo (ID: ${f.id}, efetivo_id: ${f.efetivo_id}):`, f);
+      }
       // Se tem parcelas_detalhadas da tabela fat_ferias_parcelas, usar elas
       if (f.parcelas_detalhadas && Array.isArray(f.parcelas_detalhadas) && f.parcelas_detalhadas.length > 0) {
+        const parcelas = f.parcelas_detalhadas.map((p: any) => {
+          // Converter mes para número se for string
+          let mesNum = p.mes;
+          if (typeof mesNum === 'string') {
+            mesNum = parseInt(mesNum);
+          }
+          if (!mesNum || isNaN(mesNum)) {
+            mesNum = f.mes_inicio;
+          }
+          return {
+            mes: mesNum,
+            dias: p.dias || f.dias
+          };
+        });
         return {
           feriasId: f.id,
           ferias: f,
-          parcelas: f.parcelas_detalhadas.map((p: any) => ({
-            mes: p.mes || f.mes_inicio,
-            dias: p.dias || f.dias
-          }))
+          parcelas
         };
       }
       // Senão, usar parse do observacao (fallback)
+      const parcelasFallback = parseParcelasFromObservacao(f.observacao, f.mes_inicio, f.dias);
       return {
         feriasId: f.id,
         ferias: f,
-        parcelas: parseParcelasFromObservacao(f.observacao, f.mes_inicio, f.dias)
+        parcelas: parcelasFallback
       };
     });
   }, [ferias]);

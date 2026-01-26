@@ -87,7 +87,7 @@ const Abono: React.FC = () => {
       console.log(`🔍 Buscando abono do ano ${selectedYear}...`);
       
       // Buscar dados de fat_abono com join em dim_efetivo
-      // Usar LEFT JOIN para incluir registros mesmo sem efetivo_id
+      // O join padrão do Supabase já é LEFT JOIN, então não precisa especificar
       const { data: abonoData, error: abonoError } = await supabase
         .from('fat_abono')
         .select(`
@@ -113,7 +113,7 @@ const Abono: React.FC = () => {
           parcela3_fim,
           parcela3_dias,
           observacao,
-          efetivo:dim_efetivo!left(id, matricula, nome, nome_guerra, posto_graduacao)
+          efetivo:dim_efetivo(id, matricula, nome, nome_guerra, posto_graduacao)
         `)
         .eq('ano', selectedYear)
         .order('mes', { ascending: true });
@@ -199,17 +199,22 @@ const Abono: React.FC = () => {
     const marcados: MilitarAbono[] = [];
 
     abonoData.forEach((item: any) => {
-      if (!item.efetivo) return;
+      // Incluir registros mesmo sem efetivo para debug
+      if (!item.efetivo) {
+        console.warn(`⚠️ Registro de abono sem efetivo (ID: ${item.id}, efetivo_id: ${item.efetivo_id}):`, item);
+        // Pular registros sem efetivo por enquanto, mas logar para debug
+        return;
+      }
       
       const temDataMarcada = item.parcela1_inicio || item.parcela2_inicio || item.parcela3_inicio;
       
       const militar: MilitarAbono = {
         id: item.id,
         efetivo_id: item.efetivo.id,
-        matricula: item.efetivo.matricula,
-        posto: item.efetivo.posto_graduacao,
-        nome: item.efetivo.nome,
-        nome_guerra: item.efetivo.nome_guerra,
+        matricula: item.efetivo.matricula || item.efetivo_id || 'N/A',
+        posto: item.efetivo.posto_graduacao || 'N/A',
+        nome: item.efetivo.nome || 'Sem nome',
+        nome_guerra: item.efetivo.nome_guerra || item.efetivo.nome || 'Sem nome',
         mes: item.mes,
         mes_previsao: item.mes_previsao || item.mes,
         mes_reprogramado: item.mes_reprogramado,
