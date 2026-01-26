@@ -500,6 +500,48 @@ const EfetivoBPMA = () => {
                         label="Antiguidade"
                         value={item.antiguidade || '-'}
                       />
+                      {item.user_role && (
+                        <TableCardField
+                          label="Usuário"
+                          value={item.user_role.login || item.user_role.email || 'Sem login'}
+                        />
+                      )}
+                      {(item.total_ferias || item.total_abono || item.total_licencas || item.total_restricoes || item.total_equipes || item.total_os) > 0 && (
+                        <div className="col-span-full">
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            {item.total_ferias > 0 && (
+                              <TableCardBadge variant="outline">
+                                {item.total_ferias} Férias
+                              </TableCardBadge>
+                            )}
+                            {item.total_abono > 0 && (
+                              <TableCardBadge variant="outline">
+                                {item.total_abono} Abono
+                              </TableCardBadge>
+                            )}
+                            {item.total_licencas > 0 && (
+                              <TableCardBadge variant="outline">
+                                {item.total_licencas} Licenças
+                              </TableCardBadge>
+                            )}
+                            {item.total_restricoes > 0 && (
+                              <TableCardBadge variant="outline">
+                                {item.total_restricoes} Restrições
+                              </TableCardBadge>
+                            )}
+                            {item.total_equipes > 0 && (
+                              <TableCardBadge variant="outline">
+                                {item.total_equipes} Equipes
+                              </TableCardBadge>
+                            )}
+                            {item.total_os > 0 && (
+                              <TableCardBadge variant="outline">
+                                {item.total_os} OS
+                              </TableCardBadge>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </TableCardContent>
 

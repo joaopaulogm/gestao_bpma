@@ -14,6 +14,21 @@ export interface Efetivo {
   sexo: string;
   lotacao: string;
   created_at: string;
+  ativo?: boolean;
+  // Relacionamentos (opcionais, carregados sob demanda)
+  user_role?: {
+    id: string;
+    role: string;
+    login?: string;
+    email?: string;
+    ativo: boolean;
+  };
+  total_ferias?: number;
+  total_abono?: number;
+  total_licencas?: number;
+  total_restricoes?: number;
+  total_equipes?: number;
+  total_os?: number;
 }
 
 // Ordem hierárquica dos postos (Oficiais)
@@ -71,13 +86,93 @@ export const useEfetivoTable = () => {
   const fetchEfetivo = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Buscar dados de dim_efetivo com relacionamentos
+      const { data: efetivoData, error: efetivoError } = await supabase
         .from('dim_efetivo')
-        .select('*')
+        .select(`
+          *,
+          user_roles:user_roles!user_roles_efetivo_id_fkey(
+            id,
+            role,
+            login,
+            email,
+            ativo
+          )
+        `)
+        .eq('ativo', true) // Apenas efetivo ativo
         .order('antiguidade', { ascending: true });
 
-      if (error) throw error;
-      setEfetivo((data as Efetivo[]) || []);
+      if (efetivoError) throw efetivoError;
+
+      // Buscar contagens de relacionamentos em paralelo
+      const efetivoIds = (efetivoData || []).map(e => e.id);
+      
+      if (efetivoIds.length > 0) {
+        // Buscar contagens de cada tabela relacionada
+        const [feriasRes, abonoRes, licencasRes, restricoesRes, equipesRes, osRes] = await Promise.all([
+          supabase.from('fat_ferias').select('efetivo_id', { count: 'exact', head: true }).in('efetivo_id', efetivoIds),
+          supabase.from('fat_abono').select('efetivo_id', { count: 'exact', head: true }).in('efetivo_id', efetivoIds),
+          supabase.from('fat_licencas_medicas').select('efetivo_id', { count: 'exact', head: true }).in('efetivo_id', efetivoIds),
+          supabase.from('fat_restricoes').select('efetivo_id', { count: 'exact', head: true }).in('efetivo_id', efetivoIds),
+          supabase.from('fat_equipe_membros').select('efetivo_id', { count: 'exact', head: true }).in('efetivo_id', efetivoIds),
+          supabase.from('fat_os_efetivo').select('efetivo_id', { count: 'exact', head: true }).in('efetivo_id', efetivoIds),
+        ]);
+
+        // Criar mapas de contagens por efetivo_id
+        const contagensMap = new Map<string, {
+          ferias: number;
+          abono: number;
+          licencas: number;
+          restricoes: number;
+          equipes: number;
+          os: number;
+        }>();
+
+        // Processar contagens (as queries acima retornam apenas o total, então vamos fazer queries individuais)
+        // Por performance, vamos fazer queries agrupadas
+        const [feriasCounts, abonoCounts, licencasCounts, restricoesCounts, equipesCounts, osCounts] = await Promise.all([
+          supabase.from('fat_ferias').select('efetivo_id').in('efetivo_id', efetivoIds),
+          supabase.from('fat_abono').select('efetivo_id').in('efetivo_id', efetivoIds),
+          supabase.from('fat_licencas_medicas').select('efetivo_id').in('efetivo_id', efetivoIds),
+          supabase.from('fat_restricoes').select('efetivo_id').in('efetivo_id', efetivoIds),
+          supabase.from('fat_equipe_membros').select('efetivo_id').in('efetivo_id', efetivoIds),
+          supabase.from('fat_os_efetivo').select('efetivo_id').in('efetivo_id', efetivoIds),
+        ]);
+
+        // Contar por efetivo_id
+        const countByEfetivo = (data: any[], field: string) => {
+          const counts = new Map<string, number>();
+          data?.forEach((item: any) => {
+            const id = item[field];
+            counts.set(id, (counts.get(id) || 0) + 1);
+          });
+          return counts;
+        };
+
+        const feriasCountsMap = countByEfetivo(feriasCounts.data || [], 'efetivo_id');
+        const abonoCountsMap = countByEfetivo(abonoCounts.data || [], 'efetivo_id');
+        const licencasCountsMap = countByEfetivo(licencasCounts.data || [], 'efetivo_id');
+        const restricoesCountsMap = countByEfetivo(restricoesCounts.data || [], 'efetivo_id');
+        const equipesCountsMap = countByEfetivo(equipesCounts.data || [], 'efetivo_id');
+        const osCountsMap = countByEfetivo(osCounts.data || [], 'efetivo_id');
+
+        // Enriquecer dados com contagens e relacionamentos
+        const enrichedData = (efetivoData || []).map((e: any) => ({
+          ...e,
+          user_role: e.user_roles && e.user_roles.length > 0 ? e.user_roles[0] : undefined,
+          total_ferias: feriasCountsMap.get(e.id) || 0,
+          total_abono: abonoCountsMap.get(e.id) || 0,
+          total_licencas: licencasCountsMap.get(e.id) || 0,
+          total_restricoes: restricoesCountsMap.get(e.id) || 0,
+          total_equipes: equipesCountsMap.get(e.id) || 0,
+          total_os: osCountsMap.get(e.id) || 0,
+        }));
+
+        setEfetivo(enrichedData as Efetivo[]);
+      } else {
+        setEfetivo([]);
+      }
     } catch (error: any) {
       console.error('Error fetching efetivo:', error);
       toast.error('Erro ao carregar efetivo');
