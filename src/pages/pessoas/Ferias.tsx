@@ -45,6 +45,7 @@ interface FeriasData {
     lancado_sgpol: boolean;
     lancado_campanha: boolean;
   }>;
+  staging_data?: any[];
   efetivo?: {
     id: string;
     matricula: string;
@@ -179,12 +180,29 @@ const Ferias: React.FC = () => {
         }
       }
 
+      // Tentar buscar dados de staging se disponível (pode falhar se não tiver permissão)
+      let stagingData: any[] = [];
+      try {
+        const { data: stgData, error: stgError } = await supabase
+          .from('stg_ferias_2026_pracas')
+          .select('*')
+          .eq('ano_gozo', ano);
+        
+        if (!stgError && stgData) {
+          stagingData = stgData;
+        }
+      } catch (stgErr) {
+        // Ignorar erro de staging - pode não ter permissão (restrito a admin)
+        console.warn('Não foi possível carregar dados de staging stg_ferias_2026_pracas (pode ser restrito a admin):', stgErr);
+      }
+
       // Enriquecer dados de férias com parcelas
       const feriasEnriquecidas = (feriasData || []).map(feria => {
         const parcelasFeria = parcelasData.filter(p => p.fat_ferias_id === feria.id);
         return {
           ...feria,
-          parcelas_detalhadas: parcelasFeria
+          parcelas_detalhadas: parcelasFeria,
+          staging_data: stagingData.filter(s => s.matricula === feria.efetivo?.matricula)
         };
       });
 
