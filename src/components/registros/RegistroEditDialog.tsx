@@ -56,6 +56,7 @@ const RegistroEditDialog: React.FC<RegistroEditDialogProps> = ({
     especie_id: '',
     quantidade_adulto: 0,
     quantidade_filhote: 0,
+    quantidade_jovem: 0,
     latitude_origem: '',
     longitude_origem: '',
     atropelamento: '',
@@ -81,6 +82,7 @@ const RegistroEditDialog: React.FC<RegistroEditDialogProps> = ({
         especie_id: registro.especie_id || '',
         quantidade_adulto: registro.quantidade_adulto || 0,
         quantidade_filhote: registro.quantidade_filhote || 0,
+        quantidade_jovem: (registro as any)['quantidade Jovem'] || (registro as any).quantidade_jovem || 0,
         latitude_origem: registro.latitude_origem || '',
         longitude_origem: registro.longitude_origem || '',
         atropelamento: registro.atropelamento || '',
@@ -109,10 +111,10 @@ const RegistroEditDialog: React.FC<RegistroEditDialogProps> = ({
         data: formData.data,
         horario_acionamento: formData.horario_acionamento || null,
         horario_termino: formData.horario_termino || null,
-        quantidade_adulto: formData.quantidade_adulto,
-        quantidade_filhote: formData.quantidade_filhote,
-        quantidade_total: formData.quantidade_adulto + formData.quantidade_filhote,
-        quantidade: formData.quantidade_adulto + formData.quantidade_filhote,
+        quantidade_adulto: formData.quantidade_adulto || 0,
+        quantidade_filhote: formData.quantidade_filhote || 0,
+        "quantidade Jovem": formData.quantidade_jovem || 0,
+        quantidade_total: (formData.quantidade_adulto || 0) + (formData.quantidade_filhote || 0) + (formData.quantidade_jovem || 0),
         latitude_origem: formData.latitude_origem || null,
         longitude_origem: formData.longitude_origem || null,
         atropelamento: formData.atropelamento || null,
@@ -336,7 +338,7 @@ const RegistroEditDialog: React.FC<RegistroEditDialogProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Quantidade Adulto</Label>
               <Input
@@ -354,6 +356,16 @@ const RegistroEditDialog: React.FC<RegistroEditDialogProps> = ({
                 min={0}
                 value={formData.quantidade_filhote}
                 onChange={(e) => setFormData({ ...formData, quantidade_filhote: parseInt(e.target.value) || 0 })}
+                disabled={!isEditable}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Quantidade Jovem</Label>
+              <Input
+                type="number"
+                min={0}
+                value={formData.quantidade_jovem}
+                onChange={(e) => setFormData({ ...formData, quantidade_jovem: parseInt(e.target.value) || 0 })}
                 disabled={!isEditable}
               />
             </div>

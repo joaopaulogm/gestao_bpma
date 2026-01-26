@@ -23,6 +23,7 @@ export interface EspecieItem {
   estagioVida: string;
   quantidadeAdulto: number;
   quantidadeFilhote: number;
+  quantidadeJovem: number;
   quantidadeTotal: number;
   destinacao: string;
   numeroTermoEntrega: string;
@@ -192,6 +193,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
       estagioVida: '',
       quantidadeAdulto: 0,
       quantidadeFilhote: 0,
+      quantidadeJovem: 0,
       quantidadeTotal: 0,
       destinacao: '',
       numeroTermoEntrega: '',
@@ -263,10 +265,11 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
       }
 
       // Recalcula quantidade total
-      if (field === 'quantidadeAdulto' || field === 'quantidadeFilhote') {
+      if (field === 'quantidadeAdulto' || field === 'quantidadeFilhote' || field === 'quantidadeJovem') {
         const adultos = field === 'quantidadeAdulto' ? (value as number) : updatedEspecie.quantidadeAdulto;
         const filhotes = field === 'quantidadeFilhote' ? (value as number) : updatedEspecie.quantidadeFilhote;
-        updatedEspecie.quantidadeTotal = adultos + filhotes;
+        const jovens = field === 'quantidadeJovem' ? (value as number) : updatedEspecie.quantidadeJovem;
+        updatedEspecie.quantidadeTotal = adultos + filhotes + jovens;
       }
 
       return updatedEspecie;
@@ -274,11 +277,11 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
     onEspeciesChange(updated);
   };
 
-  const handleQuantidadeChange = (id: string, tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => {
+  const handleQuantidadeChange = (id: string, tipo: 'adulto' | 'filhote' | 'jovem', operacao: 'aumentar' | 'diminuir') => {
     const especie = especies.find(e => e.id === id);
     if (!especie) return;
 
-    const field = tipo === 'adulto' ? 'quantidadeAdulto' : 'quantidadeFilhote';
+    const field = tipo === 'adulto' ? 'quantidadeAdulto' : tipo === 'filhote' ? 'quantidadeFilhote' : 'quantidadeJovem';
     const currentValue = especie[field];
     const newValue = operacao === 'aumentar' ? currentValue + 1 : Math.max(0, currentValue - 1);
     handleEspecieChange(id, field, newValue);
@@ -569,7 +572,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
               </Select>
             </FormField>
 
-            <div className="md:col-span-2 grid grid-cols-3 gap-4">
+            <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
               <FormField id={`quantidadeAdulto-${especie.id}`} label="Quantidade Adultos" required={!isEvadido}>
                 <div className="flex items-center gap-2">
                   <Button
@@ -616,6 +619,32 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                     variant="outline"
                     size="icon"
                     onClick={() => handleQuantidadeChange(especie.id, 'filhote', 'aumentar')}
+                  >
+                    +
+                  </Button>
+                </div>
+              </FormField>
+
+              <FormField id={`quantidadeJovem-${especie.id}`} label="Quantidade Jovem" required={!isEvadido}>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleQuantidadeChange(especie.id, 'jovem', 'diminuir')}
+                  >
+                    -
+                  </Button>
+                  <Input
+                    value={especie.quantidadeJovem}
+                    readOnly
+                    className="text-center w-16"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleQuantidadeChange(especie.id, 'jovem', 'aumentar')}
                   >
                     +
                   </Button>
