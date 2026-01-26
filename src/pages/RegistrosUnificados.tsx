@@ -375,11 +375,15 @@ const RegistrosUnificados: React.FC = () => {
   };
 
   const buildDateFilters = (query: any, dateField: string) => {
+    console.log(`📅 [buildDateFilters] Aplicando filtros para ${dateField}:`, { filterAno, filterMes });
+    
     if (filterAno !== 'all') {
       const startDate = `${filterAno}-01-01`;
       const endDate = `${filterAno}-12-31`;
+      console.log(`📅 [buildDateFilters] Filtro de ano: ${startDate} a ${endDate}`);
       query = query.gte(dateField, startDate).lte(dateField, endDate);
     }
+    
     if (filterMes !== 'all') {
       // Se já tem filtro de ano, usar o ano; senão, usar ano atual
       const ano = filterAno !== 'all' ? filterAno : new Date().getFullYear().toString();
@@ -388,8 +392,14 @@ const RegistrosUnificados: React.FC = () => {
       // Último dia do mês
       const lastDay = new Date(parseInt(ano), mes, 0).getDate();
       const endDate = `${ano}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      console.log(`📅 [buildDateFilters] Filtro de mês: ${startDate} a ${endDate}`);
       query = query.gte(dateField, startDate).lte(dateField, endDate);
     }
+    
+    if (filterAno === 'all' && filterMes === 'all') {
+      console.log(`📅 [buildDateFilters] Sem filtros de data - buscando todos os registros`);
+    }
+    
     return query;
   };
 
@@ -406,6 +416,19 @@ const RegistrosUnificados: React.FC = () => {
       query = buildDateFilters(query, 'data');
       
       console.log('🔍 [Fauna] Executando query...', { filterAno, filterMes });
+      
+      // Verificar se há dados na tabela SEM filtros primeiro (para debug)
+      if (filterAno !== 'all' || filterMes !== 'all') {
+        const { data: testData } = await supabaseAny
+          .from('fat_registros_de_resgate')
+          .select('id, data')
+          .limit(5);
+        console.log(`🔍 [Fauna] Teste: ${testData?.length || 0} registros encontrados SEM filtros (primeiros 5)`);
+        if (testData && testData.length > 0) {
+          console.log('📋 [Fauna] Exemplos de datas na tabela:', testData.map((r: any) => r.data));
+        }
+      }
+      
       // Remover limite para buscar todos os registros (ou aumentar significativamente)
       const { data, error } = await query;
 
@@ -426,6 +449,7 @@ const RegistrosUnificados: React.FC = () => {
         console.log('📋 [Fauna] Primeiros 3 registros:', data.slice(0, 3));
       } else {
         console.warn('⚠️ [Fauna] Nenhum registro encontrado na tabela fat_registros_de_resgate');
+        console.warn('⚠️ [Fauna] Filtros aplicados:', { filterAno, filterMes });
       }
 
       const enriched: RegistroFauna[] = (data || []).map((r: any) => {
@@ -605,6 +629,7 @@ const RegistrosUnificados: React.FC = () => {
   const loadBensApreendidosData = async () => {
     setLoadingBensApreendidos(true);
     try {
+      console.log('🔍 [Bens Apreendidos] Iniciando busca em fat_ocorrencia_apreensao...');
       // Buscar da tabela de relacionamento fat_ocorrencia_apreensao
       const { data, error } = await supabaseAny
         .from('fat_ocorrencia_apreensao')
@@ -612,7 +637,18 @@ const RegistrosUnificados: React.FC = () => {
         .order('id', { ascending: false })
         .limit(200);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [Bens Apreendidos] Erro na query:', error);
+        console.error('❌ [Bens Apreendidos] Detalhes do erro:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw error;
+      }
+      
+      console.log(`✅ [Bens Apreendidos] Carregados ${data?.length || 0} registros de bens apreendidos`);
 
       // Buscar itens de apreensão
       const { data: itensData } = await supabaseAny
