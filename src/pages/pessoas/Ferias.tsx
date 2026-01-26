@@ -287,12 +287,18 @@ const Ferias: React.FC = () => {
     
     feriasWithParcelas.forEach(item => {
       item.parcelas.forEach((parcela, idx) => {
-        summary[parcela.mes].push({
-          ferias: item.ferias,
-          parcela,
-          parcelaIndex: idx,
-          totalParcelas: item.parcelas.length
-        });
+        // Garantir que mes seja um número válido entre 1 e 12
+        const mesNum = typeof parcela.mes === 'string' ? parseInt(parcela.mes) : parcela.mes;
+        if (mesNum && mesNum >= 1 && mesNum <= 12) {
+          summary[mesNum].push({
+            ferias: item.ferias,
+            parcela,
+            parcelaIndex: idx,
+            totalParcelas: item.parcelas.length
+          });
+        } else {
+          console.warn(`⚠️ Parcela com mês inválido:`, { mes: parcela.mes, feriasId: item.ferias.id });
+        }
       });
     });
     
