@@ -14,11 +14,8 @@ const menuItems = [
   { title: 'Atividades de Prevenção', description: 'Registrar atividades educativas', icon: TreePine, path: '/secao-operacional/atividades-prevencao' },
   // Demais cards
   { title: 'Dashboard', description: 'Visualizar estatísticas', icon: BarChart, path: '/secao-operacional/dashboard' },
+  { title: 'Registros', description: 'Todos os registros unificados', icon: Table, path: '/secao-operacional/registros' },
   { title: 'Hotspots', description: 'Mapa de ocorrências', icon: MapPin, path: '/secao-operacional/hotspots' },
-  { title: 'Registros de Resgate', description: 'Todos os registros de resgate', icon: Table, path: '/secao-operacional/registros-resgates' },
-  { title: 'Registros de Crimes Ambientais', description: 'Todos os registros de crimes ambientais', icon: Briefcase, path: '/secao-operacional/registros-crimes-ambientais' },
-  { title: 'Registros de Crimes Comuns', description: 'Todos os crimes comuns', icon: Shield, path: '/secao-operacional/registros-crimes-comuns' },
-  { title: 'Registros de Prevenção', description: 'Todas as atividades de prevenção', icon: TreePine, path: '/secao-operacional/registros-prevencao' },
   { title: 'Relatórios', description: 'Gerar relatórios', icon: FileText, path: '/secao-operacional/relatorios' },
   { title: 'Bens Apreendidos', description: 'Gerenciar apreensões', icon: Package, path: '/secao-operacional/bens-apreendidos' },
   { title: 'Cadastrar Fauna', description: 'Registrar novas espécies de fauna', icon: PlusCircle, path: '/secao-operacional/fauna-cadastro' },

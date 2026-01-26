@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Clipboard, LogIn, Shield, BookOpen, Lock, Trophy, Briefcase, Users, Wrench, Settings, Gavel, HeartHandshake, BarChart3, FileText, Database, Upload } from 'lucide-react';
+import { Clipboard, LogIn, Shield, BookOpen, Lock, Trophy, Briefcase, Users, Wrench, Settings, Gavel, HeartHandshake, BarChart3, FileText, Database, Upload, AlertTriangle, TreePine } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import logoBpma from '@/assets/logo-bpma.svg';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -62,6 +62,10 @@ const SecaoOperacionalSection = () => <div className="space-y-3 sm:space-y-4 pt-
       <span className="text-xs sm:text-sm">Seção Operacional</span>
     </div>
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+      <HomeCard title="Resgate de Fauna" icon={HeartHandshake} to="/secao-operacional/resgate-cadastro" />
+      <HomeCard title="Crimes Ambientais" icon={AlertTriangle} to="/secao-operacional/crimes-ambientais" />
+      <HomeCard title="Crimes Comuns" icon={Shield} to="/secao-operacional/crimes-comuns" />
+      <HomeCard title="Prevenção" icon={TreePine} to="/secao-operacional/atividades-prevencao" />
       <HomeCard title="Dashboard Operacional" icon={BarChart3} to="/secao-operacional/dashboard" />
       <HomeCard title="Registros" icon={Clipboard} to="/secao-operacional/registros" />
       <HomeCard title="Hotspots" icon={Trophy} to="/secao-operacional/hotspots" />

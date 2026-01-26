@@ -8,7 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import { 
   Search, Filter, Eye, Edit, Trash2, 
   Bird, TreePine, AlertTriangle, Shield, Loader2,
-  ChevronDown, FileText, Calendar, Plus, MoreHorizontal,
+  ChevronDown, FileText, Calendar, MoreHorizontal,
   Check, X as XIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -684,22 +684,6 @@ const RegistrosUnificados: React.FC = () => {
     }
   };
 
-  const handleNewRecord = () => {
-    switch (activeTab) {
-      case 'fauna':
-        navigate('/resgate-cadastro');
-        break;
-      case 'crimes-ambientais':
-        navigate('/crimes-ambientais');
-        break;
-      case 'crimes-comuns':
-        navigate('/crimes-comuns');
-        break;
-      case 'prevencao':
-        navigate('/secao-operacional/atividades-prevencao');
-        break;
-    }
-  };
 
   const tabStats = useMemo(() => ({
     fauna: faunaRegistros.length,
@@ -1268,14 +1252,6 @@ const RegistrosUnificados: React.FC = () => {
                 />
               </div>
               
-              {/* Botão Novo */}
-              <Button 
-                onClick={handleNewRecord}
-                className="rounded-full bg-primary hover:bg-primary/90 shadow-md gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Novo Registro</span>
-              </Button>
             </div>
           </div>
 
