@@ -417,15 +417,23 @@ const RegistrosUnificados: React.FC = () => {
       
       console.log('🔍 [Fauna] Executando query...', { filterAno, filterMes });
       
-      // Verificar se há dados na tabela SEM filtros primeiro (para debug)
-      if (filterAno !== 'all' || filterMes !== 'all') {
-        const { data: testData } = await supabaseAny
-          .from('fat_registros_de_resgate')
-          .select('id, data')
-          .limit(5);
-        console.log(`🔍 [Fauna] Teste: ${testData?.length || 0} registros encontrados SEM filtros (primeiros 5)`);
+      // SEMPRE verificar se há dados na tabela SEM filtros primeiro (para debug)
+      const { data: testData, error: testError } = await supabaseAny
+        .from('fat_registros_de_resgate')
+        .select('id, data')
+        .order('data', { ascending: false })
+        .limit(10);
+      
+      if (testError) {
+        console.error('❌ [Fauna] Erro ao testar busca sem filtros:', testError);
+      } else {
+        console.log(`🔍 [Fauna] Teste SEM filtros: ${testData?.length || 0} registros encontrados (últimos 10)`);
         if (testData && testData.length > 0) {
           console.log('📋 [Fauna] Exemplos de datas na tabela:', testData.map((r: any) => r.data));
+          const anosEncontrados = [...new Set(testData.map((r: any) => r.data?.substring(0, 4)))].filter(Boolean);
+          console.log('📅 [Fauna] Anos encontrados nos dados:', anosEncontrados);
+        } else {
+          console.warn('⚠️ [Fauna] ATENÇÃO: Nenhum registro encontrado na tabela fat_registros_de_resgate SEM filtros!');
         }
       }
       
@@ -488,6 +496,22 @@ const RegistrosUnificados: React.FC = () => {
 
       query = buildDateFilters(query, 'data');
       console.log('🔍 [Crimes Ambientais] Executando query...', { filterAno, filterMes });
+      
+      // Teste sem filtros
+      const { data: testDataCrimes, error: testErrorCrimes } = await supabaseAny
+        .from('fat_registros_de_crime')
+        .select('id, data')
+        .order('data', { ascending: false })
+        .limit(10);
+      
+      if (!testErrorCrimes) {
+        console.log(`🔍 [Crimes Ambientais] Teste SEM filtros: ${testDataCrimes?.length || 0} registros encontrados`);
+        if (testDataCrimes && testDataCrimes.length > 0) {
+          const anosEncontrados = [...new Set(testDataCrimes.map((r: any) => r.data?.substring(0, 4)))].filter(Boolean);
+          console.log('📅 [Crimes Ambientais] Anos encontrados nos dados:', anosEncontrados);
+        }
+      }
+      
       const { data, error } = await query;
 
       if (error) {
