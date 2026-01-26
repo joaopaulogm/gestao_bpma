@@ -434,6 +434,25 @@ const RegistrosUnificados: React.FC = () => {
       // Buscar dados de todas as tabelas em paralelo
       const allRegistros: any[] = [];
       
+      // Primeiro, testar se conseguimos acessar as tabelas
+      console.log('🧪 [Fauna] Testando acesso às tabelas...');
+      for (const tabela of tabelas) {
+        try {
+          const { data: testData, error: testError } = await supabaseAny
+            .from(tabela)
+            .select('id')
+            .limit(1);
+          
+          if (testError) {
+            console.error(`❌ [Fauna] Erro ao acessar ${tabela}:`, testError);
+          } else {
+            console.log(`✅ [Fauna] Acesso à tabela ${tabela} OK, ${testData?.length || 0} registro(s) de teste`);
+          }
+        } catch (err: any) {
+          console.error(`❌ [Fauna] Exceção ao testar ${tabela}:`, err);
+        }
+      }
+      
       await Promise.all(tabelas.map(async (tabela) => {
         try {
           console.log(`🔍 [Fauna] Buscando de ${tabela}...`);
