@@ -84,10 +84,12 @@ const Abono: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Buscar dados de fat_abono com join em dim_efetivo
+      const { data: abonoData, error: abonoError } = await supabase
         .from('fat_abono')
         .select(`
           id,
+          efetivo_id,
           mes,
           ano,
           mes_previsao,
@@ -112,8 +114,25 @@ const Abono: React.FC = () => {
         .eq('ano', selectedYear)
         .order('mes');
       
-      if (error) throw error;
-      setAbonoData(data || []);
+      if (abonoError) throw abonoError;
+
+      // Tentar buscar dados de staging se disponível (pode falhar se não tiver permissão)
+      let stagingData: any[] = [];
+      try {
+        const { data: stgData, error: stgError } = await supabase
+          .from('stg_abono_2026')
+          .select('*')
+          .eq('ano', selectedYear);
+        
+        if (!stgError && stgData) {
+          stagingData = stgData;
+        }
+      } catch (stgErr) {
+        // Ignorar erro de staging - pode não ter permissão
+        console.warn('Não foi possível carregar dados de staging (pode ser restrito a admin):', stgErr);
+      }
+
+      setAbonoData(abonoData || []);
     } catch (error) {
       console.error('Erro ao carregar dados de abono:', error);
       toast.error('Erro ao carregar dados');
@@ -131,6 +150,7 @@ const Abono: React.FC = () => {
     const channel = supabase
       .channel('abono-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_abono' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stg_abono_2026' }, () => fetchData())
       .subscribe();
 
     return () => {

@@ -34,6 +34,17 @@ interface FeriasData {
   dias: number;
   tipo: string;
   observacao: string | null;
+  parcelas_detalhadas?: Array<{
+    fat_ferias_id: string;
+    parcela_num: number;
+    mes: number | null;
+    dias: number | null;
+    data_inicio: string | null;
+    data_fim: string | null;
+    lancado_livro: boolean;
+    lancado_sgpol: boolean;
+    lancado_campanha: boolean;
+  }>;
   efetivo?: {
     id: string;
     matricula: string;
@@ -138,7 +149,8 @@ const Ferias: React.FC = () => {
   const fetchFerias = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Buscar dados de fat_ferias com join em dim_efetivo
+      const { data: feriasData, error: feriasError } = await supabase
         .from('fat_ferias')
         .select(`
           *,
@@ -147,8 +159,36 @@ const Ferias: React.FC = () => {
         .eq('ano', ano)
         .order('mes_inicio');
 
-      if (error) throw error;
-      setFerias(data || []);
+      if (feriasError) throw feriasError;
+
+      // Buscar parcelas de fat_ferias_parcelas
+      const feriasIds = (feriasData || []).map(f => f.id);
+      let parcelasData: any[] = [];
+      
+      if (feriasIds.length > 0) {
+        const { data: parcelas, error: parcelasError } = await supabase
+          .from('fat_ferias_parcelas')
+          .select('*')
+          .in('fat_ferias_id', feriasIds)
+          .order('fat_ferias_id, parcela_num');
+
+        if (parcelasError) {
+          console.warn('Erro ao carregar parcelas:', parcelasError);
+        } else {
+          parcelasData = parcelas || [];
+        }
+      }
+
+      // Enriquecer dados de férias com parcelas
+      const feriasEnriquecidas = (feriasData || []).map(feria => {
+        const parcelasFeria = parcelasData.filter(p => p.fat_ferias_id === feria.id);
+        return {
+          ...feria,
+          parcelas_detalhadas: parcelasFeria
+        };
+      });
+
+      setFerias(feriasEnriquecidas);
     } catch (error) {
       console.error('Erro ao carregar férias:', error);
       toast.error('Erro ao carregar férias');
@@ -166,6 +206,7 @@ const Ferias: React.FC = () => {
     const channel = supabase
       .channel('ferias-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_ferias' }, () => fetchFerias())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_ferias_parcelas' }, () => fetchFerias())
       .subscribe();
 
     return () => {
@@ -173,13 +214,27 @@ const Ferias: React.FC = () => {
     };
   }, [fetchFerias]);
 
-  // Parse all ferias to extract parcelas
+  // Parse all ferias to extract parcelas - usar parcelas_detalhadas se disponível, senão parse do observacao
   const feriasWithParcelas = useMemo(() => {
-    return ferias.map(f => ({
-      feriasId: f.id,
-      ferias: f,
-      parcelas: parseParcelasFromObservacao(f.observacao, f.mes_inicio, f.dias)
-    }));
+    return ferias.map(f => {
+      // Se tem parcelas_detalhadas da tabela fat_ferias_parcelas, usar elas
+      if (f.parcelas_detalhadas && Array.isArray(f.parcelas_detalhadas) && f.parcelas_detalhadas.length > 0) {
+        return {
+          feriasId: f.id,
+          ferias: f,
+          parcelas: f.parcelas_detalhadas.map((p: any) => ({
+            mes: p.mes || f.mes_inicio,
+            dias: p.dias || f.dias
+          }))
+        };
+      }
+      // Senão, usar parse do observacao (fallback)
+      return {
+        feriasId: f.id,
+        ferias: f,
+        parcelas: parseParcelasFromObservacao(f.observacao, f.mes_inicio, f.dias)
+      };
+    });
   }, [ferias]);
 
   // Summary by month - counts each parcel separately
