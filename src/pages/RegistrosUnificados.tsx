@@ -192,6 +192,7 @@ const StatusBadge: React.FC<{ status: string; variant?: 'success' | 'warning' | 
 // ==================== COMPONENTE PRINCIPAL ====================
 
 const RegistrosUnificados: React.FC = () => {
+  console.log('🚀 [RegistrosUnificados] Componente renderizado');
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('fauna');
   const [searchTerm, setSearchTerm] = useState('');
@@ -251,6 +252,7 @@ const RegistrosUnificados: React.FC = () => {
 
   // Carregar cache de dimensões
   useEffect(() => {
+    console.log('🔄 [RegistrosUnificados] useEffect: Carregando cache de dimensões...');
     loadDimensionCache();
   }, []);
 
@@ -279,6 +281,7 @@ const RegistrosUnificados: React.FC = () => {
   }, [filterAno, filterMes]);
 
   const loadDimensionCache = async () => {
+    console.log('📦 [DimensionCache] Iniciando carregamento de cache de dimensões...');
     try {
       const [
         regioesRes,
@@ -307,7 +310,7 @@ const RegistrosUnificados: React.FC = () => {
         tiposCrimeMap.set(t.id_tipo_de_crime, t['Tipo de Crime'] || '');
       });
 
-      setDimensionCache({
+      const cache = {
         regioes: new Map(regioesRes.data?.map((r: any) => [r.id, r.nome]) || []) as Map<string, string>,
         especies: new Map(especiesRes.data?.map((e: any) => [e.id, { nome_popular: e.nome_popular || '', nome_cientifico: e.nome_cientifico || '', classe_taxonomica: e.classe_taxonomica || '' }]) || []) as Map<string, { nome_popular: string; nome_cientifico: string; classe_taxonomica: string }>,
         destinacoes: new Map(destinacoesRes.data?.map((d: any) => [d.id, d.nome]) || []) as Map<string, string>,
@@ -317,14 +320,29 @@ const RegistrosUnificados: React.FC = () => {
         desfechosResgates: new Map(desfechosResgatesRes.data?.map((d: any) => [d.id, d.nome]) || []) as Map<string, string>,
         desfechosCrimesComuns: new Map(desfechosCrimesComunsRes.data?.map((d: any) => [d.id, d.nome]) || []) as Map<string, string>,
         tiposAtividade: new Map(tiposAtividadeRes.data?.map((t: any) => [t.id, { nome: t.nome || '', categoria: t.categoria || '' }]) || []) as Map<string, { nome: string; categoria: string }>,
+      };
+      
+      console.log('✅ [DimensionCache] Cache carregado com sucesso:', {
+        regioes: cache.regioes.size,
+        especies: cache.especies.size,
+        destinacoes: cache.destinacoes.size,
+        estadosSaude: cache.estadosSaude.size,
+        tiposCrime: cache.tiposCrime.size,
+        tiposPenal: cache.tiposPenal.size,
+        desfechosResgates: cache.desfechosResgates.size,
+        desfechosCrimesComuns: cache.desfechosCrimesComuns.size,
+        tiposAtividade: cache.tiposAtividade.size,
       });
+      
+      setDimensionCache(cache);
     } catch (error) {
-      console.error('Erro ao carregar cache de dimensões:', error);
+      console.error('❌ [DimensionCache] Erro ao carregar cache de dimensões:', error);
       toast.error('Erro ao carregar dados auxiliares');
     }
   };
 
   const loadAllData = async () => {
+    console.log('📊 [loadAllData] Iniciando carregamento de todos os dados...');
     // Carregar todos de uma vez
     await Promise.all([
       loadFaunaData(),
@@ -333,6 +351,7 @@ const RegistrosUnificados: React.FC = () => {
       loadPrevencaoData(),
       loadBensApreendidosData(),
     ]);
+    console.log('✅ [loadAllData] Todos os dados foram carregados');
   };
 
   const loadDataForTab = async (tab: string) => {
