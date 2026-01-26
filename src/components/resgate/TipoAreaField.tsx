@@ -33,14 +33,19 @@ const TipoAreaField: React.FC<TipoAreaFieldProps> = ({
       try {
         const { data, error } = await supabase
           .from('dim_tipo_de_area')
-          .select('id, "Tipo de Área"')
-          .order('Tipo de Área', { ascending: true });
+          .select('id, "Tipo de Área"');
 
         if (error) {
           console.error('Erro ao carregar tipos de área:', error);
           setLoadError('Erro ao carregar tipos de área');
         } else if (data) {
-          setTiposArea(data);
+          // Ordenar os dados após recebê-los, já que a coluna tem espaço no nome
+          const sortedData = [...data].sort((a, b) => {
+            const nomeA = a["Tipo de Área"] || '';
+            const nomeB = b["Tipo de Área"] || '';
+            return nomeA.localeCompare(nomeB, 'pt-BR');
+          });
+          setTiposArea(sortedData);
         }
       } catch (err) {
         console.error('Erro ao carregar tipos de área:', err);
