@@ -56,6 +56,7 @@ const EquipeSection: React.FC<EquipeSectionProps> = ({ membros, onMembrosChange 
       // Validar que temos algo para buscar
       if (!sanitizedMatricula && sanitizedSearchTerm.length < 2) {
         toast.error('Digite uma matrícula ou nome válido (mínimo 2 caracteres)');
+        setIsSearching(false);
         return;
       }
       
@@ -64,18 +65,21 @@ const EquipeSection: React.FC<EquipeSectionProps> = ({ membros, onMembrosChange 
       let query = supabase
         .from('dim_efetivo')
         .select('id, matricula, posto_graduacao, nome_guerra, nome')
-        .limit(10);
+        .eq('ativo', true) // Apenas efetivo ativo
+        .limit(20);
       
       // Construir query de forma segura usando métodos do Supabase
       // Buscar por matrícula E/OU nome simultaneamente
       const conditions: string[] = [];
       
-      // Se houver números no input, buscar por matrícula
+      // Se houver números no input, buscar por matrícula (exata e sem zeros à esquerda)
       if (sanitizedMatricula && sanitizedMatricula.length > 0) {
         conditions.push(`matricula.eq.${sanitizedMatricula}`);
         if (sanitizedMatriculaSemZeros && sanitizedMatriculaSemZeros !== sanitizedMatricula) {
           conditions.push(`matricula.eq.${sanitizedMatriculaSemZeros}`);
         }
+        // Também buscar matrículas que contenham o número (para casos com zeros à esquerda)
+        conditions.push(`matricula.ilike.%${sanitizedMatricula}%`);
       }
       
       // Se houver texto no input (mínimo 2 caracteres), buscar por nome
@@ -84,11 +88,12 @@ const EquipeSection: React.FC<EquipeSectionProps> = ({ membros, onMembrosChange 
         conditions.push(`nome.ilike.%${sanitizedSearchTerm}%`);
       }
       
-      // Aplicar condições usando OR
+      // Aplicar condições usando OR (sintaxe correta do Supabase PostgREST)
       if (conditions.length > 0) {
         query = query.or(conditions.join(','));
       } else {
         toast.error('Digite uma matrícula ou nome válido');
+        setIsSearching(false);
         return;
       }
       
@@ -96,12 +101,14 @@ const EquipeSection: React.FC<EquipeSectionProps> = ({ membros, onMembrosChange 
 
       if (error) {
         console.error('Erro na busca:', error);
-        toast.error('Erro ao buscar policial');
+        toast.error(`Erro ao buscar policial: ${error.message}`);
+        setIsSearching(false);
         return;
       }
 
       if (!data || data.length === 0) {
-        toast.error('Policial não encontrado');
+        toast.error('Policial não encontrado. Verifique a matrícula ou nome digitado.');
+        setIsSearching(false);
         return;
       }
 
@@ -113,8 +120,9 @@ const EquipeSection: React.FC<EquipeSectionProps> = ({ membros, onMembrosChange 
         // Priorizar correspondência exata de matrícula
         const matchExato = data.find(p => 
           p.matricula === matriculaInput || 
-          p.matricula === matriculaSemZeros ||
-          p.matricula.replace(/^0+/, '') === matriculaSemZeros
+          p.matricula === sanitizedMatricula ||
+          p.matricula === sanitizedMatriculaSemZeros ||
+          p.matricula.replace(/^0+/, '') === sanitizedMatriculaSemZeros
         );
         if (matchExato) {
           policialEncontrado = matchExato;
@@ -125,16 +133,16 @@ const EquipeSection: React.FC<EquipeSectionProps> = ({ membros, onMembrosChange 
         id: crypto.randomUUID(),
         efetivo_id: policialEncontrado.id,
         matricula: policialEncontrado.matricula,
-        posto_graduacao: policialEncontrado.posto_graduacao,
-        nome_guerra: policialEncontrado.nome_guerra
+        posto_graduacao: policialEncontrado.posto_graduacao || '',
+        nome_guerra: policialEncontrado.nome_guerra || ''
       };
 
       onMembrosChange([...membros, novoMembro]);
       setMatriculaInput('');
-      toast.success(`${policialEncontrado.posto_graduacao} ${policialEncontrado.nome_guerra} adicionado à equipe`);
-    } catch (err) {
+      toast.success(`${policialEncontrado.posto_graduacao || ''} ${policialEncontrado.nome_guerra || ''} adicionado à equipe`);
+    } catch (err: any) {
       console.error('Erro ao buscar policial:', err);
-      toast.error('Erro ao buscar policial');
+      toast.error(`Erro ao buscar policial: ${err?.message || 'Erro desconhecido'}`);
     } finally {
       setIsSearching(false);
     }
