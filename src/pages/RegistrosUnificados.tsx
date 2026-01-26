@@ -406,81 +406,144 @@ const RegistrosUnificados: React.FC = () => {
   const loadFaunaData = async () => {
     setLoadingFauna(true);
     try {
-      console.log('🔍 [Fauna] Iniciando busca em fat_registros_de_resgate...');
-      let query = supabaseAny
-        .from('fat_registros_de_resgate')
-        .select('id, data, especie_id, quantidade, quantidade_total, regiao_administrativa_id, destinacao_id, estado_saude_id, atropelamento, created_at')
-        .order('data', { ascending: false });
-
-      // Aplicar filtros de data apenas se não for "all"
-      query = buildDateFilters(query, 'data');
+      console.log('🔍 [Fauna] Iniciando busca de registros de fauna...');
       
-      console.log('🔍 [Fauna] Executando query...', { filterAno, filterMes });
+      // Determinar quais tabelas buscar baseado no filtro de ano (igual à página Registros.tsx)
+      let tabelas: string[] = [];
       
-      // SEMPRE verificar se há dados na tabela SEM filtros primeiro (para debug)
-      const { data: testData, error: testError } = await supabaseAny
-        .from('fat_registros_de_resgate')
-        .select('id, data')
-        .order('data', { ascending: false })
-        .limit(10);
-      
-      if (testError) {
-        console.error('❌ [Fauna] Erro ao testar busca sem filtros:', testError);
+      if (filterAno === 'all') {
+        // Se não há filtro de ano, carregar apenas as mais recentes (2024 e 2025) inicialmente
+        tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025', 'fat_resgates_diarios_2024'];
       } else {
-        console.log(`🔍 [Fauna] Teste SEM filtros: ${testData?.length || 0} registros encontrados (últimos 10)`);
-        if (testData && testData.length > 0) {
-          console.log('📋 [Fauna] Exemplos de datas na tabela:', testData.map((r: any) => r.data));
-          const anosEncontrados = [...new Set(testData.map((r: any) => r.data?.substring(0, 4)))].filter(Boolean);
-          console.log('📅 [Fauna] Anos encontrados nos dados:', anosEncontrados);
+        const ano = parseInt(filterAno);
+        // Carregar apenas a tabela do ano selecionado
+        if (ano === 2025) {
+          tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025'];
+        } else if (ano >= 2020 && ano <= 2024) {
+          tabelas = [`fat_resgates_diarios_${ano}`];
+        } else if (ano >= 2026) {
+          // Para 2026 ou anos futuros, buscar apenas em fat_registros_de_resgate
+          tabelas = ['fat_registros_de_resgate'];
         } else {
-          console.warn('⚠️ [Fauna] ATENÇÃO: Nenhum registro encontrado na tabela fat_registros_de_resgate SEM filtros!');
-          console.warn('⚠️ [Fauna] Possíveis causas:');
-          console.warn('   1. Não há dados na tabela fat_registros_de_resgate');
-          console.warn('   2. Problema de permissões RLS (Row Level Security) bloqueando acesso');
-          console.warn('   3. Tabela não existe ou nome incorreto');
-          console.warn('   4. Usuário não tem permissão para ler a tabela');
+          tabelas = ['fat_registros_de_resgate'];
         }
       }
       
-      // Remover limite para buscar todos os registros (ou aumentar significativamente)
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('❌ [Fauna] Erro na query de fauna:', error);
-        console.error('❌ [Fauna] Detalhes do erro:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        toast.error(`Erro ao carregar registros de fauna: ${error.message}`);
-        throw error;
-      }
+      console.log('📊 [Fauna] Tabelas a buscar:', tabelas);
       
-      console.log(`✅ [Fauna] Carregados ${data?.length || 0} registros de fauna da tabela fat_registros_de_resgate`);
-      if (data && data.length > 0) {
-        console.log('📋 [Fauna] Primeiros 3 registros:', data.slice(0, 3));
-      } else {
-        console.warn('⚠️ [Fauna] Nenhum registro encontrado na tabela fat_registros_de_resgate');
-        console.warn('⚠️ [Fauna] Filtros aplicados:', { filterAno, filterMes });
-      }
-
-      const enriched: RegistroFauna[] = (data || []).map((r: any) => {
-        const especie = dimensionCache?.especies.get(r.especie_id);
+      // Buscar dados de todas as tabelas em paralelo
+      const allRegistros: any[] = [];
+      
+      await Promise.all(tabelas.map(async (tabela) => {
+        try {
+          console.log(`🔍 [Fauna] Buscando de ${tabela}...`);
+          
+          // Para tabelas históricas (2020-2024), usar campos diferentes
+          if (tabela.startsWith('fat_resgates_diarios_202') && parseInt(tabela.slice(-4)) <= 2024) {
+            let query = supabaseAny
+              .from(tabela)
+              .select('id, data_ocorrencia, especie_id, quantidade_resgates, nome_popular, nome_cientifico, classe_taxonomica')
+              .order('data_ocorrencia', { ascending: false });
+            
+            // Aplicar filtros de data
+            if (filterAno !== 'all') {
+              const ano = parseInt(filterAno);
+              const startDate = `${ano}-01-01`;
+              const endDate = `${ano}-12-31`;
+              query = query.gte('data_ocorrencia', startDate).lte('data_ocorrencia', endDate);
+            }
+            if (filterMes !== 'all') {
+              const ano = filterAno !== 'all' ? filterAno : new Date().getFullYear().toString();
+              const mes = parseInt(filterMes);
+              const startDate = `${ano}-${String(mes).padStart(2, '0')}-01`;
+              const lastDay = new Date(parseInt(ano), mes, 0).getDate();
+              const endDate = `${ano}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+              query = query.gte('data_ocorrencia', startDate).lte('data_ocorrencia', endDate);
+            }
+            
+            const { data, error } = await query;
+            
+            if (error) {
+              console.error(`❌ [Fauna] Erro ao buscar de ${tabela}:`, error);
+              return;
+            }
+            
+            // Normalizar dados históricos para o formato esperado
+            const normalized = (data || []).map((r: any) => ({
+              id: r.id,
+              data: r.data_ocorrencia,
+              especie_id: r.especie_id,
+              quantidade: r.quantidade_resgates || 0,
+              quantidade_total: r.quantidade_resgates || 0,
+              regiao_administrativa_id: null,
+              destinacao_id: null,
+              estado_saude_id: null,
+              atropelamento: false,
+              created_at: r.data_ocorrencia,
+              // Dados diretos para enriquecimento
+              nome_popular: r.nome_popular,
+              nome_cientifico: r.nome_cientifico,
+              classe_taxonomica: r.classe_taxonomica,
+            }));
+            
+            allRegistros.push(...normalized);
+            console.log(`✅ [Fauna] ${tabela}: ${normalized.length} registros encontrados`);
+          } else {
+            // Para fat_registros_de_resgate e fat_resgates_diarios_2025
+            let query = supabaseAny
+              .from(tabela)
+              .select('id, data, especie_id, quantidade, quantidade_total, regiao_administrativa_id, destinacao_id, estado_saude_id, atropelamento, created_at')
+              .order('data', { ascending: false });
+            
+            // Aplicar filtros de data
+            query = buildDateFilters(query, 'data');
+            
+            const { data, error } = await query;
+            
+            if (error) {
+              console.error(`❌ [Fauna] Erro ao buscar de ${tabela}:`, error);
+              return;
+            }
+            
+            allRegistros.push(...(data || []));
+            console.log(`✅ [Fauna] ${tabela}: ${(data || []).length} registros encontrados`);
+          }
+        } catch (err: any) {
+          console.error(`❌ [Fauna] Erro ao buscar de ${tabela}:`, err);
+        }
+      }));
+      
+      console.log(`✅ [Fauna] Total de registros encontrados: ${allRegistros.length}`);
+      
+      // Enriquecer dados usando cache de dimensões
+      const enriched: RegistroFauna[] = allRegistros.map((r: any) => {
+        const especie = dimensionCache?.especies.get(r.especie_id) || {
+          nome_popular: r.nome_popular || 'Não identificado',
+          nome_cientifico: r.nome_cientifico,
+          classe_taxonomica: r.classe_taxonomica
+        };
+        
         return {
           id: r.id,
           data: r.data,
-          especie_nome: especie?.nome_popular || 'Não identificado',
-          especie_cientifico: especie?.nome_cientifico,
-          classe: especie?.classe_taxonomica,
-          quantidade: r.quantidade_total || r.quantidade,
+          especie_nome: especie.nome_popular || 'Não identificado',
+          especie_cientifico: especie.nome_cientifico,
+          classe: especie.classe_taxonomica,
+          quantidade: r.quantidade_total || r.quantidade || 0,
           regiao: dimensionCache?.regioes.get(r.regiao_administrativa_id),
           destinacao: dimensionCache?.destinacoes.get(r.destinacao_id),
           estado_saude: dimensionCache?.estadosSaude.get(r.estado_saude_id),
           atropelamento: r.atropelamento,
         };
       });
-
+      
+      // Ordenar por data (mais recente primeiro)
+      enriched.sort((a, b) => {
+        const dateA = a.data ? new Date(a.data).getTime() : 0;
+        const dateB = b.data ? new Date(b.data).getTime() : 0;
+        return dateB - dateA;
+      });
+      
       setFaunaRegistros(enriched);
     } catch (error) {
       console.error('Erro ao carregar fauna:', error);
