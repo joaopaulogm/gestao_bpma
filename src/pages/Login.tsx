@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Lock, User, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle, Eye, EyeOff, FileText } from 'lucide-react';
+import { Lock, User, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle, Eye, EyeOff, FileText, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { handleSupabaseError } from '@/utils/errorHandler';
@@ -353,11 +353,6 @@ const Login = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-    setTimeout(() => {
-      navigate('/inicio');
-    }, 100);
   };
 
   // ==================== LOGIN COM EMAIL (Supabase Auth) ====================

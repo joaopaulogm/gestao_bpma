@@ -1662,6 +1662,8 @@ const RegistrosUnificados: React.FC = () => {
               <button 
                 onClick={() => setSelectedItems(new Set())}
                 className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
+                aria-label="Limpar seleção"
+                title="Limpar seleção"
               >
                 <XIcon className="h-4 w-4" />
               </button>
