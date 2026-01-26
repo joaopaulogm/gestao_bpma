@@ -927,13 +927,17 @@ const RegistrosUnificados: React.FC = () => {
   };
 
 
-  const tabStats = useMemo(() => ({
-    fauna: faunaRegistros.length,
-    crimesAmbientais: crimesAmbientais.length,
-    crimesComuns: crimesComuns.length,
-    prevencao: prevencaoRegistros.length,
-    bensApreendidos: bensApreendidos.length,
-  }), [faunaRegistros, crimesAmbientais, crimesComuns, prevencaoRegistros, bensApreendidos]);
+  const tabStats = useMemo(() => {
+    const stats = {
+      fauna: faunaRegistros.length,
+      crimesAmbientais: crimesAmbientais.length,
+      crimesComuns: crimesComuns.length,
+      prevencao: prevencaoRegistros.length,
+      bensApreendidos: bensApreendidos.length,
+    };
+    console.log('📊 [tabStats] Estatísticas atualizadas:', stats);
+    return stats;
+  }, [faunaRegistros, crimesAmbientais, crimesComuns, prevencaoRegistros, bensApreendidos]);
 
   const getStatusVariant = (status: string | undefined): 'success' | 'warning' | 'error' | 'default' => {
     if (!status) return 'default';
