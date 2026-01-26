@@ -548,9 +548,11 @@ const RegistrosUnificados: React.FC = () => {
       console.log(`📋 [Fauna] Primeiros 3 registros enriquecidos:`, enriched.slice(0, 3));
       setFaunaRegistros(enriched);
       console.log(`✅ [Fauna] Estado faunaRegistros atualizado com ${enriched.length} registros`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ [Fauna] Erro ao carregar fauna:', error);
-      toast.error('Erro ao carregar registros de fauna');
+      console.error('❌ [Fauna] Stack trace:', error?.stack);
+      console.error('❌ [Fauna] Detalhes completos:', JSON.stringify(error, null, 2));
+      toast.error(`Erro ao carregar registros de fauna: ${error?.message || 'Erro desconhecido'}`);
     } finally {
       setLoadingFauna(false);
       console.log('✅ [Fauna] Loading finalizado');
@@ -1424,6 +1426,17 @@ const RegistrosUnificados: React.FC = () => {
     );
   };
 
+  console.log('🎨 [RegistrosUnificados] Renderizando JSX...', {
+    activeTab,
+    faunaRegistros: faunaRegistros.length,
+    crimesAmbientais: crimesAmbientais.length,
+    crimesComuns: crimesComuns.length,
+    prevencao: prevencaoRegistros.length,
+    bensApreendidos: bensApreendidos.length,
+    loadingFauna,
+    dimensionCache: !!dimensionCache
+  });
+
   return (
     <Layout title="Registros" showBackButton>
       <div className="space-y-4">
@@ -1535,7 +1548,10 @@ const RegistrosUnificados: React.FC = () => {
           {/* Conteúdo das Tabs */}
           <TabsContent value="fauna" className="mt-0">
             <ScrollArea className="h-[calc(100vh-320px)]">
-              {renderFaunaTable()}
+              {(() => {
+                console.log('🎨 [TabsContent Fauna] Renderizando conteúdo da aba fauna');
+                return renderFaunaTable();
+              })()}
             </ScrollArea>
           </TabsContent>
 
