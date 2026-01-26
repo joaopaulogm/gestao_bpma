@@ -84,6 +84,8 @@ const Abono: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
+      console.log(`🔍 Buscando abono do ano ${selectedYear}...`);
+      
       // Buscar dados de fat_abono com join em dim_efetivo
       const { data: abonoData, error: abonoError } = await supabase
         .from('fat_abono')
@@ -109,12 +111,18 @@ const Abono: React.FC = () => {
           parcela3_inicio,
           parcela3_fim,
           parcela3_dias,
+          observacao,
           efetivo:dim_efetivo(id, matricula, nome, nome_guerra, posto_graduacao)
         `)
         .eq('ano', selectedYear)
         .order('mes');
       
-      if (abonoError) throw abonoError;
+      if (abonoError) {
+        console.error('❌ Erro ao buscar fat_abono:', abonoError);
+        throw abonoError;
+      }
+      
+      console.log(`✅ Encontrados ${abonoData?.length || 0} registros de abono no ano ${selectedYear}`);
 
       // Tentar buscar dados de staging se disponível (pode falhar se não tiver permissão)
       let stagingData: any[] = [];

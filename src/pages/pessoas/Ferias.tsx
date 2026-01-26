@@ -150,6 +150,8 @@ const Ferias: React.FC = () => {
   const fetchFerias = useCallback(async () => {
     setLoading(true);
     try {
+      console.log(`🔍 Buscando férias do ano ${ano}...`);
+      
       // Buscar dados de fat_ferias com join em dim_efetivo
       const { data: feriasData, error: feriasError } = await supabase
         .from('fat_ferias')
@@ -160,7 +162,12 @@ const Ferias: React.FC = () => {
         .eq('ano', ano)
         .order('mes_inicio');
 
-      if (feriasError) throw feriasError;
+      if (feriasError) {
+        console.error('❌ Erro ao buscar fat_ferias:', feriasError);
+        throw feriasError;
+      }
+      
+      console.log(`✅ Encontrados ${feriasData?.length || 0} registros de férias no ano ${ano}`);
 
       // Buscar parcelas de fat_ferias_parcelas
       const feriasIds = (feriasData || []).map(f => f.id);
