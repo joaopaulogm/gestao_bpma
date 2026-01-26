@@ -2,10 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Filter } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  TableCard,
+  TableCardHeader,
+  TableCardTitle,
+  TableCardContent,
+  TableCardField,
+  TableCardBadge,
+} from '@/components/ui/table-card';
 
 interface RankingItem {
   id: string;
@@ -220,36 +227,36 @@ const RankingOcorrencias: React.FC = () => {
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
           ) : ranking.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              Nenhum dado encontrado para o período selecionado.
-            </p>
+            <div className="bg-card rounded-xl border border-border p-12 text-center">
+              <p className="text-muted-foreground text-sm">Nenhum dado encontrado para o período selecionado.</p>
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-16">Posição</TableHead>
-                  <TableHead>{filterType === 'policial' ? 'Policial' : filterType === 'grupamento' ? 'Grupamento' : 'Equipe'}</TableHead>
-                  <TableHead className="text-right">Ocorrências</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ranking.map((item, index) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {index < 3 ? (
-                          <Trophy className={`h-5 w-5 ${getMedalColor(index)}`} />
-                        ) : (
-                          <span className="text-muted-foreground w-5 text-center">{index + 1}</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{item.nome}</TableCell>
-                    <TableCell className="text-right font-bold">{item.total}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="w-full space-y-3">
+              {ranking.map((item, index) => (
+                <TableCard key={item.id} className="hover:shadow-lg transition-shadow duration-200">
+                  <TableCardHeader>
+                    <div className="flex items-center gap-3">
+                      {index < 3 ? (
+                        <Trophy className={`h-6 w-6 ${getMedalColor(index)} flex-shrink-0`} />
+                      ) : (
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-muted-foreground font-semibold text-sm flex-shrink-0">
+                          {index + 1}
+                        </div>
+                      )}
+                      <TableCardTitle>
+                        {item.nome}
+                      </TableCardTitle>
+                    </div>
+                    <TableCardBadge 
+                      variant={index < 3 ? "success" : "default"}
+                      className="text-lg font-bold px-3 py-1"
+                    >
+                      {item.total} {item.total === 1 ? 'ocorrência' : 'ocorrências'}
+                    </TableCardBadge>
+                  </TableCardHeader>
+                </TableCard>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

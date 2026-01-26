@@ -1,10 +1,17 @@
 import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, Eye } from 'lucide-react';
 import { Frota } from '@/services/logisticaService';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import {
+  TableCard,
+  TableCardHeader,
+  TableCardTitle,
+  TableCardContent,
+  TableCardField,
+  TableCardBadge,
+  TableCardActions,
+} from '@/components/ui/table-card';
 
 interface FrotaTableProps {
   frota: Frota[];
@@ -13,101 +20,149 @@ interface FrotaTableProps {
   onView?: (id: string) => void;
 }
 
-const getSituacaoBadgeVariant = (situacao?: string) => {
-  if (!situacao) return 'secondary';
+const getSituacaoBadgeVariant = (situacao?: string): "success" | "warning" | "destructive" | "default" => {
+  if (!situacao) return 'default';
   const situacaoLower = situacao.toLowerCase();
-  if (situacaoLower.includes('disponível')) return 'default';
+  if (situacaoLower.includes('disponível')) return 'success';
   if (situacaoLower.includes('indisponível')) return 'destructive';
-  if (situacaoLower.includes('baixada')) return 'outline';
-  if (situacaoLower.includes('descarga')) return 'secondary';
-  return 'secondary';
+  if (situacaoLower.includes('baixada') || situacaoLower.includes('descarga')) return 'warning';
+  return 'default';
 };
 
 const FrotaTable: React.FC<FrotaTableProps> = ({ frota, onEdit, onDelete, onView }) => {
+  if (frota.length === 0) {
+    return (
+      <div className="w-full">
+        <div className="bg-card rounded-xl border border-border p-12 text-center">
+          <p className="text-muted-foreground text-sm">Nenhum veículo encontrado</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full overflow-x-auto">
-      <Table className="w-full min-w-[640px]">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-[80px]">Prefixo</TableHead>
-            <TableHead className="min-w-[100px]">Tipo</TableHead>
-            <TableHead className="min-w-[140px]">Marca/Modelo</TableHead>
-            <TableHead className="min-w-[100px]">Placa</TableHead>
-            <TableHead className="min-w-[120px]">Localização</TableHead>
-            <TableHead className="min-w-[100px]">KM/HM Atual</TableHead>
-            <TableHead className="min-w-[120px]">Situação</TableHead>
-            <TableHead className="min-w-[100px]">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {frota.length > 0 ? (
-            frota.map((veiculo) => (
-              <TableRow key={veiculo.id} className="hover:bg-muted/50">
-                <TableCell className="font-medium whitespace-nowrap">{veiculo.prefixo || '-'}</TableCell>
-                <TableCell className="whitespace-nowrap">{veiculo.tipo || '-'}</TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-medium">{veiculo.marca || '-'}</span>
-                    {veiculo.modelo && (
-                      <span className="text-xs text-muted-foreground">{veiculo.modelo}</span>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="whitespace-nowrap">{veiculo.placa || '-'}</TableCell>
-                <TableCell className="whitespace-nowrap">{veiculo.localizacao || '-'}</TableCell>
-                <TableCell className="whitespace-nowrap">
-                  {(veiculo.km_atual || veiculo.km_hm_atual) ? (veiculo.km_atual || veiculo.km_hm_atual)?.toLocaleString('pt-BR') : '-'}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={getSituacaoBadgeVariant(veiculo.situacao)} className="w-fit">
-                    {veiculo.situacao || '-'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {onView && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onView(veiculo.id)}
-                        className="h-8 w-8 p-0 flex-shrink-0"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {onEdit && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEdit(veiculo.id)}
-                        className="h-8 w-8 p-0 flex-shrink-0"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {onDelete && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(veiculo.id)}
-                        className="h-8 w-8 p-0 flex-shrink-0 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                Nenhum veículo encontrado
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+    <div className="w-full space-y-4">
+      {frota.map((veiculo) => (
+        <TableCard key={veiculo.id} className="hover:shadow-lg transition-shadow duration-200">
+          <TableCardHeader>
+            <TableCardTitle
+              subtitle={veiculo.placa ? `Placa: ${veiculo.placa}` : undefined}
+            >
+              {veiculo.prefixo || 'Sem prefixo'}
+            </TableCardTitle>
+            <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+              {veiculo.situacao && (
+                <TableCardBadge variant={getSituacaoBadgeVariant(veiculo.situacao)}>
+                  {veiculo.situacao}
+                </TableCardBadge>
+              )}
+              {veiculo.tipo && (
+                <span className="px-2.5 py-0.5 rounded-md text-xs font-medium border bg-slate-100 text-slate-700 border-slate-200">
+                  {veiculo.tipo}
+                </span>
+              )}
+            </div>
+          </TableCardHeader>
+
+          <TableCardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <TableCardField
+                label="Marca"
+                value={
+                  <span className="font-semibold text-foreground">
+                    {veiculo.marca || '-'}
+                  </span>
+                }
+              />
+              <TableCardField
+                label="Modelo"
+                value={
+                  <span className="text-sm">
+                    {veiculo.modelo || '-'}
+                  </span>
+                }
+              />
+              <TableCardField
+                label="Ano"
+                value={
+                  <span className="text-sm">
+                    {veiculo.ano || veiculo.ano_fabricacao || '-'}
+                  </span>
+                }
+              />
+              <TableCardField
+                label="Localização"
+                value={
+                  <span className="text-sm">
+                    {veiculo.localizacao || '-'}
+                  </span>
+                }
+              />
+              <TableCardField
+                label="KM/HM Atual"
+                value={
+                  <span className="text-primary font-bold text-lg">
+                    {(veiculo.km_atual || veiculo.km_hm_atual) 
+                      ? (veiculo.km_atual || veiculo.km_hm_atual)?.toLocaleString('pt-BR') 
+                      : '-'}
+                  </span>
+                }
+              />
+              {veiculo.km_proxima_revisao || veiculo.km_hm_proxima_revisao ? (
+                <TableCardField
+                  label="Próxima Revisão"
+                  value={
+                    <span className="text-sm font-medium">
+                      {(veiculo.km_proxima_revisao || veiculo.km_hm_proxima_revisao)?.toLocaleString('pt-BR')} km
+                    </span>
+                  }
+                />
+              ) : null}
+            </div>
+          </TableCardContent>
+
+          <TableCardActions>
+            <div className="flex items-center justify-end gap-2 w-full">
+              {onView && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onView(veiculo.id)}
+                  className="h-9 px-3 hover:bg-primary/10"
+                  title="Ver detalhes"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Ver</span>
+                </Button>
+              )}
+              {onEdit && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEdit(veiculo.id)}
+                  className="h-9 px-3 hover:bg-blue-50 hover:text-blue-700"
+                  title="Editar"
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Editar</span>
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(veiculo.id)}
+                  className="h-9 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  title="Excluir"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Excluir</span>
+                </Button>
+              )}
+            </div>
+          </TableCardActions>
+        </TableCard>
+      ))}
     </div>
   );
 };
