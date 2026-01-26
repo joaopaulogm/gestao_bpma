@@ -258,9 +258,18 @@ const RegistrosUnificados: React.FC = () => {
   useEffect(() => {
     if (dimensionCache) {
       // Carregar todos os dados de uma vez para contadores nas abas
+      console.log('📊 Cache de dimensões carregado, iniciando carregamento de dados...');
       loadAllData();
     }
   }, [dimensionCache]);
+  
+  // Recarregar dados quando a aba mudar
+  useEffect(() => {
+    if (dimensionCache) {
+      console.log(`🔄 Aba mudou para: ${activeTab}, recarregando dados...`);
+      loadDataForTab(activeTab);
+    }
+  }, [activeTab]);
 
   // Recarregar quando filtros mudarem
   useEffect(() => {
@@ -352,6 +361,16 @@ const RegistrosUnificados: React.FC = () => {
       const endDate = `${filterAno}-12-31`;
       query = query.gte(dateField, startDate).lte(dateField, endDate);
     }
+    if (filterMes !== 'all') {
+      // Se já tem filtro de ano, usar o ano; senão, usar ano atual
+      const ano = filterAno !== 'all' ? filterAno : new Date().getFullYear().toString();
+      const mes = parseInt(filterMes);
+      const startDate = `${ano}-${String(mes).padStart(2, '0')}-01`;
+      // Último dia do mês
+      const lastDay = new Date(parseInt(ano), mes, 0).getDate();
+      const endDate = `${ano}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      query = query.gte(dateField, startDate).lte(dateField, endDate);
+    }
     return query;
   };
 
@@ -360,14 +379,21 @@ const RegistrosUnificados: React.FC = () => {
     try {
       let query = supabaseAny
         .from('fat_registros_de_resgate')
-        .select('id, data, especie_id, quantidade, quantidade_total, regiao_administrativa_id, destinacao_id, estado_saude_id, atropelamento')
-        .order('data', { ascending: false })
-        .limit(200);
+        .select('id, data, especie_id, quantidade, quantidade_total, regiao_administrativa_id, destinacao_id, estado_saude_id, atropelamento, created_at')
+        .order('data', { ascending: false });
 
+      // Aplicar filtros de data apenas se não for "all"
       query = buildDateFilters(query, 'data');
+      
+      // Remover limite para buscar todos os registros (ou aumentar significativamente)
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na query de fauna:', error);
+        throw error;
+      }
+      
+      console.log(`✅ Carregados ${data?.length || 0} registros de fauna da tabela fat_registros_de_resgate`);
 
       const enriched: RegistroFauna[] = (data || []).map((r: any) => {
         const especie = dimensionCache?.especies.get(r.especie_id);
@@ -399,14 +425,18 @@ const RegistrosUnificados: React.FC = () => {
     try {
       let query = supabase
         .from('fat_registros_de_crime')
-        .select('id, data, tipo_crime_id, enquadramento_id, regiao_administrativa_id, ocorreu_apreensao, procedimento_legal, desfecho_id')
-        .order('data', { ascending: false })
-        .limit(200);
+        .select('id, data, tipo_crime_id, enquadramento_id, regiao_administrativa_id, ocorreu_apreensao, procedimento_legal, desfecho_id, created_at')
+        .order('data', { ascending: false });
 
       query = buildDateFilters(query, 'data');
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na query de crimes ambientais:', error);
+        throw error;
+      }
+      
+      console.log(`✅ Carregados ${data?.length || 0} registros de crimes ambientais da tabela fat_registros_de_crime`);
 
       const enriched: RegistroCrimeAmbiental[] = (data || []).map((r: any) => ({
         id: r.id,
@@ -432,14 +462,18 @@ const RegistrosUnificados: React.FC = () => {
     try {
       let query = supabase
         .from('fat_crimes_comuns')
-        .select('id, data, natureza_crime, tipo_penal_id, regiao_administrativa_id, local_especifico, vitimas_envolvidas, suspeitos_envolvidos, desfecho_id')
-        .order('data', { ascending: false })
-        .limit(200);
+        .select('id, data, natureza_crime, tipo_penal_id, regiao_administrativa_id, local_especifico, vitimas_envolvidas, suspeitos_envolvidos, desfecho_id, created_at')
+        .order('data', { ascending: false });
 
       query = buildDateFilters(query, 'data');
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na query de crimes comuns:', error);
+        throw error;
+      }
+      
+      console.log(`✅ Carregados ${data?.length || 0} registros de crimes comuns da tabela fat_crimes_comuns`);
 
       const enriched: RegistroCrimeComum[] = (data || []).map((r: any) => ({
         id: r.id,
@@ -467,14 +501,18 @@ const RegistrosUnificados: React.FC = () => {
     try {
       let query = supabase
         .from('fat_atividades_prevencao')
-        .select('id, data, tipo_atividade_id, regiao_administrativa_id, quantidade_publico, observacoes')
-        .order('data', { ascending: false })
-        .limit(200);
+        .select('id, data, tipo_atividade_id, regiao_administrativa_id, quantidade_publico, observacoes, created_at')
+        .order('data', { ascending: false });
 
       query = buildDateFilters(query, 'data');
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na query de prevenção:', error);
+        throw error;
+      }
+      
+      console.log(`✅ Carregados ${data?.length || 0} registros de prevenção da tabela fat_atividades_prevencao`);
 
       const enriched: RegistroPrevencao[] = (data || []).map((r: any) => {
         const tipoAtividade = dimensionCache?.tiposAtividade.get(r.tipo_atividade_id);
