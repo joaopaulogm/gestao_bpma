@@ -169,12 +169,25 @@ const Ferias: React.FC = () => {
       }
       
       console.log(`✅ Encontrados ${feriasData?.length || 0} registros de férias no ano ${ano}`);
+      
+      if (feriasData && feriasData.length > 0) {
+        console.log(`📋 Primeiros registros:`, feriasData.slice(0, 3).map(f => ({
+          id: f.id,
+          efetivo_id: f.efetivo_id,
+          ano: f.ano,
+          mes_inicio: f.mes_inicio,
+          tipo: f.tipo,
+          tem_efetivo: !!f.efetivo,
+          efetivo_nome: f.efetivo?.nome_guerra
+        })));
+      }
 
       // Buscar parcelas de fat_ferias_parcelas
       const feriasIds = (feriasData || []).map(f => f.id);
       let parcelasData: any[] = [];
       
       if (feriasIds.length > 0) {
+        console.log(`🔍 Buscando parcelas para ${feriasIds.length} registros de férias...`);
         const { data: parcelas, error: parcelasError } = await supabase
           .from('fat_ferias_parcelas')
           .select('*')
@@ -182,10 +195,21 @@ const Ferias: React.FC = () => {
           .order('fat_ferias_id, parcela_num');
 
         if (parcelasError) {
-          console.warn('Erro ao carregar parcelas:', parcelasError);
+          console.error('❌ Erro ao carregar parcelas:', parcelasError);
         } else {
           parcelasData = parcelas || [];
+          console.log(`✅ Encontradas ${parcelasData.length} parcelas de férias`);
+          if (parcelasData.length > 0) {
+            console.log(`📋 Primeiras parcelas:`, parcelasData.slice(0, 5).map(p => ({
+              fat_ferias_id: p.fat_ferias_id,
+              parcela_num: p.parcela_num,
+              mes: p.mes,
+              dias: p.dias
+            })));
+          }
         }
+      } else {
+        console.warn(`⚠️ Nenhum ID de férias para buscar parcelas!`);
       }
 
       // Tentar buscar dados de staging se disponível (pode falhar se não tiver permissão)
@@ -260,14 +284,17 @@ const Ferias: React.FC = () => {
           if (typeof mesNum === 'string') {
             mesNum = parseInt(mesNum);
           }
-          if (!mesNum || isNaN(mesNum)) {
+          // Se mes for null, undefined ou NaN, usar mes_inicio como fallback
+          if (!mesNum || isNaN(mesNum) || mesNum < 1 || mesNum > 12) {
+            console.warn(`⚠️ Parcela sem mês válido, usando mes_inicio (${f.mes_inicio}):`, { parcela: p, feriasId: f.id });
             mesNum = f.mes_inicio;
           }
           return {
             mes: mesNum,
-            dias: p.dias || f.dias
+            dias: p.dias || f.dias || 30
           };
         });
+        console.log(`✅ Processadas ${parcelas.length} parcelas para férias ID ${f.id} (efetivo: ${f.efetivo?.nome_guerra || f.efetivo_id})`);
         return {
           feriasId: f.id,
           ferias: f,
@@ -276,6 +303,7 @@ const Ferias: React.FC = () => {
       }
       // Senão, usar parse do observacao (fallback)
       const parcelasFallback = parseParcelasFromObservacao(f.observacao, f.mes_inicio, f.dias);
+      console.log(`📝 Usando fallback (observacao) para férias ID ${f.id}: ${parcelasFallback.length} parcelas`);
       return {
         feriasId: f.id,
         ferias: f,
