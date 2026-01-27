@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Plus, X } from 'lucide-react';
+import { FaunaImageUploader } from './FaunaImageUploader';
 
 interface FaunaEspecie {
   id: string;
@@ -18,6 +19,7 @@ interface FaunaEspecie {
   tipo_de_fauna: string | null;
   estado_de_conservacao: string | null;
   nomes_populares?: string[];
+  imagens_paths?: string[];
 }
 
 interface FaunaEditDialogProps {
@@ -57,6 +59,7 @@ const ESTADOS_CONSERVACAO = [
 export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEditDialogProps) {
   const [formData, setFormData] = useState<Partial<FaunaEspecie>>({});
   const [nomesPopulares, setNomesPopulares] = useState<string[]>([]);
+  const [imagensPaths, setImagensPaths] = useState<string[]>([]);
   const [novoNome, setNovoNome] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -71,19 +74,15 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
         estado_de_conservacao: especie.estado_de_conservacao,
       });
       
-      // Load nomes_populares from the species
-      if (especie.nomes_populares) {
-        setNomesPopulares(especie.nomes_populares);
-      } else {
-        loadNomesPopulares(especie.id);
-      }
+      // Load nomes_populares and imagens from the species
+      loadEspecieData(especie.id);
     }
   }, [especie]);
 
-  const loadNomesPopulares = async (id: string) => {
+  const loadEspecieData = async (id: string) => {
     const { data } = await supabase
       .from('dim_especies_fauna')
-      .select('nomes_populares')
+      .select('nomes_populares, imagens_paths')
       .eq('id', id)
       .maybeSingle();
     
@@ -92,7 +91,14 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
     } else {
       setNomesPopulares([]);
     }
+
+    if (data?.imagens_paths) {
+      setImagensPaths(data.imagens_paths as string[]);
+    } else {
+      setImagensPaths([]);
+    }
   };
+
 
   const handleAddNome = () => {
     if (novoNome.trim() && !nomesPopulares.includes(novoNome.trim())) {
@@ -256,6 +262,19 @@ export function FaunaEditDialog({ especie, open, onOpenChange, onSave }: FaunaEd
               </SelectContent>
             </Select>
           </div>
+
+          {/* Photo Upload Section */}
+          {especie && (
+            <div className="space-y-2 pt-2 border-t">
+              <Label>Fotos da Espécie</Label>
+              <FaunaImageUploader
+                especieId={especie.id}
+                nomePopular={formData.nome_popular || especie.nome_popular}
+                imagensPaths={imagensPaths}
+                onImagesChange={setImagensPaths}
+              />
+            </div>
+          )}
         </div>
 
         <DialogFooter>
