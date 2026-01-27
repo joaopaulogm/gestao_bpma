@@ -263,7 +263,46 @@ const Login = () => {
         return;
       }
 
-      // Login válido - salvar sessão e redirecionar
+      // Login válido - criar sessão Supabase Auth para ter token authenticated
+      // Usar email baseado na matrícula para criar/logar no Supabase Auth
+      const supabaseEmail = `${matriculaLimpa.toLowerCase()}@bpma.local`;
+      
+      // Tentar fazer login no Supabase Auth
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: supabaseEmail,
+        password: senhaLogin,
+      });
+
+      if (signInError) {
+        // Se usuário não existe no Supabase Auth, criar
+        if (signInError.message.includes('Invalid login credentials')) {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email: supabaseEmail,
+            password: senhaLogin,
+            options: {
+              data: {
+                matricula: usuario.matricula,
+                nome: usuario.nome,
+                nome_guerra: usuario.nome_guerra,
+                role: usuario.role,
+              }
+            }
+          });
+
+          if (signUpError && !signUpError.message.includes('already registered')) {
+            console.error('Erro ao criar usuário Supabase Auth:', signUpError);
+            // Continuar mesmo com erro - usar sessão local como fallback
+          } else {
+            // Tentar login novamente após criar
+            await supabase.auth.signInWithPassword({
+              email: supabaseEmail,
+              password: senhaLogin,
+            });
+          }
+        }
+      }
+
+      // Salvar dados extras na sessão local (para informações não disponíveis no Supabase Auth)
       const userData = {
         id: usuario.id,
         nome: usuario.nome,
@@ -321,9 +360,33 @@ const Login = () => {
 
       toast.success('Senha alterada com sucesso!');
       
-      // Login realizado com sucesso - redirecionar para página inicial
+      // Login realizado com sucesso - criar sessão Supabase Auth
       if (pendingUser) {
-        // Salvar sessão no localStorage
+        const matriculaLimpa = (pendingUser.matricula || '').replace(/[^0-9Xx]/g, '').toUpperCase();
+        const supabaseEmail = `${matriculaLimpa.toLowerCase()}@bpma.local`;
+        
+        // Criar usuário no Supabase Auth e fazer login
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: supabaseEmail,
+          password: newPassword,
+          options: {
+            data: {
+              matricula: pendingUser.matricula,
+              nome: pendingUser.nome,
+              nome_guerra: pendingUser.nome_guerra,
+              role: pendingUser.role,
+            }
+          }
+        });
+
+        if (!signUpError || signUpError.message.includes('already registered')) {
+          await supabase.auth.signInWithPassword({
+            email: supabaseEmail,
+            password: newPassword,
+          });
+        }
+
+        // Salvar dados extras na sessão local
         const userData = {
           id: pendingUser.id,
           nome: pendingUser.nome,
