@@ -15,8 +15,13 @@ const getAllowedOrigin = (requestOrigin: string | null): string => {
     return requestOrigin;
   }
 
-  // fallback para domínios *.lovable.app
-  if (requestOrigin && requestOrigin.includes(".lovable.app")) return requestOrigin;
+  // fallback para ambientes Lovable
+  // - preview/published: *.lovable.app
+  // - editor sandbox: *.lovableproject.com
+  if (requestOrigin) {
+    const o = requestOrigin.toLowerCase();
+    if (o.includes(".lovable.app") || o.includes(".lovableproject.com")) return requestOrigin;
+  }
   return allowedOrigins[0];
 };
 
