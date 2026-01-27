@@ -31,6 +31,12 @@ export const uploadFaunaImage = async (
   file: File
 ): Promise<string | null> => {
   try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      console.error('Upload bloqueado: sessão Supabase inexistente (token anon)');
+      return null;
+    }
+
     const ext = file.name.split('.').pop()?.toLowerCase() || 'webp';
     const normalizedName = normalizeFilename(nomePopular);
     const timestamp = Date.now();
@@ -110,6 +116,12 @@ export const uploadFloraImage = async (
   file: File
 ): Promise<string | null> => {
   try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      console.error('Upload bloqueado: sessão Supabase inexistente (token anon)');
+      return null;
+    }
+
     const ext = file.name.split('.').pop()?.toLowerCase() || 'webp';
     const normalizedName = normalizeFilename(nomePopular);
     const timestamp = Date.now();
