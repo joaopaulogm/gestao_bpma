@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
+const supabaseAny = supabase as any;
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
@@ -114,8 +115,8 @@ const CrimeAmbientalEditDialog: React.FC<CrimeAmbientalEditDialogProps> = ({
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('fat_registros_de_crime')
+      const { error } = await supabaseAny
+        .from('fat_registros_de_crimes_ambientais')
         .update({
           data: formData.data,
           regiao_administrativa_id: formData.regiao_administrativa_id || null,

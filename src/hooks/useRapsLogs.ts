@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+const supabaseAny = supabase as any;
 
 export interface RapsLog {
   id: string;
@@ -41,7 +42,7 @@ export const useRapsLogs = (options: UseRapsLogsOptions = {}) => {
     setError(null);
 
     try {
-      let query = supabase
+      let query = supabaseAny
         .from('rap_import_logs')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })

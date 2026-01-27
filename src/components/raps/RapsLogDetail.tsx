@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, X, AlertTriangle, CheckCircle, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+const supabaseAny = supabase as any;
 import { RapsLog } from '@/hooks/useRapsLogs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -28,11 +29,11 @@ const RapsLogDetail: React.FC<RapsLogDetailProps> = ({ logId, onClose }) => {
     const fetchLog = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAny
           .from('rap_import_logs')
           .select('*')
           .eq('id', logId)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         setLog(data);

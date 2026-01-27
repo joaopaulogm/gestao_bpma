@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { supabase } from '@/integrations/supabase/client';
+const supabaseAny = supabase as any;
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -97,8 +98,8 @@ const RegistrosCrimes = () => {
     setIsLoading(true);
     try {
       // Buscar registros de crime com relacionamentos corrigidos
-      const { data, error } = await supabase
-        .from('fat_registros_de_crime')
+      const { data, error } = await supabaseAny
+        .from('fat_registros_de_crimes_ambientais')
         .select(`
           id,
           data,
@@ -260,8 +261,8 @@ const RegistrosCrimes = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('fat_registros_de_crime')
+      const { error } = await supabaseAny
+        .from('fat_registros_de_crimes_ambientais')
         .delete()
         .eq('id', id);
 

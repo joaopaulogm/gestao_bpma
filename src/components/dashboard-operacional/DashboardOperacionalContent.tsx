@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+const supabaseAny = supabase as any;
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -180,7 +181,7 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
           supabase.from('fat_registros_de_resgate')
             .select('quantidade_total, quantidade_adulto, quantidade_filhote, desfecho_id, estado_saude_id')
             .gte('data', startDate).lte('data', endDate),
-          supabase.from('fat_registros_de_crime')
+          supabaseAny.from('fat_registros_de_crimes_ambientais')
             .select('id')
             .gte('data', startDate).lte('data', endDate),
           supabase.from('fat_crimes_comuns')

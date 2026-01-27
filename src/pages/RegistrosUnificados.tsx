@@ -408,29 +408,30 @@ const RegistrosUnificados: React.FC = () => {
     try {
       console.log('🔍 [Fauna] Iniciando busca de registros de fauna...');
       
-      // Determinar quais tabelas buscar baseado no filtro de ano (igual à página Registros.tsx)
+      // Determinar quais tabelas buscar baseado no filtro de ano
       let tabelas: string[] = [];
-      
-      // Usar view unificada para anos históricos (2020-2024) quando possível
-      let usarViewHistorica = false;
       let anoFiltrado: number | null = null;
       
       if (filterAno === 'all') {
-        // Se não há filtro de ano, carregar apenas as mais recentes (2024 e 2025) inicialmente
-        tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025', 'fat_resgates_diarios_2024'];
+        // Carregar de todas as tabelas de fauna
+        tabelas = [
+          'fat_registros_de_resgate',
+          'fat_resgates_diarios_2025',
+          'fat_resgates_diarios_2024',
+          'fat_resgates_diarios_2023',
+          'fat_resgates_diarios_2022',
+          'fat_resgates_diarios_2021',
+          'fat_resgates_diarios_2020',
+        ];
       } else {
         const ano = parseInt(filterAno);
         anoFiltrado = ano;
-        // Carregar apenas a tabela do ano selecionado
-        if (ano === 2025) {
+        if (ano >= 2026) {
+          tabelas = ['fat_registros_de_resgate'];
+        } else if (ano === 2025) {
           tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025'];
         } else if (ano >= 2020 && ano <= 2024) {
-          // Usar view unificada para anos históricos
-          usarViewHistorica = true;
-          tabelas = ['vw_resgates_basicos_union'];
-        } else if (ano >= 2026) {
-          // Para 2026 ou anos futuros, buscar apenas em fat_registros_de_resgate
-          tabelas = ['fat_registros_de_resgate'];
+          tabelas = [`fat_resgates_diarios_${ano}`];
         } else {
           tabelas = ['fat_registros_de_resgate'];
         }
@@ -438,100 +439,30 @@ const RegistrosUnificados: React.FC = () => {
       
       console.log('📊 [Fauna] Tabelas a buscar:', tabelas);
       
-      // Buscar dados de todas as tabelas em paralelo
       const allRegistros: any[] = [];
-      
-      // Primeiro, testar se conseguimos acessar as tabelas
-      console.log('🧪 [Fauna] Testando acesso às tabelas...');
-      for (const tabela of tabelas) {
-        try {
-          const { data: testData, error: testError } = await supabaseAny
-            .from(tabela)
-            .select('id')
-            .limit(1);
-          
-          if (testError) {
-            console.error(`❌ [Fauna] Erro ao acessar ${tabela}:`, testError);
-          } else {
-            console.log(`✅ [Fauna] Acesso à tabela ${tabela} OK, ${testData?.length || 0} registro(s) de teste`);
-          }
-        } catch (err: any) {
-          console.error(`❌ [Fauna] Exceção ao testar ${tabela}:`, err);
-        }
-      }
       
       await Promise.all(tabelas.map(async (tabela) => {
         try {
           console.log(`🔍 [Fauna] Buscando de ${tabela}...`);
           
-          // Para view unificada de histórico (vw_resgates_basicos_union)
-          if (tabela === 'vw_resgates_basicos_union') {
-            let query = supabaseAny
-              .from(tabela)
-              .select('ano, data, especie_id, total_resgates, nome_popular_raw, nome_cientifico, classe_taxonomica')
-              .order('data', { ascending: false });
-            
-            // Aplicar filtros de data
-            if (anoFiltrado !== null) {
-              const startDate = `${anoFiltrado}-01-01`;
-              const endDate = `${anoFiltrado}-12-31`;
-              query = query.gte('data', startDate).lte('data', endDate);
-            }
-            if (filterMes !== 'all' && anoFiltrado !== null) {
-              const mes = parseInt(filterMes);
-              const startDate = `${anoFiltrado}-${String(mes).padStart(2, '0')}-01`;
-              const lastDay = new Date(anoFiltrado, mes, 0).getDate();
-              const endDate = `${anoFiltrado}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-              query = query.gte('data', startDate).lte('data', endDate);
-            }
-            
-            const { data, error } = await query;
-            
-            if (error) {
-              console.error(`❌ [Fauna] Erro ao buscar de ${tabela}:`, error);
-              return;
-            }
-            
-            // Normalizar dados da view para o formato esperado
-            const normalized = (data || []).map((r: any) => ({
-              id: `vw-${r.ano}-${r.data}-${r.especie_id || 'unknown'}-${Math.random().toString(36).substring(7)}`,
-              data: r.data,
-              especie_id: r.especie_id,
-              quantidade: r.total_resgates || 0,
-              quantidade_total: r.total_resgates || 0,
-              regiao_administrativa_id: null,
-              destinacao_id: null,
-              estado_saude_id: null,
-              atropelamento: false,
-              created_at: r.data,
-              // Dados diretos para enriquecimento
-              nome_popular: r.nome_popular_raw,
-              nome_cientifico: r.nome_cientifico,
-              classe_taxonomica: r.classe_taxonomica,
-            }));
-            
-            allRegistros.push(...normalized);
-            console.log(`✅ [Fauna] ${tabela}: ${normalized.length} registros encontrados`);
-          }
-          // Para tabelas históricas individuais (2020-2024), usar campos diferentes
-          else if (tabela.startsWith('fat_resgates_diarios_202') && parseInt(tabela.slice(-4)) <= 2024) {
+          // Tabelas históricas (2020-2024) têm campos diferentes
+          if (tabela.match(/fat_resgates_diarios_202[0-4]$/)) {
             let query = supabaseAny
               .from(tabela)
               .select('id, data_ocorrencia, especie_id, quantidade_resgates, nome_popular, nome_cientifico, classe_taxonomica')
               .order('data_ocorrencia', { ascending: false });
             
             // Aplicar filtros de data
-            if (filterAno !== 'all') {
-              const ano = parseInt(filterAno);
-              const startDate = `${ano}-01-01`;
-              const endDate = `${ano}-12-31`;
+            if (anoFiltrado !== null) {
+              const startDate = `${anoFiltrado}-01-01`;
+              const endDate = `${anoFiltrado}-12-31`;
               query = query.gte('data_ocorrencia', startDate).lte('data_ocorrencia', endDate);
             }
             if (filterMes !== 'all') {
-              const ano = filterAno !== 'all' ? filterAno : new Date().getFullYear().toString();
+              const ano = anoFiltrado || new Date().getFullYear();
               const mes = parseInt(filterMes);
               const startDate = `${ano}-${String(mes).padStart(2, '0')}-01`;
-              const lastDay = new Date(parseInt(ano), mes, 0).getDate();
+              const lastDay = new Date(ano, mes, 0).getDate();
               const endDate = `${ano}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
               query = query.gte('data_ocorrencia', startDate).lte('data_ocorrencia', endDate);
             }
@@ -555,10 +486,10 @@ const RegistrosUnificados: React.FC = () => {
               estado_saude_id: null,
               atropelamento: false,
               created_at: r.data_ocorrencia,
-              // Dados diretos para enriquecimento
               nome_popular: r.nome_popular,
               nome_cientifico: r.nome_cientifico,
               classe_taxonomica: r.classe_taxonomica,
+              fonte: tabela,
             }));
             
             allRegistros.push(...normalized);
@@ -570,7 +501,6 @@ const RegistrosUnificados: React.FC = () => {
               .select('id, data, especie_id, quantidade, quantidade_total, regiao_administrativa_id, destinacao_id, estado_saude_id, atropelamento, created_at')
               .order('data', { ascending: false });
             
-            // Aplicar filtros de data
             query = buildDateFilters(query, 'data');
             
             const { data, error } = await query;
@@ -580,7 +510,12 @@ const RegistrosUnificados: React.FC = () => {
               return;
             }
             
-            allRegistros.push(...(data || []));
+            const normalized = (data || []).map((r: any) => ({
+              ...r,
+              fonte: tabela,
+            }));
+            
+            allRegistros.push(...normalized);
             console.log(`✅ [Fauna] ${tabela}: ${(data || []).length} registros encontrados`);
           }
         } catch (err: any) {
@@ -608,7 +543,7 @@ const RegistrosUnificados: React.FC = () => {
           regiao: dimensionCache?.regioes.get(r.regiao_administrativa_id),
           destinacao: dimensionCache?.destinacoes.get(r.destinacao_id),
           estado_saude: dimensionCache?.estadosSaude.get(r.estado_saude_id),
-          atropelamento: r.atropelamento,
+          atropelamento: r.atropelamento === true || r.atropelamento === 'Sim',
         };
       });
       
@@ -620,13 +555,9 @@ const RegistrosUnificados: React.FC = () => {
       });
       
       console.log(`✅ [Fauna] Dados enriquecidos e prontos para exibição: ${enriched.length} registros`);
-      console.log(`📋 [Fauna] Primeiros 3 registros enriquecidos:`, enriched.slice(0, 3));
       setFaunaRegistros(enriched);
-      console.log(`✅ [Fauna] Estado faunaRegistros atualizado com ${enriched.length} registros`);
     } catch (error: any) {
       console.error('❌ [Fauna] Erro ao carregar fauna:', error);
-      console.error('❌ [Fauna] Stack trace:', error?.stack);
-      console.error('❌ [Fauna] Detalhes completos:', JSON.stringify(error, null, 2));
       toast.error(`Erro ao carregar registros de fauna: ${error?.message || 'Erro desconhecido'}`);
     } finally {
       setLoadingFauna(false);
@@ -637,50 +568,26 @@ const RegistrosUnificados: React.FC = () => {
   const loadCrimesAmbientaisData = async () => {
     setLoadingCrimesAmbientais(true);
     try {
-      console.log('🔍 [Crimes Ambientais] Iniciando busca em fat_registros_de_crime...');
-      let query = supabase
-        .from('fat_registros_de_crime')
+      console.log('🔍 [Crimes Ambientais] Iniciando busca em fat_registros_de_crimes_ambientais...');
+      
+      // Buscar da tabela principal de crimes ambientais
+      let query = supabaseAny
+        .from('fat_registros_de_crimes_ambientais')
         .select('id, data, tipo_crime_id, enquadramento_id, regiao_administrativa_id, ocorreu_apreensao, procedimento_legal, desfecho_id, created_at')
         .order('data', { ascending: false });
 
       query = buildDateFilters(query, 'data');
       console.log('🔍 [Crimes Ambientais] Executando query...', { filterAno, filterMes });
       
-      // Teste sem filtros
-      const { data: testDataCrimes, error: testErrorCrimes } = await supabaseAny
-        .from('fat_registros_de_crime')
-        .select('id, data')
-        .order('data', { ascending: false })
-        .limit(10);
-      
-      if (!testErrorCrimes) {
-        console.log(`🔍 [Crimes Ambientais] Teste SEM filtros: ${testDataCrimes?.length || 0} registros encontrados`);
-        if (testDataCrimes && testDataCrimes.length > 0) {
-          const anosEncontrados = [...new Set(testDataCrimes.map((r: any) => r.data?.substring(0, 4)))].filter(Boolean);
-          console.log('📅 [Crimes Ambientais] Anos encontrados nos dados:', anosEncontrados);
-        }
-      }
-      
       const { data, error } = await query;
 
       if (error) {
-        console.error('❌ [Crimes Ambientais] Erro na query de crimes ambientais:', error);
-        console.error('❌ [Crimes Ambientais] Detalhes do erro:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
+        console.error('❌ [Crimes Ambientais] Erro na query:', error);
         toast.error(`Erro ao carregar registros de crimes ambientais: ${error.message}`);
         throw error;
       }
       
-      console.log(`✅ [Crimes Ambientais] Carregados ${data?.length || 0} registros de crimes ambientais da tabela fat_registros_de_crime`);
-      if (data && data.length > 0) {
-        console.log('📋 [Crimes Ambientais] Primeiros 3 registros:', data.slice(0, 3));
-      } else {
-        console.warn('⚠️ [Crimes Ambientais] Nenhum registro encontrado na tabela fat_registros_de_crime');
-      }
+      console.log(`✅ [Crimes Ambientais] Carregados ${data?.length || 0} registros de fat_registros_de_crimes_ambientais`);
 
       const enriched: RegistroCrimeAmbiental[] = (data || []).map((r: any) => ({
         id: r.id,
@@ -802,26 +709,35 @@ const RegistrosUnificados: React.FC = () => {
   const loadBensApreendidosData = async () => {
     setLoadingBensApreendidos(true);
     try {
-      console.log('🔍 [Bens Apreendidos] Iniciando busca em fat_ocorrencia_apreensao...');
-      // Buscar da tabela de relacionamento fat_ocorrencia_apreensao
-      const { data, error } = await supabaseAny
+      console.log('🔍 [Bens Apreendidos] Iniciando busca em fat_ocorrencia_apreensao e fat_ocorrencia_apreensao_crime_comum...');
+      
+      // Buscar da tabela de apreensões de crimes ambientais
+      const { data: apreensaoAmbiental, error: errorAmbiental } = await supabaseAny
         .from('fat_ocorrencia_apreensao')
-        .select('id, quantidade, ocorrencia_id, item_id')
-        .order('id', { ascending: false })
-        .limit(200);
+        .select('id, quantidade, id_ocorrencia, id_item_apreendido, created_at')
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('❌ [Bens Apreendidos] Erro na query:', error);
-        console.error('❌ [Bens Apreendidos] Detalhes do erro:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        throw error;
+      if (errorAmbiental) {
+        console.error('❌ [Bens Apreendidos] Erro ao buscar fat_ocorrencia_apreensao:', errorAmbiental);
       }
       
-      console.log(`✅ [Bens Apreendidos] Carregados ${data?.length || 0} registros de bens apreendidos`);
+      // Buscar da tabela de apreensões de crimes comuns
+      const { data: apreensaoComum, error: errorComum } = await supabaseAny
+        .from('fat_ocorrencia_apreensao_crime_comum')
+        .select('id, quantidade, id_ocorrencia, id_item_apreendido, created_at')
+        .order('created_at', { ascending: false });
+
+      if (errorComum) {
+        console.error('❌ [Bens Apreendidos] Erro ao buscar fat_ocorrencia_apreensao_crime_comum:', errorComum);
+      }
+      
+      // Combinar os dados de ambas as tabelas
+      const allApreensoes = [
+        ...(apreensaoAmbiental || []).map((r: any) => ({ ...r, fonte: 'ambiental' })),
+        ...(apreensaoComum || []).map((r: any) => ({ ...r, fonte: 'comum' })),
+      ];
+      
+      console.log(`✅ [Bens Apreendidos] Total de ${allApreensoes.length} apreensões encontradas`);
 
       // Buscar itens de apreensão
       const { data: itensData } = await supabaseAny
@@ -833,30 +749,64 @@ const RegistrosUnificados: React.FC = () => {
         itensMap.set(i.id, i);
       });
 
-      // Buscar ocorrências para data
-      const ocorrenciaIds = [...new Set((data || []).map((r: any) => r.ocorrencia_id).filter(Boolean))];
-      let ocorrenciasMap = new Map<string, string>();
-      if (ocorrenciaIds.length > 0) {
+      // Buscar datas das ocorrências de crimes ambientais
+      const ocorrenciaIdsAmbiental = [...new Set(
+        allApreensoes
+          .filter((r: any) => r.fonte === 'ambiental' && r.id_ocorrencia)
+          .map((r: any) => r.id_ocorrencia)
+      )];
+      
+      let ocorrenciasAmbientalMap = new Map<string, string>();
+      if (ocorrenciaIdsAmbiental.length > 0) {
         const { data: ocorrenciasData } = await supabaseAny
-          .from('fat_registros_de_crime')
+          .from('fat_registros_de_crimes_ambientais')
           .select('id, data')
-          .in('id', ocorrenciaIds);
+          .in('id', ocorrenciaIdsAmbiental);
         ocorrenciasData?.forEach((o: any) => {
-          ocorrenciasMap.set(o.id, o.data);
+          ocorrenciasAmbientalMap.set(o.id, o.data);
         });
       }
 
-      const enriched: RegistroBemApreendido[] = (data || []).map((r: any) => {
-        const item = itensMap.get(r.item_id);
+      // Buscar datas das ocorrências de crimes comuns
+      const ocorrenciaIdsComum = [...new Set(
+        allApreensoes
+          .filter((r: any) => r.fonte === 'comum' && r.id_ocorrencia)
+          .map((r: any) => r.id_ocorrencia)
+      )];
+      
+      let ocorrenciasComumMap = new Map<string, string>();
+      if (ocorrenciaIdsComum.length > 0) {
+        const { data: ocorrenciasData } = await supabaseAny
+          .from('fat_crimes_comuns')
+          .select('id, data')
+          .in('id', ocorrenciaIdsComum);
+        ocorrenciasData?.forEach((o: any) => {
+          ocorrenciasComumMap.set(o.id, o.data);
+        });
+      }
+
+      const enriched: RegistroBemApreendido[] = allApreensoes.map((r: any) => {
+        const item = itensMap.get(r.id_item_apreendido);
+        const dataOcorrencia = r.fonte === 'ambiental' 
+          ? ocorrenciasAmbientalMap.get(r.id_ocorrencia)
+          : ocorrenciasComumMap.get(r.id_ocorrencia);
+        
         return {
           id: r.id,
-          data: ocorrenciasMap.get(r.ocorrencia_id) || '',
+          data: dataOcorrencia || r.created_at?.substring(0, 10) || '',
           item: item?.Item,
           bem_apreendido: item?.['Bem Apreendido'],
-          tipo_crime: item?.['Tipo de Crime'],
+          tipo_crime: item?.['Tipo de Crime'] || (r.fonte === 'comum' ? 'Crime Comum' : 'Crime Ambiental'),
           quantidade: r.quantidade,
-          ocorrencia_id: r.ocorrencia_id,
+          ocorrencia_id: r.id_ocorrencia,
         };
+      });
+
+      // Ordenar por data (mais recente primeiro)
+      enriched.sort((a, b) => {
+        const dateA = a.data ? new Date(a.data).getTime() : 0;
+        const dateB = b.data ? new Date(b.data).getTime() : 0;
+        return dateB - dateA;
       });
 
       setBensApreendidos(enriched);
@@ -928,7 +878,7 @@ const RegistrosUnificados: React.FC = () => {
           table = 'fat_registros_de_resgate';
           break;
         case 'crimes-ambientais':
-          table = 'fat_registros_de_crime';
+          table = 'fat_registros_de_crimes_ambientais';
           break;
         case 'crimes-comuns':
           table = 'fat_crimes_comuns';
