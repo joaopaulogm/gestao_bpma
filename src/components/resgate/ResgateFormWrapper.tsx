@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
 import { ResgateFormData } from '@/schemas/resgateSchema';
@@ -7,6 +6,7 @@ import ResgateFormHeader from './ResgateFormHeader';
 import FormErrorDisplay from './FormErrorDisplay';
 import ResgateFormSubmitButton from './ResgateFormSubmitButton';
 import InformacoesGeraisSection from './InformacoesGeraisSection';
+import DesfechoResgateSection from './DesfechoResgateSection';
 import EspeciesMultiplasSection, { EspecieItem } from './EspeciesMultiplasSection';
 import EquipeSection, { MembroEquipe } from './EquipeSection';
 
@@ -42,11 +42,31 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
   especies,
   onEspeciesChange
 }) => {
+  // State for "animal identificado" question
+  const [animalIdentificado, setAnimalIdentificado] = useState(true);
+  
   // Check if we have form-level errors
   const formLevelError = errors.root?.message || errors._errors?.join(', ');
 
   // Check if desfecho is Evadido to make fields optional
   const isEvadido = formData.desfechoResgate === "Evadido";
+
+  // Handle animal identificado change
+  const handleAnimalIdentificadoChange = (value: boolean) => {
+    setAnimalIdentificado(value);
+    // If not identified, clear species data
+    if (!value) {
+      onEspeciesChange([]);
+    }
+  };
+
+  // Wrap form submit to include animalIdentificado
+  const handleFormSubmitWithAnimalId = async (data: any) => {
+    await handleFormSubmit({
+      ...data,
+      animalIdentificado
+    });
+  };
 
   return (
     <div className="page-container space-y-6 animate-fade-in">
@@ -58,7 +78,7 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
       />
 
       <form
-        onSubmit={form.handleSubmit(handleFormSubmit, () => {
+        onSubmit={form.handleSubmit(handleFormSubmitWithAnimalId, () => {
           toast.error('Não foi possível salvar: revise os campos destacados.');
         })}
         className="space-y-6"
@@ -75,12 +95,27 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
           onMembrosChange={onMembrosEquipeChange}
         />
 
-        <EspeciesMultiplasSection 
-          especies={especies}
-          onEspeciesChange={onEspeciesChange}
-          isEvadido={isEvadido}
-          errors={errors}
-        />
+        {/* Seção Desfecho do Resgate - apenas quando origem é Resgate de Fauna */}
+        {formData.origem === 'Resgate de Fauna' && (
+          <DesfechoResgateSection
+            situacaoDesfecho={formData.desfechoResgate || ''}
+            onSituacaoChange={(value) => handleSelectChange('desfechoResgate', value)}
+            animalIdentificado={animalIdentificado}
+            onAnimalIdentificadoChange={handleAnimalIdentificadoChange}
+            error={errors.desfechoResgate?.message}
+            required={true}
+          />
+        )}
+
+        {/* Seção de Espécies - só aparece se animal foi identificado */}
+        {animalIdentificado && (
+          <EspeciesMultiplasSection 
+            especies={especies}
+            onEspeciesChange={onEspeciesChange}
+            isEvadido={isEvadido}
+            errors={errors}
+          />
+        )}
 
         <ResgateFormSubmitButton 
           isSubmitting={isSubmitting} 

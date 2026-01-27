@@ -72,15 +72,7 @@ const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({
         required={true}
       />
 
-      {/* Desfecho do Resgate - apenas se origem for Resgate de Fauna */}
-      {formData.origem === 'Resgate de Fauna' && (
-        <DesfechoResgateField
-          desfechoResgate={formData.desfechoResgate}
-          onDesfechoChange={(value) => handleSelectChange('desfechoResgate', value)}
-          error={errors.desfechoResgate?.message}
-          required={true}
-        />
-      )}
+      {/* Desfecho do Resgate foi movido para DesfechoResgateSection */}
 
       {/* Desfecho da Apreensão - apenas se origem for Apreensão */}
       {formData.origem === 'Apreensão' && (
