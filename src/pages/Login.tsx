@@ -134,6 +134,48 @@ const Login = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  // Garante que o browser tenha sessão Supabase Auth (token "authenticated")
+  // Necessário para operações com Storage (upload/remoção de fotos).
+  const ensureSupabaseAuthenticated = async (matriculaLimpa: string, senha: string): Promise<boolean> => {
+    try {
+      // 1) sincroniza/cria o usuário no Supabase Auth com a senha atual (server-side)
+      const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-auth-password', {
+        body: { matricula: matriculaLimpa, senha },
+      });
+
+      if (syncError || !syncData?.success) {
+        console.error('Falha ao sincronizar Supabase Auth:', syncError, syncData);
+        toast.error('Não foi possível sincronizar o acesso para upload de fotos. Tente novamente.');
+        return false;
+      }
+
+      // 2) autentica no Supabase Auth para obter JWT
+      const supabaseEmail = `${matriculaLimpa.toLowerCase()}@bpma.local`;
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: supabaseEmail,
+        password: senha,
+      });
+
+      if (signInError) {
+        console.error('Falha ao autenticar no Supabase Auth:', signInError);
+        toast.error('Falha ao autenticar sessão necessária para upload de fotos.');
+        return false;
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session?.user) {
+        toast.error('Sessão de autenticação não foi criada.');
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.error('ensureSupabaseAuthenticated error:', err);
+      toast.error('Erro ao preparar sessão para upload de fotos.');
+      return false;
+    }
+  };
+
   // Password validation (6-10 chars, lowercase, uppercase, number, special)
   const validatePassword = (pwd: string): PasswordValidation => ({
     hasLowercase: /[a-z]/.test(pwd),
@@ -263,44 +305,9 @@ const Login = () => {
         return;
       }
 
-      // Login válido - criar sessão Supabase Auth para ter token authenticated
-      // Usar email baseado na matrícula para criar/logar no Supabase Auth
-      const supabaseEmail = `${matriculaLimpa.toLowerCase()}@bpma.local`;
-      
-      // Tentar fazer login no Supabase Auth
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: supabaseEmail,
-        password: senhaLogin,
-      });
-
-      if (signInError) {
-        // Se usuário não existe no Supabase Auth, criar
-        if (signInError.message.includes('Invalid login credentials')) {
-          const { error: signUpError } = await supabase.auth.signUp({
-            email: supabaseEmail,
-            password: senhaLogin,
-            options: {
-              data: {
-                matricula: usuario.matricula,
-                nome: usuario.nome,
-                nome_guerra: usuario.nome_guerra,
-                role: usuario.role,
-              }
-            }
-          });
-
-          if (signUpError && !signUpError.message.includes('already registered')) {
-            console.error('Erro ao criar usuário Supabase Auth:', signUpError);
-            // Continuar mesmo com erro - usar sessão local como fallback
-          } else {
-            // Tentar login novamente após criar
-            await supabase.auth.signInWithPassword({
-              email: supabaseEmail,
-              password: senhaLogin,
-            });
-          }
-        }
-      }
+      // Login válido - é OBRIGATÓRIO criar sessão Supabase Auth para upload de fotos
+      const ok = await ensureSupabaseAuthenticated(matriculaLimpa, senhaLogin);
+      if (!ok) return;
 
       // Salvar dados extras na sessão local (para informações não disponíveis no Supabase Auth)
       const userData = {
@@ -360,31 +367,11 @@ const Login = () => {
 
       toast.success('Senha alterada com sucesso!');
       
-      // Login realizado com sucesso - criar sessão Supabase Auth
+      // Sincroniza Supabase Auth com a nova senha (para manter upload funcionando)
       if (pendingUser) {
         const matriculaLimpa = (pendingUser.matricula || '').replace(/[^0-9Xx]/g, '').toUpperCase();
-        const supabaseEmail = `${matriculaLimpa.toLowerCase()}@bpma.local`;
-        
-        // Criar usuário no Supabase Auth e fazer login
-        const { error: signUpError } = await supabase.auth.signUp({
-          email: supabaseEmail,
-          password: newPassword,
-          options: {
-            data: {
-              matricula: pendingUser.matricula,
-              nome: pendingUser.nome,
-              nome_guerra: pendingUser.nome_guerra,
-              role: pendingUser.role,
-            }
-          }
-        });
-
-        if (!signUpError || signUpError.message.includes('already registered')) {
-          await supabase.auth.signInWithPassword({
-            email: supabaseEmail,
-            password: newPassword,
-          });
-        }
+        const ok = await ensureSupabaseAuthenticated(matriculaLimpa, newPassword);
+        if (!ok) return;
 
         // Salvar dados extras na sessão local
         const userData = {
@@ -517,6 +504,16 @@ const Login = () => {
       if (!resultado?.sucesso) {
         toast.error(resultado?.mensagem || 'Token inválido ou expirado');
         return;
+      }
+
+      // Mantém Supabase Auth sincronizado com a senha redefinida (evita voltar a ficar anon)
+      const matriculaLimpa = recoveryMatricula.replace(/[^0-9Xx]/g, '').toUpperCase();
+      if (matriculaLimpa) {
+        const ok = await ensureSupabaseAuthenticated(matriculaLimpa, resetNewPassword);
+        if (!ok) {
+          // Não bloqueia o fluxo (usuário ainda pode tentar login), mas avisa.
+          toast.info('Senha redefinida, mas o acesso para upload de fotos pode não ter sido sincronizado.');
+        }
       }
 
       toast.success('Senha redefinida com sucesso! Faça login com sua nova senha.');
