@@ -197,9 +197,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!userRole) return false;
     if (userRole === 'admin') return true;
     
-    // secao_operacional tem acesso a tudo em /secao-operacional/* e rotas de operador
+    // secao_operacional tem acesso irrestrito a /secao-operacional/* e rotas de operador
     if (userRole === 'secao_operacional') {
       if (requiredRoles.includes('secao_operacional') || requiredRoles.includes('operador')) {
+        return true;
+      }
+    }
+    
+    // secao_pessoas tem acesso irrestrito a /secao-pessoas/* e rotas de operador
+    if (userRole === 'secao_pessoas') {
+      if (requiredRoles.includes('secao_pessoas') || requiredRoles.includes('operador')) {
+        return true;
+      }
+    }
+    
+    // secao_logistica tem acesso irrestrito a /secao-logistica/* e rotas de operador
+    if (userRole === 'secao_logistica') {
+      if (requiredRoles.includes('secao_logistica') || requiredRoles.includes('operador')) {
         return true;
       }
     }
