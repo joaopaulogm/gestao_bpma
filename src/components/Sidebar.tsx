@@ -82,9 +82,6 @@ const navSections: NavSection[] = [
     icon: Lock,
     items: [
       { path: '/login', label: 'Fazer Login', icon: LogIn, roles: ['guest'] },
-      { path: '/resgate-cadastro', label: 'Resgate de Fauna', icon: Clipboard, roles: ['operador'] },
-      { path: '/crimes-ambientais', label: 'Crimes Ambientais', icon: Shield, roles: ['operador'] },
-      { path: '/crimes-comuns', label: 'Crimes Comuns', icon: Shield, roles: ['operador'] },
       {
         path: '/material-apoio',
         label: 'Material de Apoio',
@@ -96,8 +93,8 @@ const navSections: NavSection[] = [
           { path: '/material-apoio/manual-rap', label: 'Manual RAP', icon: BookOpen },
         ],
       },
+      { path: '/mapa-localizacao', label: 'Mapa e Localização', icon: MapPin, roles: ['operador'] },
       { path: '/ranking', label: 'Ranking de Ocorrências', icon: Trophy, roles: ['operador'] },
-      { path: '/atividades-prevencao', label: 'Atividades Prevenção', icon: Shield, roles: ['operador'] },
     ],
   },
   {
