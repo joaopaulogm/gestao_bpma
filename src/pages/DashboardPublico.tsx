@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+const supabaseAny = supabase as any;
 import { processDashboardData } from '@/utils/dashboardDataProcessor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -167,7 +168,7 @@ const DashboardPublico = () => {
       const endDate = `${selectedYear}-12-31`;
 
       const [ambientaisRes, comunsRes] = await Promise.all([
-        supabase.from('fat_registros_de_crime')
+        supabaseAny.from('fat_registros_de_crimes_ambientais')
           .select('id')
           .gte('data', startDate).lte('data', endDate),
         supabase.from('fat_crimes_comuns')

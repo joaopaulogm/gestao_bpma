@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+const supabaseAny = supabase as any;
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   BarChart, 
@@ -66,9 +67,9 @@ const DashboardCrimesEnquadramento: React.FC<DashboardCrimesEnquadramentoProps> 
         }
 
         // Buscar estatísticas de crimes por enquadramento
-        let query = supabase
-          .from('fat_registros_de_crime')
-          .select('enquadramento_id, dim_enquadramento!inner(Enquadramento)')
+        let query = supabaseAny
+          .from('fat_registros_de_crimes_ambientais')
+          .select('enquadramento_id')
           .eq('tipo_crime_id', tipoCrimeId);
 
         // Aplicar filtro de ano se especificado

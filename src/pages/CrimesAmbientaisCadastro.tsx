@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
+const supabaseAny = supabase as any;
 import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, Search, Image as ImageIcon } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
@@ -395,8 +396,8 @@ const CrimesAmbientaisCadastro = () => {
     
     try {
       // Insert main record
-      const { data: crimeRecord, error: crimeError } = await supabase
-        .from('fat_registros_de_crime')
+      const { data: crimeRecord, error: crimeError } = await supabaseAny
+        .from('fat_registros_de_crimes_ambientais')
         .insert({
           data,
           horario_acionamento: horarioAcionamento || null,

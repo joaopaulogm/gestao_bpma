@@ -1390,7 +1390,7 @@ export type Database = {
             foreignKeyName: "fat_crime_fauna_id_ocorrencia_fkey"
             columns: ["id_ocorrencia"]
             isOneToOne: false
-            referencedRelation: "fat_registros_de_crime"
+            referencedRelation: "fat_registros_de_crimes_ambientais"
             referencedColumns: ["id"]
           },
         ]
@@ -1428,7 +1428,7 @@ export type Database = {
             foreignKeyName: "fat_crime_flora_id_ocorrencia_fkey"
             columns: ["id_ocorrencia"]
             isOneToOne: false
-            referencedRelation: "fat_registros_de_crime"
+            referencedRelation: "fat_registros_de_crimes_ambientais"
             referencedColumns: ["id"]
           },
         ]
@@ -1598,7 +1598,7 @@ export type Database = {
             foreignKeyName: "fat_equipe_crime_registro_id_fkey"
             columns: ["registro_id"]
             isOneToOne: false
-            referencedRelation: "fat_registros_de_crime"
+            referencedRelation: "fat_registros_de_crimes_ambientais"
             referencedColumns: ["id"]
           },
         ]
@@ -1912,7 +1912,7 @@ export type Database = {
             foreignKeyName: "fat_ocorrencia_apreensao_id_ocorrencia_fkey"
             columns: ["id_ocorrencia"]
             isOneToOne: false
-            referencedRelation: "fat_registros_de_crime"
+            referencedRelation: "fat_registros_de_crimes_ambientais"
             referencedColumns: ["id"]
           },
         ]
@@ -2125,7 +2125,7 @@ export type Database = {
           },
         ]
       }
-      fat_registros_de_crime: {
+      fat_registros_de_crimes_ambientais: {
         Row: {
           alteracao_visual: boolean | null
           animal_afetado: boolean | null
