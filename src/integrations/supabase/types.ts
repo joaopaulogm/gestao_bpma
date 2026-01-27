@@ -2296,6 +2296,7 @@ export type Database = {
       }
       fat_registros_de_resgate: {
         Row: {
+          animal_identificado: boolean | null
           atropelamento: string
           created_at: string
           data: string
@@ -2326,6 +2327,7 @@ export type Database = {
           tipo_area_id: string | null
         }
         Insert: {
+          animal_identificado?: boolean | null
           atropelamento: string
           created_at?: string
           data: string
@@ -2356,6 +2358,7 @@ export type Database = {
           tipo_area_id?: string | null
         }
         Update: {
+          animal_identificado?: boolean | null
           atropelamento?: string
           created_at?: string
           data?: string
