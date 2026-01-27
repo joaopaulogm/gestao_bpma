@@ -1,0 +1,21 @@
+REGISTRO DE ATIVIDADE POLICIAL - RAP Nº 007135-2026
+
+Data: 26/01/2026
+Horário de Acionamento: 14h07
+Horário de Término: 16h45
+
+RELATO:
+A equipe foi acionada para atender ocorrência de resgate de fauna silvestre na região administrativa de Brasília. Ao chegar no local, foi encontrado um exemplar de tatu-bola (Tolypeutes tricinctus) em situação de risco.
+
+DADOS COMPLEMENTARES:
+Coordenadas do Resgate: 16.042776°S, 48.029226°W
+Nome Popular: Tatu-bola
+Nome Científico: Tolypeutes tricinctus
+Quantidade: 1
+Estágio da Vida: Adulto
+Condições Físicas: Saudável
+Local de Soltura/Encaminhamento: CETAS/IBAMA
+Nº Termo de Entrega: 12345
+Circunstâncias do Resgate: Animal encontrado em área urbana, sem ferimentos aparentes.
+
+Observações: O animal foi encaminhado para o CETAS/IBAMA para avaliação e posterior soltura em área adequada.

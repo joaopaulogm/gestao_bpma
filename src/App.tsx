@@ -53,6 +53,7 @@ const DashboardPublico = lazy(() => import(/* webpackChunkName: "dashboard-publi
 const MonitorarRAPs = lazy(() => import(/* webpackChunkName: "monitorar-raps" */ '@/pages/MonitorarRAPs'));
 const ControleOS = lazy(() => import(/* webpackChunkName: "controle-os" */ '@/pages/ControleOS'));
 const RegistrosUnificados = lazy(() => import(/* webpackChunkName: "registros-unificados" */ '@/pages/RegistrosUnificados'));
+const RapsLogs = lazy(() => import(/* webpackChunkName: "raps-logs" */ '@/pages/RapsLogs'));
 const Perfil = lazy(() => import(/* webpackChunkName: "perfil" */ '@/pages/Perfil'));
 const MapaLocalizacao = lazy(() => import(/* webpackChunkName: "mapa-localizacao" */ '@/pages/MapaLocalizacao'));
 
@@ -140,6 +141,7 @@ function App() {
               <Route path="/secao-operacional/flora-cadastrada" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/monitorar-raps" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><MonitorarRAPs /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/controle-os" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ControleOS /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/raps/logs" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RapsLogs /></SidebarLayout></ProtectedRoute>} />
               
               {/* Seção Pessoas */}
               <Route path="/secao-pessoas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><SecaoPessoas /></SidebarLayout></ProtectedRoute>} />
