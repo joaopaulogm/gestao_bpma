@@ -197,6 +197,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!userRole) return false;
     if (userRole === 'admin') return true;
     
+    // secao_operacional tem acesso a tudo em /secao-operacional/* e rotas de operador
+    if (userRole === 'secao_operacional') {
+      if (requiredRoles.includes('secao_operacional') || requiredRoles.includes('operador')) {
+        return true;
+      }
+    }
+    
     // Section roles also have operator access
     const operatorRoles: AppRole[] = ['operador', 'secao_operacional', 'secao_pessoas', 'secao_logistica'];
     
