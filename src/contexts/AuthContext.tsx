@@ -32,8 +32,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserRole = async (userId: string): Promise<AppRole | null> => {
     try {
-      // PRIMEIRO: Verificar se é email admin por natureza (verificação direta)
+      // PRIMEIRO: Verificar role nos metadados do JWT (mais rápido e já sincronizado pela edge function)
       const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser?.user_metadata?.role) {
+        const metadataRole = authUser.user_metadata.role as string;
+        console.log('Role obtido dos metadados do JWT:', metadataRole);
+        return metadataRole as AppRole;
+      }
+
+      // SEGUNDO: Verificar se é email admin por natureza (verificação direta)
       if (authUser?.email) {
         const emailLower = authUser.email.toLowerCase().trim();
         if (emailLower === 'soi.bpma@gmail.com' || emailLower === 'joaopaulogm@gmail.com') {
@@ -42,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // SEGUNDO: Buscar role em user_roles (tabela consolidada)
+      // TERCEIRO: Buscar role em user_roles (tabela consolidada)
       const { data: userRoleData, error } = await supabase
         .from('user_roles')
         .select('role')
