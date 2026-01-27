@@ -2318,7 +2318,7 @@ export type Database = {
           origem_id: string | null
           outro_desfecho: string | null
           outro_destinacao: string | null
-          quantidade: number | null
+          "quantidade Jovem": number | null
           quantidade_adulto: number | null
           quantidade_filhote: number | null
           quantidade_total: number | null
@@ -2348,7 +2348,7 @@ export type Database = {
           origem_id?: string | null
           outro_desfecho?: string | null
           outro_destinacao?: string | null
-          quantidade?: number | null
+          "quantidade Jovem"?: number | null
           quantidade_adulto?: number | null
           quantidade_filhote?: number | null
           quantidade_total?: number | null
@@ -2378,7 +2378,7 @@ export type Database = {
           origem_id?: string | null
           outro_desfecho?: string | null
           outro_destinacao?: string | null
-          quantidade?: number | null
+          "quantidade Jovem"?: number | null
           quantidade_adulto?: number | null
           quantidade_filhote?: number | null
           quantidade_total?: number | null
@@ -4342,6 +4342,7 @@ export type Database = {
           vinculado_em: string
         }[]
       }
+      has_privileged_role: { Args: { _user_id: string }; Returns: boolean }
       has_role:
         | {
             Args: {
