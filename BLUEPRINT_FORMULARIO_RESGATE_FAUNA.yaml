@@ -1,0 +1,732 @@
+formulario:
+  nome: "Resgate de Fauna"
+  rota: "/secao-operacional/resgate-cadastro"
+  rota_alternativa: "/resgate-cadastro"
+  rota_edicao: "/secao-operacional/resgate-cadastro?editar={id}"
+  
+  permissoes:
+    role_requerida: ["secao_operacional", "operador"]
+    criar: true
+    editar: true
+    visualizar: true
+    excluir: false
+  
+  secoes:
+    - id: "informacoes_gerais"
+      titulo: "Informações Gerais"
+      layout: "grid"
+      colunas: 2
+      campos:
+        - id: "data"
+          nome: "data"
+          label: "Data"
+          tipo: "text"
+          obrigatorio: true
+          mascara: "DD/MM/AAAA"
+          validacao:
+            tipo: "regex"
+            pattern: "^\\d{2}/\\d{2}/\\d{4}$"
+            mensagem: "Data é obrigatória"
+          valor_padrao: ""
+          placeholder: "DD/MM/AAAA"
+          transformacao_antes_salvar: "parseDDMMYYYY_to_YYYYMMDD"
+          mapeamento_banco:
+            tabela: "fat_registros_de_resgate"
+            coluna: "data"
+            tipo: "date"
+          
+        - id: "horarioAcionamento"
+          nome: "horarioAcionamento"
+          label: "Horário de Acionamento"
+          tipo: "time"
+          obrigatorio: false
+          valor_padrao: ""
+          mapeamento_banco:
+            tabela: "fat_registros_de_resgate"
+            coluna: "horario_acionamento"
+            tipo: "time"
+          
+        - id: "horarioTermino"
+          nome: "horarioTermino"
+          label: "Horário de Término"
+          tipo: "time"
+          obrigatorio: false
+          valor_padrao: ""
+          mapeamento_banco:
+            tabela: "fat_registros_de_resgate"
+            coluna: "horario_termino"
+            tipo: "time"
+          
+        - id: "regiaoAdministrativa"
+          nome: "regiaoAdministrativa"
+          label: "Região Administrativa"
+          tipo: "select_search"
+          obrigatorio: true
+          fonte_dados:
+            tipo: "static"
+            arquivo: "constants/regioes.ts"
+          mapeamento_banco:
+            tabela: "fat_registros_de_resgate"
+            coluna: "regiao_administrativa_id"
+            tipo: "uuid"
+            lookup_tabela: "dim_regiao_administrativa"
+            lookup_coluna: "nome"
+            transformacao: "nameToId"
+          
+        - id: "tipoAreaId"
+          nome: "tipoAreaId"
+          label: "Tipo de Área"
+          tipo: "select"
+          obrigatorio: false
+          fonte_dados:
+            tipo: "database"
+            tabela: "dim_tipo_de_area"
+            colunas: ["id", "\"Tipo de Área\""]
+            ordenacao: "\"Tipo de Área\""
+          mapeamento_banco:
+            tabela: "fat_registros_de_resgate"
+            coluna: "tipo_area_id"
+            tipo: "uuid"
+          
+        - id: "origem"
+          nome: "origem"
+          label: "Origem"
+          tipo: "select"
+          obrigatorio: true
+          fonte_dados:
+            tipo: "static"
+            valores: ["COPOM", "Ação Policial", "Comunidade", "Outras instituições", "PMDF"]
+          mapeamento_banco:
+            tabela: "fat_registros_de_resgate"
+            coluna: "origem_id"
+            tipo: "uuid"
+            lookup_tabela: "dim_origem"
+            lookup_coluna: "nome"
+            transformacao: "nameToId"
+          campos_condicionais:
+            - condicao: "value === 'Resgate de Fauna'"
+              mostrar: ["desfechoResgate"]
+            - condicao: "value === 'Apreensão'"
+              mostrar: ["desfechoApreensao", "numeroTCO", "outroDesfecho"]
+          
+        - id: "desfechoResgate"
+          nome: "desfechoResgate"
+          label: "Desfecho do Resgate"
+          tipo: "select"
+          obrigatorio:
+            condicao: "origem === 'Resgate de Fauna'"
+            mensagem: "Desfecho do Resgate é obrigatório"
+          visibilidade:
+            condicao: "origem === 'Resgate de Fauna'"
+          fonte_dados:
+            tipo: "database"
+            tabela: "dim_desfecho_resgates"
+            colunas: ["id", "nome"]
+            filtros:
+              tipo: "resgate"
+            ordenacao: "nome"
+          mapeamento_banco:
+            tabela: "fat_registros_de_resgate"
+            coluna: "desfecho_id"
+            tipo: "uuid"
+            lookup_tabela: "dim_desfecho_resgates"
+            lookup_coluna: "nome"
+            transformacao: "nameToId"
+          
+        - id: "desfechoApreensao"
+          nome: "desfechoApreensao"
+          label: "Desfecho da Apreensão"
+          tipo: "select"
+          obrigatorio:
+            condicao: "origem === 'Apreensão'"
+            mensagem: "Desfecho da Apreensão é obrigatório"
+          visibilidade:
+            condicao: "origem === 'Apreensão'"
+          fonte_dados:
+            tipo: "static"
+            valores: ["TCO PMDF", "TCO PCDF", "Outros"]
+          mapeamento_banco:
+            tabela: "fat_registros_de_resgate"
+            coluna: "desfecho_id"
+            tipo: "uuid"
+            lookup_tabela: "dim_desfecho_crime_ambientais"
+            lookup_coluna: "nome"
+            transformacao: "nameToId"
+          campos_condicionais:
+            - condicao: "value === 'TCO PMDF' || value === 'TCO PCDF'"
+              mostrar: ["numeroTCO"]
+              obrigatorios: ["numeroTCO"]
+            - condicao: "value === 'Outros'"
+              mostrar: ["outroDesfecho"]
+              obrigatorios: ["outroDesfecho"]
+          
+        - id: "numeroTCO"
+          nome: "numeroTCO"
+          label: "Nº TCO PMDF / Nº TCO PCDF"
+          tipo: "text"
+          obrigatorio:
+            condicao: "desfechoApreensao === 'TCO PMDF' || desfechoApreensao === 'TCO PCDF'"
+            mensagem: "Número do TCO é obrigatório"
+          visibilidade:
+            condicao: "desfechoApreensao === 'TCO PMDF' || desfechoApreensao === 'TCO PCDF'"
+          valor_padrao: ""
+          mapeamento_banco:
+            tabela: "fat_registros_de_resgate"
+            coluna: "numero_tco"
+            tipo: "text"
+          
+        - id: "outroDesfecho"
+          nome: "outroDesfecho"
+          label: "Descreva o Desfecho"
+          tipo: "textarea"
+          obrigatorio:
+            condicao: "desfechoApreensao === 'Outros'"
+            mensagem: "Especificação do outro desfecho é obrigatória"
+          visibilidade:
+            condicao: "desfechoApreensao === 'Outros'"
+          valor_padrao: ""
+          mapeamento_banco:
+            tabela: "fat_registros_de_resgate"
+            coluna: "outro_desfecho"
+            tipo: "text"
+          
+        - id: "latitudeOrigem"
+          nome: "latitudeOrigem"
+          label: "Latitude do Resgate"
+          tipo: "text"
+          obrigatorio: true
+          validacao:
+            tipo: "number"
+            min: -90
+            max: 90
+            mensagem: "Latitude deve ser um número entre -90 e 90"
+          valor_padrao: ""
+          placeholder: "Ex: -15.7801"
+          mapeamento_banco:
+            tabela: "fat_registros_de_resgate"
+            coluna: "latitude_origem"
+            tipo: "text"
+          
+        - id: "longitudeOrigem"
+          nome: "longitudeOrigem"
+          label: "Longitude do Resgate"
+          tipo: "text"
+          obrigatorio: true
+          validacao:
+            tipo: "number"
+            min: -180
+            max: 180
+            mensagem: "Longitude deve ser um número entre -180 e 180"
+          valor_padrao: ""
+          placeholder: "Ex: -47.9292"
+          mapeamento_banco:
+            tabela: "fat_registros_de_resgate"
+            coluna: "longitude_origem"
+            tipo: "text"
+    
+    - id: "equipe"
+      titulo: "Identificação da Equipe"
+      layout: "vertical"
+      campos:
+        - id: "buscaPolicial"
+          tipo: "search_input"
+          label: "Matrícula ou Nome do Policial"
+          placeholder: "Digite a matrícula ou nome do policial"
+          busca:
+            tabela: "dim_efetivo"
+            colunas: ["id", "matricula", "posto_graduacao", "nome_guerra", "nome"]
+            filtros:
+              ativo: true
+            campos_busca: ["matricula", "nome_guerra", "nome"]
+            limite: 20
+          acao_selecao: "adicionar_equipe"
+          mapeamento_banco:
+            tabela: "fat_equipe_resgate"
+            colunas:
+              registro_id: "{{parentRecordId}}"
+              efetivo_id: "{{efetivo_id}}"
+            operacao: "bulk_insert"
+        
+        - id: "membrosEquipe"
+          tipo: "lista"
+          estrutura_item:
+            id: "string"
+            efetivo_id: "string"
+            matricula: "string"
+            posto_graduacao: "string"
+            nome_guerra: "string"
+    
+    - id: "especies"
+      titulo: "Identificação das Espécies"
+      layout: "vertical"
+      repetivel: true
+      minimo_itens:
+        condicao: "desfechoResgate !== 'Evadido'"
+        valor: 1
+      template_item:
+        campos:
+          - id: "classeTaxonomica"
+            nome: "classeTaxonomica"
+            label: "Classe Taxonômica"
+            tipo: "select_search"
+            obrigatorio:
+              condicao: "!isEvadido"
+            fonte_dados:
+              tipo: "computed"
+              origem: "dim_especies_fauna"
+              extrair: "classe_taxonomica"
+              unicos: true
+              ordenacao: "classe_taxonomica"
+            ao_mudar:
+              acao: "limpar"
+              campos: ["especieId", "nomeCientifico", "ordemTaxonomica", "estadoConservacao", "tipoFauna"]
+          
+          - id: "especieId"
+            nome: "especieId"
+            label: "Espécie (Nome Popular)"
+            tipo: "select_search"
+            obrigatorio:
+              condicao: "!isEvadido"
+            desabilitado:
+              condicao: "!classeTaxonomica"
+            fonte_dados:
+              tipo: "database"
+              tabela: "dim_especies_fauna"
+              colunas: ["id", "nome_popular", "nome_cientifico", "classe_taxonomica", "ordem_taxonomica", "familia_taxonomica", "tipo_de_fauna", "estado_de_conservacao", "imagens_paths"]
+              filtro: "classe_taxonomica = {{classeTaxonomica}}"
+              ordenacao: "nome_popular"
+            ao_selecionar:
+              acao: "preencher_automatico"
+              mapeamentos:
+                nomeCientifico: "nome_cientifico"
+                ordemTaxonomica: "ordem_taxonomica"
+                estadoConservacao: "estado_de_conservacao"
+                tipoFauna: "tipo_de_fauna"
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "especie_id"
+              tipo: "uuid"
+          
+          - id: "estadoSaude"
+            nome: "estadoSaude"
+            label: "Estado de Saúde"
+            tipo: "select"
+            obrigatorio:
+              condicao: "!isEvadido"
+            fonte_dados:
+              tipo: "database"
+              tabela: "dim_estado_saude"
+              colunas: ["id", "nome"]
+              ordenacao: "nome"
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "estado_saude_id"
+              tipo: "uuid"
+              lookup_tabela: "dim_estado_saude"
+              lookup_coluna: "nome"
+              transformacao: "nameToId"
+          
+          - id: "atropelamento"
+            nome: "atropelamento"
+            label: "Atropelamento"
+            tipo: "select"
+            obrigatorio:
+              condicao: "!isEvadido"
+            fonte_dados:
+              tipo: "static"
+              valores: ["Sim", "Não"]
+            valor_padrao: ""
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "atropelamento"
+              tipo: "text"
+          
+          - id: "estagioVida"
+            nome: "estagioVida"
+            label: "Estágio da Vida"
+            tipo: "select"
+            obrigatorio:
+              condicao: "!isEvadido"
+            fonte_dados:
+              tipo: "database"
+              tabela: "dim_estagio_vida"
+              colunas: ["id", "nome"]
+              ordenacao: "nome"
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "estagio_vida_id"
+              tipo: "uuid"
+              lookup_tabela: "dim_estagio_vida"
+              lookup_coluna: "nome"
+              transformacao: "nameToId"
+          
+          - id: "quantidadeAdulto"
+            nome: "quantidadeAdulto"
+            label: "Quantidade Adultos"
+            tipo: "number_increment"
+            obrigatorio:
+              condicao: "!isEvadido"
+            minimo: 0
+            valor_padrao: 0
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "quantidade_adulto"
+              tipo: "integer"
+          
+          - id: "quantidadeFilhote"
+            nome: "quantidadeFilhote"
+            label: "Quantidade Filhotes"
+            tipo: "number_increment"
+            obrigatorio:
+              condicao: "!isEvadido"
+            minimo: 0
+            valor_padrao: 0
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "quantidade_filhote"
+              tipo: "integer"
+          
+          - id: "quantidadeJovem"
+            nome: "quantidadeJovem"
+            label: "Quantidade Jovem"
+            tipo: "number_increment"
+            obrigatorio:
+              condicao: "!isEvadido"
+            minimo: 0
+            valor_padrao: 0
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "\"quantidade Jovem\""
+              tipo: "integer"
+              nota: "Coluna tem espaço no nome, sempre usar aspas"
+          
+          - id: "quantidadeTotal"
+            nome: "quantidadeTotal"
+            label: "Quantidade Total"
+            tipo: "number"
+            somente_leitura: true
+            calculado:
+              formula: "quantidadeAdulto + quantidadeFilhote + quantidadeJovem"
+            valor_padrao: 0
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "quantidade_total"
+              tipo: "integer"
+          
+          - id: "desfechoResgate"
+            nome: "desfechoResgate"
+            label: "Desfecho do Resgate"
+            tipo: "select"
+            obrigatorio:
+              condicao: "!isEvadido"
+            fonte_dados:
+              tipo: "database"
+              tabela: "dim_desfecho_resgates"
+              colunas: ["id", "nome"]
+              filtros:
+                tipo: "resgate"
+              ordenacao: "nome"
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "desfecho_id"
+              tipo: "uuid"
+              lookup_tabela: "dim_desfecho_resgates"
+              lookup_coluna: "nome"
+              transformacao: "nameToId"
+              prioridade: "nivel_especie"
+              fallback: "nivel_registro"
+          
+          - id: "destinacao"
+            nome: "destinacao"
+            label: "Destinação"
+            tipo: "select"
+            obrigatorio:
+              condicao: "!isEvadido"
+            fonte_dados:
+              tipo: "static"
+              valores: ["CETAS/IBAMA", "HFAUS/IBRAM", "HVet/UnB", "CEAPA/BPMA", "Soltura", "Vida Livre", "Outros"]
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "destinacao_id"
+              tipo: "uuid"
+              lookup_tabela: "dim_destinacao"
+              lookup_coluna: "nome"
+              transformacao: "nameToId"
+            campos_condicionais:
+              - condicao: "value === 'CETAS/IBAMA' || value === 'HFAUS/IBRAM' || value === 'HVet/UnB'"
+                mostrar: ["numeroTermoEntrega"]
+              - condicao: "value === 'CEAPA/BPMA'"
+                mostrar: ["horaGuardaCEAPA", "motivoEntregaCEAPA"]
+                obrigatorios: ["horaGuardaCEAPA", "motivoEntregaCEAPA"]
+              - condicao: "value === 'Soltura'"
+                mostrar: ["latitudeSoltura", "longitudeSoltura"]
+                obrigatorios: ["latitudeSoltura", "longitudeSoltura"]
+              - condicao: "value === 'Outros'"
+                mostrar: ["outroDestinacao"]
+                obrigatorios: ["outroDestinacao"]
+          
+          - id: "numeroTermoEntrega"
+            nome: "numeroTermoEntrega"
+            label: "Nº Termo de Entrega"
+            tipo: "text"
+            obrigatorio: false
+            valor_padrao: ""
+            placeholder: "Número do termo"
+            visibilidade:
+              condicao: "destinacao === 'CETAS/IBAMA' || destinacao === 'HFAUS/IBRAM' || destinacao === 'HVet/UnB'"
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "numero_termo_entrega"
+              tipo: "text"
+          
+          - id: "horaGuardaCEAPA"
+            nome: "horaGuardaCEAPA"
+            label: "Hora de Guarda no CEAPA"
+            tipo: "text"
+            obrigatorio:
+              condicao: "destinacao === 'CEAPA/BPMA' && !isEvadido"
+            valor_padrao: ""
+            placeholder: "HH:MM (formato 24h)"
+            visibilidade:
+              condicao: "destinacao === 'CEAPA/BPMA'"
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "hora_guarda_ceapa"
+              tipo: "text"
+          
+          - id: "motivoEntregaCEAPA"
+            nome: "motivoEntregaCEAPA"
+            label: "Motivo"
+            tipo: "textarea"
+            obrigatorio:
+              condicao: "destinacao === 'CEAPA/BPMA' && !isEvadido"
+            valor_padrao: ""
+            placeholder: "Descreva o motivo da entrega"
+            visibilidade:
+              condicao: "destinacao === 'CEAPA/BPMA'"
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "motivo_entrega_ceapa"
+              tipo: "text"
+          
+          - id: "latitudeSoltura"
+            nome: "latitudeSoltura"
+            label: "Latitude da Soltura"
+            tipo: "text"
+            obrigatorio:
+              condicao: "destinacao === 'Soltura' && !isEvadido"
+            valor_padrao: ""
+            placeholder: "Ex: -15.7801"
+            visibilidade:
+              condicao: "destinacao === 'Soltura'"
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "latitude_soltura"
+              tipo: "text"
+          
+          - id: "longitudeSoltura"
+            nome: "longitudeSoltura"
+            label: "Longitude da Soltura"
+            tipo: "text"
+            obrigatorio:
+              condicao: "destinacao === 'Soltura' && !isEvadido"
+            valor_padrao: ""
+            placeholder: "Ex: -47.9292"
+            visibilidade:
+              condicao: "destinacao === 'Soltura'"
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "longitude_soltura"
+              tipo: "text"
+          
+          - id: "outroDestinacao"
+            nome: "outroDestinacao"
+            label: "Especifique a Destinação"
+            tipo: "textarea"
+            obrigatorio:
+              condicao: "destinacao === 'Outros' && !isEvadido"
+            valor_padrao: ""
+            placeholder: "Descreva a destinação"
+            visibilidade:
+              condicao: "destinacao === 'Outros'"
+            mapeamento_banco:
+              tabela: "fat_registros_de_resgate"
+              coluna: "outro_destinacao"
+              tipo: "text"
+
+  regras_negocio:
+    validacoes_condicionais:
+      - campo: "desfechoResgate"
+        obrigatorio_se: "origem === 'Resgate de Fauna'"
+        mensagem: "Desfecho do Resgate é obrigatório"
+      
+      - campo: "desfechoApreensao"
+        obrigatorio_se: "origem === 'Apreensão'"
+        mensagem: "Desfecho da Apreensão é obrigatório"
+      
+      - campo: "numeroTCO"
+        obrigatorio_se: "desfechoApreensao === 'TCO PMDF' || desfechoApreensao === 'TCO PCDF'"
+        mensagem: "Número do TCO é obrigatório"
+      
+      - campo: "outroDesfecho"
+        obrigatorio_se: "desfechoApreensao === 'Outros'"
+        mensagem: "Especificação do outro desfecho é obrigatória"
+      
+      - campo: "campos_especie"
+        obrigatorio_se: "desfechoResgate !== 'Evadido'"
+        mensagem: "Campos obrigatórios quando não é Evadido"
+      
+      - campo: "minimo_especies"
+        validacao: "especies.length >= 1"
+        condicao_excecao: "desfechoResgate === 'Evadido'"
+        mensagem: "É necessário adicionar pelo menos uma espécie"
+    
+    calculos_automaticos:
+      - campo: "quantidadeTotal"
+        formula: "quantidadeAdulto + quantidadeFilhote + quantidadeJovem"
+        trigger: ["quantidadeAdulto", "quantidadeFilhote", "quantidadeJovem"]
+    
+    transformacoes:
+      - campo: "data"
+        entrada: "DD/MM/AAAA"
+        saida: "YYYY-MM-DD"
+        funcao: "parseDDMMYYYY_to_YYYYMMDD"
+      
+      - campo: "nomes_para_ids"
+        tipo: "lookup"
+        tabelas:
+          - origem: "regiaoAdministrativa"
+            destino: "regiao_administrativa_id"
+            lookup: "dim_regiao_administrativa"
+          - origem: "origem"
+            destino: "origem_id"
+            lookup: "dim_origem"
+          - origem: "desfechoResgate"
+            destino: "desfecho_id"
+            lookup: "dim_desfecho_resgates"
+          - origem: "desfechoApreensao"
+            destino: "desfecho_id"
+            lookup: "dim_desfecho_crime_ambientais"
+          - origem: "estadoSaude"
+            destino: "estado_saude_id"
+            lookup: "dim_estado_saude"
+          - origem: "estagioVida"
+            destino: "estagio_vida_id"
+            lookup: "dim_estagio_vida"
+          - origem: "destinacao"
+            destino: "destinacao_id"
+            lookup: "dim_destinacao"
+          - origem: "tipoAreaId"
+            destino: "tipo_area_id"
+            lookup: "dim_tipo_de_area"
+
+  persistencia:
+    tabelas_principais:
+      - nome: "fat_registros_de_resgate"
+        condicao: "data >= '2026-01-01'"
+        estrutura: "moderna"
+      
+      - nome: "fat_resgates_diarios_2025"
+        condicao: "ano(data) = 2025"
+        estrutura: "moderna"
+      
+      - nome: "fat_resgates_diarios_2024"
+        condicao: "ano(data) = 2024"
+        estrutura: "historica"
+      
+      - nome: "fat_resgates_diarios_2023"
+        condicao: "ano(data) = 2023"
+        estrutura: "historica"
+      
+      - nome: "fat_resgates_diarios_2022"
+        condicao: "ano(data) = 2022"
+        estrutura: "historica"
+      
+      - nome: "fat_resgates_diarios_2021"
+        condicao: "ano(data) = 2021"
+        estrutura: "historica"
+      
+      - nome: "fat_resgates_diarios_2020"
+        condicao: "ano(data) = 2020"
+        estrutura: "historica"
+    
+    tabela_relacionada:
+      - nome: "fat_equipe_resgate"
+        relacionamento: "um_para_muitos"
+        chave_estrangeira: "registro_id"
+        colunas:
+          - id: "uuid"
+          - registro_id: "uuid"
+          - efetivo_id: "uuid"
+    
+    operacoes:
+      criacao:
+        tipo: "insert_multiplo"
+        logica: "um_registro_por_especie"
+        passos:
+          - determinar_tabela_por_data
+          - para_cada_especie:
+              - buscar_ids_dimensoes
+              - preparar_payload
+              - inserir_registro
+              - obter_id_registro
+              - inserir_equipe_vinculada
+      
+      edicao:
+        tipo: "update_ou_move"
+        logica:
+          - determinar_tabela_origem
+          - determinar_tabela_destino
+          - se_tabelas_diferentes:
+              - deletar_origem
+              - inserir_destino
+              - atualizar_equipe
+          - se_tabelas_iguais:
+              - atualizar_registro
+              - atualizar_equipe
+
+  seguranca:
+    rls_policies:
+      tipo: "generico_autenticado"
+      condicao: "auth.uid() IS NOT NULL"
+      operacoes: ["SELECT", "INSERT", "UPDATE", "DELETE"]
+    
+    permissoes_frontend:
+      verificacao: "ProtectedRoute"
+      roles_permitidas: ["secao_operacional", "operador"]
+      fallback: "redirecionar_login"
+
+  componentes_ui:
+    biblioteca: "shadcn/ui"
+    componentes_utilizados:
+      - Input
+      - Select
+      - Textarea
+      - Button
+      - Alert
+      - Label
+      - FormField (custom)
+      - FormSection (custom)
+    
+    estados:
+      - loading: "spinner, disabled"
+      - error: "borda_vermelha, mensagem_abaixo"
+      - success: "toast_notification"
+      - empty: "mensagem_informativa"
+
+  integracoes:
+    banco_dados:
+      cliente: "Supabase"
+      autenticacao: "Supabase Auth"
+      queries: "PostgREST API"
+    
+    storage:
+      bucket: "imagens-fauna"
+      acesso: "publico_ou_signed_url"
+      metadados: "dim_especies_fauna.imagens_paths (JSONB)"
+
+  observacoes:
+    - "Coluna 'quantidade Jovem' tem espaço no nome, sempre usar aspas"
+    - "Edição atual suporta apenas 1 espécie por registro"
+    - "Desfecho de espécie tem prioridade sobre desfecho de registro"
+    - "Tabela histórica (2020-2024) tem estrutura diferente da moderna"
