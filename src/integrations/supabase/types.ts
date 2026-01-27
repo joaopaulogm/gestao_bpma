@@ -267,7 +267,7 @@ export type Database = {
           foto_status?: string | null
           foto_validada_em?: string | null
           fotos_paths?: Json | null
-          id: string
+          id?: string
           imagens?: Json | null
           imagens_atualizado_em?: string | null
           imagens_erro?: string | null
@@ -4354,6 +4354,7 @@ export type Database = {
         | { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_allowed_user: { Args: { check_email: string }; Returns: boolean }
+      is_authenticated: { Args: never; Returns: boolean }
       jsonb_array_union_unique: { Args: { a: Json; b: Json }; Returns: Json }
       listar_usuarios_sem_auth_user_id: {
         Args: never
