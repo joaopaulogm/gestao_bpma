@@ -95,17 +95,15 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
           onMembrosChange={onMembrosEquipeChange}
         />
 
-        {/* Seção Desfecho do Resgate - apenas quando origem é Resgate de Fauna */}
-        {formData.origem === 'Resgate de Fauna' && (
-          <DesfechoResgateSection
-            situacaoDesfecho={formData.desfechoResgate || ''}
-            onSituacaoChange={(value) => handleSelectChange('desfechoResgate', value)}
-            animalIdentificado={animalIdentificado}
-            onAnimalIdentificadoChange={handleAnimalIdentificadoChange}
-            error={errors.desfechoResgate?.message}
-            required={true}
-          />
-        )}
+        {/* Seção Desfecho do Resgate - sempre visível */}
+        <DesfechoResgateSection
+          situacaoDesfecho={formData.desfechoResgate || ''}
+          onSituacaoChange={(value) => handleSelectChange('desfechoResgate', value)}
+          animalIdentificado={animalIdentificado}
+          onAnimalIdentificadoChange={handleAnimalIdentificadoChange}
+          error={errors.desfechoResgate?.message}
+          required={false}
+        />
 
         {/* Seção de Espécies - só aparece se animal foi identificado */}
         {animalIdentificado && (
