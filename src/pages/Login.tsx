@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Lock, User, Mail, KeyRound, CheckCircle2, XCircle, AlertCircle, Eye, EyeOff, FileText, Shield } from 'lucide-react';
+import { Lock, User, KeyRound, CheckCircle2, XCircle, AlertCircle, Eye, EyeOff, FileText, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { handleSupabaseError } from '@/utils/errorHandler';
+import { handleSupabaseError as _handleSupabaseError } from '@/utils/errorHandler';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -102,10 +102,6 @@ const Login = () => {
   // Estado para login com senha (pós primeiro acesso)
   const [senhaLogin, setSenhaLogin] = useState('');
   
-  // Estado para login por email/senha (Supabase Auth)
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  
   // Estado para alteração de senha
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -113,7 +109,6 @@ const Login = () => {
   // Estado para mostrar/ocultar senhas
   const [showCpf, setShowCpf] = useState(false);
   const [showSenhaLogin, setShowSenhaLogin] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
@@ -121,7 +116,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [pendingUser, setPendingUser] = useState<UserRoleData | null>(null);
   const [loginStep, setLoginStep] = useState<LoginStep>('login');
-  const [activeTab, setActiveTab] = useState<'primeiro-acesso' | 'senha' | 'email'>('senha');
+  const [activeTab, setActiveTab] = useState<'primeiro-acesso' | 'senha'>('senha');
   
   // Estado para modais
   const [openPolitica, setOpenPolitica] = useState(false);
@@ -136,7 +131,7 @@ const Login = () => {
   const [showResetNewPassword, setShowResetNewPassword] = useState(false);
   const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
   
-  const { login: authLogin, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Password validation (6-10 chars, lowercase, uppercase, number, special)
@@ -355,20 +350,6 @@ const Login = () => {
     }
   };
 
-  // ==================== LOGIN COM EMAIL (Supabase Auth) ====================
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      await authLogin(email, password);
-      navigate('/inicio');
-    } catch (error: unknown) {
-      // Error já tratado no authLogin
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
 
   // ==================== RESET ====================
@@ -773,7 +754,7 @@ const Login = () => {
         </p>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-5 bg-white/10 border border-white/10 rounded-lg p-1">
+          <TabsList className="grid w-full grid-cols-2 mb-5 bg-white/10 border border-white/10 rounded-lg p-1">
             <TabsTrigger 
               value="primeiro-acesso" 
               className="text-xs sm:text-sm text-white/70 data-[state=active]:bg-[#ffcc00] data-[state=active]:text-[#071d49] rounded-md"
@@ -785,12 +766,6 @@ const Login = () => {
               className="text-xs sm:text-sm text-white/70 data-[state=active]:bg-[#ffcc00] data-[state=active]:text-[#071d49] rounded-md"
             >
               Com Senha
-            </TabsTrigger>
-            <TabsTrigger 
-              value="email" 
-              className="text-xs sm:text-sm text-white/70 data-[state=active]:bg-[#ffcc00] data-[state=active]:text-[#071d49] rounded-md"
-            >
-              E-mail
             </TabsTrigger>
           </TabsList>
 
@@ -920,49 +895,6 @@ const Login = () => {
               >
                 Esqueci minha senha
               </button>
-            </form>
-          </TabsContent>
-
-          {/* ========== LOGIN COM E-MAIL ========== */}
-          <TabsContent value="email">
-            <form onSubmit={handleEmailLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-white/80 text-sm">E-mail</Label>
-                <GlassInput
-                  icon={Mail}
-                  type="email"
-                  placeholder="seu.email@gmail.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-white/80 text-sm">Senha</Label>
-                <GlassInput
-                  icon={Lock}
-                  type="password"
-                  placeholder="********"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  showPassword={showPassword}
-                  onTogglePassword={() => setShowPassword(!showPassword)}
-                />
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full h-11 bg-gradient-to-r from-[#ffcc00] to-[#e6b800] hover:from-[#e6b800] hover:to-[#cc9900] 
-                           text-[#071d49] font-semibold rounded-lg shadow-lg shadow-[#ffcc00]/20
-                           transition-all duration-300 hover:shadow-[#ffcc00]/40"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Entrando...' : 'Entrar com E-mail'}
-              </Button>
             </form>
           </TabsContent>
         </Tabs>
