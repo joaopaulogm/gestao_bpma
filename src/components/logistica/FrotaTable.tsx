@@ -1,8 +1,9 @@
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, Eye } from 'lucide-react';
+import { Pencil, Trash2, Eye, Search, Loader2 } from 'lucide-react';
 import { Frota } from '@/services/logisticaService';
+import { buscarValorFipePorNome, formatarValorFipe } from '@/services/fipeService';
+import { toast } from 'sonner';
 import {
   TableCard,
   TableCardHeader,
@@ -30,6 +31,45 @@ const getSituacaoBadgeVariant = (situacao?: string): "success" | "warning" | "de
 };
 
 const FrotaTable: React.FC<FrotaTableProps> = ({ frota, onEdit, onDelete, onView }) => {
+  const [valoresFipe, setValoresFipe] = useState<Record<string, string>>({});
+  const [loadingFipe, setLoadingFipe] = useState<Record<string, boolean>>({});
+
+  const handleBuscarFipe = async (veiculo: Frota) => {
+    if (!veiculo.marca) {
+      toast.error('Veículo não possui marca cadastrada');
+      return;
+    }
+
+    setLoadingFipe(prev => ({ ...prev, [veiculo.id]: true }));
+
+    try {
+      const resultado = await buscarValorFipePorNome(
+        veiculo.marca,
+        veiculo.modelo,
+        veiculo.ano,
+        veiculo.tipo
+      );
+
+      if (resultado.success && resultado.valor) {
+        setValoresFipe(prev => ({
+          ...prev,
+          [veiculo.id]: resultado.valor!.Valor
+        }));
+        toast.success(`Valor FIPE encontrado: ${resultado.valor.Valor}`);
+      } else {
+        toast.error(resultado.error || 'Veículo não encontrado na tabela FIPE');
+        if (resultado.sugestoes && resultado.sugestoes.length > 0) {
+          console.log('Sugestões FIPE:', resultado.sugestoes);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar FIPE:', error);
+      toast.error('Erro ao consultar tabela FIPE');
+    } finally {
+      setLoadingFipe(prev => ({ ...prev, [veiculo.id]: false }));
+    }
+  };
+
   if (frota.length === 0) {
     return (
       <div className="w-full">
@@ -108,6 +148,35 @@ const FrotaTable: React.FC<FrotaTableProps> = ({ frota, onEdit, onDelete, onView
                   </span>
                 }
               />
+              <TableCardField
+                label="Valor FIPE"
+                value={
+                  <div className="flex items-center gap-2">
+                    {loadingFipe[veiculo.id] ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    ) : valoresFipe[veiculo.id] ? (
+                      <span className="text-green-600 font-bold text-lg">
+                        {valoresFipe[veiculo.id]}
+                      </span>
+                    ) : veiculo.valor_aquisicao ? (
+                      <span className="text-muted-foreground text-sm">
+                        Aquisição: {veiculo.valor_aquisicao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </span>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleBuscarFipe(veiculo)}
+                        disabled={!veiculo.marca}
+                        className="h-7 text-xs"
+                      >
+                        <Search className="h-3 w-3 mr-1" />
+                        Buscar FIPE
+                      </Button>
+                    )}
+                  </div>
+                }
+              />
               {veiculo.km_proxima_revisao || veiculo.km_hm_proxima_revisao ? (
                 <TableCardField
                   label="Próxima Revisão"
@@ -122,43 +191,87 @@ const FrotaTable: React.FC<FrotaTableProps> = ({ frota, onEdit, onDelete, onView
           </TableCardContent>
 
           <TableCardActions>
-            <div className="flex items-center justify-end gap-2 w-full">
-              {onView && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onView(veiculo.id)}
-                  className="h-9 px-3 hover:bg-primary/10"
-                  title="Ver detalhes"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Ver</span>
-                </Button>
-              )}
-              {onEdit && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onEdit(veiculo.id)}
-                  className="h-9 px-3 hover:bg-blue-50 hover:text-blue-700"
-                  title="Editar"
-                >
-                  <Pencil className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Editar</span>
-                </Button>
-              )}
-              {onDelete && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDelete(veiculo.id)}
-                  className="h-9 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
-                  title="Excluir"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Excluir</span>
-                </Button>
-              )}
+            <div className="flex items-center justify-between w-full gap-2">
+              {/* Botão FIPE no lado esquerdo */}
+              <div>
+                {valoresFipe[veiculo.id] ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleBuscarFipe(veiculo)}
+                    disabled={loadingFipe[veiculo.id]}
+                    className="h-9 px-3 text-green-600 hover:bg-green-50"
+                    title="Atualizar valor FIPE"
+                  >
+                    {loadingFipe[veiculo.id] ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Search className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Atualizar FIPE</span>
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBuscarFipe(veiculo)}
+                    disabled={!veiculo.marca || loadingFipe[veiculo.id]}
+                    className="h-9 px-3"
+                    title="Consultar valor na tabela FIPE"
+                  >
+                    {loadingFipe[veiculo.id] ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Search className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Valor FIPE</span>
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+
+              {/* Ações do lado direito */}
+              <div className="flex items-center gap-2">
+                {onView && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onView(veiculo.id)}
+                    className="h-9 px-3 hover:bg-primary/10"
+                    title="Ver detalhes"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Ver</span>
+                  </Button>
+                )}
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit(veiculo.id)}
+                    className="h-9 px-3 hover:bg-blue-50 hover:text-blue-700"
+                    title="Editar"
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Editar</span>
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(veiculo.id)}
+                    className="h-9 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    title="Excluir"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Excluir</span>
+                  </Button>
+                )}
+              </div>
             </div>
           </TableCardActions>
         </TableCard>
