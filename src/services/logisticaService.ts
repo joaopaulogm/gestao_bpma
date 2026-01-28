@@ -28,6 +28,7 @@ export interface Frota {
   numero_serie_radio?: string;
   responsavel?: string;
   observacoes?: string;
+  valor_aquisicao?: number;
   // Aliases para compatibilidade
   ano_fabricacao?: string;
   km_hm_atual?: number;
