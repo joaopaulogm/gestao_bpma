@@ -7,9 +7,9 @@ import sys
 import os
 from datetime import datetime
 import re
-from postgrest import SyncPostgrestClient
 from dotenv import load_dotenv
-import httpx
+import requests
+import json
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -23,21 +23,42 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     print("Certifique-se de que o arquivo .env contém VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY")
     sys.exit(1)
 
-# Criar cliente PostgREST diretamente
-# O PostgREST do Supabase está em {SUPABASE_URL}/rest/v1
-postgrest_url = f"{SUPABASE_URL}/rest/v1"
-client = SyncPostgrestClient(
-    base_url=postgrest_url,
-    schema="public"
-)
-# Configurar autenticação
-client.auth(f"Bearer {SUPABASE_KEY}")
-# Adicionar header apikey necessário para Supabase
-client.headers = {
+# URL base do PostgREST do Supabase
+POSTGREST_URL = f"{SUPABASE_URL}/rest/v1"
+
+# Headers para todas as requisições
+HEADERS = {
     "apikey": SUPABASE_KEY,
     "Authorization": f"Bearer {SUPABASE_KEY}",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    "Prefer": "return=representation"
 }
+
+def supabase_query(table, method='GET', filters=None, data=None):
+    """Função helper para fazer queries no Supabase via PostgREST"""
+    url = f"{POSTGREST_URL}/{table}"
+    
+    if method == 'GET':
+        response = requests.get(url, headers=HEADERS, params=filters)
+    elif method == 'POST':
+        response = requests.post(url, headers=HEADERS, json=data)
+    elif method == 'PATCH':
+        url_with_filters = url
+        if filters:
+            # Construir query string para filtros
+            params = []
+            for key, value in filters.items():
+                params.append(f"{key}=eq.{value}")
+            if params:
+                url_with_filters = f"{url}?{'&'.join(params)}"
+        response = requests.patch(url_with_filters, headers=HEADERS, json=data)
+    else:
+        raise ValueError(f"Método HTTP não suportado: {method}")
+    
+    if response.status_code >= 400:
+        raise Exception(f"Erro na requisição: {response.status_code} - {response.text}")
+    
+    return response.json() if response.text else []
 
 # Caminho do arquivo Excel
 EXCEL_PATH = r'G:\Meu Drive\JP\app BPMA\AFASTAMENTOS BPMA [2026] (1).xlsx'
@@ -101,9 +122,9 @@ def get_efetivo_id_by_matricula(matricula):
     matricula = str(matricula).strip()
     
     try:
-      response = client.from_('dim_efetivo').select('id').eq('matricula', matricula).limit(1).execute()
-      if response.data and len(response.data) > 0:
-        return response.data[0]['id']
+        result = supabase_query('dim_efetivo', method='GET', filters={'matricula': f'eq.{matricula}', 'select': 'id', 'limit': '1'})
+        if result and len(result) > 0:
+            return result[0]['id']
     except Exception as e:
         print(f"Erro ao buscar matrícula {matricula}: {e}")
     
@@ -278,10 +299,15 @@ def processar_ferias_excel():
             # Inserir/atualizar fat_ferias
             try:
                 # Verificar se já existe registro para este efetivo e ano
-                existing = client.from_('fat_ferias').select('id').eq('efetivo_id', efetivo_id).eq('ano', ano_gozada).limit(1).execute()
+                existing = supabase_query('fat_ferias', method='GET', filters={
+                    'efetivo_id': f'eq.{efetivo_id}',
+                    'ano': f'eq.{ano_gozada}',
+                    'select': 'id',
+                    'limit': '1'
+                })
                 
-                if existing.data and len(existing.data) > 0:
-                    ferias_id = existing.data[0]['id']
+                if existing and len(existing) > 0:
+                    ferias_id = existing[0]['id']
                     # Atualizar
                     update_data = {
                         'mes_inicio': mes_inicio,
@@ -293,7 +319,7 @@ def processar_ferias_excel():
                     if processo_sei:
                         update_data['numero_processo_sei'] = processo_sei
                     
-                    client.from_('fat_ferias').update(update_data).eq('id', ferias_id).execute()
+                    supabase_query('fat_ferias', method='PATCH', filters={'id': f'eq.{ferias_id}'}, data=update_data)
                 else:
                     # Inserir novo
                     insert_data = {
@@ -308,8 +334,8 @@ def processar_ferias_excel():
                     if processo_sei:
                         insert_data['numero_processo_sei'] = processo_sei
                     
-                    result = client.from_('fat_ferias').insert(insert_data).execute()
-                    ferias_id = result.data[0]['id'] if result.data else None
+                    result = supabase_query('fat_ferias', method='POST', data=insert_data)
+                    ferias_id = result[0]['id'] if result and len(result) > 0 else None
                 
                 if not ferias_id:
                     erros.append(f"Erro ao inserir/atualizar férias para matrícula {matricula}")
@@ -330,12 +356,20 @@ def processar_ferias_excel():
                     }
                     
                     # Verificar se parcela já existe
-                    existing_parcela = client.from_('fat_ferias_parcelas').select('fat_ferias_id').eq('fat_ferias_id', ferias_id).eq('parcela_num', parcela['parcela_num']).limit(1).execute()
+                    existing_parcela = supabase_query('fat_ferias_parcelas', method='GET', filters={
+                        'fat_ferias_id': f'eq.{ferias_id}',
+                        'parcela_num': f'eq.{parcela["parcela_num"]}',
+                        'select': 'fat_ferias_id',
+                        'limit': '1'
+                    })
                     
-                    if existing_parcela.data and len(existing_parcela.data) > 0:
-                      client.from_('fat_ferias_parcelas').update(parcela_data).eq('fat_ferias_id', ferias_id).eq('parcela_num', parcela['parcela_num']).execute()
+                    if existing_parcela and len(existing_parcela) > 0:
+                        supabase_query('fat_ferias_parcelas', method='PATCH', filters={
+                            'fat_ferias_id': f'eq.{ferias_id}',
+                            'parcela_num': f'eq.{parcela["parcela_num"]}'
+                        }, data=parcela_data)
                     else:
-                      client.from_('fat_ferias_parcelas').insert(parcela_data).execute()
+                        supabase_query('fat_ferias_parcelas', method='POST', data=parcela_data)
                 
                 registros_inseridos += 1
                 registros_processados += 1
