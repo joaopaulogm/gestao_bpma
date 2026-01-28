@@ -96,27 +96,25 @@ BEGIN
   LIMIT 1;
 
   IF ra_plano_piloto_antiga_id IS NOT NULL THEN
-    -- Verificar se ainda há referências
+    -- Verificar se ainda há referências nas tabelas principais
+    -- Verificar apenas as tabelas que sabemos que existem
     IF NOT EXISTS (
       SELECT 1 FROM public.fat_registros_de_resgate 
       WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
-      UNION
+    ) AND NOT EXISTS (
       SELECT 1 FROM public.fat_atividades_prevencao 
       WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
-      UNION
+    ) AND NOT EXISTS (
       SELECT 1 FROM public.fat_crimes_comuns 
       WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
-      UNION
-      SELECT 1 FROM public.fat_registros_de_crime 
-      WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
     ) THEN
-      -- Deletar a RA antiga
+      -- Deletar a RA antiga apenas se não houver referências nas tabelas principais
       DELETE FROM public.dim_regiao_administrativa
       WHERE id = ra_plano_piloto_antiga_id;
       
       RAISE NOTICE 'RA antiga "Plano Piloto" deletada com sucesso';
     ELSE
-      RAISE WARNING 'RA antiga ainda possui referências. Não foi deletada.';
+      RAISE WARNING 'RA antiga ainda possui referências nas tabelas principais. Não foi deletada.';
     END IF;
   END IF;
 END $$;
