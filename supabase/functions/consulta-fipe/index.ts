@@ -273,8 +273,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('[FIPE] Erro:', error);
+    const errMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
-      JSON.stringify({ error: 'Erro ao consultar API FIPE', details: error.message }),
+      JSON.stringify({ error: 'Erro ao consultar API FIPE', details: errMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

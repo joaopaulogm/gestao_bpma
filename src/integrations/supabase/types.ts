@@ -1146,9 +1146,13 @@ export type Database = {
         Row: {
           created_at: string | null
           data: string
+          horario_inicio: string | null
+          horario_termino: string | null
           id: string
           latitude: string | null
           longitude: string | null
+          missao: string | null
+          numero_os: string | null
           observacoes: string | null
           quantidade_publico: number | null
           regiao_administrativa_id: string | null
@@ -1157,9 +1161,13 @@ export type Database = {
         Insert: {
           created_at?: string | null
           data: string
+          horario_inicio?: string | null
+          horario_termino?: string | null
           id?: string
           latitude?: string | null
           longitude?: string | null
+          missao?: string | null
+          numero_os?: string | null
           observacoes?: string | null
           quantidade_publico?: number | null
           regiao_administrativa_id?: string | null
@@ -1168,9 +1176,13 @@ export type Database = {
         Update: {
           created_at?: string | null
           data?: string
+          horario_inicio?: string | null
+          horario_termino?: string | null
           id?: string
           latitude?: string | null
           longitude?: string | null
+          missao?: string | null
+          numero_os?: string | null
           observacoes?: string | null
           quantidade_publico?: number | null
           regiao_administrativa_id?: string | null
@@ -1563,6 +1575,42 @@ export type Database = {
             columns: ["tipo_penal_id"]
             isOneToOne: false
             referencedRelation: "dim_tipo_penal"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_equipe_atividades_prevencao: {
+        Row: {
+          atividade_prevencao_id: string
+          created_at: string | null
+          efetivo_id: string
+          id: string
+        }
+        Insert: {
+          atividade_prevencao_id: string
+          created_at?: string | null
+          efetivo_id: string
+          id?: string
+        }
+        Update: {
+          atividade_prevencao_id?: string
+          created_at?: string | null
+          efetivo_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_equipe_atividades_prevencao_atividade_prevencao_id_fkey"
+            columns: ["atividade_prevencao_id"]
+            isOneToOne: false
+            referencedRelation: "fat_atividades_prevencao"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_equipe_atividades_prevencao_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
           },
         ]

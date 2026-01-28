@@ -8,6 +8,7 @@ import { normalizeData } from "./utils/normalizer.ts";
 import { validateRequiredFields, ValidationResult } from "./utils/validator.ts";
 import { resolveLookups } from "./utils/lookup.ts";
 import { extractTextFromPDF } from "./utils/pdf-extractor.ts";
+import { decode as base64Decode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,6 +30,15 @@ interface ImportResponse {
   insertedIds?: string[];
   missingFields?: string[];
   warnings?: string[];
+}
+
+// Helper function to get base64 size
+function getBase64Size(base64String: string): number {
+  try {
+    return base64Decode(base64String).length;
+  } catch {
+    return 0;
+  }
 }
 
 serve(async (req) => {
@@ -82,15 +92,16 @@ serve(async (req) => {
       pdfText = await extractTextFromPDF(pdfBase64);
     } catch (error) {
       console.error("Erro ao extrair texto do PDF:", error);
+      const errMessage = error instanceof Error ? error.message : "Erro desconhecido";
       const logEntry = await createLogEntry(supabase, {
         fileId,
         fileName,
         folderId,
         modifiedTime,
         status: "error",
-        errorMessage: `Erro ao extrair texto: ${error.message}`,
+        errorMessage: `Erro ao extrair texto: ${errMessage}`,
         processingTimeMs: Date.now() - startTime,
-        pdfSizeBytes: Buffer.from(pdfBase64, "base64").length,
+        pdfSizeBytes: getBase64Size(pdfBase64),
       });
       return new Response(
         JSON.stringify({ status: "error", message: "Erro ao processar PDF", logId: logEntry.id }),
@@ -110,7 +121,7 @@ serve(async (req) => {
         errorMessage: "Texto não extraído do PDF (possivelmente escaneado)",
         rawExcerpt: "",
         processingTimeMs: Date.now() - startTime,
-        pdfSizeBytes: Buffer.from(pdfBase64, "base64").length,
+        pdfSizeBytes: getBase64Size(pdfBase64),
       });
       return new Response(
         JSON.stringify({
@@ -144,7 +155,7 @@ serve(async (req) => {
         errorMessage: `Campos obrigatórios faltando: ${validation.missingFields.join(", ")}`,
         rawExcerpt: pdfText.substring(0, 2000), // Primeiros 2000 caracteres
         processingTimeMs: Date.now() - startTime,
-        pdfSizeBytes: Buffer.from(pdfBase64, "base64").length,
+        pdfSizeBytes: getBase64Size(pdfBase64),
       });
       return new Response(
         JSON.stringify({
@@ -182,7 +193,8 @@ serve(async (req) => {
         }
       } catch (error) {
         console.error("Erro ao inserir registro:", error);
-        warnings.push(`erro_insercao: ${error.message}`);
+        const errMessage = error instanceof Error ? error.message : "Erro desconhecido";
+        warnings.push(`erro_insercao: ${errMessage}`);
       }
     }
 
@@ -200,7 +212,7 @@ serve(async (req) => {
       errorMessage: insertedIds.length === 0 ? "Nenhum registro foi inserido" : undefined,
       rawExcerpt: pdfText.substring(0, 2000),
       processingTimeMs: Date.now() - startTime,
-      pdfSizeBytes: Buffer.from(pdfBase64, "base64").length,
+      pdfSizeBytes: getBase64Size(pdfBase64),
     });
 
     logId = logEntry.id;
@@ -219,6 +231,7 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Erro geral:", error);
+    const errMessage = error instanceof Error ? error.message : "Erro desconhecido";
     
     // Tentar criar log de erro mesmo em caso de falha crítica
     try {
@@ -230,7 +243,7 @@ serve(async (req) => {
         fileId: "unknown",
         fileName: "unknown",
         status: "error",
-        errorMessage: error.message || "Erro desconhecido",
+        errorMessage: errMessage,
         processingTimeMs: Date.now() - startTime,
       });
       logId = logEntry.id;
@@ -241,7 +254,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         status: "error",
-        message: error.message || "Erro desconhecido",
+        message: errMessage,
         logId,
       } as ImportResponse),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

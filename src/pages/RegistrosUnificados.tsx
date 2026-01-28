@@ -196,9 +196,10 @@ const RegistrosUnificados: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('fauna');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterAno, setFilterAno] = useState('all');
+  // Ano selecionado via abas (2026, 2025, etc.)
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [filterMes, setFilterMes] = useState('all');
-  const [showFilters, setShowFilters] = useState(false);
+  const [filterDia, setFilterDia] = useState('all');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   
   // Estados de dados
@@ -223,11 +224,8 @@ const RegistrosUnificados: React.FC = () => {
   // Cache de dimensões
   const [dimensionCache, setDimensionCache] = useState<any>(null);
 
-  // Anos disponíveis
-  const anos = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    return Array.from({ length: 6 }, (_, i) => (currentYear - i).toString());
-  }, []);
+  // Anos disponíveis para as abas
+  const anosDisponiveis = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
 
   // Meses
   const meses = [
@@ -244,6 +242,17 @@ const RegistrosUnificados: React.FC = () => {
     { value: '11', label: 'Novembro' },
     { value: '12', label: 'Dezembro' },
   ];
+  
+  // Dias do mês selecionado
+  const diasDoMes = useMemo(() => {
+    if (filterMes === 'all') return [];
+    const mes = parseInt(filterMes);
+    const ultimoDia = new Date(selectedYear, mes, 0).getDate();
+    return Array.from({ length: ultimoDia }, (_, i) => ({
+      value: String(i + 1),
+      label: String(i + 1).padStart(2, '0')
+    }));
+  }, [filterMes, selectedYear]);
 
   // Limpar seleção ao trocar de aba
   useEffect(() => {
@@ -278,7 +287,7 @@ const RegistrosUnificados: React.FC = () => {
     if (dimensionCache) {
       loadDataForTab(activeTab);
     }
-  }, [filterAno, filterMes]);
+  }, [selectedYear, filterMes, filterDia]);
 
   const loadDimensionCache = async () => {
     console.log('📦 [DimensionCache] Iniciando carregamento de cache de dimensões...');
@@ -375,29 +384,29 @@ const RegistrosUnificados: React.FC = () => {
   };
 
   const buildDateFilters = (query: any, dateField: string) => {
-    console.log(`📅 [buildDateFilters] Aplicando filtros para ${dateField}:`, { filterAno, filterMes });
+    console.log(`📅 [buildDateFilters] Aplicando filtros para ${dateField}:`, { selectedYear, filterMes, filterDia });
     
-    if (filterAno !== 'all') {
-      const startDate = `${filterAno}-01-01`;
-      const endDate = `${filterAno}-12-31`;
-      console.log(`📅 [buildDateFilters] Filtro de ano: ${startDate} a ${endDate}`);
-      query = query.gte(dateField, startDate).lte(dateField, endDate);
-    }
+    // Sempre filtrar pelo ano selecionado nas abas
+    const startDate = `${selectedYear}-01-01`;
+    const endDate = `${selectedYear}-12-31`;
+    console.log(`📅 [buildDateFilters] Filtro de ano: ${startDate} a ${endDate}`);
+    query = query.gte(dateField, startDate).lte(dateField, endDate);
     
+    // Filtro de mês
     if (filterMes !== 'all') {
-      // Se já tem filtro de ano, usar o ano; senão, usar ano atual
-      const ano = filterAno !== 'all' ? filterAno : new Date().getFullYear().toString();
       const mes = parseInt(filterMes);
-      const startDate = `${ano}-${String(mes).padStart(2, '0')}-01`;
-      // Último dia do mês
-      const lastDay = new Date(parseInt(ano), mes, 0).getDate();
-      const endDate = `${ano}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-      console.log(`📅 [buildDateFilters] Filtro de mês: ${startDate} a ${endDate}`);
-      query = query.gte(dateField, startDate).lte(dateField, endDate);
-    }
-    
-    if (filterAno === 'all' && filterMes === 'all') {
-      console.log(`📅 [buildDateFilters] Sem filtros de data - buscando todos os registros`);
+      const mesStartDate = `${selectedYear}-${String(mes).padStart(2, '0')}-01`;
+      const lastDay = new Date(selectedYear, mes, 0).getDate();
+      const mesEndDate = `${selectedYear}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      console.log(`📅 [buildDateFilters] Filtro de mês: ${mesStartDate} a ${mesEndDate}`);
+      query = query.gte(dateField, mesStartDate).lte(dateField, mesEndDate);
+      
+      // Filtro de dia (só se mês estiver selecionado)
+      if (filterDia !== 'all') {
+        const diaDate = `${selectedYear}-${String(mes).padStart(2, '0')}-${String(parseInt(filterDia)).padStart(2, '0')}`;
+        console.log(`📅 [buildDateFilters] Filtro de dia: ${diaDate}`);
+        query = query.eq(dateField, diaDate);
+      }
     }
     
     return query;
@@ -408,33 +417,18 @@ const RegistrosUnificados: React.FC = () => {
     try {
       console.log('🔍 [Fauna] Iniciando busca de registros de fauna...');
       
-      // Determinar quais tabelas buscar baseado no filtro de ano
+      // Determinar quais tabelas buscar baseado no ano selecionado
       let tabelas: string[] = [];
-      let anoFiltrado: number | null = null;
+      const anoFiltrado = selectedYear;
       
-      if (filterAno === 'all') {
-        // Carregar de todas as tabelas de fauna
-        tabelas = [
-          'fat_registros_de_resgate',
-          'fat_resgates_diarios_2025',
-          'fat_resgates_diarios_2024',
-          'fat_resgates_diarios_2023',
-          'fat_resgates_diarios_2022',
-          'fat_resgates_diarios_2021',
-          'fat_resgates_diarios_2020',
-        ];
+      if (anoFiltrado >= 2026) {
+        tabelas = ['fat_registros_de_resgate'];
+      } else if (anoFiltrado === 2025) {
+        tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025'];
+      } else if (anoFiltrado >= 2020 && anoFiltrado <= 2024) {
+        tabelas = [`fat_resgates_diarios_${anoFiltrado}`];
       } else {
-        const ano = parseInt(filterAno);
-        anoFiltrado = ano;
-        if (ano >= 2026) {
-          tabelas = ['fat_registros_de_resgate'];
-        } else if (ano === 2025) {
-          tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025'];
-        } else if (ano >= 2020 && ano <= 2024) {
-          tabelas = [`fat_resgates_diarios_${ano}`];
-        } else {
-          tabelas = ['fat_registros_de_resgate'];
-        }
+        tabelas = ['fat_registros_de_resgate'];
       }
       
       console.log('📊 [Fauna] Tabelas a buscar:', tabelas);
@@ -453,18 +447,21 @@ const RegistrosUnificados: React.FC = () => {
               .order('data_ocorrencia', { ascending: false });
             
             // Aplicar filtros de data
-            if (anoFiltrado !== null) {
-              const startDate = `${anoFiltrado}-01-01`;
-              const endDate = `${anoFiltrado}-12-31`;
-              query = query.gte('data_ocorrencia', startDate).lte('data_ocorrencia', endDate);
-            }
+            const startDate = `${anoFiltrado}-01-01`;
+            const endDate = `${anoFiltrado}-12-31`;
+            query = query.gte('data_ocorrencia', startDate).lte('data_ocorrencia', endDate);
+            
             if (filterMes !== 'all') {
-              const ano = anoFiltrado || new Date().getFullYear();
               const mes = parseInt(filterMes);
-              const startDate = `${ano}-${String(mes).padStart(2, '0')}-01`;
-              const lastDay = new Date(ano, mes, 0).getDate();
-              const endDate = `${ano}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-              query = query.gte('data_ocorrencia', startDate).lte('data_ocorrencia', endDate);
+              const mesStartDate = `${anoFiltrado}-${String(mes).padStart(2, '0')}-01`;
+              const lastDay = new Date(anoFiltrado, mes, 0).getDate();
+              const mesEndDate = `${anoFiltrado}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+              query = query.gte('data_ocorrencia', mesStartDate).lte('data_ocorrencia', mesEndDate);
+              
+              if (filterDia !== 'all') {
+                const diaDate = `${anoFiltrado}-${String(mes).padStart(2, '0')}-${String(parseInt(filterDia)).padStart(2, '0')}`;
+                query = query.eq('data_ocorrencia', diaDate);
+              }
             }
             
             const { data, error } = await query;
@@ -577,7 +574,7 @@ const RegistrosUnificados: React.FC = () => {
         .order('data', { ascending: false });
 
       query = buildDateFilters(query, 'data');
-      console.log('🔍 [Crimes Ambientais] Executando query...', { filterAno, filterMes });
+      console.log('🔍 [Crimes Ambientais] Executando query...', { selectedYear, filterMes, filterDia });
       
       const { data, error } = await query;
 
@@ -618,7 +615,7 @@ const RegistrosUnificados: React.FC = () => {
         .order('data', { ascending: false });
 
       query = buildDateFilters(query, 'data');
-      console.log('🔍 [Crimes Comuns] Executando query...', { filterAno, filterMes });
+      console.log('🔍 [Crimes Comuns] Executando query...', { selectedYear, filterMes, filterDia });
       const { data, error } = await query;
       
       if (error) {
@@ -1543,31 +1540,82 @@ const RegistrosUnificados: React.FC = () => {
             </div>
           </div>
 
-          {/* Filtros expandidos inline */}
+          {/* Abas de Anos */}
+          <div className="w-full border-b border-border/40 bg-background/50 backdrop-blur-sm -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
+            <div className="flex items-end gap-0.5 sm:gap-1 pt-2 overflow-x-auto scrollbar-hide">
+              {anosDisponiveis.map((ano) => (
+                <button
+                  key={ano}
+                  onClick={() => {
+                    setSelectedYear(ano);
+                    setFilterMes('all');
+                    setFilterDia('all');
+                  }}
+                  className={cn(
+                    "relative px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-t-lg transition-all duration-200",
+                    "border border-b-0 min-w-[60px] sm:min-w-[80px]",
+                    "hover:bg-muted/50",
+                    selectedYear === ano
+                      ? "bg-background text-primary border-border shadow-sm z-10 -mb-px"
+                      : "bg-muted/30 text-muted-foreground border-transparent hover:text-foreground"
+                  )}
+                >
+                  <span className="relative z-10">{ano}</span>
+                  {selectedYear === ano && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Filtros de Mês e Dia */}
           <div className="flex flex-wrap items-center gap-3">
-            <Select value={filterAno} onValueChange={setFilterAno}>
-              <SelectTrigger className="w-32 rounded-full bg-muted/50 border-0">
-                <SelectValue placeholder="Ano" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {anos.map(ano => (
-                  <SelectItem key={ano} value={ano}>{ano}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={filterMes} onValueChange={setFilterMes}>
+            <Select value={filterMes} onValueChange={(val) => {
+              setFilterMes(val);
+              setFilterDia('all'); // Reset dia quando mês muda
+            }}>
               <SelectTrigger className="w-36 rounded-full bg-muted/50 border-0">
                 <SelectValue placeholder="Mês" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="all">Todos os meses</SelectItem>
                 {meses.map(mes => (
                   <SelectItem key={mes.value} value={mes.value}>{mes.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            
+            {/* Mostrar filtro de dia apenas se mês estiver selecionado */}
+            {filterMes !== 'all' && (
+              <Select value={filterDia} onValueChange={setFilterDia}>
+                <SelectTrigger className="w-28 rounded-full bg-muted/50 border-0">
+                  <SelectValue placeholder="Dia" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os dias</SelectItem>
+                  {diasDoMes.map(dia => (
+                    <SelectItem key={dia.value} value={dia.value}>{dia.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            
+            {/* Botão para limpar filtros */}
+            {(filterMes !== 'all' || filterDia !== 'all') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFilterMes('all');
+                  setFilterDia('all');
+                }}
+                className="rounded-full text-muted-foreground hover:text-foreground"
+              >
+                <XIcon className="h-4 w-4 mr-1" />
+                Limpar
+              </Button>
+            )}
           </div>
 
           {/* Conteúdo das Tabs */}
