@@ -282,7 +282,7 @@ const MinutaAbono: React.FC = () => {
     ]);
 
     autoTable(doc, {
-      head: [['#', 'Posto/Grad', 'Matrícula', 'Nome de Guerra', 'Nome Completo', 'Data Início', 'Data Término', 'Dias', 'Nº SEI']],
+      head: [['#', 'Posto/Grad', 'Matrícula', 'Nome de Guerra', 'Nome Completo', 'Data Início', 'Data Término', 'Dias', 'N° do Processo SEI-GDF']],
       body: tableData,
       startY: 40,
       styles: { fontSize: 7 },
@@ -311,7 +311,7 @@ const MinutaAbono: React.FC = () => {
       ['BATALHÃO DE POLICIAMENTO DE PROTEÇÃO AMBIENTAL'],
       [`MINUTA DE ABONO - ${MESES[mes - 1].toUpperCase()} DE ${ano}`],
       [],
-      ['#', 'Posto/Graduação', 'Matrícula', 'Nome de Guerra', 'Nome Completo', 'Data Início', 'Data Término', 'Qtd. Dias', 'Nº Processo SEI'],
+      ['#', 'Posto/Graduação', 'Matrícula', 'Nome de Guerra', 'Nome Completo', 'Data Início', 'Data Término', 'Qtd. Dias', 'N° do Processo SEI-GDF'],
       ...data.map((item, index) => [
         index + 1,
         item.posto_graduacao,
@@ -357,7 +357,7 @@ const MinutaAbono: React.FC = () => {
               <th>Data Início</th>
               <th>Data Término</th>
               <th>Dias</th>
-              <th>Nº Processo SEI</th>
+              <th>N° do Processo SEI-GDF</th>
             </tr>
           </thead>
           <tbody>
@@ -549,7 +549,7 @@ const MinutaAbono: React.FC = () => {
                         <TableHead>Data Início</TableHead>
                         <TableHead>Data Término</TableHead>
                         <TableHead className="text-center">Qtd. Dias</TableHead>
-                        <TableHead className="min-w-[180px]">Nº Processo SEI</TableHead>
+                        <TableHead className="min-w-[200px]">N° do Processo SEI-GDF</TableHead>
                         <TableHead className="w-[80px]">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -606,7 +606,7 @@ const MinutaAbono: React.FC = () => {
                             <Input
                               value={item.sei}
                               onChange={(e) => updateSEI(item.id, e.target.value)}
-                              placeholder="Nº Processo SEI..."
+                              placeholder="N° Processo SEI-GDF..."
                               className="h-8 text-xs"
                             />
                           </TableCell>
