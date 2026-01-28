@@ -50,6 +50,9 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Primeiro, usar IA para identificar a espécie
+    // Depois vamos buscar no banco de dados
+
     const systemPrompt = tipo === 'flora' 
       ? `Você é um especialista botânico brasileiro, especialmente em espécies do Cerrado e do Distrito Federal do Brasil. Analise a imagem e identifique a espécie de planta.
          
@@ -149,7 +152,7 @@ serve(async (req) => {
     }
 
     // Parse JSON response, handling potential markdown wrapping
-    let result;
+    let aiResult;
     try {
       // Remove markdown code blocks if present
       let cleanContent = content.trim();
@@ -161,12 +164,108 @@ serve(async (req) => {
       if (cleanContent.endsWith('```')) {
         cleanContent = cleanContent.slice(0, -3);
       }
-      result = JSON.parse(cleanContent.trim());
+      aiResult = JSON.parse(cleanContent.trim());
     } catch (parseError) {
       console.error("Error parsing AI response:", content);
-      result = {
+      aiResult = {
         identificado: false,
         observacoes: "Não foi possível processar a resposta da IA. Tente novamente."
+      };
+    }
+
+    // Se a IA identificou uma espécie, buscar no banco de dados primeiro
+    let result = aiResult;
+    let encontradoNoBanco = false;
+    
+    if (aiResult.identificado && aiResult.nome_popular) {
+      try {
+        // Criar cliente Supabase para buscar no banco
+        const supabaseUrl = Deno.env.get("SUPABASE_URL") || Deno.env.get("VITE_SUPABASE_URL");
+        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY");
+        
+        if (supabaseUrl && supabaseKey) {
+          const tableName = tipo === 'flora' ? 'dim_especies_flora' : 'dim_especies_fauna';
+          
+          // Buscar por nome popular (ILIKE para busca case-insensitive)
+          const searchResponse = await fetch(
+            `${supabaseUrl}/rest/v1/${tableName}?nome_popular=ilike.*${encodeURIComponent(aiResult.nome_popular)}*&select=id,nome_popular,nome_cientifico,classe_taxonomica&limit=5`,
+            {
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+          
+          if (searchResponse.ok) {
+            const especies = await searchResponse.json();
+            
+            if (especies && especies.length > 0) {
+              // Encontrou no banco! Usar dados do banco
+              const especieEncontrada = especies[0];
+              encontradoNoBanco = true;
+              
+              result = {
+                ...aiResult,
+                encontrado_no_banco: true,
+                especie_id: especieEncontrada.id,
+                nome_popular: especieEncontrada.nome_popular,
+                nome_cientifico: especieEncontrada.nome_cientifico || aiResult.nome_cientifico,
+                classe_taxonomica: especieEncontrada.classe_taxonomica || aiResult.classe_taxonomica,
+                confianca: Math.min(100, (aiResult.confianca || 70) + 10), // Aumentar confiança se encontrado no banco
+                observacoes: `Espécie encontrada no banco de dados do BPMA. ${aiResult.observacoes || ''}`
+              };
+            } else {
+              // Não encontrou no banco, buscar por nome científico também
+              if (aiResult.nome_cientifico) {
+                const sciSearchResponse = await fetch(
+                  `${supabaseUrl}/rest/v1/${tableName}?nome_cientifico=ilike.*${encodeURIComponent(aiResult.nome_cientifico)}*&select=id,nome_popular,nome_cientifico,classe_taxonomica&limit=5`,
+                  {
+                    headers: {
+                      'apikey': supabaseKey,
+                      'Authorization': `Bearer ${supabaseKey}`,
+                      'Content-Type': 'application/json'
+                    }
+                  }
+                );
+                
+                if (sciSearchResponse.ok) {
+                  const especiesSci = await sciSearchResponse.json();
+                  
+                  if (especiesSci && especiesSci.length > 0) {
+                    const especieEncontrada = especiesSci[0];
+                    encontradoNoBanco = true;
+                    
+                    result = {
+                      ...aiResult,
+                      encontrado_no_banco: true,
+                      especie_id: especieEncontrada.id,
+                      nome_popular: especieEncontrada.nome_popular,
+                      nome_cientifico: especieEncontrada.nome_cientifico,
+                      classe_taxonomica: especieEncontrada.classe_taxonomica || aiResult.classe_taxonomica,
+                      confianca: Math.min(100, (aiResult.confianca || 70) + 10),
+                      observacoes: `Espécie encontrada no banco de dados do BPMA por nome científico. ${aiResult.observacoes || ''}`
+                    };
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (dbError) {
+        console.error("Erro ao buscar no banco de dados:", dbError);
+        // Continuar com resultado da IA mesmo se houver erro no banco
+      }
+    }
+    
+    // Se não encontrou no banco, marcar como sugestão da internet
+    if (!encontradoNoBanco && aiResult.identificado) {
+      result = {
+        ...aiResult,
+        encontrado_no_banco: false,
+        aviso: "Esta espécie não está cadastrada no banco de dados do BPMA. A identificação foi feita pela IA usando informações da internet e não pode ser confirmada com certeza. Por favor, verifique manualmente antes de salvar.",
+        observacoes: `⚠️ ATENÇÃO: ${aiResult.observacoes || 'Espécie identificada pela IA mas não encontrada no banco de dados. Verifique manualmente.'}`
       };
     }
 

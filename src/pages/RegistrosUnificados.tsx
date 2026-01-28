@@ -506,7 +506,7 @@ const RegistrosUnificados: React.FC = () => {
             
             let query = supabaseAny
               .from(tabela)
-              .select('id, data, especie_id, quantidade, quantidade_total, quantidade_adulto, quantidade_filhote, regiao_administrativa_id, origem_id, destinacao_id, estado_saude_id, estagio_vida_id, desfecho_id, atropelamento, created_at, latitude_origem, longitude_origem')
+              .select('id, data, especie_id, quantidade_total, quantidade_adulto, quantidade_filhote, regiao_administrativa_id, origem_id, destinacao_id, estado_saude_id, estagio_vida_id, desfecho_id, atropelamento, created_at, latitude_origem, longitude_origem')
               .order('data', { ascending: false });
             
             // Aplicar filtros de data explicitamente
@@ -587,7 +587,7 @@ const RegistrosUnificados: React.FC = () => {
           especie_nome: especie.nome_popular || 'Não identificado',
           especie_cientifico: especie.nome_cientifico,
           classe: especie.classe_taxonomica,
-          quantidade: r.quantidade_total || r.quantidade || 0,
+          quantidade: r.quantidade_total || 0,
           regiao: dimensionCache?.regioes.get(r.regiao_administrativa_id),
           destinacao: dimensionCache?.destinacoes.get(r.destinacao_id),
           estado_saude: dimensionCache?.estadosSaude.get(r.estado_saude_id),

@@ -21,6 +21,9 @@ interface IdentificationResult {
   estado_conservacao?: string;
   madeira_lei?: boolean;
   imune_corte?: boolean;
+  encontrado_no_banco?: boolean;
+  especie_id?: string;
+  aviso?: string;
 }
 
 interface AISpeciesIdentifierProps {
@@ -290,12 +293,45 @@ export const AISpeciesIdentifier: React.FC<AISpeciesIdentifierProps> = ({ tipo, 
 
                 {/* Result */}
                 {result && (
-                  <Card className={result.identificado ? 'border-green-500/30 bg-green-500/5' : 'border-yellow-500/30 bg-yellow-500/5'}>
+                  <Card className={
+                    result.identificado 
+                      ? (result.encontrado_no_banco ? 'border-green-500/30 bg-green-500/5' : 'border-yellow-500/30 bg-yellow-500/5')
+                      : 'border-red-500/30 bg-red-500/5'
+                  }>
                     <CardContent className="p-4 space-y-4">
                       {result.identificado ? (
                         <>
+                          {/* Aviso se não encontrado no banco */}
+                          {!result.encontrado_no_banco && result.aviso && (
+                            <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                              <div className="flex items-start gap-2">
+                                <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 shrink-0" />
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-100 mb-1">
+                                    ⚠️ Espécie não cadastrada no banco
+                                  </p>
+                                  <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                                    {result.aviso}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Badge de confirmação se encontrado no banco */}
+                          {result.encontrado_no_banco && (
+                            <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/30">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                <span className="text-xs font-medium text-green-900 dark:text-green-100">
+                                  ✓ Espécie encontrada no banco de dados do BPMA
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                          
                           <div className="flex items-start gap-3">
-                            <CheckCircle2 className="h-6 w-6 text-green-500 mt-0.5" />
+                            <CheckCircle2 className={`h-6 w-6 mt-0.5 ${result.encontrado_no_banco ? 'text-green-500' : 'text-yellow-500'}`} />
                             <div className="flex-1">
                               <h3 className="text-lg font-bold text-foreground">
                                 {result.nome_popular || 'Espécie Identificada'}
