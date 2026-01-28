@@ -37,7 +37,7 @@ interface FeriasData {
   parcelas_detalhadas?: Array<{
     fat_ferias_id: string;
     parcela_num: number;
-    mes: number | null;
+    mes: string | number | null;
     dias: number | null;
     data_inicio: string | null;
     data_fim: string | null;
@@ -777,9 +777,10 @@ const Ferias: React.FC = () => {
                           </TableCell>
                           <TableCell className="text-center py-1.5 text-xs">
                             {(() => {
-                              // Buscar data_inicio da parcela correspondente
+                              // Buscar data_inicio da parcela correspondente ao mês selecionado
+                              const mesAbrev = MESES_NUM_TO_ABREV[mesSelecionado - 1];
                               const parcelaDetalhada = item.ferias.parcelas_detalhadas?.find(
-                                (p) => p.parcela_num === item.parcelaIndex + 1
+                                (p) => p.mes === mesAbrev || String(p.mes) === String(mesSelecionado)
                               );
                               if (parcelaDetalhada?.data_inicio) {
                                 const [year, month, day] = parcelaDetalhada.data_inicio.split('-').map(Number);
@@ -790,9 +791,10 @@ const Ferias: React.FC = () => {
                           </TableCell>
                           <TableCell className="text-center py-1.5 text-xs">
                             {(() => {
-                              // Buscar data_fim da parcela correspondente
+                              // Buscar data_fim da parcela correspondente ao mês selecionado
+                              const mesAbrev = MESES_NUM_TO_ABREV[mesSelecionado - 1];
                               const parcelaDetalhada = item.ferias.parcelas_detalhadas?.find(
-                                (p) => p.parcela_num === item.parcelaIndex + 1
+                                (p) => p.mes === mesAbrev || String(p.mes) === String(mesSelecionado)
                               );
                               if (parcelaDetalhada?.data_fim) {
                                 const [year, month, day] = parcelaDetalhada.data_fim.split('-').map(Number);
