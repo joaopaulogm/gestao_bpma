@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, Eye, Search, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, Eye, RefreshCw, Loader2 } from 'lucide-react';
 import { Frota } from '@/services/logisticaService';
-import { buscarValorFipePorNome, formatarValorFipe } from '@/services/fipeService';
+import { buscarValorFipePorNome } from '@/services/fipeService';
 import { toast } from 'sonner';
 import {
   TableCard,
@@ -34,7 +34,42 @@ const FrotaTable: React.FC<FrotaTableProps> = ({ frota, onEdit, onDelete, onView
   const [valoresFipe, setValoresFipe] = useState<Record<string, string>>({});
   const [loadingFipe, setLoadingFipe] = useState<Record<string, boolean>>({});
 
-  const handleBuscarFipe = async (veiculo: Frota) => {
+  // Carregar valores FIPE automaticamente ao montar o componente
+  useEffect(() => {
+    const carregarValoresFipe = async () => {
+      for (const veiculo of frota) {
+        if (veiculo.marca && !valoresFipe[veiculo.id]) {
+          setLoadingFipe(prev => ({ ...prev, [veiculo.id]: true }));
+          
+          try {
+            const resultado = await buscarValorFipePorNome(
+              veiculo.marca,
+              veiculo.modelo,
+              veiculo.ano,
+              veiculo.tipo
+            );
+
+            if (resultado.success && resultado.valor) {
+              setValoresFipe(prev => ({
+                ...prev,
+                [veiculo.id]: resultado.valor!.Valor
+              }));
+            }
+          } catch (error) {
+            console.error(`Erro ao buscar FIPE para ${veiculo.prefixo}:`, error);
+          } finally {
+            setLoadingFipe(prev => ({ ...prev, [veiculo.id]: false }));
+          }
+        }
+      }
+    };
+
+    if (frota.length > 0) {
+      carregarValoresFipe();
+    }
+  }, [frota]);
+
+  const handleAtualizarFipe = async (veiculo: Frota) => {
     if (!veiculo.marca) {
       toast.error('Veículo não possui marca cadastrada');
       return;
@@ -55,12 +90,9 @@ const FrotaTable: React.FC<FrotaTableProps> = ({ frota, onEdit, onDelete, onView
           ...prev,
           [veiculo.id]: resultado.valor!.Valor
         }));
-        toast.success(`Valor FIPE encontrado: ${resultado.valor.Valor}`);
+        toast.success(`Valor FIPE atualizado: ${resultado.valor.Valor}`);
       } else {
         toast.error(resultado.error || 'Veículo não encontrado na tabela FIPE');
-        if (resultado.sugestoes && resultado.sugestoes.length > 0) {
-          console.log('Sugestões FIPE:', resultado.sugestoes);
-        }
       }
     } catch (error) {
       console.error('Erro ao buscar FIPE:', error);
@@ -162,17 +194,10 @@ const FrotaTable: React.FC<FrotaTableProps> = ({ frota, onEdit, onDelete, onView
                       <span className="text-muted-foreground text-sm">
                         Aquisição: {veiculo.valor_aquisicao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                       </span>
+                    ) : !veiculo.marca ? (
+                      <span className="text-muted-foreground text-xs">Sem marca</span>
                     ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleBuscarFipe(veiculo)}
-                        disabled={!veiculo.marca}
-                        className="h-7 text-xs"
-                      >
-                        <Search className="h-3 w-3 mr-1" />
-                        Buscar FIPE
-                      </Button>
+                      <span className="text-muted-foreground text-xs">Carregando...</span>
                     )}
                   </div>
                 }
@@ -192,45 +217,25 @@ const FrotaTable: React.FC<FrotaTableProps> = ({ frota, onEdit, onDelete, onView
 
           <TableCardActions>
             <div className="flex items-center justify-between w-full gap-2">
-              {/* Botão FIPE no lado esquerdo */}
+              {/* Botão Atualizar FIPE no lado esquerdo */}
               <div>
-                {valoresFipe[veiculo.id] ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleBuscarFipe(veiculo)}
-                    disabled={loadingFipe[veiculo.id]}
-                    className="h-9 px-3 text-green-600 hover:bg-green-50"
-                    title="Atualizar valor FIPE"
-                  >
-                    {loadingFipe[veiculo.id] ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Search className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Atualizar FIPE</span>
-                      </>
-                    )}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleBuscarFipe(veiculo)}
-                    disabled={!veiculo.marca || loadingFipe[veiculo.id]}
-                    className="h-9 px-3"
-                    title="Consultar valor na tabela FIPE"
-                  >
-                    {loadingFipe[veiculo.id] ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Search className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Valor FIPE</span>
-                      </>
-                    )}
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleAtualizarFipe(veiculo)}
+                  disabled={!veiculo.marca || loadingFipe[veiculo.id]}
+                  className="h-9 px-3 text-primary hover:bg-primary/10"
+                  title="Atualizar valor FIPE"
+                >
+                  {loadingFipe[veiculo.id] ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Atualizar FIPE</span>
+                    </>
+                  )}
+                </Button>
               </div>
 
               {/* Ações do lado direito */}
