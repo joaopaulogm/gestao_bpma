@@ -416,19 +416,25 @@ const RegistrosUnificados: React.FC = () => {
     setLoadingFauna(true);
     try {
       console.log('🔍 [Fauna] Iniciando busca de registros de fauna...');
+      console.log('🔍 [Fauna] Ano selecionado:', selectedYear);
       
       // Determinar quais tabelas buscar baseado no ano selecionado
       let tabelas: string[] = [];
       const anoFiltrado = selectedYear;
       
+      // Para 2026 e anos seguintes, usar apenas fat_registros_de_resgate
       if (anoFiltrado >= 2026) {
         tabelas = ['fat_registros_de_resgate'];
+        console.log('📊 [Fauna] Ano >= 2026, usando tabela padrão: fat_registros_de_resgate');
       } else if (anoFiltrado === 2025) {
         tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025'];
+        console.log('📊 [Fauna] Ano 2025, usando tabelas: fat_registros_de_resgate e fat_resgates_diarios_2025');
       } else if (anoFiltrado >= 2020 && anoFiltrado <= 2024) {
         tabelas = [`fat_resgates_diarios_${anoFiltrado}`];
+        console.log(`📊 [Fauna] Ano histórico ${anoFiltrado}, usando tabela: fat_resgates_diarios_${anoFiltrado}`);
       } else {
         tabelas = ['fat_registros_de_resgate'];
+        console.log('📊 [Fauna] Ano desconhecido, usando tabela padrão: fat_registros_de_resgate');
       }
       
       console.log('📊 [Fauna] Tabelas a buscar:', tabelas);
@@ -500,12 +506,26 @@ const RegistrosUnificados: React.FC = () => {
             
             query = buildDateFilters(query, 'data');
             
+            console.log(`🔍 [Fauna] Query final para ${tabela} (ano ${anoFiltrado}):`, {
+              tabela,
+              anoFiltrado,
+              startDate: `${anoFiltrado}-01-01`,
+              endDate: `${anoFiltrado}-12-31`
+            });
+            
             const { data, error } = await query;
             
             if (error) {
               console.error(`❌ [Fauna] Erro ao buscar de ${tabela}:`, error);
+              console.error(`❌ [Fauna] Detalhes do erro:`, JSON.stringify(error, null, 2));
               return;
             }
+            
+            console.log(`📊 [Fauna] Resultado da query ${tabela}:`, {
+              total: data?.length || 0,
+              primeiroRegistro: data?.[0] || null,
+              ultimoRegistro: data?.[data?.length - 1] || null
+            });
             
             const normalized = (data || []).map((r: any) => ({
               ...r,
