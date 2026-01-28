@@ -90,7 +90,13 @@ const MapaLocalizacao: React.FC = () => {
         };
         script.onerror = (err) => {
           console.error('Erro ao carregar script Google Maps:', err);
-          setError('Erro ao carregar o Google Maps. Verifique a chave da API, domínios autorizados e a conexão.');
+          setError(
+            'Erro ao carregar o Google Maps. ' +
+            'Verifique: 1) GOOGLE_MAPS_API_KEY configurado no Supabase Dashboard → Edge Functions → Secrets, ' +
+            '2) Domínios autorizados no Google Cloud Console (gestao-bpma.lovable.app), ' +
+            '3) APIs habilitadas (Maps JavaScript API, Places API). ' +
+            'Veja docs/CONFIGURAR_GOOGLE_MAPS.md para mais detalhes.'
+          );
         };
         document.head.appendChild(script);
       } catch (err) {
