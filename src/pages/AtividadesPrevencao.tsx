@@ -14,19 +14,17 @@ import {
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Save, MapPin, Shield, Users, TreePine, Theater, GraduationCap, BookOpen } from 'lucide-react';
+import { Loader2, Save, MapPin, Shield, Users, TreePine, Theater, GraduationCap, BookOpen, Clock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import RegiaoAdministrativaSearchField from '@/components/prevencao/RegiaoAdministrativaSearchField';
+import NumeroOSField from '@/components/prevencao/NumeroOSField';
+import EquipeSectionPrevencao, { MembroEquipePrevencao } from '@/components/prevencao/EquipeSectionPrevencao';
 
 interface TipoAtividade {
   id: string;
   categoria: string;
   nome: string;
   ordem: number;
-}
-
-interface Regiao {
-  id: string;
-  nome: string;
 }
 
 const AtividadesPrevencao: React.FC = () => {
@@ -36,7 +34,6 @@ const AtividadesPrevencao: React.FC = () => {
   
   // Dimension data
   const [tiposAtividades, setTiposAtividades] = useState<TipoAtividade[]>([]);
-  const [regioes, setRegioes] = useState<Regiao[]>([]);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -47,7 +44,14 @@ const AtividadesPrevencao: React.FC = () => {
     longitude: '',
     quantidadePublico: 0,
     observacoes: '',
+    horarioInicio: '',
+    horarioTermino: '',
+    missao: '',
+    numeroOS: '',
   });
+  
+  // Equipe state
+  const [membrosEquipe, setMembrosEquipe] = useState<MembroEquipePrevencao[]>([]);
   
   useEffect(() => {
     fetchDimensionData();
@@ -58,13 +62,13 @@ const AtividadesPrevencao: React.FC = () => {
     try {
       const supabaseAny = supabase as any;
       
-      const [tiposRes, regioesRes] = await Promise.all([
-        supabaseAny.from('dim_tipo_atividade_prevencao').select('id, categoria, nome, ordem').order('categoria').order('ordem'),
-        supabase.from('dim_regiao_administrativa').select('id, nome').order('nome'),
-      ]);
+      const tiposRes = await supabaseAny
+        .from('dim_tipo_atividade_prevencao')
+        .select('id, categoria, nome, ordem')
+        .order('categoria')
+        .order('ordem');
       
       if (tiposRes.data) setTiposAtividades(tiposRes.data);
-      if (regioesRes.data) setRegioes(regioesRes.data);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       toast.error('Erro ao carregar dados do formulário');
@@ -89,7 +93,8 @@ const AtividadesPrevencao: React.FC = () => {
     try {
       const supabaseAny = supabase as any;
       
-      const { error } = await supabaseAny
+      // Inserir atividade
+      const { data: atividadeData, error: atividadeError } = await supabaseAny
         .from('fat_atividades_prevencao')
         .insert({
           data: formData.data,
@@ -97,11 +102,34 @@ const AtividadesPrevencao: React.FC = () => {
           regiao_administrativa_id: formData.regiaoAdministrativaId || null,
           latitude: formData.latitude || null,
           longitude: formData.longitude || null,
-          quantidade_publico: formData.quantidadePublico,
+          quantidade_publico: formData.quantidadePublico || null,
           observacoes: formData.observacoes || null,
-        });
+          horario_inicio: formData.horarioInicio || null,
+          horario_termino: formData.horarioTermino || null,
+          missao: formData.missao || null,
+          numero_os: formData.numeroOS || null,
+        })
+        .select('id')
+        .single();
       
-      if (error) throw error;
+      if (atividadeError) throw atividadeError;
+      
+      // Inserir equipe se houver membros
+      if (membrosEquipe.length > 0 && atividadeData?.id) {
+        const equipeRecords = membrosEquipe.map(m => ({
+          atividade_prevencao_id: atividadeData.id,
+          efetivo_id: m.efetivo_id
+        }));
+        
+        const { error: equipeError } = await supabase
+          .from('fat_equipe_atividades_prevencao')
+          .insert(equipeRecords);
+        
+        if (equipeError) {
+          console.error('Erro ao salvar equipe:', equipeError);
+          toast.warning('Atividade salva, mas houve erro ao salvar a equipe');
+        }
+      }
       
       toast.success('Atividade registrada com sucesso!');
       
@@ -114,7 +142,14 @@ const AtividadesPrevencao: React.FC = () => {
         longitude: '',
         quantidadePublico: 0,
         observacoes: '',
+        horarioInicio: '',
+        horarioTermino: '',
+        missao: '',
+        numeroOS: '',
       });
+      setMembrosEquipe([]);
+      setActiveTab('prevencao');
+      setSubTab('teatro');
     } catch (error: any) {
       console.error('Erro ao salvar:', error);
       toast.error(`Erro ao salvar: ${error.message}`);
@@ -157,6 +192,14 @@ const AtividadesPrevencao: React.FC = () => {
   };
   
   const selectedActivity = tiposAtividades.find(t => t.id === formData.tipoAtividadeId);
+  
+  // Verificar se é Policiamento Comunitário para mostrar campo quantidade público
+  const isPoliciamentoComunitario = selectedActivity && (
+    selectedActivity.categoria === 'Policiamento Comunitário' ||
+    selectedActivity.categoria === 'Teatro Lobo Guará' ||
+    selectedActivity.categoria === 'Guardiões Ambientais' ||
+    selectedActivity.categoria === 'Saber Cerrado'
+  );
   
   if (isLoading) {
     return (
@@ -362,39 +405,99 @@ const AtividadesPrevencao: React.FC = () => {
                 />
               </div>
               
+              <RegiaoAdministrativaSearchField
+                value={formData.regiaoAdministrativaId}
+                onChange={(value) => handleInputChange('regiaoAdministrativaId', value)}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label className="text-sm">Região Administrativa</Label>
-                <Select
-                  value={formData.regiaoAdministrativaId}
-                  onValueChange={(value) => handleInputChange('regiaoAdministrativaId', value)}
-                >
-                  <SelectTrigger className="h-10 sm:h-11">
-                    <SelectValue placeholder="Selecione a região..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {regioes.map((regiao) => (
-                      <SelectItem key={regiao.id} value={regiao.id}>
-                        {regiao.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="horarioInicio" className="text-sm flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Horário de Início
+                </Label>
+                <Input
+                  id="horarioInicio"
+                  type="time"
+                  value={formData.horarioInicio}
+                  onChange={(e) => handleInputChange('horarioInicio', e.target.value)}
+                  className="h-10 sm:h-11"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="horarioTermino" className="text-sm flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Horário de Término
+                </Label>
+                <Input
+                  id="horarioTermino"
+                  type="time"
+                  value={formData.horarioTermino}
+                  onChange={(e) => handleInputChange('horarioTermino', e.target.value)}
+                  className="h-10 sm:h-11"
+                />
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="quantidadePublico" className="text-sm">Quantidade de Público Atendido</Label>
-              <Input
-                id="quantidadePublico"
-                type="number"
-                min="0"
-                value={formData.quantidadePublico}
-                onChange={(e) => handleInputChange('quantidadePublico', parseInt(e.target.value) || 0)}
-                className="h-10 sm:h-11"
-              />
-            </div>
+            {isPoliciamentoComunitario && (
+              <div className="space-y-2">
+                <Label htmlFor="quantidadePublico" className="text-sm">Quantidade de Público Atendido</Label>
+                <Input
+                  id="quantidadePublico"
+                  type="number"
+                  min="0"
+                  value={formData.quantidadePublico}
+                  onChange={(e) => handleInputChange('quantidadePublico', parseInt(e.target.value) || 0)}
+                  className="h-10 sm:h-11"
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
+        
+        {/* Missão */}
+        <Card>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Missão</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm">Missão</Label>
+              <Select
+                value={formData.missao}
+                onValueChange={(value) => handleInputChange('missao', value)}
+              >
+                <SelectTrigger className="h-10 sm:h-11">
+                  <SelectValue placeholder="Selecione a missão..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Patrulhamento Preventivo e Ostensivo (Espontânea)">
+                    Patrulhamento Preventivo e Ostensivo (Espontânea)
+                  </SelectItem>
+                  <SelectItem value="Patrulhamento Preventivo e Ostensivo (Ordem de Serviço)">
+                    Patrulhamento Preventivo e Ostensivo (Ordem de Serviço)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {formData.missao === 'Patrulhamento Preventivo e Ostensivo (Ordem de Serviço)' && (
+              <NumeroOSField
+                value={formData.numeroOS}
+                onChange={(value) => handleInputChange('numeroOS', value)}
+                required={true}
+              />
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Identificação da Equipe */}
+        <EquipeSectionPrevencao
+          membros={membrosEquipe}
+          onMembrosChange={setMembrosEquipe}
+        />
         
         {/* Localização */}
         <Card>
