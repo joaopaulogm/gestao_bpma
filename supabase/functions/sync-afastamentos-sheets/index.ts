@@ -241,60 +241,141 @@ function parseMonth(value: string | null): number | null {
   return months[v] || null;
 }
 
-// Process Férias sheet
+// Process Férias sheet - usando índices de coluna conforme especificação:
+// Coluna P (15) = Mês previsto | Coluna R (17) = Mês reprogramado | Coluna Q (16) = Matrícula
+// Coluna S (18) = Posto/Grad | Coluna T (19) = Nome | Coluna V (21) = UPM
+// Coluna W (22) = Ano ref | Coluna X (23) = Ano gozo | Coluna Y (24) = SEI
+// Parcela 1: Z (25) = dias, AA (26) = início, AB (27) = fim, AC (28) = livro, AD (29) = sgpol, AE (30) = campanha
+// Parcela 2: AF (31) = dias, AG (32) = início, AH (33) = fim, AI (34) = livro, AJ (35) = sgpol, AK (36) = campanha
+// Parcela 3: AL (37) = dias, AM (38) = início, AN (39) = fim, AO (40) = livro, AP (41) = sgpol, AQ (42) = campanha
+// AR (43) = total dias
 function processFeriasRows(rows: any[][], sheetName: string): any[] {
   if (rows.length < 2) return [];
   
+  // Índices de colunas (0-indexed)
+  const COL_MES_PREVISTO = 15;   // P - Mês previsto
+  const COL_MATRICULA = 16;      // Q - Matrícula
+  const COL_MES_REPROG = 17;     // R - Mês reprogramado / Posto-Grad (depende do layout)
+  const COL_POSTO_GRAD = 18;     // S - Posto/Graduação
+  const COL_NOME = 19;           // T - Nome completo
+  const COL_UPM = 21;            // V - UPM
+  const COL_ANO_REF = 22;        // W - Ano referência
+  const COL_ANO_GOZO = 23;       // X - Ano gozo
+  const COL_SEI = 24;            // Y - SEI
+  
+  // 1ª Parcela (colunas Z a AE)
+  const COL_P1_DIAS = 25;        // Z - dias 1ª parcela
+  const COL_P1_INICIO = 26;      // AA - início 1ª parcela
+  const COL_P1_FIM = 27;         // AB - fim 1ª parcela
+  const COL_P1_LIVRO = 28;       // AC - lançado livro
+  const COL_P1_SGPOL = 29;       // AD - lançado SGPOL
+  const COL_P1_CAMPANHA = 30;    // AE - lançado campanha
+  
+  // 2ª Parcela (colunas AF a AK)
+  const COL_P2_DIAS = 31;        // AF - dias 2ª parcela
+  const COL_P2_INICIO = 32;      // AG - início 2ª parcela
+  const COL_P2_FIM = 33;         // AH - fim 2ª parcela
+  const COL_P2_LIVRO = 34;       // AI - lançado livro
+  const COL_P2_SGPOL = 35;       // AJ - lançado SGPOL
+  const COL_P2_CAMPANHA = 36;    // AK - lançado campanha
+  
+  // 3ª Parcela (colunas AL a AQ)
+  const COL_P3_DIAS = 37;        // AL - dias 3ª parcela
+  const COL_P3_INICIO = 38;      // AM - início 3ª parcela
+  const COL_P3_FIM = 39;         // AN - fim 3ª parcela
+  const COL_P3_LIVRO = 40;       // AO - lançado livro
+  const COL_P3_SGPOL = 41;       // AP - lançado SGPOL
+  const COL_P3_CAMPANHA = 42;    // AQ - lançado campanha
+  
+  const COL_TOTAL_DIAS = 43;     // AR - total dias
+  
+  console.log(`[processFeriasRows] Processing ${rows.length - 1} rows from ${sheetName}`);
+  
+  // Log header row para debug
+  if (rows.length > 0) {
+    console.log(`[processFeriasRows] Row 0 (header): cols 15-30:`, rows[0].slice(15, 31));
+    console.log(`[processFeriasRows] Row 0 (header): cols 31-44:`, rows[0].slice(31, 45));
+  }
+  
+  // Também tentar ler com headers para compatibilidade
   const headers = parseHeaders(rows[0]);
   const staging: any[] = [];
   
+  // Começar da linha 1 (índice 0 é header)
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    const matricula = getCell(row, headers, 'matricula', 'mat', 'matrícula');
+    
+    // Tentar ler matrícula: primeiro por índice, depois por header
+    let matricula = row[COL_MATRICULA]?.toString().trim();
+    if (!matricula || matricula === '' || matricula.toLowerCase() === 'matrícula') {
+      matricula = getCell(row, headers, 'matricula', 'mat', 'matrícula');
+    }
     
     if (!matricula) continue;
+    
+    const anoGozo = parseInt2(row[COL_ANO_GOZO]?.toString()) || 
+                    parseInt2(getCell(row, headers, 'ano gozo', 'ano_gozo')) || 
+                    2026;
+    
+    // Ler datas de início/fim das parcelas pelos índices corretos
+    const p1Inicio = row[COL_P1_INICIO] ? parseDate(String(row[COL_P1_INICIO]), anoGozo) : null;
+    const p1Fim = row[COL_P1_FIM] ? parseDate(String(row[COL_P1_FIM]), anoGozo) : null;
+    const p2Inicio = row[COL_P2_INICIO] ? parseDate(String(row[COL_P2_INICIO]), anoGozo) : null;
+    const p2Fim = row[COL_P2_FIM] ? parseDate(String(row[COL_P2_FIM]), anoGozo) : null;
+    const p3Inicio = row[COL_P3_INICIO] ? parseDate(String(row[COL_P3_INICIO]), anoGozo) : null;
+    const p3Fim = row[COL_P3_FIM] ? parseDate(String(row[COL_P3_FIM]), anoGozo) : null;
+    
+    // Log primeiras linhas para debug
+    if (staging.length < 3) {
+      console.log(`[processFeriasRows] Row ${i}: matricula=${matricula}, anoGozo=${anoGozo}`);
+      console.log(`  P1: dias=${row[COL_P1_DIAS]}, inicio=${p1Inicio}, fim=${p1Fim}`);
+      console.log(`  P2: dias=${row[COL_P2_DIAS]}, inicio=${p2Inicio}, fim=${p2Fim}`);
+      console.log(`  P3: dias=${row[COL_P3_DIAS]}, inicio=${p3Inicio}, fim=${p3Fim}`);
+    }
     
     staging.push({
       source_sheet: sheetName,
       source_row_number: i + 1,
       matricula,
-      posto_graduacao: getCell(row, headers, 'posto/grad', 'posto', 'graduacao', 'grad'),
-      nome_completo: getCell(row, headers, 'nome', 'nome completo'),
-      upm: getCell(row, headers, 'upm', 'lotacao'),
-      ano_referencia: parseInt2(getCell(row, headers, 'ano ref', 'ano referencia', 'ano_ref')),
-      ano_gozo: parseInt2(getCell(row, headers, 'ano gozo', 'ano_gozo')) || 2026,
-      sei: getCell(row, headers, 'sei', 'processo sei'),
-      mes_previsto: getCell(row, headers, 'mes previsto', 'previsto'),
-      mes_reprogramado: getCell(row, headers, 'mes reprogramado', 'reprogramado'),
+      posto_graduacao: row[COL_POSTO_GRAD]?.toString().trim() || getCell(row, headers, 'posto/grad', 'posto', 'graduacao', 'grad'),
+      nome_completo: row[COL_NOME]?.toString().trim() || getCell(row, headers, 'nome', 'nome completo'),
+      upm: row[COL_UPM]?.toString().trim() || getCell(row, headers, 'upm', 'lotacao'),
+      ano_referencia: parseInt2(row[COL_ANO_REF]?.toString()) || parseInt2(getCell(row, headers, 'ano ref', 'ano referencia', 'ano_ref')),
+      ano_gozo: anoGozo,
+      sei: row[COL_SEI]?.toString().trim() || getCell(row, headers, 'sei', 'processo sei'),
+      mes_previsto: row[COL_MES_PREVISTO]?.toString().trim() || getCell(row, headers, 'mes previsto', 'previsto'),
+      mes_reprogramado: row[COL_MES_REPROG]?.toString().trim() || getCell(row, headers, 'mes reprogramado', 'reprogramado'),
+      // Meses das parcelas - tentar calcular do mês de início ou usar header
       parc1_mes: getCell(row, headers, '1a parc mes', 'parc 1 mes', 'p1 mes'),
       parc2_mes: getCell(row, headers, '2a parc mes', 'parc 2 mes', 'p2 mes'),
       parc3_mes: getCell(row, headers, '3a parc mes', 'parc 3 mes', 'p3 mes'),
-      p1_mes_num: parseMonth(getCell(row, headers, '1a parc mes', 'parc 1 mes', 'p1 mes')),
-      p2_mes_num: parseMonth(getCell(row, headers, '2a parc mes', 'parc 2 mes', 'p2 mes')),
-      p3_mes_num: parseMonth(getCell(row, headers, '3a parc mes', 'parc 3 mes', 'p3 mes')),
-      p1_dias: parseInt2(getCell(row, headers, '1a parc dias', 'parc 1 dias', 'p1 dias')),
-      p1_inicio: parseDate(getCell(row, headers, '1a parc inicio', 'parc 1 inicio', 'p1 inicio')),
-      p1_fim: parseDate(getCell(row, headers, '1a parc fim', 'parc 1 fim', 'p1 fim')),
-      p1_livro: parseBool(getCell(row, headers, '1a parc livro', 'p1 livro', 'livro 1')),
-      p1_sgpol: parseBool(getCell(row, headers, '1a parc sgpol', 'p1 sgpol', 'sgpol 1')),
-      p1_campanha: parseBool(getCell(row, headers, '1a parc campanha', 'p1 campanha', 'campanha 1')),
-      p2_dias: parseInt2(getCell(row, headers, '2a parc dias', 'parc 2 dias', 'p2 dias')),
-      p2_inicio: parseDate(getCell(row, headers, '2a parc inicio', 'parc 2 inicio', 'p2 inicio')),
-      p2_fim: parseDate(getCell(row, headers, '2a parc fim', 'parc 2 fim', 'p2 fim')),
-      p2_livro: parseBool(getCell(row, headers, '2a parc livro', 'p2 livro', 'livro 2')),
-      p2_sgpol: parseBool(getCell(row, headers, '2a parc sgpol', 'p2 sgpol', 'sgpol 2')),
-      p2_campanha: parseBool(getCell(row, headers, '2a parc campanha', 'p2 campanha', 'campanha 2')),
-      p3_dias: parseInt2(getCell(row, headers, '3a parc dias', 'parc 3 dias', 'p3 dias')),
-      p3_inicio: parseDate(getCell(row, headers, '3a parc inicio', 'parc 3 inicio', 'p3 inicio')),
-      p3_fim: parseDate(getCell(row, headers, '3a parc fim', 'parc 3 fim', 'p3 fim')),
-      p3_livro: parseBool(getCell(row, headers, '3a parc livro', 'p3 livro', 'livro 3')),
-      p3_sgpol: parseBool(getCell(row, headers, '3a parc sgpol', 'p3 sgpol', 'sgpol 3')),
-      p3_campanha: parseBool(getCell(row, headers, '3a parc campanha', 'p3 campanha', 'campanha 3')),
-      total_dias: parseInt2(getCell(row, headers, 'total dias', 'dias total', 'total')),
+      p1_mes_num: p1Inicio ? parseInt(p1Inicio.split('-')[1]) : parseMonth(getCell(row, headers, '1a parc mes', 'parc 1 mes', 'p1 mes')),
+      p2_mes_num: p2Inicio ? parseInt(p2Inicio.split('-')[1]) : parseMonth(getCell(row, headers, '2a parc mes', 'parc 2 mes', 'p2 mes')),
+      p3_mes_num: p3Inicio ? parseInt(p3Inicio.split('-')[1]) : parseMonth(getCell(row, headers, '3a parc mes', 'parc 3 mes', 'p3 mes')),
+      p1_dias: parseInt2(row[COL_P1_DIAS]?.toString()) || parseInt2(getCell(row, headers, '1a parc dias', 'parc 1 dias', 'p1 dias')),
+      p1_inicio: p1Inicio,
+      p1_fim: p1Fim,
+      p1_livro: parseBool(row[COL_P1_LIVRO]?.toString()) || parseBool(getCell(row, headers, '1a parc livro', 'p1 livro', 'livro 1')),
+      p1_sgpol: parseBool(row[COL_P1_SGPOL]?.toString()) || parseBool(getCell(row, headers, '1a parc sgpol', 'p1 sgpol', 'sgpol 1')),
+      p1_campanha: parseBool(row[COL_P1_CAMPANHA]?.toString()) || parseBool(getCell(row, headers, '1a parc campanha', 'p1 campanha', 'campanha 1')),
+      p2_dias: parseInt2(row[COL_P2_DIAS]?.toString()) || parseInt2(getCell(row, headers, '2a parc dias', 'parc 2 dias', 'p2 dias')),
+      p2_inicio: p2Inicio,
+      p2_fim: p2Fim,
+      p2_livro: parseBool(row[COL_P2_LIVRO]?.toString()) || parseBool(getCell(row, headers, '2a parc livro', 'p2 livro', 'livro 2')),
+      p2_sgpol: parseBool(row[COL_P2_SGPOL]?.toString()) || parseBool(getCell(row, headers, '2a parc sgpol', 'p2 sgpol', 'sgpol 2')),
+      p2_campanha: parseBool(row[COL_P2_CAMPANHA]?.toString()) || parseBool(getCell(row, headers, '2a parc campanha', 'p2 campanha', 'campanha 2')),
+      p3_dias: parseInt2(row[COL_P3_DIAS]?.toString()) || parseInt2(getCell(row, headers, '3a parc dias', 'parc 3 dias', 'p3 dias')),
+      p3_inicio: p3Inicio,
+      p3_fim: p3Fim,
+      p3_livro: parseBool(row[COL_P3_LIVRO]?.toString()) || parseBool(getCell(row, headers, '3a parc livro', 'p3 livro', 'livro 3')),
+      p3_sgpol: parseBool(row[COL_P3_SGPOL]?.toString()) || parseBool(getCell(row, headers, '3a parc sgpol', 'p3 sgpol', 'sgpol 3')),
+      p3_campanha: parseBool(row[COL_P3_CAMPANHA]?.toString()) || parseBool(getCell(row, headers, '3a parc campanha', 'p3 campanha', 'campanha 3')),
+      total_dias: parseInt2(row[COL_TOTAL_DIAS]?.toString()) || parseInt2(getCell(row, headers, 'total dias', 'dias total', 'total')),
       loaded_at: new Date().toISOString(),
     });
   }
   
+  console.log(`[processFeriasRows] Processed ${staging.length} valid rows`);
   return staging;
 }
 
