@@ -404,9 +404,17 @@ const RegistrosUnificados: React.FC = () => {
       
       // Filtro de dia (só se mês estiver selecionado)
       if (filterDia !== 'all') {
-        const diaDate = `${selectedYear}-${String(mes).padStart(2, '0')}-${String(parseInt(filterDia)).padStart(2, '0')}`;
-        console.log(`📅 [buildDateFilters] Filtro de dia: ${diaDate}`);
-        query = query.eq(dateField, diaDate);
+        const dia = parseInt(filterDia);
+        // Usar o início do dia selecionado até o início do dia seguinte (exclusivo)
+        // Isso garante que todos os registros do dia sejam incluídos, independente de timezone
+        const diaStartDate = `${selectedYear}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        // Calcular o próximo dia para usar como limite superior (exclusivo)
+        const nextDay = new Date(selectedYear, mes - 1, dia + 1);
+        const diaEndDate = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
+        console.log(`📅 [buildDateFilters] Filtro de dia: ${diaStartDate} até ${diaEndDate} (exclusivo)`);
+        // Usar gte para início do dia e lt (menor que) para o início do próximo dia
+        // Isso garante que registros do dia específico sejam retornados corretamente
+        query = query.gte(dateField, diaStartDate).lt(dateField, diaEndDate);
       }
     }
     
