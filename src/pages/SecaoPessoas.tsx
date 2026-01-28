@@ -4,10 +4,10 @@ import { Users, Calendar, UserMinus, FileCheck, Palmtree, Gift, UsersRound, Targ
 import { Card, CardContent } from '@/components/ui/card';
 
 const menuItems = [
+  { title: 'Campanha', description: 'Calendário de campanha', icon: Target, path: '/secao-pessoas/campanha' },
   { title: 'Efetivo BPMA', description: 'Gerenciar efetivo policial', icon: Users, path: '/secao-pessoas/efetivo' },
   { title: 'Equipes', description: 'Gerenciar equipes de serviço', icon: UsersRound, path: '/secao-pessoas/equipes' },
   { title: 'Escalas', description: 'Escalas de serviço', icon: Calendar, path: '/secao-pessoas/escalas' },
-  { title: 'Campanha', description: 'Calendário de campanha', icon: Target, path: '/secao-pessoas/campanha' },
   { title: 'Afastamentos', description: 'Registros de afastamentos', icon: UserMinus, path: '/secao-pessoas/afastamentos' },
   { title: 'Licenças', description: 'Licenças concedidas', icon: FileCheck, path: '/secao-pessoas/licencas' },
   { title: 'Férias', description: 'Controle de férias', icon: Palmtree, path: '/secao-pessoas/ferias' },
