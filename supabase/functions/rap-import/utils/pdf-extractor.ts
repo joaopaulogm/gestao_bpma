@@ -4,18 +4,6 @@ export async function extractTextFromPDF(pdfBase64: string): Promise<string> {
   try {
     // Converter base64 para Uint8Array
     const pdfBytes = Uint8Array.from(atob(pdfBase64), (c) => c.charCodeAt(0));
-
-    // Tentar usar biblioteca pdf-parse via npm (se disponível)
-    // Por enquanto, vamos usar uma abordagem mais simples
-    
-    // Nota: Em Deno, podemos usar bibliotecas externas
-    // Vamos tentar usar uma biblioteca de PDF parsing
-    
-    // Alternativa: usar fetch para uma API externa de extração
-    // Ou usar uma biblioteca Deno-compatible
-    
-    // Por enquanto, vamos implementar uma versão básica que tenta extrair texto
-    // usando regex simples (não é ideal, mas funciona para PDFs com texto)
     
     // Decodificar o PDF e tentar extrair texto diretamente
     const text = await extractTextFromPDFBytes(pdfBytes);
@@ -60,7 +48,7 @@ async function extractTextFromPDFBytes(pdfBytes: Uint8Array): Promise<string> {
       if (decoded && decoded.length > 10) {
         textMatches.push(decoded);
       }
-    } catch (e) {
+    } catch (_e) {
       // Ignorar erros de decodificação
     }
   }
@@ -70,11 +58,9 @@ async function extractTextFromPDFBytes(pdfBytes: Uint8Array): Promise<string> {
   
   // Se não encontrou texto suficiente, tentar usar biblioteca externa
   if (fullText.trim().length < 50) {
-    // Tentar usar uma biblioteca de PDF via import dinâmico
     try {
-      // Nota: Em produção, você pode querer usar uma biblioteca como pdfjs-dist
-      // ou fazer uma chamada para uma API externa de OCR/extraction
-      fullText = await tryExternalPDFLibrary(pdfBytes);
+      // Tentar usar uma biblioteca de PDF via import dinâmico
+      fullText = await tryPDFJSLibrary(pdfBytes);
     } catch (error) {
       console.warn("Não foi possível usar biblioteca externa:", error);
     }
@@ -83,7 +69,7 @@ async function extractTextFromPDFBytes(pdfBytes: Uint8Array): Promise<string> {
   return fullText.trim();
 }
 
-async function tryPDFJSLibrary(pdfBytes: Uint8Array): Promise<string> {
+async function tryPDFJSLibrary(_pdfBytes: Uint8Array): Promise<string> {
   // Tentar usar pdfjs-dist via esm.sh
   try {
     // Nota: Em produção, você pode querer usar uma biblioteca mais robusta
@@ -102,11 +88,3 @@ async function tryPDFJSLibrary(pdfBytes: Uint8Array): Promise<string> {
     return "";
   }
 }
-
-// Alternativa: usar uma biblioteca npm via esm.sh
-// Exemplo de como poderia ser:
-/*
-import { PDFDocument } from "https://esm.sh/pdf-lib@1.17.1";
-// ou
-import * as pdfjs from "https://cdn.skypack.dev/pdfjs-dist@3.0.279";
-*/

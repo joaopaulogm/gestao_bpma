@@ -121,7 +121,7 @@ const AtividadesPrevencao: React.FC = () => {
           efetivo_id: m.efetivo_id
         }));
         
-        const { error: equipeError } = await supabase
+        const { error: equipeError } = await (supabase as any)
           .from('fat_equipe_atividades_prevencao')
           .insert(equipeRecords);
         
