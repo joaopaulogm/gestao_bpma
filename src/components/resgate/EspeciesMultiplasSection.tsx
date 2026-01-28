@@ -10,6 +10,7 @@ import { AlertTriangle, Plus, Trash2, Image as ImageIcon, Camera } from 'lucide-
 import { supabase } from '@/integrations/supabase/client';
 import { getFaunaImageUrl } from '@/services/especieService';
 import { AISpeciesIdentifier } from '@/components/species/AISpeciesIdentifier';
+import { toast } from 'sonner';
 
 export interface EspecieItem {
   id: string;

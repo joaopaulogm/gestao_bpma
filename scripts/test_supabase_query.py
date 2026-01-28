@@ -8,7 +8,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 SUPABASE_URL = os.getenv('VITE_SUPABASE_URL')
-SUPABASE_KEY = os.getenv('VITE_SUPABASE_ANON_KEY')
+# Tentar service_role primeiro, senão usar anon_key
+SUPABASE_KEY = (
+    os.getenv('SUPABASE_SERVICE_ROLE_KEY') or 
+    os.getenv('VITE_SUPABASE_SERVICE_ROLE_KEY') or 
+    os.getenv('VITE_SUPABASE_ANON_KEY')
+)
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("ERRO: Variáveis de ambiente não encontradas!")
@@ -22,6 +27,11 @@ HEADERS = {
     "Content-Type": "application/json",
     "Prefer": "return=representation"
 }
+
+if os.getenv('SUPABASE_SERVICE_ROLE_KEY') or os.getenv('VITE_SUPABASE_SERVICE_ROLE_KEY'):
+    print("Usando SUPABASE_SERVICE_ROLE_KEY (acesso completo)")
+else:
+    print("Usando VITE_SUPABASE_ANON_KEY (pode ter limitações de RLS)")
 
 # Testar busca de algumas matrículas
 matriculas_teste = ['1999176', '739820', '7361580']
@@ -57,26 +67,62 @@ for matricula in matriculas_teste:
 
 # Testar buscar algumas matrículas que existem no banco
 print(f"\n\nBuscando algumas matrículas do banco para ver o formato...")
+
+# Tentar com service_role se disponível
+SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+if SUPABASE_SERVICE_ROLE_KEY:
+    print("Usando SUPABASE_SERVICE_ROLE_KEY para busca...")
+    SERVICE_HEADERS = {
+        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+    }
+    test_headers = SERVICE_HEADERS
+else:
+    print("Usando VITE_SUPABASE_ANON_KEY (pode ter limitações de RLS)...")
+    test_headers = HEADERS
+
 url = f"{POSTGREST_URL}/dim_efetivo"
 params = {
     'select': 'id,matricula',
-    'limit': '10',
+    'limit': '20',
     'order': 'matricula'
 }
 
 try:
-    response = requests.get(url, headers=HEADERS, params=params)
+    response = requests.get(url, headers=test_headers, params=params)
     print(f"Status: {response.status_code}")
-    print(f"Headers: {dict(response.headers)}")
     print(f"Response text (primeiros 500 chars): {response.text[:500]}")
     
     if response.status_code == 200:
         data = response.json()
         print(f"\nTotal de registros retornados: {len(data)}")
         if data:
-            print(f"Primeiras {min(10, len(data))} matrículas no banco:")
+            print(f"\nPrimeiras {min(20, len(data))} matrículas no banco:")
             for item in data:
-                print(f"  ID: {item.get('id')}, Matrícula: '{item.get('matricula')}'")
+                matricula = item.get('matricula')
+                print(f"  Matrícula: '{matricula}' (tipo: {type(matricula).__name__}, len: {len(str(matricula))})")
+            
+            # Testar busca de uma matrícula específica do Excel
+            print(f"\n\nTestando busca de matrículas do Excel:")
+            matriculas_teste_excel = ['1999176', '739820', '7361580']
+            for matricula_teste in matriculas_teste_excel:
+                # Tentar busca exata
+                params_exata = {
+                    'matricula': f'eq.{matricula_teste}',
+                    'select': 'id,matricula',
+                    'limit': '1'
+                }
+                response_exata = requests.get(url, headers=test_headers, params=params_exata)
+                if response_exata.status_code == 200:
+                    data_exata = response_exata.json()
+                    if data_exata:
+                        print(f"  ✓ '{matricula_teste}' encontrada: {data_exata[0].get('matricula')}")
+                    else:
+                        print(f"  ✗ '{matricula_teste}' não encontrada (busca exata)")
+                else:
+                    print(f"  ✗ Erro ao buscar '{matricula_teste}': {response_exata.status_code}")
         else:
             print("Nenhum registro retornado. Pode ser problema de RLS ou tabela vazia.")
     else:

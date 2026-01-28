@@ -17,19 +17,29 @@ load_dotenv()
 # Configuração do Supabase
 SUPABASE_URL = os.getenv('VITE_SUPABASE_URL')
 # Tentar service_role primeiro (tem acesso completo), senão usar anon_key
-SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY') or os.getenv('VITE_SUPABASE_ANON_KEY')
+# Verificar múltiplos formatos de variável
+SUPABASE_KEY = (
+    os.getenv('SUPABASE_SERVICE_ROLE_KEY') or 
+    os.getenv('VITE_SUPABASE_SERVICE_ROLE_KEY') or 
+    os.getenv('VITE_SUPABASE_ANON_KEY')
+)
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("ERRO: Variáveis de ambiente SUPABASE_URL e SUPABASE_KEY não encontradas!")
     print("Certifique-se de que o arquivo .env contém:")
     print("  - VITE_SUPABASE_URL")
-    print("  - SUPABASE_SERVICE_ROLE_KEY (recomendado para scripts) ou VITE_SUPABASE_ANON_KEY")
+    print("  - SUPABASE_SERVICE_ROLE_KEY ou VITE_SUPABASE_SERVICE_ROLE_KEY (recomendado para scripts)")
+    print("  - Ou VITE_SUPABASE_ANON_KEY (pode ter limitações de RLS)")
     sys.exit(1)
 
-if os.getenv('SUPABASE_SERVICE_ROLE_KEY'):
-    print("Usando SUPABASE_SERVICE_ROLE_KEY (acesso completo)")
+if os.getenv('SUPABASE_SERVICE_ROLE_KEY') or os.getenv('VITE_SUPABASE_SERVICE_ROLE_KEY'):
+    print("Usando SUPABASE_SERVICE_ROLE_KEY (acesso completo)", flush=True)
+    # Verificar se a chave parece completa (JWT geralmente tem 3 partes separadas por ponto)
+    if SUPABASE_KEY.count('.') < 2:
+        print("AVISO: A chave service_role parece estar incompleta ou invalida!", flush=True)
+        print("Verifique se a chave esta completa no arquivo .env", flush=True)
 else:
-    print("AVISO: Usando VITE_SUPABASE_ANON_KEY - pode ter limitações de RLS")
+    print("AVISO: Usando VITE_SUPABASE_ANON_KEY - pode ter limitacoes de RLS", flush=True)
 
 # URL base do PostgREST do Supabase
 POSTGREST_URL = f"{SUPABASE_URL}/rest/v1"
@@ -46,34 +56,46 @@ def supabase_query(table, method='GET', filters=None, data=None):
     """Função helper para fazer queries no Supabase via PostgREST"""
     url = f"{POSTGREST_URL}/{table}"
     
-    if method == 'GET':
-        # Construir query string para filtros do PostgREST
-        # PostgREST usa formato: ?select=id&campo=eq.valor&limit=1
-        params = {}
-        if filters:
-            for key, value in filters.items():
-                params[key] = value
-        response = requests.get(url, headers=HEADERS, params=params)
-    elif method == 'POST':
-        response = requests.post(url, headers=HEADERS, json=data)
-    elif method == 'PATCH':
-        # Para PATCH, os filtros vão na query string
-        params = {}
-        if filters:
-            for key, value in filters.items():
-                params[key] = value
-        response = requests.patch(url, headers=HEADERS, params=params, json=data)
-    else:
-        raise ValueError(f"Método HTTP não suportado: {method}")
+    # Timeout de 30 segundos para evitar travamentos
+    timeout = 30
     
-    if response.status_code >= 400:
-        raise Exception(f"Erro na requisição: {response.status_code} - {response.text}")
-    
-    return response.json() if response.text else []
+    try:
+        if method == 'GET':
+            # Construir query string para filtros do PostgREST
+            # PostgREST usa formato: ?select=id&campo=eq.valor&limit=1
+            params = {}
+            if filters:
+                for key, value in filters.items():
+                    params[key] = value
+            response = requests.get(url, headers=HEADERS, params=params, timeout=timeout)
+        elif method == 'POST':
+            response = requests.post(url, headers=HEADERS, json=data, timeout=timeout)
+        elif method == 'PATCH':
+            # Para PATCH, os filtros vão na query string
+            params = {}
+            if filters:
+                for key, value in filters.items():
+                    params[key] = value
+            response = requests.patch(url, headers=HEADERS, params=params, json=data, timeout=timeout)
+        else:
+            raise ValueError(f"Método HTTP não suportado: {method}")
+        
+        if response.status_code >= 400:
+            raise Exception(f"Erro na requisição: {response.status_code} - {response.text}")
+        
+        return response.json() if response.text else []
+    except requests.exceptions.Timeout:
+        raise Exception(f"Timeout ao acessar {url} - requisição demorou mais de {timeout} segundos")
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Erro de conexão ao acessar {url}: {str(e)}")
 
 # Caminho do arquivo Excel
 EXCEL_PATH = r'G:\Meu Drive\JP\app BPMA\AFASTAMENTOS BPMA [2026] (1).xlsx'
 ABA_NOME = '02 | FÉRIAS 2026 PRAÇAS'
+
+print(f"Iniciando importacao de ferias 2026...", flush=True)
+print(f"Arquivo Excel: {EXCEL_PATH}", flush=True)
+print(f"Aba: {ABA_NOME}", flush=True)
 
 # Mapeamento de meses
 MESES_ABREV = {
@@ -163,9 +185,16 @@ def get_efetivo_id_by_matricula(matricula, debug=False):
                     print(f"  [OK] Matrícula {matricula} encontrada (formato usado: {formato})")
                 return efetivo_id
         except Exception as e:
+            error_msg = str(e)
             if debug:
-                print(f"  [ERRO] Erro ao buscar {matricula} (formato {formato}): {e}")
-            # Continuar tentando outros formatos
+                print(f"  [ERRO] Erro ao buscar {matricula} (formato {formato}): {error_msg}")
+            # Se for erro de autenticação, não continuar tentando
+            if '401' in error_msg or 'Invalid API key' in error_msg:
+                print(f"\nERRO CRÍTICO: Chave de API inválida ou expirada!")
+                print(f"Verifique se a chave SUPABASE_SERVICE_ROLE_KEY ou VITE_SUPABASE_SERVICE_ROLE_KEY está correta no arquivo .env")
+                print(f"Obtenha a chave correta em: https://supabase.com/dashboard/project/oiwwptnqaunsyhpkwbrz/settings/api")
+                raise Exception("Chave de API inválida. Verifique o arquivo .env")
+            # Continuar tentando outros formatos para outros erros
             continue
     
     # Se não encontrou, armazenar None no cache para não tentar novamente
@@ -180,8 +209,24 @@ def processar_ferias_excel():
     
     try:
         # Ler a aba específica
-        df = pd.read_excel(EXCEL_PATH, sheet_name=ABA_NOME, header=None)
-        print(f"Arquivo lido com sucesso. Dimensões: {df.shape}")
+        print(f"Lendo arquivo Excel: {EXCEL_PATH}")
+        print(f"Aba: {ABA_NOME}")
+        
+        # Verificar se arquivo existe
+        if not os.path.exists(EXCEL_PATH):
+            print(f"ERRO: Arquivo não encontrado: {EXCEL_PATH}")
+            return
+        
+        print("Arquivo encontrado. Lendo dados...", flush=True)
+        print("Isso pode demorar alguns segundos para arquivos grandes...", flush=True)
+        try:
+            df = pd.read_excel(EXCEL_PATH, sheet_name=ABA_NOME, header=None, engine='openpyxl')
+            print(f"Arquivo lido com sucesso. Dimensoes: {df.shape}", flush=True)
+        except Exception as e:
+            print(f"ERRO ao ler arquivo Excel: {e}", flush=True)
+            import traceback
+            traceback.print_exc()
+            return
         
         # Encontrar linha de cabeçalho procurando pela coluna Q (índice 16)
         # A legenda diz que coluna Q = Matrícula
@@ -280,6 +325,9 @@ def processar_ferias_excel():
         registros_processados = 0
         registros_inseridos = 0
         erros = []
+        
+        total_linhas = len(df) - header_row - 1
+        print(f"Iniciando processamento de {total_linhas} linhas de dados...")
         
         # Processar cada linha de dados (começar após o cabeçalho)
         for idx in range(header_row + 1, len(df)):

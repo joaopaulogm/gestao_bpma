@@ -177,8 +177,8 @@ async function getRegiaoAdministrativa(latitude: number, longitude: number): Pro
       const geocoder = new google.maps.Geocoder();
       const latlng = { lat: latitude, lng: longitude };
       
-      return new Promise((resolve) => {
-        geocoder.geocode({ location: latlng }, (results, status) => {
+      return new Promise(async (resolve) => {
+        geocoder.geocode({ location: latlng }, async (results, status) => {
           if (status === 'OK' && results && results.length > 0) {
             // Procurar por "administrative_area_level_2" ou "locality" nos resultados
             const result = results[0];
