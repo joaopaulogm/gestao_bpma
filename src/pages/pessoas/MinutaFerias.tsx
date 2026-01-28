@@ -127,6 +127,7 @@ const MinutaFerias: React.FC = () => {
           minuta_data_inicio,
           minuta_data_fim,
           minuta_observacao,
+          numero_processo_sei,
           efetivo:dim_efetivo(id, matricula, posto_graduacao, nome, quadro)
         `)
         .eq('ano', ano);
