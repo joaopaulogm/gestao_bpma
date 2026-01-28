@@ -790,9 +790,10 @@ const Ferias: React.FC = () => {
                             {(() => {
                               // Buscar data_inicio da parcela correspondente (preferir parcela_num; fallback por mês)
                               const mesAbrev = MESES_NUM_TO_ABREV[(item.parcela.mes || 1) - 1];
-                              const parcelaDetalhada = item.ferias.parcelas_detalhadas?.find((p) =>
-                                p.parcela_num === item.parcelaIndex + 1 || String(p.mes).toUpperCase() === mesAbrev
-                              );
+                              const parcelaDetalhada = item.ferias.parcelas_detalhadas?.find((p) => {
+                                const pMes = String(p.mes ?? '').trim().toUpperCase();
+                                return p.parcela_num === item.parcelaIndex + 1 || pMes === mesAbrev;
+                              });
                               if (parcelaDetalhada?.data_inicio) {
                                 const [year, month, day] = parcelaDetalhada.data_inicio.split('-').map(Number);
                                 return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
@@ -804,9 +805,10 @@ const Ferias: React.FC = () => {
                             {(() => {
                               // Buscar data_fim da parcela correspondente (preferir parcela_num; fallback por mês)
                               const mesAbrev = MESES_NUM_TO_ABREV[(item.parcela.mes || 1) - 1];
-                              const parcelaDetalhada = item.ferias.parcelas_detalhadas?.find((p) =>
-                                p.parcela_num === item.parcelaIndex + 1 || String(p.mes).toUpperCase() === mesAbrev
-                              );
+                              const parcelaDetalhada = item.ferias.parcelas_detalhadas?.find((p) => {
+                                const pMes = String(p.mes ?? '').trim().toUpperCase();
+                                return p.parcela_num === item.parcelaIndex + 1 || pMes === mesAbrev;
+                              });
                               if (parcelaDetalhada?.data_fim) {
                                 const [year, month, day] = parcelaDetalhada.data_fim.split('-').map(Number);
                                 return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
