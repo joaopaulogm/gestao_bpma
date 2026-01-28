@@ -33,9 +33,8 @@ const MapaLocalizacao: React.FC = () => {
   const [loadingLayers, setLoadingLayers] = useState<string[]>([]);
   const kmlLayersRef = useRef<Map<string, google.maps.Data>>(new Map());
 
-  // Carregar Google Maps
-  useEffect(() => {
-    const loadGoogleMaps = async () => {
+  // Função para carregar Google Maps (extraída para poder ser chamada novamente)
+  const loadGoogleMaps = async () => {
       try {
         const response = await supabase.functions.invoke('get-google-maps-token');
         
@@ -66,17 +65,32 @@ const MapaLocalizacao: React.FC = () => {
           return;
         }
 
+        // Verificar se o script já existe
+        const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+        if (existingScript) {
+          console.log('Script Google Maps já existe, removendo...');
+          existingScript.remove();
+        }
+
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker&v=weekly`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker,places&v=weekly`;
         script.async = true;
         script.defer = true;
         script.onload = () => {
           console.log('Google Maps carregado com sucesso');
-          setMapLoaded(true);
+          // Aguardar um pouco para garantir que tudo está inicializado
+          setTimeout(() => {
+            if (window.google?.maps) {
+              setMapLoaded(true);
+              setError(null);
+            } else {
+              setError('Google Maps carregado mas não inicializado corretamente.');
+            }
+          }, 100);
         };
         script.onerror = (err) => {
           console.error('Erro ao carregar script Google Maps:', err);
-          setError('Erro ao carregar o Google Maps. Verifique a chave da API e a conexão.');
+          setError('Erro ao carregar o Google Maps. Verifique a chave da API, domínios autorizados e a conexão.');
         };
         document.head.appendChild(script);
       } catch (err) {
@@ -86,6 +100,8 @@ const MapaLocalizacao: React.FC = () => {
       }
     };
 
+  // Carregar Google Maps ao montar componente
+  useEffect(() => {
     loadGoogleMaps();
   }, []);
 
@@ -356,16 +372,27 @@ const MapaLocalizacao: React.FC = () => {
           <CardContent className="p-0">
             <div 
               ref={mapRef} 
-              className="w-full h-[500px] lg:h-[calc(100vh-200px)] min-h-[400px]"
+              className="w-full h-[500px] lg:h-[calc(100vh-200px)] min-h-[400px] relative"
             >
               {!mapLoaded && (
-                <div className="flex items-center justify-center h-full bg-muted/20">
+                <div className="absolute inset-0 flex items-center justify-center bg-muted/20 z-10">
                   <div className="text-center">
                     {error ? (
                       <>
                         <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-2" />
                         <p className="text-sm font-medium text-destructive mb-1">Erro ao carregar mapa</p>
-                        <p className="text-xs text-muted-foreground max-w-md px-4">{error}</p>
+                        <p className="text-xs text-muted-foreground max-w-md px-4 mb-3">{error}</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setError(null);
+                            setMapLoaded(false);
+                            loadGoogleMaps();
+                          }}
+                        >
+                          Tentar Novamente
+                        </Button>
                       </>
                     ) : (
                       <>

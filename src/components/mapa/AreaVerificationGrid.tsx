@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, TreePine, Mountain, Leaf, CheckCircle2, XCircle, MapPin } from 'lucide-react';
+import { Shield, TreePine, Mountain, Leaf, CheckCircle2, XCircle, MapPin, Loader2, AlertTriangle, Droplets, Layers2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { getGeographicInfo, GeographicInfo } from '@/services/geographicInfoService';
 
 interface Coordenadas {
   latitude: number;
@@ -73,6 +75,27 @@ const AreaVerificationGrid: React.FC<AreaVerificationGridProps> = ({
   coordenadas,
   visibleLayersCount,
 }) => {
+  const [geographicInfo, setGeographicInfo] = useState<GeographicInfo | null>(null);
+  const [loadingInfo, setLoadingInfo] = useState(false);
+  
+  useEffect(() => {
+    if (coordenadas) {
+      setLoadingInfo(true);
+      getGeographicInfo(coordenadas.latitude, coordenadas.longitude)
+        .then(info => {
+          setGeographicInfo(info);
+        })
+        .catch(error => {
+          console.error('Erro ao obter informações geográficas:', error);
+        })
+        .finally(() => {
+          setLoadingInfo(false);
+        });
+    } else {
+      setGeographicInfo(null);
+    }
+  }, [coordenadas]);
+  
   if (!coordenadas) {
     return (
       <Card className="bg-card/50 backdrop-blur border-border/50">
@@ -150,6 +173,108 @@ const AreaVerificationGrid: React.FC<AreaVerificationGridProps> = ({
             );
           })}
         </div>
+
+        {/* Informações Geográficas Detalhadas */}
+        {loadingInfo ? (
+          <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+            <div className="flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <p className="text-xs text-muted-foreground">Carregando informações...</p>
+            </div>
+          </div>
+        ) : geographicInfo && (
+          <div className="mt-3 space-y-2">
+            {/* Região Administrativa */}
+            {geographicInfo.regiaoAdministrativa.nome && (
+              <div className="p-2.5 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                      Região Administrativa
+                    </p>
+                    <p className="text-[12px] text-blue-700 dark:text-blue-300 font-medium">
+                      {geographicInfo.regiaoAdministrativa.nome}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Classe de Solo */}
+            {geographicInfo.classeSolo && (
+              <div className="p-2.5 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                <div className="flex items-start gap-2">
+                  <Layers2 className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                      Classe de Solo
+                    </p>
+                    <p className="text-[12px] text-amber-700 dark:text-amber-300 font-medium">
+                      {geographicInfo.classeSolo}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Riscos Ambientais */}
+            {(geographicInfo.riscoRecargaAquifero || 
+              geographicInfo.riscoErosaoSolo || 
+              geographicInfo.riscoPerdaCerrado) && (
+              <div className="p-2.5 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold text-red-900 dark:text-red-100 mb-1.5">
+                      Áreas de Risco
+                    </p>
+                    <div className="space-y-1">
+                      {geographicInfo.riscoRecargaAquifero && (
+                        <div className="flex items-center gap-1.5">
+                          <Droplets className="h-3 w-3 text-red-600 dark:text-red-400" />
+                          <span className="text-[11px] text-red-700 dark:text-red-300">
+                            Risco de Recarga de Aquífero
+                          </span>
+                        </div>
+                      )}
+                      {geographicInfo.riscoErosaoSolo && (
+                        <div className="flex items-center gap-1.5">
+                          <Layers2 className="h-3 w-3 text-red-600 dark:text-red-400" />
+                          <span className="text-[11px] text-red-700 dark:text-red-300">
+                            Risco de Erosão do Solo
+                          </span>
+                        </div>
+                      )}
+                      {geographicInfo.riscoPerdaCerrado && (
+                        <div className="flex items-center gap-1.5">
+                          <TreePine className="h-3 w-3 text-red-600 dark:text-red-400" />
+                          <span className="text-[11px] text-red-700 dark:text-red-300">
+                            Risco de Perda de Cerrado Nativo
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Mensagem se não há riscos */}
+            {!geographicInfo.riscoRecargaAquifero && 
+             !geographicInfo.riscoErosaoSolo && 
+             !geographicInfo.riscoPerdaCerrado && (
+              <div className="p-2 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <p className="text-[11px] text-green-700 dark:text-green-300">
+                    Nenhuma área de risco identificada nesta localização
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Resumo da localização */}
         <div className="mt-3 p-2.5 bg-primary/5 rounded-lg border border-primary/20">
