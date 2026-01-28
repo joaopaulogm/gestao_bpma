@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, MapPin, Navigation, AlertTriangle, Copy } from 'lucide-react';
+import { Loader2, MapPin, Navigation, AlertTriangle, Copy, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import KmlLayerControls, { KML_LAYERS, KmlLayer } from '@/components/mapa/KmlLayerControls';
@@ -23,9 +24,11 @@ const MapaLocalizacao: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [coordenadasInput, setCoordenadasInput] = useState<string>('');
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const clickMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
   
   // KML Layers state — usamos Data em vez de KmlLayer para funcionar em localhost e produção
   // (KmlLayer faz o fetch nos servidores do Google, que não alcançam localhost)
@@ -117,13 +120,64 @@ const MapaLocalizacao: React.FC = () => {
       // Centro do DF
       const dfCenter = { lat: -15.7942, lng: -47.8822 };
       
-      mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+      const map = new google.maps.Map(mapRef.current, {
         center: dfCenter,
         zoom: 11,
         mapTypeId: 'hybrid',
         mapTypeControl: true,
         streetViewControl: false,
         fullscreenControl: true,
+      });
+      
+      mapInstanceRef.current = map;
+      
+      // Adicionar listener de clique no mapa
+      map.addListener('click', (e: google.maps.MapMouseEvent) => {
+        if (e.latLng) {
+          const lat = e.latLng.lat();
+          const lng = e.latLng.lng();
+          
+          // Atualizar coordenadas
+          setCoordenadas({
+            latitude: lat,
+            longitude: lng,
+            accuracy: 0, // Precisão desconhecida para cliques manuais
+            timestamp: new Date(),
+          });
+          
+          // Atualizar campo de input
+          setCoordenadasInput(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+          
+          // Criar/atualizar marcador no ponto clicado
+          if (clickMarkerRef.current) {
+            clickMarkerRef.current.position = { lat, lng };
+          } else {
+            const pinElement = document.createElement('div');
+            pinElement.innerHTML = `
+              <div class="relative">
+                <div class="absolute -inset-4 bg-green-500/30 rounded-full animate-ping"></div>
+                <div class="relative w-8 h-8 bg-green-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+              </div>
+            `;
+            
+            clickMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({
+              map: map,
+              position: { lat, lng },
+              content: pinElement,
+              title: 'Localização selecionada',
+            });
+          }
+          
+          // Centralizar mapa no ponto clicado
+          map.panTo({ lat, lng });
+          map.setZoom(Math.max(map.getZoom() || 11, 14));
+          
+          toast.success(`Coordenadas selecionadas: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+        }
       });
     }
   }, [mapLoaded]);
@@ -202,49 +256,54 @@ const MapaLocalizacao: React.FC = () => {
     }
   }, [mapLoaded, layers]);
 
-  // Atualizar marcador quando coordenadas mudarem
+  // Atualizar marcador quando coordenadas mudarem (apenas para GPS)
   useEffect(() => {
     if (coordenadas && mapInstanceRef.current && mapLoaded) {
       const position = { lat: coordenadas.latitude, lng: coordenadas.longitude };
       
-      // Remover marcador anterior
-      if (markerRef.current) {
-        markerRef.current.map = null;
-      }
+      // Se a precisão é > 0, é uma localização GPS (não clique manual)
+      if (coordenadas.accuracy > 0) {
+        // Remover marcador anterior de GPS
+        if (markerRef.current) {
+          markerRef.current.map = null;
+        }
 
-      // Criar novo marcador
-      const pinElement = document.createElement('div');
-      pinElement.innerHTML = `
-        <div class="relative">
-          <div class="absolute -inset-4 bg-blue-500/30 rounded-full animate-ping"></div>
-          <div class="relative w-8 h-8 bg-blue-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
-            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
-            </svg>
+        // Criar novo marcador de GPS (azul)
+        const pinElement = document.createElement('div');
+        pinElement.innerHTML = `
+          <div class="relative">
+            <div class="absolute -inset-4 bg-blue-500/30 rounded-full animate-ping"></div>
+            <div class="relative w-8 h-8 bg-blue-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+              </svg>
+            </div>
           </div>
-        </div>
-      `;
+        `;
 
-      markerRef.current = new google.maps.marker.AdvancedMarkerElement({
-        map: mapInstanceRef.current,
-        position,
-        content: pinElement,
-        title: 'Sua localização',
-      });
+        markerRef.current = new google.maps.marker.AdvancedMarkerElement({
+          map: mapInstanceRef.current,
+          position,
+          content: pinElement,
+          title: 'Sua localização GPS',
+        });
 
-      mapInstanceRef.current.panTo(position);
-      mapInstanceRef.current.setZoom(16);
+        mapInstanceRef.current.panTo(position);
+        mapInstanceRef.current.setZoom(16);
 
-      new google.maps.Circle({
-        map: mapInstanceRef.current,
-        center: position,
-        radius: coordenadas.accuracy,
-        fillColor: '#3B82F6',
-        fillOpacity: 0.15,
-        strokeColor: '#3B82F6',
-        strokeOpacity: 0.4,
-        strokeWeight: 2,
-      });
+        // Mostrar círculo de precisão apenas para GPS
+        new google.maps.Circle({
+          map: mapInstanceRef.current,
+          center: position,
+          radius: coordenadas.accuracy,
+          fillColor: '#3B82F6',
+          fillOpacity: 0.15,
+          strokeColor: '#3B82F6',
+          strokeOpacity: 0.4,
+          strokeWeight: 2,
+        });
+      }
+      // Se accuracy é 0, é uma seleção manual (clique ou busca) - o marcador já foi criado no handler
     }
   }, [coordenadas, mapLoaded]);
 
@@ -303,6 +362,88 @@ const MapaLocalizacao: React.FC = () => {
     }
   };
 
+  const buscarPorCoordenadas = () => {
+    const input = coordenadasInput.trim();
+    
+    if (!input) {
+      toast.error('Digite as coordenadas no formato: latitude, longitude');
+      return;
+    }
+    
+    // Tentar parsear diferentes formatos de coordenadas
+    // Formato 1: "-15.7942, -47.8822"
+    // Formato 2: "-15.7942,-47.8822"
+    // Formato 3: "-15°47'39.1"S, 47°52'55.9"W" (formato DMS)
+    
+    const parts = input.split(',').map(p => p.trim());
+    
+    if (parts.length !== 2) {
+      toast.error('Formato inválido. Use: latitude, longitude (ex: -15.7942, -47.8822)');
+      return;
+    }
+    
+    const latStr = parts[0];
+    const lngStr = parts[1];
+    
+    // Converter para número
+    const lat = parseFloat(latStr);
+    const lng = parseFloat(lngStr);
+    
+    if (isNaN(lat) || isNaN(lng)) {
+      toast.error('Coordenadas inválidas. Use números decimais (ex: -15.7942, -47.8822)');
+      return;
+    }
+    
+    // Validar range de coordenadas (DF está aproximadamente entre -16.5 e -15.0 lat, -48.5 e -47.0 lng)
+    if (lat < -16.5 || lat > -15.0 || lng < -48.5 || lng > -47.0) {
+      toast.warning('Coordenadas fora do Distrito Federal. Continuando mesmo assim...');
+    }
+    
+    // Atualizar coordenadas
+    setCoordenadas({
+      latitude: lat,
+      longitude: lng,
+      accuracy: 0, // Precisão desconhecida para entrada manual
+      timestamp: new Date(),
+    });
+    
+    // Criar/atualizar marcador
+    if (mapInstanceRef.current) {
+      const position = { lat, lng };
+      
+      if (clickMarkerRef.current) {
+        clickMarkerRef.current.position = position;
+      } else {
+        const pinElement = document.createElement('div');
+        pinElement.innerHTML = `
+          <div class="relative">
+            <div class="absolute -inset-4 bg-green-500/30 rounded-full animate-ping"></div>
+            <div class="relative w-8 h-8 bg-green-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+          </div>
+        `;
+        
+        clickMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({
+          map: mapInstanceRef.current,
+          position,
+          content: pinElement,
+          title: 'Localização buscada',
+        });
+      }
+      
+      // Centralizar mapa
+      mapInstanceRef.current.panTo(position);
+      mapInstanceRef.current.setZoom(16);
+      
+      toast.success(`Coordenadas definidas: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+    } else {
+      toast.error('Mapa ainda não está carregado. Aguarde alguns segundos.');
+    }
+  };
+
   const visibleLayersCount = layers.filter(l => l.visible).length;
 
   return (
@@ -333,10 +474,50 @@ const MapaLocalizacao: React.FC = () => {
                 ) : (
                   <>
                     <MapPin className="h-5 w-5" />
-                    {coordenadas ? 'Atualizar' : 'Obter Localização'}
+                    {coordenadas ? 'Atualizar GPS' : 'Obter Localização GPS'}
                   </>
                 )}
               </Button>
+
+              {/* Campo de busca por coordenadas */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Ou busque por coordenadas:
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Ex: -15.7942, -47.8822"
+                    value={coordenadasInput}
+                    onChange={(e) => setCoordenadasInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        buscarPorCoordenadas();
+                      }
+                    }}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={buscarPorCoordenadas}
+                    size="icon"
+                    variant="outline"
+                    title="Buscar coordenadas"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Formato: latitude, longitude (ex: -15.7942, -47.8822)
+                </p>
+              </div>
+
+              {/* Dica de clique no mapa */}
+              <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
+                <p className="text-xs text-muted-foreground flex items-center gap-2">
+                  <MapPin className="h-3 w-3" />
+                  <span>Clique no mapa para selecionar um ponto</span>
+                </p>
+              </div>
 
               {error && (
                 <Alert variant="destructive" className="py-2">
