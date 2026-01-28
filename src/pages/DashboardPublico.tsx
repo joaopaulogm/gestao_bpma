@@ -81,60 +81,138 @@ const DashboardPublico = () => {
   const { data: rawData, isLoading } = useQuery({
     queryKey: ['public-dashboard-rescues', selectedYear, selectedMonth, selectedClasse],
     queryFn: async () => {
+      console.log('🔍 [DashboardPublico] Buscando dados de resgates...', { selectedYear, selectedMonth });
+      
+      // Determinar quais tabelas buscar baseado no ano selecionado
+      let tabelas: string[] = [];
+      
       if (!selectedYear) {
-        // No year selected - fetch all from 2026+
-        const { data, error } = await supabase
-          .from('fat_registros_de_resgate')
-          .select(`
-            *,
-            especie:dim_especies_fauna(id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, estado_de_conservacao, tipo_de_fauna),
-            regiao_administrativa:dim_regiao_administrativa(id, nome),
-            origem:dim_origem(id, nome),
-            destinacao:dim_destinacao(id, nome),
-            estado_saude:dim_estado_saude(id, nome),
-            estagio_vida:dim_estagio_vida(id, nome),
-            desfecho:dim_desfecho_resgates(id, nome, tipo)
-          `)
-          .order('data', { ascending: false });
-        
-        if (error) throw error;
-        return data || [];
+        // Sem ano selecionado - buscar de todas as tabelas disponíveis (2026+)
+        tabelas = ['fat_registros_de_resgate'];
+        console.log('📊 [DashboardPublico] Sem ano selecionado, buscando de fat_registros_de_resgate');
+      } else if (selectedYear >= 2026) {
+        // Para 2026 e anos seguintes, usar APENAS fat_registros_de_resgate
+        tabelas = ['fat_registros_de_resgate'];
+        console.log('📊 [DashboardPublico] Ano >= 2026, usando tabela: fat_registros_de_resgate');
+      } else if (selectedYear === 2025) {
+        // Para 2025, buscar de ambas as tabelas
+        tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025'];
+        console.log('📊 [DashboardPublico] Ano 2025, usando tabelas: fat_registros_de_resgate e fat_resgates_diarios_2025');
+      } else if (selectedYear >= 2020 && selectedYear <= 2024) {
+        // Para anos históricos (2020-2024), usar tabela específica do ano
+        tabelas = [`fat_resgates_diarios_${selectedYear}`];
+        console.log(`📊 [DashboardPublico] Ano histórico ${selectedYear}, usando tabela: fat_resgates_diarios_${selectedYear}`);
+      } else {
+        // Fallback para fat_registros_de_resgate
+        tabelas = ['fat_registros_de_resgate'];
+        console.log('📊 [DashboardPublico] Ano desconhecido, usando tabela padrão: fat_registros_de_resgate');
       }
-
-      // Year selected - fetch from appropriate table
-      if (selectedYear >= 2026) {
-        let query = supabase
-          .from('fat_registros_de_resgate')
-          .select(`
-            *,
-            especie:dim_especies_fauna(id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, estado_de_conservacao, tipo_de_fauna),
-            regiao_administrativa:dim_regiao_administrativa(id, nome),
-            origem:dim_origem(id, nome),
-            destinacao:dim_destinacao(id, nome),
-            estado_saude:dim_estado_saude(id, nome),
-            estagio_vida:dim_estagio_vida(id, nome),
-            desfecho:dim_desfecho_resgates(id, nome, tipo)
-          `)
-          .order('data', { ascending: false });
-
-        const startDate = `${selectedYear}-01-01`;
-        const endDate = `${selectedYear}-12-31`;
-        query = query.gte('data', startDate).lte('data', endDate);
-
-        if (selectedMonth) {
-          const monthStart = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
-          const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
-          const monthEnd = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${lastDay}`;
-          query = query.gte('data', monthStart).lte('data', monthEnd);
+      
+      const allRegistros: any[] = [];
+      
+      // Buscar de todas as tabelas em paralelo
+      await Promise.all(tabelas.map(async (tabela) => {
+        try {
+          console.log(`🔍 [DashboardPublico] Buscando de ${tabela}...`);
+          
+          // Para tabelas históricas (2020-2024), usar campos diferentes
+          if (tabela.match(/fat_resgates_diarios_202[0-4]$/)) {
+            let query = supabaseAny
+              .from(tabela)
+              .select('id, data_ocorrencia, especie_id, quantidade_resgates, nome_popular, nome_cientifico, classe_taxonomica')
+              .order('data_ocorrencia', { ascending: false });
+            
+            // Aplicar filtros de data
+            if (selectedYear) {
+              const startDate = `${selectedYear}-01-01`;
+              const endDate = `${selectedYear}-12-31`;
+              query = query.gte('data_ocorrencia', startDate).lte('data_ocorrencia', endDate);
+              
+              if (selectedMonth) {
+                const monthStart = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
+                const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
+                const monthEnd = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${lastDay}`;
+                query = query.gte('data_ocorrencia', monthStart).lte('data_ocorrencia', monthEnd);
+              }
+            }
+            
+            const { data, error } = await query;
+            
+            if (error) {
+              console.error(`❌ [DashboardPublico] Erro ao buscar de ${tabela}:`, error);
+              return;
+            }
+            
+            // Normalizar dados históricos para o formato esperado
+            const normalized = (data || []).map((r: any) => ({
+              id: r.id,
+              data: r.data_ocorrencia,
+              especie_id: r.especie_id,
+              quantidade_total: r.quantidade_resgates || 0,
+              quantidade: r.quantidade_resgates || 0,
+              especie: {
+                nome_popular: r.nome_popular || 'Não identificado',
+                nome_cientifico: r.nome_cientifico,
+                classe_taxonomica: r.classe_taxonomica
+              },
+              regiao_administrativa: null,
+              origem: null,
+              destinacao: null,
+              estado_saude: null,
+              estagio_vida: null,
+              desfecho: null,
+              atropelamento: null,
+            }));
+            
+            allRegistros.push(...normalized);
+            console.log(`✅ [DashboardPublico] ${tabela}: ${normalized.length} registros encontrados`);
+          } else {
+            // Para fat_registros_de_resgate e fat_resgates_diarios_2025
+            let query = supabase
+              .from(tabela)
+              .select(`
+                *,
+                especie:dim_especies_fauna(id, nome_popular, nome_cientifico, classe_taxonomica, ordem_taxonomica, estado_de_conservacao, tipo_de_fauna),
+                regiao_administrativa:dim_regiao_administrativa(id, nome),
+                origem:dim_origem(id, nome),
+                destinacao:dim_destinacao(id, nome),
+                estado_saude:dim_estado_saude(id, nome),
+                estagio_vida:dim_estagio_vida(id, nome),
+                desfecho:dim_desfecho_resgates(id, nome, tipo)
+              `)
+              .order('data', { ascending: false });
+            
+            // Aplicar filtros de data
+            if (selectedYear) {
+              const startDate = `${selectedYear}-01-01`;
+              const endDate = `${selectedYear}-12-31`;
+              query = query.gte('data', startDate).lte('data', endDate);
+              
+              if (selectedMonth) {
+                const monthStart = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
+                const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
+                const monthEnd = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${lastDay}`;
+                query = query.gte('data', monthStart).lte('data', monthEnd);
+              }
+            }
+            
+            const { data, error } = await query;
+            
+            if (error) {
+              console.error(`❌ [DashboardPublico] Erro ao buscar de ${tabela}:`, error);
+              return;
+            }
+            
+            allRegistros.push(...(data || []));
+            console.log(`✅ [DashboardPublico] ${tabela}: ${(data || []).length} registros encontrados`);
+          }
+        } catch (err: any) {
+          console.error(`❌ [DashboardPublico] Erro ao buscar de ${tabela}:`, err);
         }
-
-        const { data, error } = await query;
-        if (error) throw error;
-        return data || [];
-      }
-
-      // Historical years - use appropriate table
-      return [];
+      }));
+      
+      console.log(`✅ [DashboardPublico] Total de registros encontrados: ${allRegistros.length}`);
+      return allRegistros;
     },
     staleTime: 5 * 60 * 1000,
   });
