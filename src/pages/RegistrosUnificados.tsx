@@ -418,15 +418,16 @@ const RegistrosUnificados: React.FC = () => {
     try {
       console.log('🔍 [Fauna] Iniciando busca de registros de fauna...');
       console.log('🔍 [Fauna] Ano selecionado:', selectedYear);
+      console.log('🔍 [Fauna] Filtros:', { filterMes, filterDia });
       
       // Determinar quais tabelas buscar baseado no ano selecionado
       let tabelas: string[] = [];
       const anoFiltrado = selectedYear;
       
-      // Para 2026 e anos seguintes, usar apenas fat_registros_de_resgate
+      // Para 2026 e anos seguintes, usar APENAS fat_registros_de_resgate
       if (anoFiltrado >= 2026) {
         tabelas = ['fat_registros_de_resgate'];
-        console.log('📊 [Fauna] Ano >= 2026, usando tabela padrão: fat_registros_de_resgate');
+        console.log('📊 [Fauna] Ano >= 2026, usando APENAS tabela padrão: fat_registros_de_resgate');
       } else if (anoFiltrado === 2025) {
         tabelas = ['fat_registros_de_resgate', 'fat_resgates_diarios_2025'];
         console.log('📊 [Fauna] Ano 2025, usando tabelas: fat_registros_de_resgate e fat_resgates_diarios_2025');
@@ -499,35 +500,62 @@ const RegistrosUnificados: React.FC = () => {
             allRegistros.push(...normalized);
             console.log(`✅ [Fauna] ${tabela}: ${normalized.length} registros encontrados`);
           } else {
-            // Para fat_registros_de_resgate e fat_resgates_diarios_2025
+            // Para fat_registros_de_resgate (2026+) e fat_resgates_diarios_2025
             // Buscar todos os campos necessários, incluindo campos que podem estar NULL
+            console.log(`🔍 [Fauna] Construindo query para ${tabela} com filtros de data...`);
+            
             let query = supabaseAny
               .from(tabela)
               .select('id, data, especie_id, quantidade, quantidade_total, quantidade_adulto, quantidade_filhote, regiao_administrativa_id, origem_id, destinacao_id, estado_saude_id, estagio_vida_id, desfecho_id, atropelamento, created_at, latitude_origem, longitude_origem')
               .order('data', { ascending: false });
             
-            query = buildDateFilters(query, 'data');
+            // Aplicar filtros de data explicitamente
+            const startDate = `${anoFiltrado}-01-01`;
+            const endDate = `${anoFiltrado}-12-31`;
+            console.log(`📅 [Fauna] Aplicando filtro de ano: ${startDate} a ${endDate}`);
+            query = query.gte('data', startDate).lte('data', endDate);
             
-            console.log(`🔍 [Fauna] Query final para ${tabela} (ano ${anoFiltrado}):`, {
-              tabela,
-              anoFiltrado,
-              startDate: `${anoFiltrado}-01-01`,
-              endDate: `${anoFiltrado}-12-31`
-            });
+            // Filtro de mês
+            if (filterMes !== 'all') {
+              const mes = parseInt(filterMes);
+              const mesStartDate = `${anoFiltrado}-${String(mes).padStart(2, '0')}-01`;
+              const lastDay = new Date(anoFiltrado, mes, 0).getDate();
+              const mesEndDate = `${anoFiltrado}-${String(mes).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+              console.log(`📅 [Fauna] Aplicando filtro de mês: ${mesStartDate} a ${mesEndDate}`);
+              query = query.gte('data', mesStartDate).lte('data', mesEndDate);
+              
+              // Filtro de dia (só se mês estiver selecionado)
+              if (filterDia !== 'all') {
+                const diaDate = `${anoFiltrado}-${String(mes).padStart(2, '0')}-${String(parseInt(filterDia)).padStart(2, '0')}`;
+                console.log(`📅 [Fauna] Aplicando filtro de dia: ${diaDate}`);
+                query = query.eq('data', diaDate);
+              }
+            }
+            
+            console.log(`🔍 [Fauna] Executando query para ${tabela} (ano ${anoFiltrado})...`);
             
             const { data, error } = await query;
             
             if (error) {
               console.error(`❌ [Fauna] Erro ao buscar de ${tabela}:`, error);
               console.error(`❌ [Fauna] Detalhes do erro:`, JSON.stringify(error, null, 2));
+              toast.error(`Erro ao buscar de ${tabela}: ${error.message}`);
               return;
             }
             
             console.log(`📊 [Fauna] Resultado da query ${tabela}:`, {
               total: data?.length || 0,
-              primeiroRegistro: data?.[0] || null,
-              ultimoRegistro: data?.[data?.length - 1] || null
+              primeiroRegistro: data?.[0] ? { id: data[0].id, data: data[0].data } : null,
+              ultimoRegistro: data?.[data?.length - 1] ? { id: data[data.length - 1].id, data: data[data.length - 1].data } : null
             });
+            
+            if (data && data.length > 0) {
+              console.log(`📊 [Fauna] Primeiros 3 registros de ${tabela}:`, data.slice(0, 3).map((r: any) => ({
+                id: r.id,
+                data: r.data,
+                especie_id: r.especie_id
+              })));
+            }
             
             const normalized = (data || []).map((r: any) => ({
               ...r,
@@ -535,10 +563,11 @@ const RegistrosUnificados: React.FC = () => {
             }));
             
             allRegistros.push(...normalized);
-            console.log(`✅ [Fauna] ${tabela}: ${(data || []).length} registros encontrados`);
+            console.log(`✅ [Fauna] ${tabela}: ${(data || []).length} registros encontrados e adicionados`);
           }
         } catch (err: any) {
           console.error(`❌ [Fauna] Erro ao buscar de ${tabela}:`, err);
+          toast.error(`Erro ao buscar de ${tabela}: ${err.message}`);
         }
       }));
       
