@@ -2,8 +2,9 @@
 -- ATUALIZAR REGISTROS DE RESGATE PARA RAs ESPECÍFICAS DO PLANO PILOTO
 -- ============================================
 -- Esta migration atualiza os registros em fat_registros_de_resgate
--- que têm regiao_administrativa_id apontando para "Plano Piloto (RA I)"
--- para usar as novas RAs específicas (Asa Sul ou Asa Norte) baseado nas coordenadas
+-- e fat_resgates_diarios_YYYY que têm regiao_administrativa_id apontando 
+-- para "Plano Piloto (RA I)" para usar as novas RAs específicas 
+-- (Asa Sul ou Asa Norte) baseado nas coordenadas
 -- ============================================
 
 BEGIN;
@@ -21,6 +22,8 @@ DECLARE
   registros_atualizados_sul integer := 0;
   registros_atualizados_norte integer := 0;
   registros_sem_coordenadas integer := 0;
+  ano integer;
+  tabela_nome text;
 BEGIN
   -- Buscar ID da RA antiga "Plano Piloto"
   SELECT id INTO ra_plano_piloto_antiga_id
@@ -35,12 +38,12 @@ BEGIN
   ELSE
     RAISE NOTICE 'RA antiga encontrada: %', ra_plano_piloto_antiga_id;
 
-    -- Atualizar registros baseado nas coordenadas
+    -- Atualizar registros em fat_registros_de_resgate baseado nas coordenadas
     -- Asa Sul: latitude < -15.8 (aproximadamente)
     -- Asa Norte: latitude >= -15.8 (aproximadamente)
     -- Nota: A divisão entre Asa Sul e Asa Norte no Plano Piloto é aproximadamente na latitude -15.8
     
-    -- Atualizar para Asa Sul (coordenadas mais ao sul)
+    -- Atualizar fat_registros_de_resgate para Asa Sul
     UPDATE public.fat_registros_de_resgate
     SET regiao_administrativa_id = ra_asa_sul_id
     WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
@@ -50,7 +53,7 @@ BEGIN
     
     GET DIAGNOSTICS registros_atualizados_sul = ROW_COUNT;
     
-    -- Atualizar para Asa Norte (coordenadas mais ao norte ou sem coordenadas válidas)
+    -- Atualizar fat_registros_de_resgate para Asa Norte
     UPDATE public.fat_registros_de_resgate
     SET regiao_administrativa_id = ra_asa_norte_id
     WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
@@ -62,22 +65,41 @@ BEGIN
     
     GET DIAGNOSTICS registros_atualizados_norte = ROW_COUNT;
     
-    -- Contar registros sem coordenadas válidas
-    SELECT COUNT(*) INTO registros_sem_coordenadas
-    FROM public.fat_registros_de_resgate
-    WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
-      AND (latitude_origem IS NULL OR latitude_origem = '' OR latitude_origem !~ '^-?[0-9]+\.?[0-9]*$');
+    -- Atualizar também as tabelas fat_resgates_diarios_YYYY (2020-2025)
+    -- Como essas tabelas não têm coordenadas, vamos distribuir igualmente ou usar uma estratégia diferente
+    -- Por padrão, vamos atualizar para Asa Norte (mais conservador)
+    FOR ano IN 2020..2025 LOOP
+      tabela_nome := 'public.fat_resgates_diarios_' || ano;
+      
+      -- Verificar se a tabela existe e tem a coluna regiao_administrativa_id
+      IF EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'fat_resgates_diarios_' || ano
+      ) AND EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'fat_resgates_diarios_' || ano
+        AND column_name = 'regiao_administrativa_id'
+      ) THEN
+        -- Atualizar para Asa Norte (sem coordenadas, usamos padrão conservador)
+        EXECUTE format('UPDATE %I SET regiao_administrativa_id = $1 WHERE regiao_administrativa_id = $2', 
+          tabela_nome) 
+        USING ra_asa_norte_id, ra_plano_piloto_antiga_id;
+        
+        RAISE NOTICE 'Tabela % atualizada', tabela_nome;
+      END IF;
+    END LOOP;
     
     RAISE NOTICE 'Registros atualizados para Asa Sul: %', registros_atualizados_sul;
     RAISE NOTICE 'Registros atualizados para Asa Norte: %', registros_atualizados_norte;
-    RAISE NOTICE 'Registros sem coordenadas válidas (atualizados para Asa Norte): %', registros_sem_coordenadas;
     
     -- Verificar se ainda há registros com a RA antiga
     IF EXISTS (
       SELECT 1 FROM public.fat_registros_de_resgate 
       WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
     ) THEN
-      RAISE WARNING 'Ainda existem registros com a RA antiga após atualização!';
+      RAISE WARNING 'Ainda existem registros em fat_registros_de_resgate com a RA antiga após atualização!';
     END IF;
   END IF;
 END $$;
@@ -98,27 +120,79 @@ BEGIN
   IF ra_plano_piloto_antiga_id IS NOT NULL THEN
     -- Verificar se ainda há referências nas tabelas principais
     -- Verificar todas as tabelas que podem referenciar regiao_administrativa_id
-    IF NOT EXISTS (
-      SELECT 1 FROM public.fat_registros_de_resgate 
-      WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
-    ) AND NOT EXISTS (
-      SELECT 1 FROM public.fat_atividades_prevencao 
-      WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
-    ) AND NOT EXISTS (
-      SELECT 1 FROM public.fat_crimes_comuns 
-      WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
-    ) AND NOT EXISTS (
-      SELECT 1 FROM public.fat_registros_de_crimes_ambientais 
-      WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
-    ) THEN
-      -- Deletar a RA antiga apenas se não houver referências nas tabelas principais
-      DELETE FROM public.dim_regiao_administrativa
-      WHERE id = ra_plano_piloto_antiga_id;
+    DECLARE
+      tem_referencias boolean := false;
+      ano integer;
+      tabela_nome text;
+    BEGIN
+      -- Verificar fat_registros_de_resgate
+      IF EXISTS (
+        SELECT 1 FROM public.fat_registros_de_resgate 
+        WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
+      ) THEN
+        tem_referencias := true;
+      END IF;
       
-      RAISE NOTICE 'RA antiga "Plano Piloto" deletada com sucesso';
-    ELSE
-      RAISE WARNING 'RA antiga ainda possui referências nas tabelas principais. Não foi deletada.';
-    END IF;
+      -- Verificar fat_atividades_prevencao
+      IF NOT tem_referencias AND EXISTS (
+        SELECT 1 FROM public.fat_atividades_prevencao 
+        WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
+      ) THEN
+        tem_referencias := true;
+      END IF;
+      
+      -- Verificar fat_crimes_comuns
+      IF NOT tem_referencias AND EXISTS (
+        SELECT 1 FROM public.fat_crimes_comuns 
+        WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
+      ) THEN
+        tem_referencias := true;
+      END IF;
+      
+      -- Verificar fat_registros_de_crimes_ambientais
+      IF NOT tem_referencias AND EXISTS (
+        SELECT 1 FROM public.fat_registros_de_crimes_ambientais 
+        WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
+      ) THEN
+        tem_referencias := true;
+      END IF;
+      
+      -- Verificar fat_resgates_diarios_YYYY (2020-2025)
+      IF NOT tem_referencias THEN
+        FOR ano IN 2020..2025 LOOP
+          tabela_nome := 'public.fat_resgates_diarios_' || ano;
+          
+          IF EXISTS (
+            SELECT 1 FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'fat_resgates_diarios_' || ano
+          ) AND EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'public' 
+            AND table_name = 'fat_resgates_diarios_' || ano
+            AND column_name = 'regiao_administrativa_id'
+          ) THEN
+            EXECUTE format('SELECT EXISTS(SELECT 1 FROM %I WHERE regiao_administrativa_id = $1)', tabela_nome)
+            INTO tem_referencias
+            USING ra_plano_piloto_antiga_id;
+            
+            IF tem_referencias THEN
+              EXIT;
+            END IF;
+          END IF;
+        END LOOP;
+      END IF;
+      
+      IF NOT tem_referencias THEN
+        -- Deletar a RA antiga apenas se não houver referências
+        DELETE FROM public.dim_regiao_administrativa
+        WHERE id = ra_plano_piloto_antiga_id;
+        
+        RAISE NOTICE 'RA antiga "Plano Piloto" deletada com sucesso';
+      ELSE
+        RAISE WARNING 'RA antiga ainda possui referências nas tabelas principais. Não foi deletada.';
+      END IF;
+    END;
   END IF;
 END $$;
 
