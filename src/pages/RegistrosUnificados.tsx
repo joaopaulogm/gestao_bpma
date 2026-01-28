@@ -197,7 +197,8 @@ const RegistrosUnificados: React.FC = () => {
   const [activeTab, setActiveTab] = useState('fauna');
   const [searchTerm, setSearchTerm] = useState('');
   // Ano selecionado via abas (2026, 2025, etc.)
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  // Por padrão, usar 2026 (ano atual e padrão para fat_registros_de_resgate)
+  const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [filterMes, setFilterMes] = useState('all');
   const [filterDia, setFilterDia] = useState('all');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
@@ -499,9 +500,10 @@ const RegistrosUnificados: React.FC = () => {
             console.log(`✅ [Fauna] ${tabela}: ${normalized.length} registros encontrados`);
           } else {
             // Para fat_registros_de_resgate e fat_resgates_diarios_2025
+            // Buscar todos os campos necessários, incluindo campos que podem estar NULL
             let query = supabaseAny
               .from(tabela)
-              .select('id, data, especie_id, quantidade, quantidade_total, regiao_administrativa_id, destinacao_id, estado_saude_id, atropelamento, created_at')
+              .select('id, data, especie_id, quantidade, quantidade_total, quantidade_adulto, quantidade_filhote, regiao_administrativa_id, origem_id, destinacao_id, estado_saude_id, estagio_vida_id, desfecho_id, atropelamento, created_at, latitude_origem, longitude_origem')
               .order('data', { ascending: false });
             
             query = buildDateFilters(query, 'data');
