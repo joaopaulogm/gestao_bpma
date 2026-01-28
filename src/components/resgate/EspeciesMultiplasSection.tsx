@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertTriangle, Plus, Trash2, Image as ImageIcon, Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getFaunaImageUrl } from '@/services/especieService';
-import AISpeciesIdentifier from '@/components/species/AISpeciesIdentifier';
+import { AISpeciesIdentifier } from '@/components/species/AISpeciesIdentifier';
 
 export interface EspecieItem {
   id: string;
