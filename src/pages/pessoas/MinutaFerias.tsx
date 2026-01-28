@@ -152,7 +152,7 @@ const MinutaFerias: React.FC = () => {
             dias: diasNoMes,
             data_inicio: dataInicio,
             data_fim: dataFim,
-            processoSei: f.minuta_observacao || '',
+            processoSei: f.numero_processo_sei || f.minuta_observacao || '',
             hasChanges: false,
             saving: false,
           });

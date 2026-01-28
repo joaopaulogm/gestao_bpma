@@ -160,7 +160,8 @@ const Ferias: React.FC = () => {
         .from('fat_ferias')
         .select(`
           *,
-          efetivo:dim_efetivo(id, matricula, posto_graduacao, nome_guerra, nome, quadro)
+          efetivo:dim_efetivo(id, matricula, posto_graduacao, nome_guerra, nome, quadro),
+          parcelas:fat_ferias_parcelas(*)
         `)
         .eq('ano', ano)
         .order('mes_inicio', { ascending: true });
