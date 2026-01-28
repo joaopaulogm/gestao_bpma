@@ -16,12 +16,20 @@ load_dotenv()
 
 # Configuração do Supabase
 SUPABASE_URL = os.getenv('VITE_SUPABASE_URL')
-SUPABASE_KEY = os.getenv('VITE_SUPABASE_ANON_KEY')
+# Tentar service_role primeiro (tem acesso completo), senão usar anon_key
+SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY') or os.getenv('VITE_SUPABASE_ANON_KEY')
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("ERRO: Variáveis de ambiente SUPABASE_URL e SUPABASE_KEY não encontradas!")
-    print("Certifique-se de que o arquivo .env contém VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY")
+    print("Certifique-se de que o arquivo .env contém:")
+    print("  - VITE_SUPABASE_URL")
+    print("  - SUPABASE_SERVICE_ROLE_KEY (recomendado para scripts) ou VITE_SUPABASE_ANON_KEY")
     sys.exit(1)
+
+if os.getenv('SUPABASE_SERVICE_ROLE_KEY'):
+    print("Usando SUPABASE_SERVICE_ROLE_KEY (acesso completo)")
+else:
+    print("AVISO: Usando VITE_SUPABASE_ANON_KEY - pode ter limitações de RLS")
 
 # URL base do PostgREST do Supabase
 POSTGREST_URL = f"{SUPABASE_URL}/rest/v1"
@@ -117,24 +125,51 @@ def parse_mes(mes_str):
     
     return None
 
-def get_efetivo_id_by_matricula(matricula):
-    """Busca efetivo_id pela matrícula"""
+# Cache de matrículas já buscadas
+_matricula_cache = {}
+
+def get_efetivo_id_by_matricula(matricula, debug=False):
+    """Busca efetivo_id pela matrícula com cache"""
     if pd.isna(matricula) or matricula == '':
         return None
     
     matricula = str(matricula).strip()
     
-    try:
-        result = supabase_query('dim_efetivo', method='GET', filters={
-            'matricula': f'eq.{matricula}',
-            'select': 'id',
-            'limit': '1'
-        })
-        if result and len(result) > 0:
-            return result[0]['id']
-    except Exception as e:
-        print(f"Erro ao buscar matrícula {matricula}: {e}")
+    # Verificar cache primeiro
+    if matricula in _matricula_cache:
+        return _matricula_cache[matricula]
     
+    # Tentar diferentes formatos de busca
+    formatos_tentar = [
+        matricula,  # Formato original
+        matricula.lstrip('0'),  # Sem zeros à esquerda
+    ]
+    
+    # Remover duplicatas mantendo ordem
+    formatos_tentar = list(dict.fromkeys(formatos_tentar))
+    
+    for formato in formatos_tentar:
+        try:
+            result = supabase_query('dim_efetivo', method='GET', filters={
+                'matricula': f'eq.{formato}',
+                'select': 'id',
+                'limit': '1'
+            })
+            if result and len(result) > 0:
+                efetivo_id = result[0]['id']
+                # Armazenar no cache
+                _matricula_cache[matricula] = efetivo_id
+                if debug:
+                    print(f"  [OK] Matrícula {matricula} encontrada (formato usado: {formato})")
+                return efetivo_id
+        except Exception as e:
+            if debug:
+                print(f"  [ERRO] Erro ao buscar {matricula} (formato {formato}): {e}")
+            # Continuar tentando outros formatos
+            continue
+    
+    # Se não encontrou, armazenar None no cache para não tentar novamente
+    _matricula_cache[matricula] = None
     return None
 
 def processar_ferias_excel():
@@ -148,19 +183,53 @@ def processar_ferias_excel():
         df = pd.read_excel(EXCEL_PATH, sheet_name=ABA_NOME, header=None)
         print(f"Arquivo lido com sucesso. Dimensões: {df.shape}")
         
-        # Encontrar linha de cabeçalho (procurar por "MATRÍCULA" ou "MATRICULA")
+        # Encontrar linha de cabeçalho procurando pela coluna Q (índice 16)
+        # A legenda diz que coluna Q = Matrícula
+        COL_MATRICULA = 16  # Coluna Q
+        
+        # Primeiro, procurar por texto "MAT" ou "MATR" na coluna Q
         header_row = None
-        for i in range(min(20, len(df))):
-            row_str = ' '.join([str(val).upper() if pd.notna(val) else '' for val in df.iloc[i].values])
-            if 'MATR' in row_str or 'Q' in row_str:
-                header_row = i
-                break
+        for i in range(min(30, len(df))):
+            if COL_MATRICULA < len(df.columns):
+                cell_value = str(df.iloc[i, COL_MATRICULA]).strip().upper() if pd.notna(df.iloc[i, COL_MATRICULA]) else ''
+                # Procurar por "MAT" seguido de espaço ou fim de string (para pegar "MAT" ou "MATRÍCULA")
+                if cell_value == 'MAT' or cell_value.startswith('MATR'):
+                    header_row = i
+                    print(f"Linha de cabeçalho encontrada na linha {i + 1}: '{df.iloc[i, COL_MATRICULA]}'")
+                    break
+        
+        # Se não encontrou, procurar pela primeira linha que tenha um número válido na coluna Q
+        # e verificar se a linha anterior tem cabeçalho
+        if header_row is None:
+            print("Procurando cabeçalho pela primeira linha com dados numéricos...")
+            for i in range(5, min(50, len(df))):
+                if COL_MATRICULA < len(df.columns):
+                    cell_value = df.iloc[i, COL_MATRICULA]
+                    if pd.notna(cell_value):
+                        matricula_test = str(cell_value).strip()
+                        # Verificar se parece uma matrícula (número ou número com X)
+                        matricula_clean = matricula_test.replace('X', '').replace('x', '').replace('-', '').replace('.', '')
+                        if matricula_clean.isdigit() and len(matricula_clean) >= 4:
+                            # Verificar linhas anteriores para encontrar cabeçalho
+                            for j in range(max(0, i-5), i):
+                                prev_cell = str(df.iloc[j, COL_MATRICULA]).strip().upper() if pd.notna(df.iloc[j, COL_MATRICULA]) else ''
+                                if prev_cell == 'MAT' or prev_cell.startswith('MATR') or prev_cell == '':
+                                    header_row = j if prev_cell else j + 1
+                                    print(f"Linha de cabeçalho inferida na linha {header_row + 1} (primeira matrícula encontrada na linha {i + 1}: {matricula_test})")
+                                    break
+                            if header_row is not None:
+                                break
         
         if header_row is None:
             print("ERRO: Não foi possível encontrar a linha de cabeçalho!")
+            print("\nPrimeiras 20 linhas da coluna Q (matrícula):")
+            for i in range(min(20, len(df))):
+                if COL_MATRICULA < len(df.columns):
+                    cell_val = df.iloc[i, COL_MATRICULA]
+                    print(f"  Linha {i + 1}: {cell_val} (tipo: {type(cell_val).__name__})")
             return
         
-        print(f"Linha de cabeçalho encontrada: {header_row + 1}")
+        print(f"Linha de cabeçalho confirmada: {header_row + 1}")
         
         # Mapear colunas conforme legenda fornecida
         # Coluna Q = Matrícula (índice 16, 0-based)
@@ -217,17 +286,41 @@ def processar_ferias_excel():
             row = df.iloc[idx]
             
             # Verificar se há matrícula (coluna Q)
-            matricula = row.iloc[COL_MATRICULA] if COL_MATRICULA < len(row) else None
+            if COL_MATRICULA >= len(row):
+                continue
+                
+            matricula_raw = row.iloc[COL_MATRICULA]
             
-            if pd.isna(matricula) or str(matricula).strip() == '':
+            if pd.isna(matricula_raw):
                 continue
             
-            matricula = str(matricula).strip()
+            matricula = str(matricula_raw).strip()
             
-            # Buscar efetivo_id
-            efetivo_id = get_efetivo_id_by_matricula(matricula)
+            # Pular linhas que não são matrículas válidas
+            # Matrículas válidas são números ou números com 'X' no final
+            palavras_ignorar = ['MATRÍCULA', 'MATRICULA', 'MAT', 'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO', 'NAN', '']
+            if not matricula or matricula.upper() in palavras_ignorar:
+                continue
+            
+            # Validar formato de matrícula (deve ser número ou número com X)
+            # Remover caracteres especiais e verificar se é número
+            matricula_clean = matricula.replace('X', '').replace('x', '').replace('-', '').replace('.', '').replace(' ', '')
+            if not matricula_clean.isdigit() or len(matricula_clean) < 4:
+                continue
+            
+            # Buscar efetivo_id (debug nas primeiras 5 para entender o problema)
+            debug_mode = registros_processados < 5
+            if debug_mode:
+                print(f"\nProcessando linha {idx + 1}, matrícula: {matricula}")
+            
+            efetivo_id = get_efetivo_id_by_matricula(matricula, debug=debug_mode)
             if not efetivo_id:
-                erros.append(f"Matrícula {matricula} não encontrada no banco")
+                if debug_mode:
+                    print(f"  [NAO ENCONTRADA] Matrícula {matricula} não encontrada no banco")
+                # Não adicionar ao erro imediatamente, apenas contar
+                registros_processados += 1
+                if registros_processados % 50 == 0:
+                    print(f"Processadas {registros_processados} linhas... ({len(_matricula_cache)} matrículas verificadas, {sum(1 for v in _matricula_cache.values() if v is not None)} encontradas)")
                 continue
             
             # Ler dados básicos
