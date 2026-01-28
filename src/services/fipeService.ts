@@ -111,12 +111,12 @@ export const buscarValorFipePorNome = async (
 
     const data = await response.json();
 
-    if (!response.ok) {
-      console.error('[FIPE Service] Erro:', data);
+    // Verifica se a resposta indica falha (mesmo com status 200)
+    if (!response.ok || data.success === false) {
+      console.log('[FIPE Service] Veículo não encontrado na FIPE:', data.error);
       return {
         success: false,
-        error: data.error || 'Erro ao buscar valor FIPE',
-        sugestoes: data.sugestoes,
+        error: data.error || 'Veículo não encontrado na tabela FIPE',
       };
     }
 

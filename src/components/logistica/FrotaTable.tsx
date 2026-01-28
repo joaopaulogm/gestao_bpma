@@ -54,9 +54,19 @@ const FrotaTable: React.FC<FrotaTableProps> = ({ frota, onEdit, onDelete, onView
                 ...prev,
                 [veiculo.id]: resultado.valor!.Valor
               }));
+            } else {
+              // Marca valor como N/A para veículos não encontrados
+              setValoresFipe(prev => ({
+                ...prev,
+                [veiculo.id]: 'N/A'
+              }));
             }
           } catch (error) {
             console.error(`Erro ao buscar FIPE para ${veiculo.prefixo}:`, error);
+            setValoresFipe(prev => ({
+              ...prev,
+              [veiculo.id]: 'N/A'
+            }));
           } finally {
             setLoadingFipe(prev => ({ ...prev, [veiculo.id]: false }));
           }
@@ -187,9 +197,13 @@ const FrotaTable: React.FC<FrotaTableProps> = ({ frota, onEdit, onDelete, onView
                     {loadingFipe[veiculo.id] ? (
                       <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     ) : valoresFipe[veiculo.id] ? (
-                      <span className="text-green-600 font-bold text-lg">
-                        {valoresFipe[veiculo.id]}
-                      </span>
+                      valoresFipe[veiculo.id] === 'N/A' ? (
+                        <span className="text-muted-foreground text-xs">Não disponível</span>
+                      ) : (
+                        <span className="text-green-600 font-bold text-lg">
+                          {valoresFipe[veiculo.id]}
+                        </span>
+                      )
                     ) : veiculo.valor_aquisicao ? (
                       <span className="text-muted-foreground text-sm">
                         Aquisição: {veiculo.valor_aquisicao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}

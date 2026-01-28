@@ -69,24 +69,72 @@ serve(async (req) => {
 
         console.log(`[FIPE] Buscando marca: ${marcaNome}, modelo: ${modeloNome}, ano: ${anoVeiculo}`);
 
+        // Função auxiliar para normalizar strings (remove acentos, números de versão, etc.)
+        const normalizar = (str: string): string => {
+          return str
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+            .replace(/[0-9.,]+\s*(l|cc|cv|v|turbo|diesel|flex|gasolina|alcool)?/gi, '') // Remove specs
+            .replace(/\s+/g, ' ')
+            .trim();
+        };
+
+        // Função para calcular similaridade entre strings
+        const calcularSimilaridade = (str1: string, str2: string): number => {
+          const s1 = normalizar(str1);
+          const s2 = normalizar(str2);
+          
+          // Verifica se uma string contém a outra
+          if (s1.includes(s2) || s2.includes(s1)) return 0.9;
+          
+          // Verifica palavras em comum
+          const palavras1 = s1.split(' ').filter(p => p.length > 2);
+          const palavras2 = s2.split(' ').filter(p => p.length > 2);
+          
+          let matches = 0;
+          for (const p1 of palavras1) {
+            for (const p2 of palavras2) {
+              if (p1.includes(p2) || p2.includes(p1)) {
+                matches++;
+                break;
+              }
+            }
+          }
+          
+          const maxPalavras = Math.max(palavras1.length, palavras2.length);
+          return maxPalavras > 0 ? matches / maxPalavras : 0;
+        };
+
         // 1. Buscar todas as marcas
         const marcasResponse = await fetch(`${FIPE_API_BASE}/${tipoVeiculo}/marcas`);
         const marcas = await marcasResponse.json();
         
-        // Encontrar marca pelo nome (busca parcial)
-        const marcaEncontrada = marcas.find((m: any) => 
-          m.nome.toLowerCase().includes(marcaNome) || 
-          marcaNome.includes(m.nome.toLowerCase())
-        );
+        // Encontrar marca pelo nome (busca flexível)
+        let marcaEncontrada = marcas.find((m: any) => {
+          const nomeApi = m.nome.toLowerCase();
+          const nomeBusca = marcaNome.toLowerCase();
+          return nomeApi.includes(nomeBusca) || 
+                 nomeBusca.includes(nomeApi) ||
+                 nomeApi.replace(/\s|-/g, '').includes(nomeBusca.replace(/\s|-/g, '')) ||
+                 nomeBusca.replace(/\s|-/g, '').includes(nomeApi.replace(/\s|-/g, ''));
+        });
+
+        // Tentar busca por GM se for Chevrolet
+        if (!marcaEncontrada && marcaNome.includes('chevrolet')) {
+          marcaEncontrada = marcas.find((m: any) => m.nome.toLowerCase().includes('gm'));
+        }
 
         if (!marcaEncontrada) {
+          // Marca não existe na FIPE (ex: tratores)
+          console.log(`[FIPE] Marca não encontrada: ${marcaNome}`);
           return new Response(
             JSON.stringify({ 
-              error: 'Marca não encontrada', 
+              success: false,
+              error: 'Marca não disponível na tabela FIPE', 
               marcaBuscada: marcaNome,
-              sugestoes: marcas.slice(0, 10).map((m: any) => m.nome)
             }),
-            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
 
@@ -98,22 +146,48 @@ serve(async (req) => {
         
         let modeloEncontrado = null;
         if (modeloNome) {
-          // Buscar modelo pelo nome (busca parcial)
-          modeloEncontrado = modelosData.modelos?.find((m: any) => 
-            m.nome.toLowerCase().includes(modeloNome) || 
-            modeloNome.includes(m.nome.toLowerCase())
-          );
+          const modeloNormalizado = normalizar(modeloNome);
+          
+          // Extrair palavras-chave do modelo (ex: "S10", "KWID", "XTZ", "LANDER", "PAJERO")
+          const palavrasChave = modeloNome
+            .toUpperCase()
+            .split(/[\s\-\/]+/)
+            .filter((p: string) => p.length >= 2 && !/^[0-9.,]+$/.test(p));
+          
+          console.log(`[FIPE] Palavras-chave do modelo: ${palavrasChave.join(', ')}`);
+          
+          // Busca por palavras-chave
+          for (const palavra of palavrasChave) {
+            modeloEncontrado = modelosData.modelos?.find((m: any) => 
+              m.nome.toUpperCase().includes(palavra)
+            );
+            if (modeloEncontrado) break;
+          }
+          
+          // Se não encontrou, tenta busca por similaridade
+          if (!modeloEncontrado) {
+            let melhorSimilaridade = 0;
+            for (const m of modelosData.modelos || []) {
+              const sim = calcularSimilaridade(m.nome, modeloNome);
+              if (sim > melhorSimilaridade && sim > 0.3) {
+                melhorSimilaridade = sim;
+                modeloEncontrado = m;
+              }
+            }
+          }
         }
 
         if (!modeloEncontrado && modeloNome) {
+          // Retornar como não encontrado mas com status 200
+          console.log(`[FIPE] Modelo não encontrado: ${modeloNome}`);
           return new Response(
             JSON.stringify({ 
-              error: 'Modelo não encontrado', 
+              success: false,
+              error: 'Modelo não encontrado na tabela FIPE', 
               modeloBuscado: modeloNome,
               marca: marcaEncontrada,
-              sugestoes: modelosData.modelos?.slice(0, 10).map((m: any) => m.nome) || []
             }),
-            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
 
