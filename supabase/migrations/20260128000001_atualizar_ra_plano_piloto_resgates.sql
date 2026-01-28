@@ -97,7 +97,7 @@ BEGIN
 
   IF ra_plano_piloto_antiga_id IS NOT NULL THEN
     -- Verificar se ainda há referências nas tabelas principais
-    -- Verificar apenas as tabelas que sabemos que existem
+    -- Verificar todas as tabelas que podem referenciar regiao_administrativa_id
     IF NOT EXISTS (
       SELECT 1 FROM public.fat_registros_de_resgate 
       WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
@@ -106,6 +106,9 @@ BEGIN
       WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
     ) AND NOT EXISTS (
       SELECT 1 FROM public.fat_crimes_comuns 
+      WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
+    ) AND NOT EXISTS (
+      SELECT 1 FROM public.fat_registros_de_crimes_ambientais 
       WHERE regiao_administrativa_id = ra_plano_piloto_antiga_id
     ) THEN
       -- Deletar a RA antiga apenas se não houver referências nas tabelas principais
