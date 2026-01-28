@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
+import { AlertTriangle, Plus, Trash2, Image as ImageIcon, Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getFaunaImageUrl } from '@/services/especieService';
+import AISpeciesIdentifier from '@/components/species/AISpeciesIdentifier';
 
 export interface EspecieItem {
   id: string;
@@ -307,9 +308,99 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
         </div>
       )}
 
+      {/* Botão de Identificação por Foto */}
+      <div className="mb-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h4 className="font-semibold text-sm mb-1">Identificar Espécie por Foto</h4>
+            <p className="text-xs text-muted-foreground">
+              Use a inteligência artificial para identificar a espécie através de uma foto
+            </p>
+          </div>
+          <AISpeciesIdentifier
+            tipo="fauna"
+            onIdentified={(result) => {
+              if (result.identificado && result.nome_popular) {
+                // Buscar a espécie no banco usando o nome popular ou científico
+                const especieEncontrada = especiesFauna.find(
+                  e => e.nome_popular?.toLowerCase() === result.nome_popular?.toLowerCase() ||
+                       e.nome_cientifico?.toLowerCase() === result.nome_cientifico?.toLowerCase()
+                );
+                
+                if (especieEncontrada) {
+                  // Adicionar nova espécie com dados preenchidos
+                  const novaEspecie: EspecieItem = {
+                    id: `temp-${Date.now()}`,
+                    especieId: especieEncontrada.id,
+                    classeTaxonomica: especieEncontrada.classe_taxonomica || '',
+                    nomeCientifico: especieEncontrada.nome_cientifico || '',
+                    ordemTaxonomica: especieEncontrada.ordem_taxonomica || '',
+                    estadoConservacao: especieEncontrada.estado_de_conservacao || '',
+                    tipoFauna: especieEncontrada.tipo_de_fauna || '',
+                    estadoSaude: '',
+                    atropelamento: '',
+                    estagioVida: '',
+                    quantidadeAdulto: 0,
+                    quantidadeFilhote: 0,
+                    quantidadeJovem: 0,
+                    quantidadeTotal: 0,
+                    desfechoResgate: '',
+                    destinacao: '',
+                    numeroTermoEntrega: '',
+                    horaGuardaCEAPA: '',
+                    motivoEntregaCEAPA: '',
+                    latitudeSoltura: '',
+                    longitudeSoltura: '',
+                    outroDestinacao: ''
+                  };
+                  onEspeciesChange([...especies, novaEspecie]);
+                } else if (result.especie_id) {
+                  // Se a IA retornou um ID de espécie (encontrado no banco)
+                  const especiePorId = especiesFauna.find(e => e.id === result.especie_id);
+                  if (especiePorId) {
+                    const novaEspecie: EspecieItem = {
+                      id: `temp-${Date.now()}`,
+                      especieId: especiePorId.id,
+                      classeTaxonomica: especiePorId.classe_taxonomica || '',
+                      nomeCientifico: especiePorId.nome_cientifico || '',
+                      ordemTaxonomica: especiePorId.ordem_taxonomica || '',
+                      estadoConservacao: especiePorId.estado_de_conservacao || '',
+                      tipoFauna: especiePorId.tipo_de_fauna || '',
+                      estadoSaude: '',
+                      atropelamento: '',
+                      estagioVida: '',
+                      quantidadeAdulto: 0,
+                      quantidadeFilhote: 0,
+                      quantidadeJovem: 0,
+                      quantidadeTotal: 0,
+                      desfechoResgate: '',
+                      destinacao: '',
+                      numeroTermoEntrega: '',
+                      horaGuardaCEAPA: '',
+                      motivoEntregaCEAPA: '',
+                      latitudeSoltura: '',
+                      longitudeSoltura: '',
+                      outroDestinacao: ''
+                    };
+                    onEspeciesChange([...especies, novaEspecie]);
+                  }
+                } else {
+                  // Espécie não encontrada no banco - mostrar aviso e permitir adicionar manualmente
+                  toast.warning(
+                    result.aviso || 
+                    'Espécie identificada mas não encontrada no banco. Adicione manualmente.',
+                    { duration: 5000 }
+                  );
+                }
+              }
+            }}
+          />
+        </div>
+      </div>
+
       {especies.length === 0 && (
         <div className="text-center py-4 text-muted-foreground">
-          Nenhuma espécie adicionada. Clique no botão abaixo para adicionar.
+          Nenhuma espécie adicionada. Use a identificação por foto acima ou clique no botão abaixo para adicionar manualmente.
         </div>
       )}
 
