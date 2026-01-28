@@ -40,14 +40,11 @@ def supabase_query(table, method='GET', filters=None, data=None):
     
     if method == 'GET':
         # Construir query string para filtros do PostgREST
+        # PostgREST usa formato: ?select=id&campo=eq.valor&limit=1
         params = {}
         if filters:
             for key, value in filters.items():
-                if key in ['select', 'limit', 'order']:
-                    params[key] = value
-                else:
-                    # Para filtros de igualdade, usar formato: campo=eq.valor
-                    params[key] = value
+                params[key] = value
         response = requests.get(url, headers=HEADERS, params=params)
     elif method == 'POST':
         response = requests.post(url, headers=HEADERS, json=data)
