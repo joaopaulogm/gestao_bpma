@@ -7,8 +7,9 @@ import sys
 import os
 from datetime import datetime
 import re
-from supabase import create_client, Client
+from postgrest import SyncPostgrestClient
 from dotenv import load_dotenv
+import httpx
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -19,9 +20,21 @@ SUPABASE_KEY = os.getenv('VITE_SUPABASE_ANON_KEY')
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("ERRO: Variáveis de ambiente SUPABASE_URL e SUPABASE_KEY não encontradas!")
+    print("Certifique-se de que o arquivo .env contém VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY")
     sys.exit(1)
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Criar cliente PostgREST diretamente
+# O PostgREST do Supabase está em {SUPABASE_URL}/rest/v1
+postgrest_url = f"{SUPABASE_URL}/rest/v1"
+client = SyncPostgrestClient(
+    base_url=postgrest_url,
+    schema="public",
+    headers={
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+)
 
 # Caminho do arquivo Excel
 EXCEL_PATH = r'G:\Meu Drive\JP\app BPMA\AFASTAMENTOS BPMA [2026] (1).xlsx'
@@ -85,9 +98,9 @@ def get_efetivo_id_by_matricula(matricula):
     matricula = str(matricula).strip()
     
     try:
-        result = supabase.table('dim_efetivo').select('id').eq('matricula', matricula).limit(1).execute()
-        if result.data and len(result.data) > 0:
-            return result.data[0]['id']
+      response = client.from_('dim_efetivo').select('id').eq('matricula', matricula).limit(1).execute()
+      if response.data and len(response.data) > 0:
+        return response.data[0]['id']
     except Exception as e:
         print(f"Erro ao buscar matrícula {matricula}: {e}")
     
@@ -262,7 +275,7 @@ def processar_ferias_excel():
             # Inserir/atualizar fat_ferias
             try:
                 # Verificar se já existe registro para este efetivo e ano
-                existing = supabase.table('fat_ferias').select('id').eq('efetivo_id', efetivo_id).eq('ano', ano_gozada).limit(1).execute()
+                existing = client.from_('fat_ferias').select('id').eq('efetivo_id', efetivo_id).eq('ano', ano_gozada).limit(1).execute()
                 
                 if existing.data and len(existing.data) > 0:
                     ferias_id = existing.data[0]['id']
@@ -277,7 +290,7 @@ def processar_ferias_excel():
                     if processo_sei:
                         update_data['numero_processo_sei'] = processo_sei
                     
-                    supabase.table('fat_ferias').update(update_data).eq('id', ferias_id).execute()
+                    client.from_('fat_ferias').update(update_data).eq('id', ferias_id).execute()
                 else:
                     # Inserir novo
                     insert_data = {
@@ -292,7 +305,7 @@ def processar_ferias_excel():
                     if processo_sei:
                         insert_data['numero_processo_sei'] = processo_sei
                     
-                    result = supabase.table('fat_ferias').insert(insert_data).execute()
+                    result = client.from_('fat_ferias').insert(insert_data).execute()
                     ferias_id = result.data[0]['id'] if result.data else None
                 
                 if not ferias_id:
@@ -314,12 +327,12 @@ def processar_ferias_excel():
                     }
                     
                     # Verificar se parcela já existe
-                    existing_parcela = supabase.table('fat_ferias_parcelas').select('fat_ferias_id').eq('fat_ferias_id', ferias_id).eq('parcela_num', parcela['parcela_num']).limit(1).execute()
+                    existing_parcela = client.from_('fat_ferias_parcelas').select('fat_ferias_id').eq('fat_ferias_id', ferias_id).eq('parcela_num', parcela['parcela_num']).limit(1).execute()
                     
                     if existing_parcela.data and len(existing_parcela.data) > 0:
-                        supabase.table('fat_ferias_parcelas').update(parcela_data).eq('fat_ferias_id', ferias_id).eq('parcela_num', parcela['parcela_num']).execute()
+                      client.from_('fat_ferias_parcelas').update(parcela_data).eq('fat_ferias_id', ferias_id).eq('parcela_num', parcela['parcela_num']).execute()
                     else:
-                        supabase.table('fat_ferias_parcelas').insert(parcela_data).execute()
+                      client.from_('fat_ferias_parcelas').insert(parcela_data).execute()
                 
                 registros_inseridos += 1
                 registros_processados += 1
