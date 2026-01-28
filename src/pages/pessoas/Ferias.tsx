@@ -740,6 +740,8 @@ const Ferias: React.FC = () => {
                       <TableHead className="whitespace-nowrap">Matrícula</TableHead>
                       <TableHead>Parcelas</TableHead>
                       <TableHead className="text-center whitespace-nowrap">Dias</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Data Início</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Data Término</TableHead>
                       <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -772,6 +774,32 @@ const Ferias: React.FC = () => {
                             <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200 text-[10px] md:text-xs px-1.5">
                               {item.parcela.dias}d
                             </Badge>
+                          </TableCell>
+                          <TableCell className="text-center py-1.5 text-xs">
+                            {(() => {
+                              // Buscar data_inicio da parcela correspondente
+                              const parcelaDetalhada = item.ferias.parcelas_detalhadas?.find(
+                                (p) => p.parcela_num === item.parcelaIndex + 1
+                              );
+                              if (parcelaDetalhada?.data_inicio) {
+                                const [year, month, day] = parcelaDetalhada.data_inicio.split('-').map(Number);
+                                return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+                              }
+                              return '-';
+                            })()}
+                          </TableCell>
+                          <TableCell className="text-center py-1.5 text-xs">
+                            {(() => {
+                              // Buscar data_fim da parcela correspondente
+                              const parcelaDetalhada = item.ferias.parcelas_detalhadas?.find(
+                                (p) => p.parcela_num === item.parcelaIndex + 1
+                              );
+                              if (parcelaDetalhada?.data_fim) {
+                                const [year, month, day] = parcelaDetalhada.data_fim.split('-').map(Number);
+                                return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+                              }
+                              return '-';
+                            })()}
                           </TableCell>
                           <TableCell className="text-center py-1.5">
                             <Button 
