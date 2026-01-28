@@ -28,13 +28,16 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 postgrest_url = f"{SUPABASE_URL}/rest/v1"
 client = SyncPostgrestClient(
     base_url=postgrest_url,
-    schema="public",
-    headers={
-        "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Content-Type": "application/json"
-    }
+    schema="public"
 )
+# Configurar autenticação
+client.auth(f"Bearer {SUPABASE_KEY}")
+# Adicionar header apikey necessário para Supabase
+client.headers = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json"
+}
 
 # Caminho do arquivo Excel
 EXCEL_PATH = r'G:\Meu Drive\JP\app BPMA\AFASTAMENTOS BPMA [2026] (1).xlsx'
