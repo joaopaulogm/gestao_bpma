@@ -385,11 +385,7 @@ const MapaLocalizacao: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            setError(null);
-                            setMapLoaded(false);
-                            loadGoogleMaps();
-                          }}
+                          onClick={loadGoogleMaps}
                         >
                           Tentar Novamente
                         </Button>
