@@ -44,3 +44,9 @@ verify_jwt = false
 
 [functions.consulta-fipe]
 verify_jwt = false
+
+[functions.sync-all-users-auth]
+verify_jwt = false
+
+[functions.rap-import]
+verify_jwt = false
