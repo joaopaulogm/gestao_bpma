@@ -55,6 +55,26 @@ const MESES_ABREV: Record<string, number> = {
   'JUL': 7, 'AGO': 8, 'SET': 9, 'OUT': 10, 'NOV': 11, 'DEZ': 12
 };
 
+const MESES_NUM_TO_ABREV = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+
+function extractSeiFromObservacao(observacao: string | null): string {
+  if (!observacao) return '';
+  // formato atual gravado no banco: "...; sei=XXXX; ..."
+  const match = observacao.match(/(?:^|[;\s])sei\s*=\s*([^;\n\r]+)/i);
+  return (match?.[1] || '').trim();
+}
+
+function normalizeMinutaDate(isoDate: string, ano: number): string {
+  // alguns registros estão com ano incorreto (ex.: 2025) apesar de fat_ferias.ano = 2026
+  // Aqui preservamos mês/dia e forçamos o ano da minuta.
+  const d = parseISO(isoDate);
+  if (Number.isNaN(d.getTime())) return isoDate;
+  const y = d.getFullYear();
+  if (y === ano) return format(d, 'yyyy-MM-dd');
+  const fixed = new Date(ano, d.getMonth(), d.getDate());
+  return format(fixed, 'yyyy-MM-dd');
+}
+
 const postoOrdem: Record<string, number> = {
   'TC': 1, 'MAJ': 2, 'CAP': 3, '1º TEN': 4, '2º TEN': 5, 'ASP OF': 6,
   'ST': 7, '1º SGT': 8, '2º SGT': 9, '3º SGT': 10, 'CB': 11, 'SD': 12
@@ -92,6 +112,7 @@ const MinutaFerias: React.FC = () => {
   const [data, setData] = useState<FeriasMinuta[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
+  const [autoFilling, setAutoFilling] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -153,6 +174,85 @@ const MinutaFerias: React.FC = () => {
       setLoading(false);
     }
   }, [ano, mes]);
+
+  const autoFillFromParcelas = useCallback(async () => {
+    setAutoFilling(true);
+    try {
+      const mesAbrev = MESES_NUM_TO_ABREV[mes - 1];
+      if (!mesAbrev) {
+        toast.error('Mês inválido');
+        return;
+      }
+
+      // 1) buscar ferias do ano
+      const { data: ferias, error: feriasError } = await supabase
+        .from('fat_ferias')
+        .select('id, mes_inicio, dias, observacao, minuta_data_inicio, minuta_data_fim, minuta_observacao')
+        .eq('ano', ano);
+
+      if (feriasError) throw feriasError;
+      const feriasIds = (ferias || []).map((f: any) => f.id).filter(Boolean);
+      if (feriasIds.length === 0) {
+        toast.info('Nenhum registro de férias encontrado para o ano selecionado');
+        return;
+      }
+
+      // 2) buscar parcelas do mês selecionado
+      const { data: parcelas, error: parcelasError } = await supabase
+        .from('fat_ferias_parcelas')
+        .select('fat_ferias_id, parcela_num, mes, dias, data_inicio, data_fim')
+        .in('fat_ferias_id', feriasIds)
+        .eq('mes', mesAbrev);
+
+      if (parcelasError) throw parcelasError;
+
+      const parcelasByFeriasId = new Map<string, any>();
+      (parcelas || []).forEach((p: any) => {
+        // se houver mais de uma parcela no mesmo mês (caso raro), manter a de menor parcela_num
+        const prev = parcelasByFeriasId.get(p.fat_ferias_id);
+        if (!prev || (p.parcela_num || 99) < (prev.parcela_num || 99)) {
+          parcelasByFeriasId.set(p.fat_ferias_id, p);
+        }
+      });
+
+      // 3) atualizar fat_ferias.minuta_* usando data_inicio/data_fim da parcela do mês
+      let updated = 0;
+      for (const f of ferias || []) {
+        const p = parcelasByFeriasId.get(f.id);
+        if (!p?.data_inicio || !p?.data_fim) continue;
+
+        const sei = (f.minuta_observacao || '').trim() || extractSeiFromObservacao(f.observacao);
+        const minutaInicio = normalizeMinutaDate(p.data_inicio, ano);
+        const minutaFim = normalizeMinutaDate(p.data_fim, ano);
+
+        // evitar write desnecessário
+        const sameInicio = f.minuta_data_inicio === minutaInicio;
+        const sameFim = f.minuta_data_fim === minutaFim;
+        const sameSei = (f.minuta_observacao || '') === (sei || null);
+        if (sameInicio && sameFim && sameSei) continue;
+
+        const { error: updErr } = await supabase
+          .from('fat_ferias')
+          .update({
+            minuta_data_inicio: minutaInicio,
+            minuta_data_fim: minutaFim,
+            minuta_observacao: sei || null,
+          })
+          .eq('id', f.id);
+
+        if (updErr) throw updErr;
+        updated++;
+      }
+
+      toast.success(`Auto-preenchimento concluído: ${updated} registro(s) atualizado(s).`);
+      await fetchData();
+    } catch (e) {
+      console.error('Erro no auto-preenchimento da minuta (parcelas):', e);
+      toast.error('Falha ao auto-preencher a minuta a partir das parcelas');
+    } finally {
+      setAutoFilling(false);
+    }
+  }, [ano, mes, fetchData]);
 
   useEffect(() => {
     fetchData();
@@ -424,6 +524,19 @@ const MinutaFerias: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                onClick={autoFillFromParcelas}
+                disabled={autoFilling}
+                variant="outline"
+                className="gap-2"
+              >
+                {autoFilling ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Check className="h-4 w-4" />
+                )}
+                Auto-preencher do Banco
+              </Button>
               <Button 
                 onClick={saveAll} 
                 disabled={!hasAnyChanges || savingAll}
