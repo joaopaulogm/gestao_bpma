@@ -69,25 +69,32 @@ BEGIN
     -- Como essas tabelas não têm coordenadas, vamos distribuir igualmente ou usar uma estratégia diferente
     -- Por padrão, vamos atualizar para Asa Norte (mais conservador)
     FOR ano IN 2020..2025 LOOP
-      tabela_nome := 'public.fat_resgates_diarios_' || ano;
+      tabela_nome := 'fat_resgates_diarios_' || ano;
       
       -- Verificar se a tabela existe e tem a coluna regiao_administrativa_id
       IF EXISTS (
         SELECT 1 FROM information_schema.tables 
         WHERE table_schema = 'public' 
-        AND table_name = 'fat_resgates_diarios_' || ano
+        AND table_name = tabela_nome
       ) AND EXISTS (
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'public' 
-        AND table_name = 'fat_resgates_diarios_' || ano
+        AND table_name = tabela_nome
         AND column_name = 'regiao_administrativa_id'
       ) THEN
         -- Atualizar para Asa Norte (sem coordenadas, usamos padrão conservador)
-        EXECUTE format('UPDATE %I SET regiao_administrativa_id = $1 WHERE regiao_administrativa_id = $2', 
-          tabela_nome) 
-        USING ra_asa_norte_id, ra_plano_piloto_antiga_id;
-        
-        RAISE NOTICE 'Tabela % atualizada', tabela_nome;
+        BEGIN
+          EXECUTE format('UPDATE %I.%I SET regiao_administrativa_id = $1 WHERE regiao_administrativa_id = $2', 
+            'public', tabela_nome) 
+          USING ra_asa_norte_id, ra_plano_piloto_antiga_id;
+          
+          RAISE NOTICE 'Tabela public.% atualizada', tabela_nome;
+        EXCEPTION
+          WHEN OTHERS THEN
+            RAISE WARNING 'Erro ao atualizar tabela public.%: %', tabela_nome, SQLERRM;
+        END;
+      ELSE
+        RAISE NOTICE 'Tabela public.% não existe ou não tem coluna regiao_administrativa_id, pulando...', tabela_nome;
       END IF;
     END LOOP;
     
@@ -160,25 +167,31 @@ BEGIN
       -- Verificar fat_resgates_diarios_YYYY (2020-2025)
       IF NOT tem_referencias THEN
         FOR ano IN 2020..2025 LOOP
-          tabela_nome := 'public.fat_resgates_diarios_' || ano;
+          tabela_nome := 'fat_resgates_diarios_' || ano;
           
           IF EXISTS (
             SELECT 1 FROM information_schema.tables 
             WHERE table_schema = 'public' 
-            AND table_name = 'fat_resgates_diarios_' || ano
+            AND table_name = tabela_nome
           ) AND EXISTS (
             SELECT 1 FROM information_schema.columns 
             WHERE table_schema = 'public' 
-            AND table_name = 'fat_resgates_diarios_' || ano
+            AND table_name = tabela_nome
             AND column_name = 'regiao_administrativa_id'
           ) THEN
-            EXECUTE format('SELECT EXISTS(SELECT 1 FROM %I WHERE regiao_administrativa_id = $1)', tabela_nome)
-            INTO tem_referencias
-            USING ra_plano_piloto_antiga_id;
-            
-            IF tem_referencias THEN
-              EXIT;
-            END IF;
+            BEGIN
+              EXECUTE format('SELECT EXISTS(SELECT 1 FROM %I.%I WHERE regiao_administrativa_id = $1)', 
+                'public', tabela_nome)
+              INTO tem_referencias
+              USING ra_plano_piloto_antiga_id;
+              
+              IF tem_referencias THEN
+                EXIT;
+              END IF;
+            EXCEPTION
+              WHEN OTHERS THEN
+                RAISE WARNING 'Erro ao verificar tabela public.%: %', tabela_nome, SQLERRM;
+            END;
           END IF;
         END LOOP;
       END IF;
