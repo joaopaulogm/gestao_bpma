@@ -40,7 +40,7 @@ interface FeriasMinuta {
   dias: number;
   data_inicio: Date;
   data_fim: Date;
-  observacao: string;
+  processoSei: string;
   hasChanges: boolean;
   saving: boolean;
 }
@@ -117,22 +117,10 @@ const MinutaFerias: React.FC = () => {
       ferias?.forEach((f: any) => {
         const diasNoMes = getParcelaForMonth(f.observacao, f.mes_inicio, f.dias, mes);
         
-        if (diasNoMes && f.efetivo) {
-          // Use saved dates if available, otherwise calculate defaults
-          let dataInicio: Date;
-          let dataFim: Date;
-          
-          if (f.minuta_data_inicio) {
-            dataInicio = parseISO(f.minuta_data_inicio);
-          } else {
-            dataInicio = new Date(ano, mes - 1, 1);
-          }
-          
-          if (f.minuta_data_fim) {
-            dataFim = parseISO(f.minuta_data_fim);
-          } else {
-            dataFim = addDays(dataInicio, diasNoMes - 1);
-          }
+        // Only include entries with confirmed dates (minuta_data_inicio and minuta_data_fim set)
+        if (diasNoMes && f.efetivo && f.minuta_data_inicio && f.minuta_data_fim) {
+          const dataInicio = parseISO(f.minuta_data_inicio);
+          const dataFim = parseISO(f.minuta_data_fim);
           
           minutaData.push({
             id: f.id,
@@ -143,7 +131,7 @@ const MinutaFerias: React.FC = () => {
             dias: diasNoMes,
             data_inicio: dataInicio,
             data_fim: dataFim,
-            observacao: f.minuta_observacao || '',
+            processoSei: f.minuta_observacao || '',
             hasChanges: false,
             saving: false,
           });
@@ -189,10 +177,10 @@ const MinutaFerias: React.FC = () => {
     }));
   };
 
-  const updateObservacao = (id: string, observacao: string) => {
+  const updateProcessoSei = (id: string, processoSei: string) => {
     setData(prev => prev.map(item => {
       if (item.id === id) {
-        return { ...item, observacao, hasChanges: true };
+        return { ...item, processoSei, hasChanges: true };
       }
       return item;
     }));
@@ -210,7 +198,7 @@ const MinutaFerias: React.FC = () => {
         .update({
           minuta_data_inicio: format(item.data_inicio, 'yyyy-MM-dd'),
           minuta_data_fim: format(item.data_fim, 'yyyy-MM-dd'),
-          minuta_observacao: item.observacao || null,
+          minuta_observacao: item.processoSei || null,
         })
         .eq('id', id);
 
@@ -241,7 +229,7 @@ const MinutaFerias: React.FC = () => {
           .update({
             minuta_data_inicio: format(item.data_inicio, 'yyyy-MM-dd'),
             minuta_data_fim: format(item.data_fim, 'yyyy-MM-dd'),
-            minuta_observacao: item.observacao || null,
+            minuta_observacao: item.processoSei || null,
           })
           .eq('id', item.id);
 
@@ -281,11 +269,11 @@ const MinutaFerias: React.FC = () => {
       item.dias,
       format(item.data_inicio, 'dd/MM/yyyy'),
       format(item.data_fim, 'dd/MM/yyyy'),
-      item.observacao || '-',
+      item.processoSei || '-',
     ]);
 
     autoTable(doc, {
-      head: [['#', 'Quadro', 'Posto/Grad', 'Matrícula', 'Nome', 'Dias', 'Início', 'Término', 'Obs.']],
+      head: [['#', 'Quadro', 'Posto/Grad', 'Matrícula', 'Nome', 'Dias', 'Início', 'Término', 'Nº SEI']],
       body: tableData,
       startY: 40,
       styles: { fontSize: 7 },
@@ -313,7 +301,7 @@ const MinutaFerias: React.FC = () => {
       ['BATALHÃO DE POLICIAMENTO DE PROTEÇÃO AMBIENTAL'],
       [`MINUTA DE FÉRIAS - ${MESES[mes - 1].toUpperCase()} DE ${ano}`],
       [],
-      ['#', 'Quadro', 'Posto/Graduação', 'Matrícula', 'Nome Completo', 'Qtd. Dias', 'Data Início', 'Data Término', 'Observações'],
+      ['#', 'Quadro', 'Posto/Graduação', 'Matrícula', 'Nome Completo', 'Qtd. Dias', 'Data Início', 'Data Término', 'N° do Processo SEI-GDF'],
       ...data.map((item, index) => [
         index + 1,
         item.quadro,
@@ -323,7 +311,7 @@ const MinutaFerias: React.FC = () => {
         item.dias,
         format(item.data_inicio, 'dd/MM/yyyy'),
         format(item.data_fim, 'dd/MM/yyyy'),
-        item.observacao || '',
+        item.processoSei || '',
       ]),
     ];
 
@@ -359,7 +347,7 @@ const MinutaFerias: React.FC = () => {
               <th>Dias</th>
               <th>Data Início</th>
               <th>Data Término</th>
-              <th>Observações</th>
+              <th>N° do Processo SEI-GDF</th>
             </tr>
           </thead>
           <tbody>
@@ -373,7 +361,7 @@ const MinutaFerias: React.FC = () => {
                 <td style="text-align: center;">${item.dias}</td>
                 <td>${format(item.data_inicio, 'dd/MM/yyyy')}</td>
                 <td>${format(item.data_fim, 'dd/MM/yyyy')}</td>
-                <td>${item.observacao || '-'}</td>
+                <td>${item.processoSei || '-'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -562,7 +550,7 @@ const MinutaFerias: React.FC = () => {
                         <TableHead className="text-center">Dias</TableHead>
                         <TableHead>Data Início</TableHead>
                         <TableHead>Data Término</TableHead>
-                        <TableHead className="min-w-[200px]">Observações</TableHead>
+                        <TableHead className="min-w-[200px]">N° do Processo SEI-GDF</TableHead>
                         <TableHead className="w-[80px] print:hidden">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -627,14 +615,14 @@ const MinutaFerias: React.FC = () => {
                           </TableCell>
                           <TableCell className="print:hidden">
                             <Input
-                              value={item.observacao}
-                              onChange={(e) => updateObservacao(item.id, e.target.value)}
-                              placeholder="Observações..."
+                              value={item.processoSei}
+                              onChange={(e) => updateProcessoSei(item.id, e.target.value)}
+                              placeholder="N° Processo SEI-GDF..."
                               className="h-8 text-xs"
                             />
                           </TableCell>
                           <TableCell className="hidden print:table-cell">
-                            {item.observacao || '-'}
+                            {item.processoSei || '-'}
                           </TableCell>
                           <TableCell className="print:hidden">
                             <Button
