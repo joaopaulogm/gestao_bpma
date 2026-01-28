@@ -39,19 +39,25 @@ def supabase_query(table, method='GET', filters=None, data=None):
     url = f"{POSTGREST_URL}/{table}"
     
     if method == 'GET':
-        response = requests.get(url, headers=HEADERS, params=filters)
+        # Construir query string para filtros do PostgREST
+        params = {}
+        if filters:
+            for key, value in filters.items():
+                if key in ['select', 'limit', 'order']:
+                    params[key] = value
+                else:
+                    # Para filtros de igualdade, usar formato: campo=eq.valor
+                    params[key] = value
+        response = requests.get(url, headers=HEADERS, params=params)
     elif method == 'POST':
         response = requests.post(url, headers=HEADERS, json=data)
     elif method == 'PATCH':
-        url_with_filters = url
+        # Para PATCH, os filtros vão na query string
+        params = {}
         if filters:
-            # Construir query string para filtros
-            params = []
             for key, value in filters.items():
-                params.append(f"{key}=eq.{value}")
-            if params:
-                url_with_filters = f"{url}?{'&'.join(params)}"
-        response = requests.patch(url_with_filters, headers=HEADERS, json=data)
+                params[key] = value
+        response = requests.patch(url, headers=HEADERS, params=params, json=data)
     else:
         raise ValueError(f"Método HTTP não suportado: {method}")
     
@@ -122,7 +128,11 @@ def get_efetivo_id_by_matricula(matricula):
     matricula = str(matricula).strip()
     
     try:
-        result = supabase_query('dim_efetivo', method='GET', filters={'matricula': f'eq.{matricula}', 'select': 'id', 'limit': '1'})
+        result = supabase_query('dim_efetivo', method='GET', filters={
+            'matricula': f'eq.{matricula}',
+            'select': 'id',
+            'limit': '1'
+        })
         if result and len(result) > 0:
             return result[0]['id']
     except Exception as e:
