@@ -294,13 +294,24 @@ const Ferias: React.FC = () => {
       // Se tem parcelas_detalhadas da tabela fat_ferias_parcelas, usar elas
       if (f.parcelas_detalhadas && Array.isArray(f.parcelas_detalhadas) && f.parcelas_detalhadas.length > 0) {
         const parcelas = f.parcelas_detalhadas.map((p: any) => {
-          // Converter mes para número se for string
-          let mesNum = p.mes;
-          if (typeof mesNum === 'string') {
-            mesNum = parseInt(mesNum);
+          // Converter mes (text) para número. No banco, fat_ferias_parcelas.mes é TEXT (ex: 'JAN').
+          let mesNum: number | null = null;
+          if (typeof p.mes === 'string') {
+            const mesStr = p.mes.trim().toUpperCase();
+            // 1) abreviação (JAN/FEV/...)
+            if (MESES_ABREV[mesStr]) {
+              mesNum = MESES_ABREV[mesStr];
+            } else {
+              // 2) fallback: tentar parsear número (caso venha '1', '01', etc.)
+              const parsed = parseInt(mesStr, 10);
+              if (!Number.isNaN(parsed)) mesNum = parsed;
+            }
+          } else if (typeof p.mes === 'number') {
+            mesNum = p.mes;
           }
-          // Se mes for null, undefined ou NaN, usar mes_inicio como fallback
-          if (!mesNum || isNaN(mesNum) || mesNum < 1 || mesNum > 12) {
+
+          // Se mes for null/invalid, usar mes_inicio como fallback
+          if (!mesNum || mesNum < 1 || mesNum > 12) {
             console.warn(`⚠️ Parcela sem mês válido, usando mes_inicio (${f.mes_inicio}):`, { parcela: p, feriasId: f.id });
             mesNum = f.mes_inicio;
           }
@@ -777,10 +788,10 @@ const Ferias: React.FC = () => {
                           </TableCell>
                           <TableCell className="text-center py-1.5 text-xs">
                             {(() => {
-                              // Buscar data_inicio da parcela correspondente ao mês selecionado
-                              const mesAbrev = MESES_NUM_TO_ABREV[mesSelecionado - 1];
-                              const parcelaDetalhada = item.ferias.parcelas_detalhadas?.find(
-                                (p) => p.mes === mesAbrev || String(p.mes) === String(mesSelecionado)
+                              // Buscar data_inicio da parcela correspondente (preferir parcela_num; fallback por mês)
+                              const mesAbrev = MESES_NUM_TO_ABREV[(item.parcela.mes || 1) - 1];
+                              const parcelaDetalhada = item.ferias.parcelas_detalhadas?.find((p) =>
+                                p.parcela_num === item.parcelaIndex + 1 || String(p.mes).toUpperCase() === mesAbrev
                               );
                               if (parcelaDetalhada?.data_inicio) {
                                 const [year, month, day] = parcelaDetalhada.data_inicio.split('-').map(Number);
@@ -791,10 +802,10 @@ const Ferias: React.FC = () => {
                           </TableCell>
                           <TableCell className="text-center py-1.5 text-xs">
                             {(() => {
-                              // Buscar data_fim da parcela correspondente ao mês selecionado
-                              const mesAbrev = MESES_NUM_TO_ABREV[mesSelecionado - 1];
-                              const parcelaDetalhada = item.ferias.parcelas_detalhadas?.find(
-                                (p) => p.mes === mesAbrev || String(p.mes) === String(mesSelecionado)
+                              // Buscar data_fim da parcela correspondente (preferir parcela_num; fallback por mês)
+                              const mesAbrev = MESES_NUM_TO_ABREV[(item.parcela.mes || 1) - 1];
+                              const parcelaDetalhada = item.ferias.parcelas_detalhadas?.find((p) =>
+                                p.parcela_num === item.parcelaIndex + 1 || String(p.mes).toUpperCase() === mesAbrev
                               );
                               if (parcelaDetalhada?.data_fim) {
                                 const [year, month, day] = parcelaDetalhada.data_fim.split('-').map(Number);
