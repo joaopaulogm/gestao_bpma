@@ -664,42 +664,42 @@ const MinutaFerias: React.FC = () => {
                   Nenhum policial com férias confirmadas para este mês.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
+                <div className="overflow-auto max-h-[calc(100vh-22rem)] min-h-[320px] rounded-md border border-border/50">
+                  <Table className="table-fixed w-full min-w-[720px] text-xs">
                     <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[50px]">#</TableHead>
-                        <TableHead>Quadro</TableHead>
-                        <TableHead>Posto/Grad</TableHead>
-                        <TableHead>Matrícula</TableHead>
-                        <TableHead>Nome Completo</TableHead>
-                        <TableHead className="text-center">Dias</TableHead>
-                        <TableHead>Data Início</TableHead>
-                        <TableHead>Data Término</TableHead>
-                        <TableHead className="min-w-[200px]">N° do Processo SEI-GDF</TableHead>
-                        <TableHead className="w-[80px] print:hidden">Ações</TableHead>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="w-10 py-2 text-center">#</TableHead>
+                        <TableHead className="w-20 py-2">Quadro</TableHead>
+                        <TableHead className="w-20 py-2">Posto/Grad</TableHead>
+                        <TableHead className="w-24 py-2">Matrícula</TableHead>
+                        <TableHead className="min-w-[120px] py-2">Nome Completo</TableHead>
+                        <TableHead className="w-12 py-2 text-center">Dias</TableHead>
+                        <TableHead className="w-28 py-2">Data Início</TableHead>
+                        <TableHead className="w-28 py-2">Data Término</TableHead>
+                        <TableHead className="min-w-[160px] py-2">N° do Processo SEI-GDF</TableHead>
+                        <TableHead className="w-14 py-2 print:hidden">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {data.map((item, index) => (
-                        <TableRow key={item.id} className={cn(item.hasChanges && "bg-orange-50 dark:bg-orange-950/20")}>
-                          <TableCell className="font-medium">{index + 1}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-xs">
+                        <TableRow key={item.id} className={cn("hover:bg-muted/50", item.hasChanges && "bg-orange-50 dark:bg-orange-950/20")}>
+                          <TableCell className="font-medium py-1.5 text-center">{index + 1}</TableCell>
+                          <TableCell className="py-1.5">
+                            <Badge variant="outline" className="text-[10px] px-1">
                               {item.quadro}
                             </Badge>
                           </TableCell>
-                          <TableCell>{item.posto_graduacao}</TableCell>
-                          <TableCell>{item.matricula}</TableCell>
-                          <TableCell className="font-medium">{item.nome}</TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant="secondary">{item.dias}</Badge>
+                          <TableCell className="py-1.5 whitespace-nowrap">{item.posto_graduacao}</TableCell>
+                          <TableCell className="py-1.5 font-mono text-[10px]">{item.matricula}</TableCell>
+                          <TableCell className="py-1.5 font-medium truncate max-w-[140px]" title={item.nome}>{item.nome}</TableCell>
+                          <TableCell className="py-1.5 text-center">
+                            <Badge variant="secondary" className="text-[10px]">{item.dias}</Badge>
                           </TableCell>
-                          <TableCell className="print:hidden">
+                          <TableCell className="py-1.5 print:hidden">
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="min-w-fit px-3 justify-start text-left font-normal">
-                                  <Calendar className="mr-2 h-4 w-4" />
+                                <Button variant="outline" size="sm" className="min-w-fit h-7 px-2 text-[10px] justify-start font-normal">
+                                  <Calendar className="mr-1 h-3 w-3 shrink-0" />
                                   {format(item.data_inicio, 'dd/MM/yyyy')}
                                 </Button>
                               </PopoverTrigger>
@@ -714,11 +714,11 @@ const MinutaFerias: React.FC = () => {
                               </PopoverContent>
                             </Popover>
                           </TableCell>
-                          <TableCell className="print:hidden">
+                          <TableCell className="py-1.5 print:hidden">
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="min-w-fit px-3 justify-start text-left font-normal">
-                                  <Calendar className="mr-2 h-4 w-4" />
+                                <Button variant="outline" size="sm" className="min-w-fit h-7 px-2 text-[10px] justify-start font-normal">
+                                  <Calendar className="mr-1 h-3 w-3 shrink-0" />
                                   {format(item.data_fim, 'dd/MM/yyyy')}
                                 </Button>
                               </PopoverTrigger>
@@ -733,40 +733,40 @@ const MinutaFerias: React.FC = () => {
                               </PopoverContent>
                             </Popover>
                           </TableCell>
-                          <TableCell className="hidden print:table-cell">
+                          <TableCell className="hidden py-1.5 print:table-cell text-[10px]">
                             {format(item.data_inicio, 'dd/MM/yyyy')}
                           </TableCell>
-                          <TableCell className="hidden print:table-cell">
+                          <TableCell className="hidden py-1.5 print:table-cell text-[10px]">
                             {format(item.data_fim, 'dd/MM/yyyy')}
                           </TableCell>
-                          <TableCell className="print:hidden">
+                          <TableCell className="py-1.5 print:hidden">
                             <Input
                               value={item.processoSei}
                               onChange={(e) => updateProcessoSei(item.id, e.target.value)}
-                              placeholder="N° Processo SEI-GDF..."
-                              className="h-8 text-xs"
+                              placeholder="N° SEI..."
+                              className="h-7 text-[10px]"
                             />
                           </TableCell>
-                          <TableCell className="hidden print:table-cell">
+                          <TableCell className="hidden py-1.5 print:table-cell text-[10px]">
                             {item.processoSei || '-'}
                           </TableCell>
-                          <TableCell className="print:hidden">
+                          <TableCell className="py-1.5 print:hidden">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => saveItem(item.id)}
                               disabled={!item.hasChanges || item.saving}
                               className={cn(
-                                "h-8 w-8 p-0",
+                                "h-7 w-7 p-0",
                                 item.hasChanges && "text-orange-600 hover:text-orange-700"
                               )}
                             >
                               {item.saving ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               ) : item.hasChanges ? (
-                                <Save className="h-4 w-4" />
+                                <Save className="h-3.5 w-3.5" />
                               ) : (
-                                <Check className="h-4 w-4 text-green-600" />
+                                <Check className="h-3.5 w-3.5 text-green-600" />
                               )}
                             </Button>
                           </TableCell>
