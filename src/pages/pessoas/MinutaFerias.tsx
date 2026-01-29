@@ -665,41 +665,47 @@ const MinutaFerias: React.FC = () => {
                 </div>
               ) : (
                 <div className="overflow-auto max-h-[calc(100vh-22rem)] min-h-[320px] rounded-md border border-border/50">
-                  <Table className="table-fixed w-full min-w-[720px] text-xs">
+                  <Table className="w-full min-w-[900px] text-xs">
                     <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-10 py-2 text-center">#</TableHead>
-                        <TableHead className="w-20 py-2">Quadro</TableHead>
-                        <TableHead className="w-20 py-2">Posto/Grad</TableHead>
-                        <TableHead className="w-24 py-2">Matrícula</TableHead>
-                        <TableHead className="min-w-[120px] py-2">Nome Completo</TableHead>
-                        <TableHead className="w-12 py-2 text-center">Dias</TableHead>
-                        <TableHead className="w-28 py-2">Data Início</TableHead>
-                        <TableHead className="w-28 py-2">Data Término</TableHead>
-                        <TableHead className="min-w-[160px] py-2">N° do Processo SEI-GDF</TableHead>
-                        <TableHead className="w-14 py-2 print:hidden">Ações</TableHead>
+                      <TableRow className="hover:bg-transparent border-b">
+                        <TableHead className="w-10 py-2.5 text-center font-semibold">#</TableHead>
+                        <TableHead className="min-w-[70px] py-2.5 font-semibold">Quadro</TableHead>
+                        <TableHead className="min-w-[95px] py-2.5 font-semibold">Posto/Grad</TableHead>
+                        <TableHead className="min-w-[95px] py-2.5 font-semibold">Matrícula</TableHead>
+                        <TableHead className="min-w-[200px] py-2.5 font-semibold">Nome Completo</TableHead>
+                        <TableHead className="w-14 py-2.5 text-center font-semibold">Dias</TableHead>
+                        <TableHead className="min-w-[115px] py-2.5 font-semibold">Data Início</TableHead>
+                        <TableHead className="min-w-[115px] py-2.5 font-semibold">Data Término</TableHead>
+                        <TableHead className="min-w-[200px] py-2.5 font-semibold">N° do Processo SEI-GDF</TableHead>
+                        <TableHead className="w-16 py-2.5 print:hidden font-semibold">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {data.map((item, index) => (
-                        <TableRow key={item.id} className={cn("hover:bg-muted/50", item.hasChanges && "bg-orange-50 dark:bg-orange-950/20")}>
-                          <TableCell className="font-medium py-1.5 text-center">{index + 1}</TableCell>
-                          <TableCell className="py-1.5">
-                            <Badge variant="outline" className="text-[10px] px-1">
+                        <TableRow key={item.id} className={cn("hover:bg-muted/50 border-b border-border/50", item.hasChanges && "bg-orange-50 dark:bg-orange-950/20")}>
+                          <TableCell className="font-medium py-2 text-center align-middle">{index + 1}</TableCell>
+                          <TableCell className="py-2 align-middle">
+                            <Badge variant="outline" className="text-xs px-2 py-0.5">
                               {item.quadro}
                             </Badge>
                           </TableCell>
-                          <TableCell className="py-1.5 whitespace-nowrap">{item.posto_graduacao}</TableCell>
-                          <TableCell className="py-1.5 font-mono text-[10px]">{item.matricula}</TableCell>
-                          <TableCell className="py-1.5 font-medium truncate max-w-[140px]" title={item.nome}>{item.nome}</TableCell>
-                          <TableCell className="py-1.5 text-center">
-                            <Badge variant="secondary" className="text-[10px]">{item.dias}</Badge>
+                          <TableCell className="py-2 align-middle whitespace-nowrap overflow-visible">
+                            {item.posto_graduacao}
                           </TableCell>
-                          <TableCell className="py-1.5 print:hidden">
+                          <TableCell className="py-2 align-middle font-mono whitespace-nowrap overflow-visible">
+                            {item.matricula}
+                          </TableCell>
+                          <TableCell className="py-2 align-middle font-medium min-w-0">
+                            <span className="block break-words">{item.nome}</span>
+                          </TableCell>
+                          <TableCell className="py-2 text-center align-middle">
+                            <Badge variant="secondary" className="text-xs">{item.dias}</Badge>
+                          </TableCell>
+                          <TableCell className="py-2 align-middle print:hidden">
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="min-w-fit h-7 px-2 text-[10px] justify-start font-normal">
-                                  <Calendar className="mr-1 h-3 w-3 shrink-0" />
+                                <Button variant="outline" size="sm" className="min-w-[100px] h-8 px-2 text-xs justify-start font-normal">
+                                  <Calendar className="mr-1.5 h-3.5 w-3.5 shrink-0" />
                                   {format(item.data_inicio, 'dd/MM/yyyy')}
                                 </Button>
                               </PopoverTrigger>
@@ -714,11 +720,11 @@ const MinutaFerias: React.FC = () => {
                               </PopoverContent>
                             </Popover>
                           </TableCell>
-                          <TableCell className="py-1.5 print:hidden">
+                          <TableCell className="py-2 align-middle print:hidden">
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="min-w-fit h-7 px-2 text-[10px] justify-start font-normal">
-                                  <Calendar className="mr-1 h-3 w-3 shrink-0" />
+                                <Button variant="outline" size="sm" className="min-w-[100px] h-8 px-2 text-xs justify-start font-normal">
+                                  <Calendar className="mr-1.5 h-3.5 w-3.5 shrink-0" />
                                   {format(item.data_fim, 'dd/MM/yyyy')}
                                 </Button>
                               </PopoverTrigger>
@@ -733,40 +739,40 @@ const MinutaFerias: React.FC = () => {
                               </PopoverContent>
                             </Popover>
                           </TableCell>
-                          <TableCell className="hidden py-1.5 print:table-cell text-[10px]">
+                          <TableCell className="hidden py-2 align-middle print:table-cell text-xs">
                             {format(item.data_inicio, 'dd/MM/yyyy')}
                           </TableCell>
-                          <TableCell className="hidden py-1.5 print:table-cell text-[10px]">
+                          <TableCell className="hidden py-2 align-middle print:table-cell text-xs">
                             {format(item.data_fim, 'dd/MM/yyyy')}
                           </TableCell>
-                          <TableCell className="py-1.5 print:hidden">
+                          <TableCell className="py-2 align-middle print:hidden">
                             <Input
                               value={item.processoSei}
                               onChange={(e) => updateProcessoSei(item.id, e.target.value)}
-                              placeholder="N° SEI..."
-                              className="h-7 text-[10px]"
+                              placeholder="N° Processo SEI-GDF..."
+                              className="h-8 text-xs min-w-0"
                             />
                           </TableCell>
-                          <TableCell className="hidden py-1.5 print:table-cell text-[10px]">
+                          <TableCell className="hidden py-2 align-middle print:table-cell text-xs">
                             {item.processoSei || '-'}
                           </TableCell>
-                          <TableCell className="py-1.5 print:hidden">
+                          <TableCell className="py-2 align-middle print:hidden">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => saveItem(item.id)}
                               disabled={!item.hasChanges || item.saving}
                               className={cn(
-                                "h-7 w-7 p-0",
+                                "h-8 w-8 p-0",
                                 item.hasChanges && "text-orange-600 hover:text-orange-700"
                               )}
                             >
                               {item.saving ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                <Loader2 className="h-4 w-4 animate-spin" />
                               ) : item.hasChanges ? (
-                                <Save className="h-3.5 w-3.5" />
+                                <Save className="h-4 w-4" />
                               ) : (
-                                <Check className="h-3.5 w-3.5 text-green-600" />
+                                <Check className="h-4 w-4 text-green-600" />
                               )}
                             </Button>
                           </TableCell>

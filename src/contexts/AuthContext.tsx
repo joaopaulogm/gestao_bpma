@@ -40,16 +40,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return metadataRole as AppRole;
       }
 
-      // SEGUNDO: Verificar se é email admin por natureza (verificação direta)
-      if (authUser?.email) {
-        const emailLower = authUser.email.toLowerCase().trim();
-        if (emailLower === 'soi.bpma@gmail.com' || emailLower === 'joaopaulogm@gmail.com') {
-          console.log('Email admin detectado:', emailLower);
-          return 'admin';
-        }
-      }
-
-      // TERCEIRO: Buscar role em user_roles (tabela consolidada)
+      // SEGUNDO: Verificar role em user_roles (tabela consolidada)
+      // (Removido hardcoded emails - segurança baseada apenas em banco de dados)
       const { data: userRoleData, error } = await supabase
         .from('user_roles')
         .select('role')

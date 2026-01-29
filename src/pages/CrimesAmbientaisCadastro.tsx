@@ -241,7 +241,7 @@ const CrimesAmbientaisCadastro = () => {
         supabase.from('dim_tipo_de_area').select('id, "Tipo de Área"'),
         supabase.from('dim_tipo_de_crime').select('id_tipo_de_crime, "Tipo de Crime"'),
         supabase.from('dim_enquadramento').select('id_enquadramento, id_tipo_de_crime, "Enquadramento"'),
-        // FK em fat_registros_de_crime referencia dim_desfecho(id); carregar desfechos tipo 'crime'
+        // FK em fat_registros_de_crimes_ambientais referencia dim_desfecho(id); carregar desfechos tipo 'crime'
         (supabase as any).from('dim_desfecho').select('id, nome, tipo').eq('tipo', 'crime'),
         supabase.from('dim_especies_fauna').select('*').order('nome_popular'),
         supabase.from('dim_especies_flora').select('*').order('"Nome Popular"'),
@@ -455,7 +455,7 @@ const CrimesAmbientaisCadastro = () => {
     setIsSubmitting(true);
     
     try {
-      // Insert main record (tabela no banco: fat_registros_de_crime; fallback para fat_registros_de_crimes_ambientais)
+      // Insert main record — tabela correta no banco: fat_registros_de_crimes_ambientais
       const insertPayload = {
           data,
           horario_acionamento: horarioAcionamento || null,
@@ -507,29 +507,14 @@ const CrimesAmbientaisCadastro = () => {
           qtd_liberados_menor: qtdLiberadosMenor
         };
 
-      let crimeRecord: { id: string } | null = null;
-      let crimeError: any = null;
-
       const { data: dataCrime, error: errCrime } = await supabaseAny
-        .from('fat_registros_de_crime')
+        .from('fat_registros_de_crimes_ambientais')
         .insert(insertPayload)
         .select('id')
         .single();
-      crimeRecord = dataCrime;
-      crimeError = errCrime;
 
-      if (crimeError?.code === '42P01' || (crimeError?.message && crimeError.message.includes('does not exist'))) {
-        const { data: dataAlt, error: errAlt } = await supabaseAny
-          .from('fat_registros_de_crimes_ambientais')
-          .insert(insertPayload)
-          .select('id')
-          .single();
-        if (!errAlt) {
-          crimeRecord = dataAlt;
-          crimeError = null;
-        }
-      }
-      if (crimeError) throw crimeError;
+      if (errCrime) throw errCrime;
+      const crimeRecord = dataCrime;
       if (!crimeRecord?.id) throw new Error('Insert não retornou id');
 
       const ocorrenciaId = crimeRecord.id;

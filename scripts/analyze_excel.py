@@ -5,7 +5,7 @@ import os
 # Caminho: 1º argumento, 2º env EXCEL_PATH, 3º default
 excel_path = (
     sys.argv[1] if len(sys.argv) > 1 else
-    os.environ.get('EXCEL_PATH', r'C:\Users\joaop\BPMA\Resumos Estatísticas 2025 a 2020.xlsx')
+    os.environ.get('EXCEL_PATH', 'Resumos Estatísticas 2025 a 2020.xlsx')
 )
 
 if not os.path.exists(excel_path):
