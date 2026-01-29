@@ -136,7 +136,7 @@ const Ferias: React.FC = () => {
   const [ferias, setFerias] = useState<FeriasData[]>([]);
   const [loading, setLoading] = useState(true);
   // Iniciar com 2025 por padrão (ano mais comum com dados)
-  const [ano, setAno] = useState(2025);
+  const [ano, setAno] = useState(() => new Date().getFullYear());
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPolicial, setEditingPolicial] = useState<FeriasData | null>(null);
   const [parcelas, setParcelas] = useState<ParcelaInfo[]>([{ mes: 1, dias: 30 }]);
@@ -765,7 +765,9 @@ const Ferias: React.FC = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredPoliciais.map((item, index) => {
-                      const allParcelas = getParcelasForFerias(item.ferias);
+                      // Usar parcelas de feriasWithParcelas (parcelas_detalhadas) para dias corretos; senão fallback
+                      const feriasEntry = feriasWithParcelas.find((f) => f.feriasId === item.ferias.id);
+                      const allParcelas = feriasEntry ? feriasEntry.parcelas : getParcelasForFerias(item.ferias);
                       
                       return (
                         <TableRow key={`${item.ferias.id}-${item.parcelaIndex}`}>
