@@ -181,6 +181,7 @@ const CrimesAmbientaisCadastro = () => {
   const [isSearchingMembro, setIsSearchingMembro] = useState(false);
   
   // Conclusão
+  const [autoresIdentificados, setAutoresIdentificados] = useState<boolean>(true);
   const [desfechoId, setDesfechoId] = useState('');
   const [procedimentoLegal, setProcedimentoLegal] = useState('');
   const [qtdDetidosMaior, setQtdDetidosMaior] = useState(0);
@@ -330,41 +331,94 @@ const CrimesAmbientaisCadastro = () => {
 
   // Funções removidas - agora gerenciadas pelo componente BensApreendidosSection
 
-  // Equipe functions
+  // Equipe functions - busca em dim_efetivo por matrícula ou nome (nome_guerra, nome)
   const buscarPolicial = useCallback(async () => {
-    if (!matriculaInput.trim()) {
-      toast.error('Digite uma matrícula');
+    const term = matriculaInput.trim();
+    if (!term) {
+      toast.error('Digite a matrícula ou nome do policial');
       return;
     }
-    const matriculaSemZeros = matriculaInput.replace(/^0+/, '');
-    if (membrosEquipe.some(m => m.matricula === matriculaSemZeros || m.matricula === matriculaInput)) {
+    const sanitizedMatricula = term.replace(/[^0-9]/g, '');
+    const sanitizedMatriculaSemZeros = sanitizedMatricula.replace(/^0+/, '');
+    const sanitizedSearchTerm = term.replace(/[<>'"&]/g, '').substring(0, 100);
+
+    if (!sanitizedMatricula && sanitizedSearchTerm.length < 2) {
+      toast.error('Digite uma matrícula ou nome válido (mínimo 2 caracteres)');
+      return;
+    }
+
+    if (membrosEquipe.some(m =>
+      m.matricula === term || m.matricula === sanitizedMatricula || m.matricula === sanitizedMatriculaSemZeros
+    )) {
       toast.error('Este policial já foi adicionado');
       return;
     }
+
     setIsSearchingMembro(true);
     try {
-      const { data: policialData, error } = await supabase
+      let query = supabase
         .from('dim_efetivo')
-        .select('id, matricula, posto_graduacao, nome_guerra')
-        .or(`matricula.eq.${matriculaInput},matricula.eq.${matriculaSemZeros}`)
-        .limit(1)
-        .single();
-      if (error || !policialData) {
-        toast.error('Policial não encontrado');
+        .select('id, matricula, posto_graduacao, nome_guerra, nome')
+        .eq('ativo', true)
+        .limit(20);
+
+      const conditions: string[] = [];
+      if (sanitizedMatricula && sanitizedMatricula.length > 0) {
+        conditions.push(`matricula.eq.${sanitizedMatricula}`);
+        if (sanitizedMatriculaSemZeros && sanitizedMatriculaSemZeros !== sanitizedMatricula) {
+          conditions.push(`matricula.eq.${sanitizedMatriculaSemZeros}`);
+        }
+        conditions.push(`matricula.ilike.%${sanitizedMatricula}%`);
+      }
+      if (sanitizedSearchTerm && sanitizedSearchTerm.length >= 2) {
+        conditions.push(`nome_guerra.ilike.%${sanitizedSearchTerm}%`);
+        conditions.push(`nome.ilike.%${sanitizedSearchTerm}%`);
+      }
+
+      if (conditions.length === 0) {
+        toast.error('Digite uma matrícula ou nome válido');
+        setIsSearchingMembro(false);
         return;
       }
+
+      query = query.or(conditions.join(','));
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Erro na busca dim_efetivo:', error);
+        toast.error(`Erro ao buscar policial: ${error.message}`);
+        setIsSearchingMembro(false);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        toast.error('Policial não encontrado. Verifique a matrícula ou nome digitado.');
+        setIsSearchingMembro(false);
+        return;
+      }
+
+      let policialEncontrado = data[0];
+      if (data.length > 1) {
+        const matchExato = data.find(p =>
+          p.matricula === term || p.matricula === sanitizedMatricula || p.matricula === sanitizedMatriculaSemZeros ||
+          p.matricula.replace(/^0+/, '') === sanitizedMatriculaSemZeros
+        );
+        if (matchExato) policialEncontrado = matchExato;
+      }
+
       const novoMembro: MembroEquipeCrime = {
         id: crypto.randomUUID(),
-        efetivo_id: policialData.id,
-        matricula: policialData.matricula,
-        posto_graduacao: policialData.posto_graduacao,
-        nome_guerra: policialData.nome_guerra
+        efetivo_id: policialEncontrado.id,
+        matricula: policialEncontrado.matricula,
+        posto_graduacao: policialEncontrado.posto_graduacao || '',
+        nome_guerra: policialEncontrado.nome_guerra || ''
       };
       setMembrosEquipe([...membrosEquipe, novoMembro]);
       setMatriculaInput('');
-      toast.success(`${policialData.posto_graduacao} ${policialData.nome_guerra} adicionado`);
-    } catch (err) {
-      toast.error('Erro ao buscar policial');
+      toast.success(`${policialEncontrado.posto_graduacao || ''} ${policialEncontrado.nome_guerra || ''} adicionado`);
+    } catch (err: any) {
+      console.error('Erro ao buscar policial:', err);
+      toast.error(err?.message || 'Erro ao buscar policial');
     } finally {
       setIsSearchingMembro(false);
     }
@@ -762,14 +816,14 @@ const CrimesAmbientaisCadastro = () => {
           <div className="space-y-4">
             <div className="flex gap-2 items-end">
               <div className="flex-1 space-y-2">
-                <Label htmlFor="matriculaCrime" className="text-sm font-medium">Matrícula do Policial</Label>
+                <Label htmlFor="matriculaCrime" className="text-sm font-medium">Matrícula ou Nome do Policial</Label>
                 <Input
                   id="matriculaCrime"
                   type="text"
                   value={matriculaInput}
                   onChange={(e) => setMatriculaInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), buscarPolicial())}
-                  placeholder="Digite a matrícula"
+                  placeholder="Digite a matrícula ou nome do policial"
                   className="input-glass"
                 />
               </div>
@@ -1459,6 +1513,23 @@ const CrimesAmbientaisCadastro = () => {
 
         {/* Card: Conclusão da Ocorrência */}
         <FormSection title="Conclusão da Ocorrência" columns>
+          <div className="col-span-full flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border/50">
+            <Label className="text-sm font-medium shrink-0">Autores identificados?</Label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Switch
+                  checked={autoresIdentificados}
+                  onCheckedChange={setAutoresIdentificados}
+                />
+                <span className="text-sm font-medium">{autoresIdentificados ? 'Sim' : 'Não'}</span>
+              </label>
+            </div>
+            {!autoresIdentificados && (
+              <p className="text-xs text-muted-foreground sm:mt-0 mt-1">
+                Registre o desfecho conforme o caso (ex.: Em Apuração, Averiguado e Nada Constatado).
+              </p>
+            )}
+          </div>
           <div className="space-y-2">
             <Label className="text-sm font-medium">
               Desfecho <span className="text-destructive">*</span>

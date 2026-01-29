@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const ANO_MIN = 2025;
+const ANO_MAX = 2040;
+const ANOS = Array.from({ length: ANO_MAX - ANO_MIN + 1 }, (_, i) => ANO_MIN + i);
 
 interface NumeroOSFieldProps {
   value: string;
@@ -9,82 +14,106 @@ interface NumeroOSFieldProps {
   required?: boolean;
 }
 
+/**
+ * Valor completo no banco: ANO.00707.0000XXX (XXX = até 3 dígitos preenchidos com zeros à esquerda em 7 posições)
+ * Ex.: 1 → 2026.00707.0000001 | 13 → 2026.00707.0000013 | 118 → 2026.00707.0000118
+ */
+function parseNumeroOS(full: string): { ano: number; sufixo: number } | null {
+  if (!full || typeof full !== 'string') return null;
+  const match = full.match(/^(\d{4})\.00707\.(\d+)$/);
+  if (!match) return null;
+  const ano = parseInt(match[1], 10);
+  const sufixo = parseInt(match[2], 10);
+  if (Number.isNaN(ano) || Number.isNaN(sufixo)) return null;
+  return { ano, sufixo };
+}
+
+function buildNumeroOS(ano: number, sufixoNum: number): string {
+  const sufixoStr = String(sufixoNum).padStart(7, '0');
+  return `${ano}.00707.${sufixoStr}`;
+}
+
 const NumeroOSField: React.FC<NumeroOSFieldProps> = ({
   value,
   onChange,
   error,
   required = false
 }) => {
-  const [inputValue, setInputValue] = useState('');
+  const currentYear = new Date().getFullYear();
+  const parsed = parseNumeroOS(value);
+
+  const [ano, setAno] = useState<number>(parsed?.ano ?? currentYear);
+  const [sufixoInput, setSufixoInput] = useState<string>(
+    parsed !== null ? String(parsed.sufixo) : ''
+  );
 
   useEffect(() => {
-    // Extrair apenas os últimos 3 dígitos do valor completo
-    if (value) {
-      const match = value.match(/\.(\d{3})$/);
-      if (match) {
-        setInputValue(match[1]);
-      } else {
-        setInputValue(value.slice(-3));
-      }
-    } else {
-      setInputValue('');
+    const p = parseNumeroOS(value);
+    if (p) {
+      setAno(p.ano);
+      setSufixoInput(String(p.sufixo));
+    } else if (!value) {
+      setAno(currentYear);
+      setSufixoInput('');
     }
-  }, [value]);
+  }, [value, currentYear]);
 
-  const formatOS = (input: string): string => {
-    // Remover tudo que não é número
-    const numbersOnly = input.replace(/\D/g, '');
-    
-    // Limitar a 3 dígitos
-    const limited = numbersOnly.slice(0, 3);
-    
-    // Preencher com zeros à esquerda se necessário
-    const padded = limited.padStart(3, '0');
-    
-    // Formatar como 2026.00707.0000XXX
-    const currentYear = new Date().getFullYear();
-    return `${currentYear}.00707.0000${padded}`;
+  const handleAnoChange = (v: string) => {
+    const num = parseInt(v, 10);
+    if (!Number.isNaN(num)) {
+      setAno(num);
+      if (sufixoInput !== '') {
+        const n = parseInt(sufixoInput, 10);
+        if (!Number.isNaN(n)) onChange(buildNumeroOS(num, n));
+      }
+    }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    
-    // Remover tudo que não é número
-    const numbersOnly = newValue.replace(/\D/g, '');
-    
-    // Limitar a 3 dígitos
-    const limited = numbersOnly.slice(0, 3);
-    
-    setInputValue(limited);
-    
-    // Formatar e enviar valor completo
-    if (limited.length > 0) {
-      const formatted = formatOS(limited);
-      onChange(formatted);
-    } else {
+  const handleSufixoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, '');
+    const limited = raw.slice(0, 3);
+    setSufixoInput(limited);
+    if (limited === '') {
       onChange('');
+      return;
+    }
+    const n = parseInt(limited, 10);
+    if (!Number.isNaN(n) && n >= 0 && n <= 999) {
+      onChange(buildNumeroOS(ano, n));
     }
   };
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="numeroOS" className="text-sm">
+      <Label className="text-sm">
         Número da OS {required && <span className="text-destructive">*</span>}
       </Label>
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground font-mono">
-          {new Date().getFullYear()}.00707.0000
-        </span>
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={String(ano)} onValueChange={handleAnoChange}>
+          <SelectTrigger id="numeroOS-ano" className="w-[100px]">
+            <SelectValue placeholder="Ano" />
+          </SelectTrigger>
+          <SelectContent>
+            {ANOS.map((a) => (
+              <SelectItem key={a} value={String(a)}>
+                {a}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="text-sm text-muted-foreground font-mono">.00707.0000</span>
         <Input
           id="numeroOS"
           name="numeroOS"
           type="text"
-          value={inputValue}
-          onChange={handleChange}
-          placeholder="000"
+          inputMode="numeric"
+          value={sufixoInput}
+          onChange={handleSufixoChange}
+          placeholder="001"
           maxLength={3}
-          className={`w-20 ${error ? "border-red-500" : ""}`}
+          className={`w-20 font-mono ${error ? 'border-red-500' : ''}`}
           pattern="[0-9]{1,3}"
+          aria-label="Últimos 3 dígitos da OS"
         />
       </div>
       {value && (
