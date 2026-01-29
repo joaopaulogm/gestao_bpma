@@ -128,6 +128,7 @@ const MinutaFerias: React.FC = () => {
           minuta_data_fim,
           minuta_observacao,
           numero_processo_sei,
+          confirmado,
           efetivo:dim_efetivo(id, matricula, posto_graduacao, nome, quadro)
         `)
         .eq('ano', ano);
@@ -138,9 +139,20 @@ const MinutaFerias: React.FC = () => {
       
       ferias?.forEach((f: any) => {
         const diasNoMes = getParcelaForMonth(f.observacao, f.mes_inicio, f.dias, mes);
-        
-        // Only include entries with confirmed dates (minuta_data_inicio and minuta_data_fim set)
-        if (diasNoMes && f.efetivo && f.minuta_data_inicio && f.minuta_data_fim) {
+        const hasProcessoSei = Boolean(
+          (f.numero_processo_sei || '').trim() ||
+          (f.minuta_observacao || '').trim() ||
+          extractSeiFromObservacao(f.observacao)
+        );
+        // Apenas quem confirmou as férias (confirmado ON) e tem processo SEI, com datas confirmadas
+        if (
+          diasNoMes &&
+          f.efetivo &&
+          f.minuta_data_inicio &&
+          f.minuta_data_fim &&
+          f.confirmado === true &&
+          hasProcessoSei
+        ) {
           const dataInicio = parseISO(f.minuta_data_inicio);
           const dataFim = parseISO(f.minuta_data_fim);
           

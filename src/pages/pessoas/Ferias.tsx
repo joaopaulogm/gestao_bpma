@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import {
   Table,
   TableBody,
@@ -34,6 +35,7 @@ interface FeriasData {
   dias: number;
   tipo: string;
   observacao: string | null;
+  confirmado?: boolean;
   parcelas_detalhadas?: Array<{
     fat_ferias_id: string;
     parcela_num: number;
@@ -141,6 +143,7 @@ const Ferias: React.FC = () => {
   const [editingPolicial, setEditingPolicial] = useState<FeriasData | null>(null);
   const [parcelas, setParcelas] = useState<ParcelaInfo[]>([{ mes: 1, dias: 30 }]);
   const [saving, setSaving] = useState(false);
+  const [savingConfirmadoId, setSavingConfirmadoId] = useState<string | null>(null);
 
   const handleOpenMinuta = () => {
     if (mesSelecionado) {
@@ -417,6 +420,24 @@ const Ferias: React.FC = () => {
     setParcelas(parsedParcelas);
     setEditDialogOpen(true);
   };
+
+  const handleToggleConfirmado = useCallback(async (feriasId: string, checked: boolean) => {
+    setSavingConfirmadoId(feriasId);
+    try {
+      const { error } = await supabase
+        .from('fat_ferias')
+        .update({ confirmado: checked })
+        .eq('id', feriasId);
+      if (error) throw error;
+      setFerias(prev => prev.map(f => f.id === feriasId ? { ...f, confirmado: checked } : f));
+      toast.success(checked ? 'Férias confirmadas (entram na minuta)' : 'Férias desconfirmadas');
+    } catch (err: any) {
+      console.error('Erro ao atualizar confirmação:', err);
+      toast.error(err?.message || 'Erro ao atualizar confirmação');
+    } finally {
+      setSavingConfirmadoId(null);
+    }
+  }, []);
 
   const addParcela = () => {
     if (parcelas.length >= 3) {
@@ -760,6 +781,7 @@ const Ferias: React.FC = () => {
                       <TableHead className="text-center whitespace-nowrap">Dias</TableHead>
                       <TableHead className="text-center whitespace-nowrap">Data Início</TableHead>
                       <TableHead className="text-center whitespace-nowrap">Data Término</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Confirmado</TableHead>
                       <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -824,6 +846,18 @@ const Ferias: React.FC = () => {
                               }
                               return '-';
                             })()}
+                          </TableCell>
+                          <TableCell className="text-center py-1.5">
+                            <div className="flex justify-center items-center">
+                              <Switch
+                                checked={!!item.ferias.confirmado}
+                                onCheckedChange={(checked) => handleToggleConfirmado(item.ferias.id, checked)}
+                                disabled={savingConfirmadoId === item.ferias.id}
+                              />
+                              {savingConfirmadoId === item.ferias.id && (
+                                <Loader2 className="h-3 w-3 animate-spin ml-1 text-muted-foreground" />
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-center py-1.5">
                             <Button 

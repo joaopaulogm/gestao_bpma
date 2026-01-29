@@ -241,7 +241,8 @@ const CrimesAmbientaisCadastro = () => {
         supabase.from('dim_tipo_de_area').select('id, "Tipo de Área"'),
         supabase.from('dim_tipo_de_crime').select('id_tipo_de_crime, "Tipo de Crime"'),
         supabase.from('dim_enquadramento').select('id_enquadramento, id_tipo_de_crime, "Enquadramento"'),
-        supabase.from('dim_desfecho_crime_ambientais').select('id, nome, tipo'),
+        // FK em fat_registros_de_crime referencia dim_desfecho(id); carregar desfechos tipo 'crime'
+        (supabase as any).from('dim_desfecho').select('id, nome, tipo').eq('tipo', 'crime'),
         supabase.from('dim_especies_fauna').select('*').order('nome_popular'),
         supabase.from('dim_especies_flora').select('*').order('"Nome Popular"'),
         supabase.from('dim_estado_saude').select('id, nome'),
@@ -260,7 +261,12 @@ const CrimesAmbientaisCadastro = () => {
         console.log('Enquadramentos carregados:', enquadramentosRes.data);
         setEnquadramentos(enquadramentosRes.data as Enquadramento[]);
       }
-      if (desfechosRes.data) setDesfechos(desfechosRes.data);
+      if (!desfechosRes.error && desfechosRes.data?.length) {
+        setDesfechos(desfechosRes.data);
+      } else {
+        const fallbackDesfechos = await supabase.from('dim_desfecho_crime_ambientais').select('id, nome, tipo');
+        if (fallbackDesfechos.data?.length) setDesfechos(fallbackDesfechos.data);
+      }
       if (especiesFaunaRes.data) setEspeciesFauna(especiesFaunaRes.data);
       if (especiesFloraRes.data) setEspeciesFlora(especiesFloraRes.data as unknown as EspecieFlora[]);
       if (estadosSaudeRes.data) setEstadosSaude(estadosSaudeRes.data);
@@ -449,10 +455,8 @@ const CrimesAmbientaisCadastro = () => {
     setIsSubmitting(true);
     
     try {
-      // Insert main record
-      const { data: crimeRecord, error: crimeError } = await supabaseAny
-        .from('fat_registros_de_crimes_ambientais')
-        .insert({
+      // Insert main record (tabela no banco: fat_registros_de_crime; fallback para fat_registros_de_crimes_ambientais)
+      const insertPayload = {
           data,
           horario_acionamento: horarioAcionamento || null,
           horario_desfecho: horarioTermino || null,
@@ -501,11 +505,32 @@ const CrimesAmbientaisCadastro = () => {
           qtd_detidos_menor: qtdDetidosMenor,
           qtd_liberados_maior: qtdLiberadosMaior,
           qtd_liberados_menor: qtdLiberadosMenor
-        })
+        };
+
+      let crimeRecord: { id: string } | null = null;
+      let crimeError: any = null;
+
+      const { data: dataCrime, error: errCrime } = await supabaseAny
+        .from('fat_registros_de_crime')
+        .insert(insertPayload)
         .select('id')
         .single();
+      crimeRecord = dataCrime;
+      crimeError = errCrime;
 
+      if (crimeError?.code === '42P01' || (crimeError?.message && crimeError.message.includes('does not exist'))) {
+        const { data: dataAlt, error: errAlt } = await supabaseAny
+          .from('fat_registros_de_crimes_ambientais')
+          .insert(insertPayload)
+          .select('id')
+          .single();
+        if (!errAlt) {
+          crimeRecord = dataAlt;
+          crimeError = null;
+        }
+      }
       if (crimeError) throw crimeError;
+      if (!crimeRecord?.id) throw new Error('Insert não retornou id');
 
       const ocorrenciaId = crimeRecord.id;
 
@@ -584,9 +609,10 @@ const CrimesAmbientaisCadastro = () => {
       // Reset form
       resetForm();
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar:', error);
-      toast.error('Erro ao registrar ocorrência');
+      const msg = error?.message || error?.error_description || String(error);
+      toast.error(msg ? `Erro ao registrar: ${msg}` : 'Erro ao registrar ocorrência');
     } finally {
       setIsSubmitting(false);
     }

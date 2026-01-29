@@ -1758,6 +1758,7 @@ export type Database = {
       fat_ferias: {
         Row: {
           ano: number
+          confirmado: boolean
           created_at: string | null
           dias: number | null
           efetivo_id: string | null
@@ -1767,6 +1768,7 @@ export type Database = {
           minuta_data_fim: string | null
           minuta_data_inicio: string | null
           minuta_observacao: string | null
+          numero_processo_sei: string | null
           observacao: string | null
           source_row_number: number | null
           source_sheet: string | null
@@ -1775,6 +1777,7 @@ export type Database = {
         }
         Insert: {
           ano?: number
+          confirmado?: boolean
           created_at?: string | null
           dias?: number | null
           efetivo_id?: string | null
@@ -1784,6 +1787,7 @@ export type Database = {
           minuta_data_fim?: string | null
           minuta_data_inicio?: string | null
           minuta_observacao?: string | null
+          numero_processo_sei?: string | null
           observacao?: string | null
           source_row_number?: number | null
           source_sheet?: string | null
@@ -1792,6 +1796,7 @@ export type Database = {
         }
         Update: {
           ano?: number
+          confirmado?: boolean
           created_at?: string | null
           dias?: number | null
           efetivo_id?: string | null
@@ -1801,6 +1806,7 @@ export type Database = {
           minuta_data_fim?: string | null
           minuta_data_inicio?: string | null
           minuta_observacao?: string | null
+          numero_processo_sei?: string | null
           observacao?: string | null
           source_row_number?: number | null
           source_sheet?: string | null
