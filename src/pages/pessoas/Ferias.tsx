@@ -36,6 +36,8 @@ interface FeriasData {
   tipo: string;
   observacao: string | null;
   confirmado?: boolean;
+  numero_processo_sei?: string | null;
+  minuta_observacao?: string | null;
   parcelas_detalhadas?: Array<{
     fat_ferias_id: string;
     parcela_num: number;
@@ -144,6 +146,9 @@ const Ferias: React.FC = () => {
   const [parcelas, setParcelas] = useState<ParcelaInfo[]>([{ mes: 1, dias: 30 }]);
   const [saving, setSaving] = useState(false);
   const [savingConfirmadoId, setSavingConfirmadoId] = useState<string | null>(null);
+  const [savingSeiId, setSavingSeiId] = useState<string | null>(null);
+  const [editingSeiId, setEditingSeiId] = useState<string | null>(null);
+  const [editingSeiValue, setEditingSeiValue] = useState('');
 
   const handleOpenMinuta = () => {
     if (mesSelecionado) {
@@ -420,6 +425,28 @@ const Ferias: React.FC = () => {
     setParcelas(parsedParcelas);
     setEditDialogOpen(true);
   };
+
+  const handleSaveSei = useCallback(async (feriasId: string, value: string | null) => {
+    setSavingSeiId(feriasId);
+    try {
+      const { error } = await supabase
+        .from('fat_ferias')
+        .update({
+          numero_processo_sei: value || null,
+          minuta_observacao: value || null,
+        })
+        .eq('id', feriasId);
+      if (error) throw error;
+      setFerias(prev => prev.map(f => f.id === feriasId ? { ...f, numero_processo_sei: value ?? null, minuta_observacao: value ?? null } : f));
+      toast.success(value ? 'Processo SEI atualizado' : 'Processo SEI removido');
+    } catch (err: any) {
+      console.error('Erro ao salvar Processo SEI:', err);
+      toast.error(err?.message || 'Erro ao salvar Processo SEI');
+    } finally {
+      setSavingSeiId(null);
+      setEditingSeiId(null);
+    }
+  }, []);
 
   const handleToggleConfirmado = useCallback(async (feriasId: string, checked: boolean) => {
     setSavingConfirmadoId(feriasId);
@@ -781,6 +808,7 @@ const Ferias: React.FC = () => {
                       <TableHead className="text-center whitespace-nowrap">Dias</TableHead>
                       <TableHead className="text-center whitespace-nowrap">Data Início</TableHead>
                       <TableHead className="text-center whitespace-nowrap">Data Término</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Processo SEI</TableHead>
                       <TableHead className="text-center whitespace-nowrap">Confirmado</TableHead>
                       <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
                     </TableRow>
@@ -846,6 +874,60 @@ const Ferias: React.FC = () => {
                               }
                               return '-';
                             })()}
+                          </TableCell>
+                          <TableCell className="py-1.5">
+                            {editingSeiId === item.ferias.id ? (
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  className="h-7 text-xs min-w-[120px]"
+                                  placeholder="Ex: 12345.67890"
+                                  value={editingSeiValue}
+                                  onChange={(e) => setEditingSeiValue(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleSaveSei(item.ferias.id, editingSeiValue.trim() || null);
+                                    }
+                                    if (e.key === 'Escape') {
+                                      setEditingSeiId(null);
+                                      setEditingSeiValue('');
+                                    }
+                                  }}
+                                  autoFocus
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 shrink-0"
+                                  onClick={() => handleSaveSei(item.ferias.id, editingSeiValue.trim() || null)}
+                                >
+                                  <Check className="h-3 w-3 text-green-600" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 shrink-0"
+                                  onClick={() => { setEditingSeiId(null); setEditingSeiValue(''); }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="text-left w-full min-h-[28px] px-2 py-1 rounded border border-transparent hover:border-border hover:bg-muted/50 text-xs"
+                                onClick={() => {
+                                  setEditingSeiId(item.ferias.id);
+                                  setEditingSeiValue((item.ferias.numero_processo_sei || item.ferias.minuta_observacao) ?? '');
+                                }}
+                              >
+                                {(item.ferias.numero_processo_sei || item.ferias.minuta_observacao) || (
+                                  <span className="text-muted-foreground italic">Clique para editar</span>
+                                )}
+                              </button>
+                            )}
+                            {savingSeiId === item.ferias.id && (
+                              <Loader2 className="h-3 w-3 animate-spin mt-1 text-muted-foreground" />
+                            )}
                           </TableCell>
                           <TableCell className="text-center py-1.5">
                             <div className="flex justify-center items-center">
