@@ -504,10 +504,16 @@ const Ferias: React.FC = () => {
     return parseParcelasFromObservacao(feriaData.observacao, feriaData.mes_inicio, feriaData.dias);
   };
 
-  // Formatar parcelas para exibição
+  // Formatar parcelas para exibição: Integral só quando exatamente 30 dias corridos; caso contrário 1ª/2ª/3ª Parcela
   const formatParcelasDisplay = (allParcelas: ParcelaInfo[], mesSelecionado: number | null) => {
     if (allParcelas.length === 1) {
-      return <Badge variant="secondary" className="text-[10px] md:text-xs">Integral ({allParcelas[0].dias}d)</Badge>;
+      const dias = allParcelas[0].dias;
+      const isIntegral = dias === 30;
+      return (
+        <Badge variant="secondary" className="text-[10px] md:text-xs">
+          {isIntegral ? `Integral (${dias}d)` : `1ª Parcela (${dias}d)`}
+        </Badge>
+      );
     }
     return (
       <div className="flex items-center gap-0.5 flex-wrap">
@@ -517,7 +523,7 @@ const Ferias: React.FC = () => {
             variant={p.mes === mesSelecionado ? 'default' : 'secondary'}
             className={`text-[9px] md:text-xs px-1 py-0 ${p.mes === mesSelecionado ? 'ring-1 ring-primary ring-offset-1' : 'opacity-70'}`}
           >
-            {pIdx + 1}ª{MESES_NUM_TO_ABREV[p.mes - 1]}({p.dias}d)
+            {pIdx + 1}ª Parcela {MESES_NUM_TO_ABREV[p.mes - 1]}({p.dias}d)
           </Badge>
         ))}
       </div>
