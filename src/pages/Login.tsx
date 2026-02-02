@@ -230,13 +230,14 @@ const Login = () => {
 
       if (error) {
         console.error('Erro RPC verificar_primeiro_acesso:', error);
-        toast.error('Erro ao verificar credenciais');
+        toast.error(error?.message || 'Erro ao verificar credenciais');
         return;
       }
 
       const usuario = Array.isArray(data) ? data[0] : data;
 
       if (!usuario) {
+        console.warn('Primeiro acesso: nenhum usuário retornado para matrícula/CPF informados.', { matricula: matriculaLimpa, cpfLength: cpfLimpo.length });
         toast.error('Matrícula ou CPF incorretos. Verifique os dados informados.');
         return;
       }
