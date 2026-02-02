@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      dim_area_especialmente_protegida: {
+        Row: {
+          competencia: string
+          created_at: string | null
+          id: string
+          nome: string
+          tipo: string | null
+        }
+        Insert: {
+          competencia: string
+          created_at?: string | null
+          id?: string
+          nome: string
+          tipo?: string | null
+        }
+        Update: {
+          competencia?: string
+          created_at?: string | null
+          id?: string
+          nome?: string
+          tipo?: string | null
+        }
+        Relationships: []
+      }
       dim_area_protegida: {
         Row: {
           created_at: string | null
@@ -1144,8 +1168,10 @@ export type Database = {
       }
       fat_atividades_prevencao: {
         Row: {
+          area_protegida_id: string | null
           created_at: string | null
           data: string
+          em_area_protegida: boolean | null
           horario_inicio: string | null
           horario_termino: string | null
           id: string
@@ -1159,8 +1185,10 @@ export type Database = {
           tipo_atividade_id: string | null
         }
         Insert: {
+          area_protegida_id?: string | null
           created_at?: string | null
           data: string
+          em_area_protegida?: boolean | null
           horario_inicio?: string | null
           horario_termino?: string | null
           id?: string
@@ -1174,8 +1202,10 @@ export type Database = {
           tipo_atividade_id?: string | null
         }
         Update: {
+          area_protegida_id?: string | null
           created_at?: string | null
           data?: string
+          em_area_protegida?: boolean | null
           horario_inicio?: string | null
           horario_termino?: string | null
           id?: string
@@ -1189,6 +1219,13 @@ export type Database = {
           tipo_atividade_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fat_atividades_prevencao_area_protegida_id_fkey"
+            columns: ["area_protegida_id"]
+            isOneToOne: false
+            referencedRelation: "dim_area_especialmente_protegida"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fat_atividades_prevencao_regiao_administrativa_id_fkey"
             columns: ["regiao_administrativa_id"]
