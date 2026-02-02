@@ -36,9 +36,9 @@ const AtividadesPrevencao: React.FC = () => {
   // Dimension data
   const [tiposAtividades, setTiposAtividades] = useState<TipoAtividade[]>([]);
   
-  // Form state
+  // Form state (data em branco permitido para escolher no calendário ou digitar)
   const [formData, setFormData] = useState({
-    data: new Date().toISOString().split('T')[0],
+    data: '',
     tipoAtividadeId: '',
     regiaoAdministrativaId: '',
     latitude: '',
@@ -439,13 +439,12 @@ const AtividadesPrevencao: React.FC = () => {
           <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label htmlFor="data" className="text-sm">Data *</Label>
+                <Label htmlFor="data" className="text-sm">Data</Label>
                 <Input
                   id="data"
                   type="date"
-                  value={formData.data}
+                  value={formData.data || ''}
                   onChange={(e) => handleInputChange('data', e.target.value)}
-                  required
                   className="h-10 sm:h-11"
                 />
               </div>
@@ -494,7 +493,7 @@ const AtividadesPrevencao: React.FC = () => {
                   type="number"
                   min="0"
                   value={formData.quantidadePublico}
-                  onChange={(e) => handleInputChange('quantidadePublico', parseInt(e.target.value) || 0)}
+                  onChange={(e) => handleInputChange('quantidadePublico', Number.parseInt(e.target.value, 10) || 0)}
                   className="h-10 sm:h-11"
                 />
               </div>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Database } from '@/integrations/supabase/types';
@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!error && userRoleData?.role) {
         console.log('Role obtido de user_roles:', userRoleData.role);
-        return userRoleData.role as AppRole;
+        return userRoleData.role;
       }
 
       console.log('Usando role padrão: operador');
@@ -67,6 +67,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error fetching user role:', error);
       return 'operador';
     }
+  };
+
+  const STORAGE_KEY = 'bpma_auth_user';
+
+  const getLocalAuthUser = (): string | null =>
+    localStorage.getItem(STORAGE_KEY) ?? sessionStorage.getItem(STORAGE_KEY);
+
+  const clearLocalAuthStorage = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(STORAGE_KEY);
   };
 
   // Handler para sessão local (login com matrícula/senha)
@@ -84,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handleLocalAuthEvent = (event: CustomEvent) => {
       handleLocalAuthChange(event.detail);
     };
-    window.addEventListener('bpma_local_auth_changed', handleLocalAuthEvent as EventListener);
+    globalThis.addEventListener('bpma_local_auth_changed', handleLocalAuthEvent as EventListener);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -97,17 +107,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             fetchUserRole(session.user.id).then(setUserRole);
           }, 0);
           // Limpar sessão local se existir (Supabase Auth tem prioridade)
-          localStorage.removeItem('bpma_auth_user');
+          clearLocalAuthStorage();
         } else {
-          // Verificar se há sessão local (login com matrícula/senha)
-          const localAuthUser = localStorage.getItem('bpma_auth_user');
+          // Verificar se há sessão local (login com matrícula/senha - localStorage ou sessionStorage)
+          const localAuthUser = getLocalAuthUser();
           if (localAuthUser) {
             try {
               const localUser = JSON.parse(localAuthUser);
               handleLocalAuthChange(localUser);
             } catch (e) {
               console.error('Error parsing local auth user:', e);
-              localStorage.removeItem('bpma_auth_user');
+              clearLocalAuthStorage();
               setUser(null);
               setUserRole(null);
             }
@@ -129,17 +139,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         fetchUserRole(session.user.id).then(setUserRole);
         // Limpar sessão local se existir
-        localStorage.removeItem('bpma_auth_user');
+        clearLocalAuthStorage();
       } else {
-        // Verificar se há sessão local (login com matrícula/senha - persistente)
-        const localAuthUser = localStorage.getItem('bpma_auth_user');
+        // Verificar se há sessão local (login com matrícula/senha - localStorage ou sessionStorage)
+        const localAuthUser = getLocalAuthUser();
         if (localAuthUser) {
           try {
             const localUser = JSON.parse(localAuthUser);
             handleLocalAuthChange(localUser);
           } catch (e) {
             console.error('Error parsing local auth user:', e);
-            localStorage.removeItem('bpma_auth_user');
+            clearLocalAuthStorage();
           }
         }
       }
@@ -148,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       subscription.unsubscribe();
-      window.removeEventListener('bpma_local_auth_changed', handleLocalAuthEvent as EventListener);
+      globalThis.removeEventListener('bpma_local_auth_changed', handleLocalAuthEvent as EventListener);
     };
   }, []);
 
@@ -190,10 +200,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast.success('Logout realizado com sucesso');
     } catch (error: unknown) {
-      // Mesmo com erro, limpar sessão local
-      localStorage.removeItem('bpma_auth_user');
+      // Mesmo com erro, limpar sessão local em ambos os storages
+      clearLocalAuthStorage();
       setUser(null);
       setUserRole(null);
+      if (error instanceof Error) {
+        console.error('Logout error:', error.message);
+      }
       toast.success('Logout realizado');
     }
   };
@@ -235,16 +248,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return requiredRoles.includes(userRole);
   };
 
-  const value = {
-    user,
-    loading,
-    login,
-    logout,
-    isAuthenticated: !!user,
-    userRole,
-    isAdmin,
-    hasAccess,
-  };
+  const value = useMemo(
+    () => ({
+      user,
+      loading,
+      login,
+      logout,
+      isAuthenticated: !!user,
+      userRole,
+      isAdmin,
+      hasAccess,
+    }),
+    [user, loading, userRole, login, logout, hasAccess]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

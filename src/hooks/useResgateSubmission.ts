@@ -48,23 +48,38 @@ const isTabelaHistorica = (tabela: string): boolean => {
   return /^fat_resgates_diarios_202[0-4]$/.test(tabela);
 };
 
+interface PrepararDadosParams {
+  tabela: string;
+  dataFormatada: string;
+  especie: EspecieItem;
+  especieDetalhes: { nome_popular?: string; nome_cientifico?: string; classe_taxonomica?: string; ordem_taxonomica?: string; tipo_de_fauna?: string; estado_de_conservacao?: string } | null;
+  data: ResgateFormData;
+  regiaoId: string | null;
+  origemId: string | null;
+  estadoSaudeId: string | null;
+  estagioVidaId: string | null;
+  destinacaoId: string | null;
+  desfechoId: string | null;
+}
+
 /**
  * Prepara os dados para inserção baseado no tipo de tabela
  * Tabelas históricas (2020-2024) têm estrutura diferente
  */
-const prepararDadosParaInsercao = async (
-  tabela: string,
-  dataFormatada: string,
-  especie: EspecieItem,
-  especieDetalhes: any,
-  data: ResgateFormData,
-  regiaoId: string | null,
-  origemId: string | null,
-  estadoSaudeId: string | null,
-  estagioVidaId: string | null,
-  destinacaoId: string | null,
-  desfechoId: string | null
-): Promise<any> => {
+const prepararDadosParaInsercao = async (params: PrepararDadosParams): Promise<Record<string, unknown>> => {
+  const {
+    tabela,
+    dataFormatada,
+    especie,
+    especieDetalhes,
+    data,
+    regiaoId,
+    origemId,
+    estadoSaudeId,
+    estagioVidaId,
+    destinacaoId,
+    desfechoId,
+  } = params;
   // Se for tabela histórica (2020-2024), usar estrutura diferente
   if (isTabelaHistorica(tabela)) {
     const dataObj = new Date(dataFormatada);
@@ -179,14 +194,15 @@ export const useResgateSubmission = () => {
       // Parse the date from DD/MM/YYYY format to Date object
       let dataObj: Date;
       
-      if (data.data.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+      const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+      if (dateRegex.test(data.data)) {
         dataObj = parse(data.data, 'dd/MM/yyyy', new Date(), { locale: ptBR });
       } else {
         dataObj = new Date(data.data);
       }
       
-      if (isNaN(dataObj.getTime())) {
-        throw new Error('Data inválida');
+      if (Number.isNaN(dataObj.getTime())) {
+        throw new TypeError('Data inválida');
       }
       
       const dataFormatada = format(dataObj, 'yyyy-MM-dd');
@@ -195,14 +211,15 @@ export const useResgateSubmission = () => {
       console.log('Espécies a salvar:', especies.length);
       
       // Find dimension IDs (apenas os que não são por espécie)
-      const [regiaoId, origemId, desfechoId] = await Promise.all([
+      let desfechoId: string | null = null;
+      if (data.desfechoApreensao) {
+        desfechoId = await buscarIdPorNome('dim_desfecho_crime_ambientais', data.desfechoApreensao);
+      } else if (data.desfechoResgate) {
+        desfechoId = await buscarIdPorNome('dim_desfecho_resgates', data.desfechoResgate);
+      }
+      const [regiaoId, origemId] = await Promise.all([
         buscarIdPorNome('dim_regiao_administrativa', data.regiaoAdministrativa),
         buscarIdPorNome('dim_origem', data.origem),
-        data.desfechoApreensao 
-          ? buscarIdPorNome('dim_desfecho_crime_ambientais', data.desfechoApreensao)
-          : data.desfechoResgate 
-            ? buscarIdPorNome('dim_desfecho_resgates', data.desfechoResgate)
-            : Promise.resolve(null)
       ]);
 
       // Determinar qual tabela usar baseado na data
@@ -220,11 +237,8 @@ export const useResgateSubmission = () => {
           especieDetalhes = await buscarEspeciePorId(especie.especieId);
         }
 
-        // Buscar IDs das dimensões específicas da espécie (incluindo destinação e desfecho)
-        // Se a espécie tiver um desfechoResgate definido, usar esse; caso contrário, usar o do registro principal
-        const especieDesfechoId = especie.desfechoResgate 
-          ? await buscarIdPorNome('dim_desfecho_resgates', especie.desfechoResgate)
-          : desfechoId;
+        // Desfecho é único por registro (seção Desfecho do Resgate); não mais por espécie
+        const especieDesfechoId = desfechoId;
 
         const [estadoSaudeId, estagioVidaId, destinacaoId] = await Promise.all([
           buscarIdPorNome('dim_estado_saude', especie.estadoSaude),
@@ -233,8 +247,8 @@ export const useResgateSubmission = () => {
         ]);
 
         // Preparar dados baseado no tipo de tabela
-        const dadosInsercao = await prepararDadosParaInsercao(
-          tabelaDestino,
+        const dadosInsercao = await prepararDadosParaInsercao({
+          tabela: tabelaDestino,
           dataFormatada,
           especie,
           especieDetalhes,
@@ -244,8 +258,8 @@ export const useResgateSubmission = () => {
           estadoSaudeId,
           estagioVidaId,
           destinacaoId,
-          especieDesfechoId
-        );
+          desfechoId: especieDesfechoId,
+        });
 
         const { data: insertedRecord, error } = await supabaseAny
           .from(tabelaDestino)

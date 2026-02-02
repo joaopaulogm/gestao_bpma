@@ -6,9 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Lock, User, KeyRound, CheckCircle2, XCircle, AlertCircle, Eye, EyeOff, FileText, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { handleSupabaseError as _handleSupabaseError } from '@/utils/errorHandler';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import logoBPMA from '@/assets/logo-bpma.png';
 
@@ -101,6 +101,7 @@ const Login = () => {
   
   // Estado para login com senha (pós primeiro acesso)
   const [senhaLogin, setSenhaLogin] = useState('');
+  const [permanecerConectado, setPermanecerConectado] = useState(true);
   
   // Estado para alteração de senha
   const [newPassword, setNewPassword] = useState('');
@@ -180,8 +181,8 @@ const Login = () => {
   const validatePassword = (pwd: string): PasswordValidation => ({
     hasLowercase: /[a-z]/.test(pwd),
     hasUppercase: /[A-Z]/.test(pwd),
-    hasNumber: /[0-9]/.test(pwd),
-    hasSpecial: /[!@#$%^&*(),.?":{}|<>\-_=+\[\]\\/'`~;]/.test(pwd),
+    hasNumber: /\d/.test(pwd),
+    hasSpecial: /[!@#$%^&*(),.?":{}|<>\-_=+[\]\\/'`~;]/.test(pwd),
     hasValidLength: pwd.length >= 6 && pwd.length <= 10,
   });
 
@@ -207,8 +208,8 @@ const Login = () => {
 
     try {
       // Aceita números e letra X na matrícula
-      const matriculaLimpa = matricula.replace(/[^0-9Xx]/g, '').toUpperCase();
-      const cpfLimpo = cpf.replace(/\D/g, '');
+      const matriculaLimpa = matricula.replaceAll(/[^0-9Xx]/g, '').toUpperCase();
+      const cpfLimpo = cpf.replaceAll(/\D/g, '');
 
       if (!matriculaLimpa) {
         toast.error('Digite sua matrícula (números e letra X se houver)');
@@ -248,7 +249,7 @@ const Login = () => {
       }
 
       // Se já tem senha definida (hash bcrypt começa com $2)
-      const senhaIsHash = usuario.senha && usuario.senha.startsWith('$2');
+      const senhaIsHash = usuario.senha?.startsWith('$2');
       if (senhaIsHash) {
         toast.info('Você já alterou sua senha. Use a aba "Com Senha" para entrar.');
         setActiveTab('senha');
@@ -275,7 +276,7 @@ const Login = () => {
 
     try {
       // Aceita números e letra X na matrícula
-      const matriculaLimpa = matricula.replace(/[^0-9Xx]/g, '').toUpperCase();
+      const matriculaLimpa = matricula.replaceAll(/[^0-9Xx]/g, '').toUpperCase();
 
       if (!matriculaLimpa || !senhaLogin) {
         toast.error('Preencha matrícula e senha');
@@ -322,9 +323,9 @@ const Login = () => {
       localStorage.setItem('bpma_auth_user', JSON.stringify(userData));
       
       // Disparar evento para AuthContext reagir imediatamente
-      window.dispatchEvent(new CustomEvent('bpma_local_auth_changed', { detail: userData }));
+      globalThis.dispatchEvent(new CustomEvent('bpma_local_auth_changed', { detail: userData }));
       
-      toast.success(`Bem-vindo(a), ${usuario.nome_guerra || usuario.nome}!`);
+      toast.success(`Bem-vindo(a), ${usuario.nome_guerra ?? usuario.nome}!`);
       
       // Redirecionar para página inicial
       setTimeout(() => {
@@ -355,7 +356,7 @@ const Login = () => {
 
     try {
       // Salvar nova senha com hash bcrypt
-      const { data, error } = await (supabase as any).rpc('atualizar_senha_user_roles', {
+      const { error } = await (supabase as any).rpc('atualizar_senha_user_roles', {
         p_user_role_id: pendingUser.id,
         p_nova_senha: newPassword,
       });
@@ -370,7 +371,7 @@ const Login = () => {
       
       // Sincroniza Supabase Auth com a nova senha (para manter upload funcionando)
       if (pendingUser) {
-        const matriculaLimpa = (pendingUser.matricula || '').replace(/[^0-9Xx]/g, '').toUpperCase();
+        const matriculaLimpa = (pendingUser.matricula || '').replaceAll(/[^0-9Xx]/g, '').toUpperCase();
         const ok = await ensureSupabaseAuthenticated(matriculaLimpa, newPassword);
         if (!ok) return;
 
@@ -386,7 +387,7 @@ const Login = () => {
         localStorage.setItem('bpma_auth_user', JSON.stringify(userData));
         
         // Disparar evento para AuthContext reagir imediatamente
-        window.dispatchEvent(new CustomEvent('bpma_local_auth_changed', { detail: userData }));
+        globalThis.dispatchEvent(new CustomEvent('bpma_local_auth_changed', { detail: userData }));
       }
       
       // Redirecionar para página inicial
@@ -424,8 +425,8 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const matriculaLimpa = recoveryMatricula.replace(/[^0-9Xx]/g, '').toUpperCase();
-      const cpfLimpo = recoveryCpf.replace(/\D/g, '');
+      const matriculaLimpa = recoveryMatricula.replaceAll(/[^0-9Xx]/g, '').toUpperCase();
+      const cpfLimpo = recoveryCpf.replaceAll(/\D/g, '');
 
       if (!matriculaLimpa) {
         toast.error('Digite sua matrícula');
@@ -508,7 +509,7 @@ const Login = () => {
       }
 
       // Mantém Supabase Auth sincronizado com a senha redefinida (evita voltar a ficar anon)
-      const matriculaLimpa = recoveryMatricula.replace(/[^0-9Xx]/g, '').toUpperCase();
+      const matriculaLimpa = recoveryMatricula.replaceAll(/[^0-9Xx]/g, '').toUpperCase();
       if (matriculaLimpa) {
         const ok = await ensureSupabaseAuthenticated(matriculaLimpa, resetNewPassword);
         if (!ok) {
@@ -678,7 +679,7 @@ const Login = () => {
                 type="text"
                 placeholder="11 dígitos do CPF"
                 value={recoveryCpf}
-                onChange={(e) => setRecoveryCpf(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                onChange={(e) => setRecoveryCpf(e.target.value.replaceAll(/\D/g, '').slice(0, 11))}
                 maxLength={11}
               />
             </div>
@@ -856,7 +857,7 @@ const Login = () => {
                   inputMode="text"
                   placeholder="Números da matrícula (e X se houver)"
                   value={matricula}
-                  onChange={(e) => setMatricula(e.target.value.replace(/[^0-9Xx]/g, '').toUpperCase())}
+                  onChange={(e) => setMatricula(e.target.value.replaceAll(/[^0-9Xx]/g, '').toUpperCase())}
                   required
                   autoComplete="username"
                 />
@@ -870,7 +871,7 @@ const Login = () => {
                   inputMode="numeric"
                   placeholder="00000000000"
                   value={cpf}
-                  onChange={(e) => setCpf(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => setCpf(e.target.value.replaceAll(/\D/g, ''))}
                   maxLength={11}
                   required
                   autoComplete="current-password"
@@ -917,7 +918,7 @@ const Login = () => {
                   inputMode="text"
                   placeholder="Números da matrícula (e X se houver)"
                   value={matricula}
-                  onChange={(e) => setMatricula(e.target.value.replace(/[^0-9Xx]/g, '').toUpperCase())}
+                  onChange={(e) => setMatricula(e.target.value.replaceAll(/[^0-9Xx]/g, '').toUpperCase())}
                   required
                   autoComplete="username"
                 />
@@ -937,6 +938,21 @@ const Login = () => {
                   showPassword={showSenhaLogin}
                   onTogglePassword={() => setShowSenhaLogin(!showSenhaLogin)}
                 />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="permanecer-conectado"
+                  checked={permanecerConectado}
+                  onCheckedChange={(checked) => setPermanecerConectado(checked === true)}
+                  className="border-white/40 data-[state=checked]:bg-[#ffcc00] data-[state=checked]:border-[#ffcc00]"
+                />
+                <Label
+                  htmlFor="permanecer-conectado"
+                  className="text-sm text-white/80 cursor-pointer select-none"
+                >
+                  Permanecer conectado
+                </Label>
               </div>
 
               <Button 

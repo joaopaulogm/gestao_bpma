@@ -36,7 +36,7 @@ export interface FaunaItem {
 interface FaunaSectionProps {
   faunaItems: FaunaItem[];
   onFaunaItemsChange: (items: FaunaItem[]) => void;
-  getFieldError: (field: any) => string | undefined;
+  getFieldError: (field: string) => string | undefined;
 }
 
 interface EspecieFauna {

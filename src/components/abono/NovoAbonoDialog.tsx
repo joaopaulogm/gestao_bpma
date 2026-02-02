@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Search, Calendar, AlertTriangle, Check, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,13 +62,7 @@ export const NovoAbonoDialog: React.FC<NovoAbonoDialogProps> = ({ selectedYear, 
   const [feriasExistentes, setFeriasExistentes] = useState<FeriasExistente[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (open) {
-      fetchData();
-    }
-  }, [open, selectedYear]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch militares
