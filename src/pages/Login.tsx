@@ -208,8 +208,8 @@ const Login = () => {
 
     try {
       // Aceita números e letra X na matrícula
-      const matriculaLimpa = matricula.replaceAll(/[^0-9Xx]/g, '').toUpperCase();
-      const cpfLimpo = cpf.replaceAll(/\D/g, '');
+      const matriculaLimpa = matricula.replace(/[^0-9Xx]/g, '').toUpperCase();
+      const cpfLimpo = cpf.replace(/\D/g, '');
 
       if (!matriculaLimpa) {
         toast.error('Digite sua matrícula (números e letra X se houver)');
@@ -276,7 +276,7 @@ const Login = () => {
 
     try {
       // Aceita números e letra X na matrícula
-      const matriculaLimpa = matricula.replaceAll(/[^0-9Xx]/g, '').toUpperCase();
+      const matriculaLimpa = matricula.replace(/[^0-9Xx]/g, '').toUpperCase();
 
       if (!matriculaLimpa || !senhaLogin) {
         toast.error('Preencha matrícula e senha');
@@ -371,7 +371,7 @@ const Login = () => {
       
       // Sincroniza Supabase Auth com a nova senha (para manter upload funcionando)
       if (pendingUser) {
-        const matriculaLimpa = (pendingUser.matricula || '').replaceAll(/[^0-9Xx]/g, '').toUpperCase();
+        const matriculaLimpa = (pendingUser.matricula || '').replace(/[^0-9Xx]/g, '').toUpperCase();
         const ok = await ensureSupabaseAuthenticated(matriculaLimpa, newPassword);
         if (!ok) return;
 
@@ -425,8 +425,8 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const matriculaLimpa = recoveryMatricula.replaceAll(/[^0-9Xx]/g, '').toUpperCase();
-      const cpfLimpo = recoveryCpf.replaceAll(/\D/g, '');
+      const matriculaLimpa = recoveryMatricula.replace(/[^0-9Xx]/g, '').toUpperCase();
+      const cpfLimpo = recoveryCpf.replace(/\D/g, '');
 
       if (!matriculaLimpa) {
         toast.error('Digite sua matrícula');
@@ -509,7 +509,7 @@ const Login = () => {
       }
 
       // Mantém Supabase Auth sincronizado com a senha redefinida (evita voltar a ficar anon)
-      const matriculaLimpa = recoveryMatricula.replaceAll(/[^0-9Xx]/g, '').toUpperCase();
+      const matriculaLimpa = recoveryMatricula.replace(/[^0-9Xx]/g, '').toUpperCase();
       if (matriculaLimpa) {
         const ok = await ensureSupabaseAuthenticated(matriculaLimpa, resetNewPassword);
         if (!ok) {
@@ -679,7 +679,7 @@ const Login = () => {
                 type="text"
                 placeholder="11 dígitos do CPF"
                 value={recoveryCpf}
-                onChange={(e) => setRecoveryCpf(e.target.value.replaceAll(/\D/g, '').slice(0, 11))}
+                onChange={(e) => setRecoveryCpf(e.target.value.replace(/\D/g, '').slice(0, 11))}
                 maxLength={11}
               />
             </div>
@@ -857,7 +857,7 @@ const Login = () => {
                   inputMode="text"
                   placeholder="Números da matrícula (e X se houver)"
                   value={matricula}
-                  onChange={(e) => setMatricula(e.target.value.replaceAll(/[^0-9Xx]/g, '').toUpperCase())}
+                  onChange={(e) => setMatricula(e.target.value.replace(/[^0-9Xx]/g, '').toUpperCase())}
                   required
                   autoComplete="username"
                 />
@@ -871,7 +871,7 @@ const Login = () => {
                   inputMode="numeric"
                   placeholder="00000000000"
                   value={cpf}
-                  onChange={(e) => setCpf(e.target.value.replaceAll(/\D/g, ''))}
+                  onChange={(e) => setCpf(e.target.value.replace(/\D/g, ''))}
                   maxLength={11}
                   required
                   autoComplete="current-password"
@@ -918,7 +918,7 @@ const Login = () => {
                   inputMode="text"
                   placeholder="Números da matrícula (e X se houver)"
                   value={matricula}
-                  onChange={(e) => setMatricula(e.target.value.replaceAll(/[^0-9Xx]/g, '').toUpperCase())}
+                  onChange={(e) => setMatricula(e.target.value.replace(/[^0-9Xx]/g, '').toUpperCase())}
                   required
                   autoComplete="username"
                 />
