@@ -4,43 +4,14 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Clipboard,
   LogOut,
-  Home,
   Lock,
   ChevronLeft,
   ChevronRight,
-  LogIn,
-  Shield,
   Users,
   User,
-  BookOpen,
-  Settings,
-  Briefcase,
-  Wrench,
-  Trophy,
   Menu,
   X,
   ChevronDown,
-  FileText,
-  Search,
-  PawPrint,
-  Leaf,
-  TreePine,
-  List,
-  BarChart3,
-  MapPin,
-  Package,
-  FolderOpen,
-  FileCheck,
-  Calendar,
-  Palmtree,
-  Gift,
-  UsersRound,
-  Target,
-  Camera,
-  UserMinus,
-  LayoutDashboard,
-  CalendarDays,
-  Presentation,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -54,152 +25,18 @@ import {
 import NotificationsPopover from '@/components/NotificationsPopover';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import type { Database } from '@/integrations/supabase/types';
-
-type AppRole = Database['public']['Enums']['app_role'];
-
-interface NavItem {
-  path: string;
-  label: string;
-  icon: LucideIcon;
-  roles?: (AppRole | 'guest')[];
-  children?: NavItem[];
-}
-
-interface NavSection {
-  title: string;
-  icon?: LucideIcon;
-  items: NavItem[];
-}
+import { navSections } from '@/config/nav';
+import type { NavItem } from '@/config/nav';
+import type { AppRole } from '@/config/nav';
 
 const NAVY = '#071d49';
-const GOLD = '#ffcc00';
-
-const navSections: NavSection[] = [
-  {
-    title: 'Início',
-    items: [{ path: '/inicio', label: 'Página Inicial', icon: Home }],
-  },
-  {
-    title: 'Atividade Operacional',
-    icon: Lock,
-    items: [
-      { path: '/login', label: 'Fazer Login', icon: LogIn, roles: ['guest'] },
-      {
-        path: '/material-apoio',
-        label: 'Material de Apoio',
-        icon: BookOpen,
-        roles: ['operador'],
-        children: [
-          { path: '/material-apoio/pop', label: 'POP', icon: FileText },
-          { path: '/material-apoio/identificar-especie', label: 'Identificar Espécie', icon: Search },
-          { path: '/material-apoio/manual-rap', label: 'Manual RAP', icon: BookOpen },
-        ],
-      },
-      { path: '/mapa-localizacao', label: 'Mapa e Localização', icon: MapPin, roles: ['operador'] },
-      { path: '/ranking', label: 'Ranking de Ocorrências', icon: Trophy, roles: ['operador'] },
-    ],
-  },
-  {
-    title: 'Seção Operacional',
-    icon: Briefcase,
-    items: [
-      {
-        path: '/secao-operacional',
-        label: 'Seção Operacional',
-        icon: Briefcase,
-        roles: ['secao_operacional'],
-        children: [
-          { path: '/secao-operacional/dashboard', label: 'Dashboard', icon: BarChart3 },
-          { path: '/secao-operacional/registros', label: 'Registros', icon: FolderOpen },
-          { path: '/secao-operacional/apresentacao', label: 'Apresentação', icon: Presentation },
-          { path: '/secao-operacional/hotspots', label: 'Hotspots', icon: MapPin },
-          { path: '/secao-operacional/relatorios', label: 'Relatórios', icon: FileText },
-          { path: '/secao-operacional/fauna-cadastro', label: 'Fauna — Cadastrar', icon: PawPrint },
-          { path: '/secao-operacional/fauna-cadastrada', label: 'Fauna — Cadastrada', icon: List },
-          { path: '/secao-operacional/flora-cadastro', label: 'Flora — Cadastrar', icon: Leaf },
-          { path: '/secao-operacional/flora-cadastrada', label: 'Flora — Cadastrada', icon: TreePine },
-          { path: '/secao-operacional/monitorar-raps', label: 'Monitorar RAPs', icon: Camera },
-          { path: '/secao-operacional/resgate-cadastro', label: 'Resgate', icon: Clipboard },
-          { path: '/secao-operacional/crimes-ambientais', label: 'Crimes Ambientais', icon: Shield },
-          { path: '/secao-operacional/crimes-comuns', label: 'Crimes Comuns', icon: Shield },
-          { path: '/secao-operacional/atividades-prevencao', label: 'Atividades Prevenção', icon: Shield },
-          { path: '/secao-operacional/bens-apreendidos', label: 'Bens Apreendidos', icon: Package },
-          { path: '/secao-operacional/controle-os', label: 'Controle OS', icon: FileCheck },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'Comando',
-    icon: LayoutDashboard,
-    items: [
-      {
-        path: '/comando',
-        label: 'Comando',
-        icon: LayoutDashboard,
-        roles: ['admin', 'comando'],
-        children: [
-          { path: '/comando/agenda-OS', label: 'Agenda OS', icon: Calendar },
-          { path: '/comando/agenda-CMD', label: 'Agenda CMD', icon: CalendarDays },
-          { path: '/comando/dashboard', label: 'Dashboard', icon: BarChart3 },
-          { path: '/comando/apresentacao', label: 'Apresentação', icon: Presentation },
-          { path: '/comando/pessoal', label: 'Pessoal', icon: Users },
-          { path: '/comando/pessoal/campanha', label: 'Campanha', icon: Target },
-          { path: '/comando/pessoal/efetivo', label: 'Efetivo BPMA', icon: UsersRound },
-          { path: '/comando/pessoal/equipes', label: 'Equipes', icon: Users },
-          { path: '/comando/pessoal/escalas', label: 'Escalas', icon: Calendar },
-          { path: '/comando/pessoal/afastamentos', label: 'Afastamentos', icon: UserMinus },
-          { path: '/comando/pessoal/licencas', label: 'Licenças', icon: FileCheck },
-          { path: '/comando/pessoal/ferias', label: 'Férias', icon: Palmtree },
-          { path: '/comando/pessoal/abono', label: 'Abono', icon: Gift },
-          { path: '/comando/logistica', label: 'Logística', icon: Wrench },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'Seção Pessoas',
-    icon: Users,
-    items: [
-      {
-        path: '/secao-pessoas',
-        label: 'Seção Pessoas',
-        icon: Users,
-        roles: ['secao_pessoas'],
-        children: [
-          { path: '/secao-pessoas/campanha', label: 'Campanha', icon: Target },
-          { path: '/secao-pessoas/efetivo', label: 'Efetivo BPMA', icon: UsersRound },
-          { path: '/secao-pessoas/equipes', label: 'Equipes', icon: Users },
-          { path: '/secao-pessoas/escalas', label: 'Escalas', icon: Calendar },
-          { path: '/secao-pessoas/afastamentos', label: 'Afastamentos', icon: UserMinus },
-          { path: '/secao-pessoas/licencas', label: 'Licenças', icon: FileCheck },
-          { path: '/secao-pessoas/ferias', label: 'Férias', icon: Palmtree },
-          { path: '/secao-pessoas/abono', label: 'Abono', icon: Gift },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'Seção Logística',
-    icon: Wrench,
-    items: [
-      { path: '/secao-logistica', label: 'Seção Logística', icon: Wrench, roles: ['secao_logistica'] },
-    ],
-  },
-  {
-    title: 'Administração',
-    icon: Settings,
-    items: [
-      { path: '/gerenciar-permissoes', label: 'Gerenciar Permissões', icon: Settings, roles: ['admin'] },
-    ],
-  },
-];
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [openKeys, setOpenKeys] = useState<Set<string>>(() => new Set());
+  /** Seções que o usuário fechou manualmente; permite recolher mesmo com filho ativo */
+  const [forceClosed, setForceClosed] = useState<Set<string>>(() => new Set());
   const [indicatorStyle, setIndicatorStyle] = useState({ top: 0, height: 36, opacity: 0 });
   const navRef = useRef<HTMLElement | null>(null);
   const sidebarContentRef = useRef<HTMLDivElement | null>(null);
@@ -213,6 +50,20 @@ const Sidebar = () => {
   }, [location.pathname]);
 
   useEffect(() => {
+    setForceClosed((prev) => {
+      let changed = false;
+      const next = new Set(prev);
+      next.forEach((key) => {
+        if (!(location.pathname === key || location.pathname.startsWith(key + '/'))) {
+          next.delete(key);
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [location.pathname]);
+
+  useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setIsMobileOpen(false);
     };
@@ -220,6 +71,7 @@ const Sidebar = () => {
     return () => document.removeEventListener('keydown', handleEscape);
   }, []);
 
+  // Oculta nós do DOM cujo texto corresponda a um padrão específico (conteúdo sensível).
   useEffect(() => {
     const root = sidebarContentRef.current;
     if (!root) return;
@@ -260,11 +112,20 @@ const Sidebar = () => {
     return true;
   };
 
-  const toggleOpen = (key: string) => {
+  const setSectionOpen = (key: string, open: boolean) => {
     setOpenKeys((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
+      if (open) {
+        next.add(key);
+        setForceClosed((f) => {
+          const n = new Set(f);
+          n.delete(key);
+          return n;
+        });
+      } else {
+        next.delete(key);
+        setForceClosed((f) => new Set(f).add(key));
+      }
       return next;
     });
   };
@@ -331,12 +192,13 @@ const Sidebar = () => {
 
       const key = item.path;
       const childActive = isChildActive(item.path);
-      const isOpenCollapse = openKeys.has(key) || childActive;
+      const userClosed = forceClosed.has(key);
+      const isOpenCollapse = (openKeys.has(key) || childActive) && !userClosed;
       const showSub = isOpen || isMobile;
 
       return (
         <li key={item.path} className="list-none">
-          <Collapsible open={isOpenCollapse} onOpenChange={() => toggleOpen(key)}>
+          <Collapsible open={isOpenCollapse} onOpenChange={(open) => setSectionOpen(key, open)}>
             <div className="flex items-center rounded-r-2xl">
               <div className="flex-1 min-w-0">
                 <NavLink item={item} />
@@ -507,7 +369,7 @@ const Sidebar = () => {
         <button
           onClick={() => setIsMobileOpen(true)}
           className="fixed top-4 left-4 z-40 p-2 rounded-xl shadow-lg transition-all hover:scale-105"
-          style={{ background: NAVY, color: GOLD }}
+          style={{ background: NAVY, color: '#ffcc00' }}
           aria-label="Abrir menu"
         >
           <Menu className="h-6 w-6" />
