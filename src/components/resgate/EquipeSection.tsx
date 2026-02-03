@@ -174,25 +174,6 @@ const EquipeSection: React.FC<EquipeSectionProps> = ({
   return (
     <FormSection title="Identificação da Equipe">
       <div className="space-y-4">
-        {/* Grupamento/Serviço */}
-        {grupamentoServicoOptions.length > 0 && onGrupamentoServicoChange && (
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Grupamento / Serviço</Label>
-            <Select value={grupamentoServicoId || undefined} onValueChange={onGrupamentoServicoChange}>
-              <SelectTrigger className="input-glass">
-                <SelectValue placeholder="Selecione o grupamento ou serviço" />
-              </SelectTrigger>
-              <SelectContent>
-                {grupamentoServicoOptions.map((opt) => (
-                  <SelectItem key={opt.id} value={opt.id}>
-                    {opt.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
         {/* Input para buscar policial */}
         <div className="flex gap-2 items-end">
           <div className="flex-1 space-y-2">
@@ -225,6 +206,25 @@ const EquipeSection: React.FC<EquipeSectionProps> = ({
             )}
           </Button>
         </div>
+
+        {/* Grupamento ou Serviço (abaixo do campo de busca e inclusão de policiais) */}
+        {grupamentoServicoOptions.length > 0 && onGrupamentoServicoChange && (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Grupamento ou Serviço</Label>
+            <Select value={grupamentoServicoId || undefined} onValueChange={onGrupamentoServicoChange}>
+              <SelectTrigger className="input-glass">
+                <SelectValue placeholder="Selecione o grupamento ou serviço" />
+              </SelectTrigger>
+              <SelectContent>
+                {grupamentoServicoOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {opt.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* Lista de membros adicionados */}
         {membros.length > 0 && (

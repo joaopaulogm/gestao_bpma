@@ -441,9 +441,26 @@ const CrimesComuns = () => {
         {/* Card: Identificação da Equipe */}
         <FormSection title="Identificação da Equipe">
           <div className="space-y-4">
+            <div className="flex gap-2 items-end">
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="matriculaCrime" className="text-sm font-medium">Matrícula ou Nome do Policial</Label>
+                <Input
+                  id="matriculaCrime"
+                  type="text"
+                  value={matriculaInput}
+                  onChange={(e) => setMatriculaInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), buscarPolicial())}
+                  placeholder="Digite a matrícula ou nome do policial"
+                  className="input-glass"
+                />
+              </div>
+              <Button type="button" onClick={buscarPolicial} disabled={isSearchingMembro || !matriculaInput.trim()} className="btn-primary">
+                {isSearchingMembro ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Search className="h-4 w-4 mr-2" />Buscar</>}
+              </Button>
+            </div>
             {grupamentoServicoOptions.length > 0 && (
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Grupamento / Serviço</Label>
+                <Label className="text-sm font-medium">Grupamento ou Serviço</Label>
                 <Select value={grupamentoServicoId || undefined} onValueChange={setGrupamentoServicoId}>
                   <SelectTrigger className="input-glass">
                     <SelectValue placeholder="Selecione o grupamento ou serviço" />
@@ -458,23 +475,6 @@ const CrimesComuns = () => {
                 </Select>
               </div>
             )}
-            <div className="flex gap-2 items-end">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="matriculaCrime" className="text-sm font-medium">Matrícula do Policial</Label>
-                <Input
-                  id="matriculaCrime"
-                  type="text"
-                  value={matriculaInput}
-                  onChange={(e) => setMatriculaInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), buscarPolicial())}
-                  placeholder="Digite a matrícula"
-                  className="input-glass"
-                />
-              </div>
-              <Button type="button" onClick={buscarPolicial} disabled={isSearchingMembro || !matriculaInput.trim()} className="btn-primary">
-                {isSearchingMembro ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Search className="h-4 w-4 mr-2" />Buscar</>}
-              </Button>
-            </div>
             {membrosEquipe.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-muted-foreground">Policiais na Equipe ({membrosEquipe.length})</Label>

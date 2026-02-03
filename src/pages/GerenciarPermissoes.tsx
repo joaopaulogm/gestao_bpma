@@ -80,7 +80,7 @@ const GerenciarPermissoes: React.FC = () => {
 
       if (error) throw error;
       setUserRoles(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching user roles:', error);
       toast.error('Erro ao carregar permissões');
     } finally {
@@ -124,7 +124,7 @@ const GerenciarPermissoes: React.FC = () => {
       });
       
       setUsuarios(usuariosWithRoles);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching usuarios:', error);
       toast.error('Erro ao carregar usuários');
     } finally {
@@ -159,9 +159,10 @@ const GerenciarPermissoes: React.FC = () => {
       setNewRole('operador');
       fetchUserRoles();
       fetchUsuarios();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding role:', error);
-      if (error.code === '23505') {
+      const code = error && typeof error === 'object' && 'code' in error ? (error as { code: string }).code : undefined;
+      if (code === '23505') {
         toast.error('Este usuário já possui esta permissão');
       } else {
         toast.error('Erro ao adicionar permissão');
@@ -183,7 +184,7 @@ const GerenciarPermissoes: React.FC = () => {
       toast.success('Permissão removida com sucesso');
       fetchUserRoles();
       fetchUsuarios();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting role:', error);
       toast.error('Erro ao remover permissão');
     }
@@ -201,7 +202,7 @@ const GerenciarPermissoes: React.FC = () => {
       toast.success('Permissão atualizada com sucesso');
       fetchUserRoles();
       fetchUsuarios();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating role:', error);
       toast.error('Erro ao atualizar permissão');
     }
@@ -274,7 +275,7 @@ const GerenciarPermissoes: React.FC = () => {
       }
       
       fetchUsuarios();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error setting usuario role:', error);
       toast.error('Erro ao definir nível de acesso');
     }
@@ -311,9 +312,10 @@ const GerenciarPermissoes: React.FC = () => {
       setNewUserEmail('');
       setNewUserMatricula('');
       fetchUsuarios();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding user:', error);
-      if (error.code === '23505') {
+      const code = error && typeof error === 'object' && 'code' in error ? (error as { code: string }).code : undefined;
+      if (code === '23505') {
         toast.error('Este usuário já está cadastrado');
       } else {
         toast.error('Erro ao adicionar usuário');
@@ -334,7 +336,7 @@ const GerenciarPermissoes: React.FC = () => {
 
       toast.success('Usuário removido com sucesso');
       fetchUsuarios();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting user:', error);
       toast.error('Erro ao remover usuário');
     }
@@ -351,7 +353,7 @@ const GerenciarPermissoes: React.FC = () => {
 
       toast.success(currentStatus ? 'Usuário desativado' : 'Usuário ativado');
       fetchUsuarios();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error toggling user status:', error);
       toast.error('Erro ao alterar status do usuário');
     }
@@ -657,16 +659,22 @@ const GerenciarPermissoes: React.FC = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>ID do Usuário</TableHead>
+                        <TableHead>Nome de Guerra</TableHead>
                         <TableHead>Nível de Acesso</TableHead>
                         <TableHead>Data de Criação</TableHead>
                         <TableHead className="w-20">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {userRoles.map((userRole) => (
+                      {userRoles.map((userRole) => {
+                        const usuario = usuarios.find(u => u.auth_user_id === userRole.user_id);
+                        return (
                         <TableRow key={userRole.id}>
                           <TableCell className="font-mono text-sm">
                             {userRole.user_id}
+                          </TableCell>
+                          <TableCell>
+                            {usuario?.nome_guerra || usuario?.nome || '-'}
                           </TableCell>
                           <TableCell>
                             <Select 
@@ -701,7 +709,8 @@ const GerenciarPermissoes: React.FC = () => {
                             </Button>
                           </TableCell>
                         </TableRow>
-                      ))}
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>

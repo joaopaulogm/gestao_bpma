@@ -166,23 +166,6 @@ const EquipeSectionPrevencao: React.FC<EquipeSectionPrevencaoProps> = ({
       </CardHeader>
       <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
         <div className="space-y-4">
-          {grupamentoServicoOptions.length > 0 && onGrupamentoServicoChange && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Grupamento / Serviço</Label>
-              <Select value={grupamentoServicoId || undefined} onValueChange={onGrupamentoServicoChange}>
-                <SelectTrigger className="h-10 sm:h-11">
-                  <SelectValue placeholder="Selecione o grupamento ou serviço" />
-                </SelectTrigger>
-                <SelectContent>
-                  {grupamentoServicoOptions.map((opt) => (
-                    <SelectItem key={opt.id} value={opt.id}>
-                      {opt.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
           <div className="flex gap-2 items-end">
             <div className="flex-1 space-y-2">
               <Label htmlFor="matricula" className="text-sm font-medium">
@@ -214,6 +197,24 @@ const EquipeSectionPrevencao: React.FC<EquipeSectionPrevencaoProps> = ({
               )}
             </Button>
           </div>
+
+          {grupamentoServicoOptions.length > 0 && onGrupamentoServicoChange && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Grupamento ou Serviço</Label>
+              <Select value={grupamentoServicoId || undefined} onValueChange={onGrupamentoServicoChange}>
+                <SelectTrigger className="h-10 sm:h-11">
+                  <SelectValue placeholder="Selecione o grupamento ou serviço" />
+                </SelectTrigger>
+                <SelectContent>
+                  {grupamentoServicoOptions.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.id}>
+                      {opt.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {membros.length > 0 && (
             <div className="space-y-2">
