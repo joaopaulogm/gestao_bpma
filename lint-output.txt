@@ -1,0 +1,875 @@
+﻿
+> vite_react_shadcn_ts@0.0.0 lint
+> eslint .
+
+
+C:\Users\joaop\supabase\gestao_bpma\scripts\criar-funcao-e-executar.ts
+  56:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  89:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\scripts\executar-migrations-auto.ts
+  112:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  151:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  170:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  207:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\scripts\executar-sincronizacao-user-roles.ts
+   68:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   98:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  151:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\scripts\run-migration-estatisticas.ts
+   89:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  115:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:20  error  A `require()` style import is forbidden   @typescript-eslint/no-require-imports
+
+C:\Users\joaop\supabase\gestao_bpma\scripts\verificar-e-executar.ts
+   61:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  150:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  178:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  197:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  231:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\NotificationsPopover.tsx
+  24:32  error    Unexpected any. Specify a different type                                                                              @typescript-eslint/no-explicit-any
+  40:6   warning  React Hook useEffect has a missing dependency: 'fetchNotificacoes'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  47:50  error    Unexpected any. Specify a different type                                                                              @typescript-eslint/no-explicit-any
+  63:26  error    Unexpected any. Specify a different type                                                                              @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\abono\EditarParcelasDialog.tsx
+  124:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\abono\NovoAbonoDialog.tsx
+  94:3  error  Parsing error: ')' expected
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\afastamentos\NovoAfastamentoDialog.tsx
+  212:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  241:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  268:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  276:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\campanha\CampanhaCalendarView.tsx
+  124:9  error  Unexpected lexical declaration in case block  no-case-declarations
+  125:9  error  Unexpected lexical declaration in case block  no-case-declarations
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\campanha\CampanhaDayTeams.tsx
+   21:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  162:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\campanha\TeamMembersDialog.tsx
+  29:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\crimes\CrimeAmbientalEditDialog.tsx
+   20:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  142:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\crimes\FaunaSection.tsx
+  78:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\crimes\FloraSection.tsx
+  33:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard-operacional\DashboardOperacionalContent.tsx
+    4:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  329:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  336:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  361:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  393:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  421:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  427:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  447:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  474:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  524:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  547:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  627:68  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  630:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  634:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  639:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  643:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard-operacional\DashboardOperacionalHorarioChart.tsx
+  80:65  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard-operacional\DashboardOperacionalSazonalidade.tsx
+   40:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  120:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\ChartCard.tsx
+   36:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   43:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   48:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   64:89  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  140:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  176:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardAdvancedKPIs.tsx
+   15:9   warning  The 'registros' logical expression could make the dependencies of useMemo Hook (at line 202) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'registros' in its own useMemo() Hook  react-hooks/exhaustive-deps
+   22:53  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+   51:9   error    'especiesMap' is never reassigned. Use 'const' instead                                                                                                                                                                                     prefer-const
+   58:60  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+   59:61  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+   63:64  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+   73:67  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+   77:39  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+   88:24  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+   94:65  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+   97:65  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  100:37  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  111:22  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  117:62  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  124:64  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  129:56  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  136:70  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  140:65  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  145:38  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  156:20  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  161:54  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  165:15  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  168:56  error    Unexpected any. Specify a different type                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardAppreensoesRecordes.tsx
+  24:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardAtropelamentos.tsx
+  59:11  error  'atropelamentos' is never reassigned. Use 'const' instead  prefer-const
+  86:32  error  Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  89:40  error  Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardCharts.tsx
+  33:46  error  React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  42:56  error  Unexpected any. Specify a different type                                                                                    @typescript-eslint/no-explicit-any
+  46:31  error  React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardComparativos.tsx
+  16:9   warning  The 'registros' logical expression could make the dependencies of useMemo Hook (at line 56) change on every render. To fix this, wrap the initialization of 'registros' in its own useMemo() Hook   react-hooks/exhaustive-deps
+  16:9   warning  The 'registros' logical expression could make the dependencies of useMemo Hook (at line 114) change on every render. To fix this, wrap the initialization of 'registros' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  25:27  error    Unexpected any. Specify a different type                                                                                                                                                            @typescript-eslint/no-explicit-any
+  73:27  error    Unexpected any. Specify a different type                                                                                                                                                            @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardCrimes.tsx
+  14:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardCrimesEnquadramento.tsx
+   3:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  90:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardHeader.tsx
+  22:9  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardMapas.tsx
+  23:1  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardPublicoExport.tsx
+  177:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  200:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  228:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardRankingEspecies.tsx
+   63:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   82:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardResgates.tsx
+  19:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  76:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardSazonalidade.tsx
+  13:9   warning  The 'registros' logical expression could make the dependencies of useMemo Hook (at line 48) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'registros' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  22:27  error    Unexpected any. Specify a different type                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardTabsPrincipal.tsx
+  16:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  26:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\DashboardTendenciaSazonal.tsx
+  141:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\charts\ChartUtils.tsx
+   5:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  18:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  30:59  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  35:29  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  51:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  51:96  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\charts\ClassDistributionDonutChart.tsx
+  17:9   warning  The 'registros' logical expression could make the dependencies of useMemo Hook (at line 39) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'registros' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  22:27  error    Unexpected any. Specify a different type                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  41:47  error    Unexpected any. Specify a different type                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\charts\DashboardResgates2020_2025.tsx
+   28:7   warning  Fast refresh only works when a file only exports components. Move your component(s) to a separate file  react-refresh/only-export-components
+   32:7   warning  Fast refresh only works when a file only exports components. Move your component(s) to a separate file  react-refresh/only-export-components
+   32:45  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+   57:49  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+   58:24  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+   59:24  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+   63:24  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+   64:24  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+   81:51  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+   82:52  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+   86:37  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+  103:36  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+  115:29  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+  203:31  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+  208:37  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+  227:31  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+  233:37  error    Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+  274:6   warning  React Hook useMemo has a missing dependency: 'year'. Either include it or remove the dependency array   react-hooks/exhaustive-deps
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\charts\DestinacaoMensalStackedChart.tsx
+  12:9   warning  The 'registros' logical expression could make the dependencies of useMemo Hook (at line 61) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'registros' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  20:27  error    Unexpected any. Specify a different type                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\charts\HeatmapDiaSemanaMesChart.tsx
+  15:9   warning  The 'registros' logical expression could make the dependencies of useMemo Hook (at line 57) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'registros' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  25:27  error    Unexpected any. Specify a different type                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  46:20  error    Unexpected any. Specify a different type                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\charts\HotspotsRankingChart.tsx
+  11:9   warning  The 'registros' logical expression could make the dependencies of useMemo Hook (at line 37) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'registros' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  17:27  error    Unexpected any. Specify a different type                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\charts\SerieTemporalMensalChart.tsx
+  12:9   warning  The 'registros' logical expression could make the dependencies of useMemo Hook (at line 38) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'registros' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  20:27  error    Unexpected any. Specify a different type                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\dashboard\charts\TaxaSolturaMensalChart.tsx
+  12:9   warning  The 'registros' logical expression could make the dependencies of useMemo Hook (at line 57) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'registros' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  20:27  error    Unexpected any. Specify a different type                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\fauna\FaunaEditDialog.tsx
+  138:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\flora\FloraEditDialog.tsx
+  161:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\historical\AnnualTrendChart.tsx
+  43:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  48:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\historical\ClassDistributionChart.tsx
+  36:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\historical\TopSpeciesChart.tsx
+  55:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\logistica\FrotaTable.tsx
+  80:6  warning  React Hook useEffect has a missing dependency: 'valoresFipe'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\mapa\KmlLayerControls.tsx
+  19:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\prevencao\AreaProtegidaSection.tsx
+  57:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\prevencao\EquipeSectionPrevencao.tsx
+  129:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\raps\RapsLogDetail.tsx
+  12:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\registros\RegistroEditDialog.tsx
+   29:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   30:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   31:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   32:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   33:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   34:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   35:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   69:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   70:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   85:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   85:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  142:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  199:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  240:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  257:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  279:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  296:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  316:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  333:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\registros\RegistrosAdvancedSearch.tsx
+  95:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\resgate\AnimalInfoSection.tsx
+  11:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\resgate\DestinacaoSection.tsx
+  11:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\resgate\EquipeSection.tsx
+  143:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\resgate\EspecieSection.tsx
+  13:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\resgate\InformacoesGeraisSection.tsx
+  20:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\resgate\ResgateForm.tsx
+  12:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\resgate\ResgateFormWrapper.tsx
+  16:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\ui\badge.tsx
+  42:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\ui\button.tsx
+  58:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\ui\command.tsx
+  24:11  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\ui\form.tsx
+  168:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\ui\navigation-menu.tsx
+  119:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\ui\sidebar.tsx
+  760:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\ui\textarea.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\joaop\supabase\gestao_bpma\src\components\ui\toggle.tsx
+  43:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\joaop\supabase\gestao_bpma\src\contexts\AuthContext.tsx
+  254:5   warning  React Hook useMemo has a missing dependency: 'isAdmin'. Either include it or remove the dependency array                        react-hooks/exhaustive-deps
+  260:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useCampanhaCalendar.ts
+  142:42  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  143:48  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  145:52  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  146:52  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  147:40  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  148:56  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  149:40  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  150:44  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  151:48  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  304:6   warning  React Hook useCallback has a missing dependency: 'defaultInitialTeams'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  323:32  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  327:78  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  328:42  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  333:36  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  337:89  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  344:47  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  354:57  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  360:54  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useCampanhaData.ts
+  103:42  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  106:52  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  183:67  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  263:6   warning  React Hook useCallback has a missing dependency: 'defaultInitialTeams'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  289:57  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  296:59  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  300:54  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  304:52  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  311:42  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  355:21  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  379:21  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  415:21  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  434:21  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  465:21  error    Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useCampanhaQuotas.ts
+  23:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useDashboardDataFetching.ts
+  31:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useDashboardStatistics.ts
+  31:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  32:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useEfetivoTable.ts
+  144:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  146:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  176:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  198:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useFaunaTable.ts
+  52:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useFloraTable.ts
+   56:62  error    Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  109:6   warning  React Hook useEffect has a missing dependency: 'fetchEspecies'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useHistoricalData.ts
+   50:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   65:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   87:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  123:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  128:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useKmlLayers.ts
+  21:20  warning  The ref value 'kmlLayersRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'kmlLayersRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useRapsLogs.ts
+   3:33  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  72:19  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  82:6   warning  React Hook useEffect has a missing dependency: 'fetchLogs'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useRegistroDelete.ts
+  7:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useResgateFormEdit.ts
+  13:33  error    Unexpected any. Specify a different type                                                                                                           @typescript-eslint/no-explicit-any
+  51:6   warning  React Hook useEffect has missing dependencies: 'fetchRegistro' and 'populateFormWithRegistro'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useResgateFormFields.ts
+  12:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useResgateFormSubmitEdit.ts
+   14:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  157:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\hooks\useResgateSubmission.ts
+   13:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  235:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\AtividadesPrevencao.tsx
+   67:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   98:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  130:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  162:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\ControleOS.tsx
+   32:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  154:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  583:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\CrimesAmbientaisCadastro.tsx
+   11:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   53:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  245:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  306:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  334:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  425:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  597:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\CrimesComuns.tsx
+  248:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  262:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\DashboardPublico.tsx
+  178:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\EfetivoBPMA.tsx
+  161:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  215:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  220:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  266:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\FaunaCadastrada.tsx
+   28:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   31:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  115:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  116:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  142:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  196:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\FloraCadastrada.tsx
+   28:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   31:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   83:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  117:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  118:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  119:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  137:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  155:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\FloraCadastro.tsx
+  129:6  warning  React Hook useEffect has a missing dependency: 'loadFlora'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\GerenciarPermissoes.tsx
+   82:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  185:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  203:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  276:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  313:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  336:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  353:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\Hotspots.tsx
+  13:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\ImportarDados.tsx
+  11:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\Login.tsx
+  227:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  287:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  359:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  441:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  465:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  493:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\MapaLocalizacao.tsx
+   43:20  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  199:20  warning  The ref value 'kmlLayersRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'kmlLayersRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\POP.tsx
+  638:16  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\Perfil.tsx
+  94:6  warning  React Hook useEffect has a missing dependency: 'fetchPerfil'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\RankingOcorrencias.tsx
+   31:6   warning  React Hook useEffect has a missing dependency: 'fetchRanking'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   47:13  error    'query' is never reassigned. Use 'const' instead                                                                 prefer-const
+   69:71  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  111:71  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  130:44  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\RegistroDetalhes.tsx
+   15:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   52:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  261:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  316:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  383:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\Registros.tsx
+    6:33  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   44:26  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   45:26  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   46:30  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   47:31  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   48:31  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   49:28  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   50:27  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   80:6   warning  React Hook useEffect has a missing dependency: 'fetchRegistros'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  212:27  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  254:23  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  273:58  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  300:21  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  309:48  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  314:23  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  474:20  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  479:20  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  484:20  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  490:45  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  502:20  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  559:30  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  619:21  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\RegistrosCrimes.tsx
+    4:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  140:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  143:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  146:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  149:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  152:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  155:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  220:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  225:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\RegistrosCrimesComuns.tsx
+  119:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  165:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\RegistrosPrevencao.tsx
+   89:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  105:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  181:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  224:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\RegistrosUnificados.tsx
+   40:33   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  226:56   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  276:6    warning  React Hook useEffect has a missing dependency: 'loadAllData'. Either include it or remove the dependency array                                          react-hooks/exhaustive-deps
+  284:6    warning  React Hook useEffect has missing dependencies: 'dimensionCache' and 'loadDataForTab'. Either include them or remove the dependency array                react-hooks/exhaustive-deps
+  291:6    warning  React Hook useEffect has missing dependencies: 'activeTab', 'dimensionCache', and 'loadDataForTab'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  319:39   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  324:51   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  325:53   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  326:59   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  327:61   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  329:57   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  330:71   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  331:79   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  332:65   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  387:36   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  452:27   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  491:53   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  561:102  error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  568:53   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  576:23   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  585:62   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  615:21   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  648:71   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  704:67   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  743:66   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  792:47   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  793:43   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  803:40   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  804:30   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  811:23   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  812:20   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  815:11   error    'ocorrenciasAmbientalMap' is never reassigned. Use 'const' instead                                                                                      prefer-const
+  821:38   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  829:23   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  830:20   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  833:11   error    'ocorrenciasComumMap' is never reassigned. Use 'const' instead                                                                                          prefer-const
+  839:38   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  844:71   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  978:34   error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\ResgateEditar.tsx
+    8:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   37:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   38:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  170:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\SecaoLogistica.tsx
+   53:62  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+   54:60  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+   74:6   warning  React Hook useEffect has missing dependencies: 'carregarFrota' and 'carregarTGRL'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  178:39  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+  230:34  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+  236:44  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+  286:23  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+  323:41  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+  355:23  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+  381:44  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\pessoas\Abono.tsx
+   73:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  189:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  201:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  261:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  294:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  298:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  673:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\pessoas\Afastamentos.tsx
+  317:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\pessoas\Equipes.tsx
+  248:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  445:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  512:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\pessoas\Escalas.tsx
+  130:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\pessoas\Ferias.tsx
+   52:18  error    Unexpected any. Specify a different type                                                              @typescript-eslint/no-explicit-any
+  189:69  error    Unexpected any. Specify a different type                                                              @typescript-eslint/no-explicit-any
+  214:25  error    Unexpected any. Specify a different type                                                              @typescript-eslint/no-explicit-any
+  243:24  error    Unexpected any. Specify a different type                                                              @typescript-eslint/no-explicit-any
+  308:56  error    Unexpected any. Specify a different type                                                              @typescript-eslint/no-explicit-any
+  351:6   warning  React Hook useMemo has a missing dependency: 'ano'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  432:19  error    Unexpected any. Specify a different type                                                              @typescript-eslint/no-explicit-any
+  432:27  error    Unexpected any. Specify a different type                                                              @typescript-eslint/no-explicit-any
+  433:18  error    Unexpected any. Specify a different type                                                              @typescript-eslint/no-explicit-any
+  456:9   error    'totalDias' is never reassigned. Use 'const' instead                                                  prefer-const
+  488:19  error    Unexpected any. Specify a different type                                                              @typescript-eslint/no-explicit-any
+  507:19  error    Unexpected any. Specify a different type                                                              @typescript-eslint/no-explicit-any
+  635:21  error    Unexpected any. Specify a different type                                                              @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\pessoas\MinutaAbono.tsx
+  113:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  213:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  315:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\pages\pessoas\MinutaFerias.tsx
+  160:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  232:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  247:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  430:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\scripts\sync-inaturalist-images.ts
+  146:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  275:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  391:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  493:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\services\dashboardService.ts
+    7:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   21:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   21:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   36:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  146:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  146:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  226:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  228:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  257:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  259:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  301:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  313:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  330:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  361:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  367:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  375:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  382:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  436:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  489:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  497:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  505:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  513:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\services\dashboardStatisticsService.ts
+  10:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\services\fipeService.ts
+  124:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\services\geographicInfoService.ts
+   27:59  error  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+   35:36  error  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+   70:34  error  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+   72:55  error  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  203:26  error  Promise executor functions should not be async  no-async-promise-executor
+
+C:\Users\joaop\supabase\gestao_bpma\src\services\logisticaService.ts
+  139:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  324:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  345:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\services\speciesImageService.ts
+  46:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\services\syncService.ts
+  13:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\types\hotspots.ts
+  159:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\utils\dashboard\metricsTransformations.ts
+  21:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:86  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:65  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:92  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  60:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\utils\dashboard\rescueStatisticsTransformations.ts
+   24:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   37:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   38:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   72:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  205:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\utils\dashboard\speciesTransformations.ts
+  13:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:83  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\utils\dashboard\statisticsTransformations.ts
+  19:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:80  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\utils\dashboard\taxonomicTransformations.ts
+  12:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:73  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\utils\dashboard\timeSeriesTransformations.ts
+  36:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  47:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\utils\errorHandler.ts
+    8:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   30:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   60:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  112:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  112:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\utils\exportUtils.ts
+   18:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   22:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   26:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   29:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   37:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   43:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  252:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  256:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  260:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  263:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  271:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  276:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\src\utils\historicalExport.ts
+  119:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  142:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\joaop\supabase\gestao_bpma\tailwind.config.ts
+  190:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+Ô£û 593 problems (549 errors, 44 warnings)
+  6 errors and 0 warnings potentially fixable with the `--fix` option.
+

@@ -1,0 +1,18 @@
+LEIA-ME
+
+Objetivo
+- Carregar automaticamente as camadas KML/KMZ no QGIS e salvar um projeto .qgz.
+
+Arquivos gerados
+- criar_projeto_qgis.py : script para rodar dentro do QGIS e criar o projeto.
+- manifest_camadas_qgis.csv : lista das camadas detectadas (nome e caminho).
+
+Passo a passo (QGIS)
+1) Copie o arquivo criar_projeto_qgis.py para a mesma pasta onde estao seus .kml/.kmz.
+2) Abra o QGIS.
+3) Plugins > Python Console > Show Editor.
+4) Abra o arquivo criar_projeto_qgis.py no editor e clique em Run.
+5) O QGIS vai carregar as camadas e salvar o projeto: Mapa_DF_camadas.qgz na mesma pasta.
+
+Dica
+- Se a camada poligonal_do_DF.kml estiver na pasta, o script ajusta o zoom para o limite do DF.
