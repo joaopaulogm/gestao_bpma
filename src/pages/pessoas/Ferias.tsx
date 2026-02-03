@@ -63,6 +63,9 @@ interface FeriasData {
 interface ParcelaInfo {
   mes: number;
   dias: number;
+  /** Se preenchidas, a parcela usa datas exatas em vez de apenas mês */
+  data_inicio?: string | null;
+  data_fim?: string | null;
 }
 
 interface ParcelaParsed {
@@ -421,8 +424,51 @@ const Ferias: React.FC = () => {
 
   const handleEditPolicial = (feriaData: FeriasData) => {
     setEditingPolicial(feriaData);
-    const parsedParcelas = parseParcelasFromObservacao(feriaData.observacao, feriaData.mes_inicio, feriaData.dias);
-    setParcelas(parsedParcelas);
+    const anoFerias = feriaData.ano ?? ano;
+    // Carregar parcelas de parcelas_detalhadas (com data_inicio/data_fim) ou do observação; garantir 3 parcelas
+    let base: ParcelaInfo[] = [];
+    if (feriaData.parcelas_detalhadas && Array.isArray(feriaData.parcelas_detalhadas) && feriaData.parcelas_detalhadas.length > 0) {
+      base = feriaData.parcelas_detalhadas
+        .sort((a: any, b: any) => (a.parcela_num ?? 0) - (b.parcela_num ?? 0))
+        .map((p: any) => {
+          let mesNum = typeof p.mes === 'number' ? p.mes : (typeof p.mes === 'string' && MESES_ABREV[String(p.mes).trim().toUpperCase().slice(0, 3)])
+            ? MESES_ABREV[String(p.mes).trim().toUpperCase().slice(0, 3)]
+            : feriaData.mes_inicio;
+          if (!mesNum || mesNum < 1 || mesNum > 12) mesNum = feriaData.mes_inicio || 1;
+          const dias = typeof p.dias === 'number' && !isNaN(p.dias) ? p.dias : 10;
+          return {
+            mes: mesNum,
+            dias,
+            data_inicio: p.data_inicio ?? null,
+            data_fim: p.data_fim ?? null,
+          } as ParcelaInfo;
+        });
+    }
+    if (base.length === 0) {
+      base = parseParcelasFromObservacao(feriaData.observacao, feriaData.mes_inicio, feriaData.dias);
+    }
+    // Garantir exatamente 3 parcelas para edição (preencher com padrão, total 30 dias)
+    while (base.length < 3) {
+      const totalAgora = base.reduce((s, p) => s + p.dias, 0);
+      const restante = 30 - totalAgora;
+      base.push({ mes: 1, dias: Math.max(5, Math.min(restante, 25)) });
+    }
+    let totalDias = base.reduce((s, p) => s + p.dias, 0);
+    if (totalDias !== 30 && base.length > 0) {
+      if (totalDias > 30) {
+        // Reduzir da primeira parcela(s) até total = 30
+        let excess = totalDias - 30;
+        for (let i = 0; i < base.length && excess > 0; i++) {
+          const d = base[i].dias;
+          const reducao = Math.min(excess, Math.max(0, d - 5));
+          base[i] = { ...base[i], dias: d - reducao };
+          excess -= reducao;
+        }
+      } else {
+        base[base.length - 1] = { ...base[base.length - 1], dias: Math.max(5, base[base.length - 1].dias + (30 - totalDias)) };
+      }
+    }
+    setParcelas(base.slice(0, 3));
     setEditDialogOpen(true);
   };
 
@@ -488,9 +534,30 @@ const Ferias: React.FC = () => {
     setParcelas(parcelas.filter((_, i) => i !== index));
   };
 
-  const updateParcela = (index: number, field: 'mes' | 'dias', value: number) => {
+  const updateParcela = (index: number, field: 'mes' | 'dias' | 'data_inicio' | 'data_fim', value: number | string | null) => {
     const newParcelas = [...parcelas];
-    newParcelas[index] = { ...newParcelas[index], [field]: value };
+    const current = { ...newParcelas[index] };
+    if (field === 'data_inicio' || field === 'data_fim') {
+      current[field] = value === '' || value == null ? null : String(value);
+      // Se limpar uma das datas, manter a outra; dias podem ser recalculados depois
+      if (field === 'data_inicio' && current.data_inicio && current.data_fim) {
+        const di = new Date(current.data_inicio);
+        const df = new Date(current.data_fim);
+        if (!isNaN(di.getTime()) && !isNaN(df.getTime()) && df >= di) {
+          current.dias = Math.max(1, Math.ceil((df.getTime() - di.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+        }
+      }
+      if (field === 'data_fim' && current.data_inicio && current.data_fim) {
+        const di = new Date(current.data_inicio);
+        const df = new Date(current.data_fim);
+        if (!isNaN(di.getTime()) && !isNaN(df.getTime()) && df >= di) {
+          current.dias = Math.max(1, Math.ceil((df.getTime() - di.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+        }
+      }
+    } else {
+      (current as Record<string, unknown>)[field] = value;
+    }
+    newParcelas[index] = current;
     setParcelas(newParcelas);
   };
 
@@ -514,17 +581,20 @@ const Ferias: React.FC = () => {
     
     setSaving(true);
     try {
-      // Sort parcelas by month
-      const sortedParcelas = [...parcelas].sort((a, b) => a.mes - b.mes);
-      
-      // Build observacao string
+      // Ordenar parcelas: por data_inicio se houver, senão por mês
+      const sortedParcelas = [...parcelas].sort((a, b) => {
+        if (a.data_inicio && b.data_inicio) return a.data_inicio.localeCompare(b.data_inicio);
+        return a.mes - b.mes;
+      });
+      // Para exibição (observação), usar mês da data_inicio quando houver
+      const mesParaObs = (p: ParcelaInfo) => (p.data_inicio ? new Date(p.data_inicio).getMonth() + 1 : p.mes);
       const observacaoStr = sortedParcelas.length > 1 
-        ? sortedParcelas.map((p, i) => `${i + 1}ª: ${MESES_NUM_TO_ABREV[p.mes - 1]}(${p.dias}d)`).join(', ')
+        ? sortedParcelas.map((p, i) => `${i + 1}ª: ${MESES_NUM_TO_ABREV[mesParaObs(p) - 1]}(${p.dias}d)`).join(', ')
         : null;
       
       const result = await updateFerias({
         id: editingPolicial.id,
-        mes_inicio: sortedParcelas[0].mes,
+        mes_inicio: mesParaObs(sortedParcelas[0]),
         dias: sortedParcelas[0].dias,
         tipo: sortedParcelas.length > 1 ? 'PARCELADA' : 'INTEGRAL',
         observacao: observacaoStr || undefined,
@@ -532,6 +602,31 @@ const Ferias: React.FC = () => {
 
       if (!result.ok) {
         throw new Error(result.error || 'Erro ao salvar alterações');
+      }
+
+      // Upsert parcelas em fat_ferias_parcelas (data_inicio, data_fim, mes, dias)
+      const parcelasRows = sortedParcelas.map((p, i) => ({
+        fat_ferias_id: editingPolicial.id,
+        parcela_num: i + 1,
+        mes: MESES_NUM_TO_ABREV[mesParaObs(p) - 1],
+        dias: p.dias,
+        data_inicio: p.data_inicio || null,
+        data_fim: p.data_fim || null,
+      }));
+      const { error: parcelasError } = await supabase
+        .from('fat_ferias_parcelas')
+        .upsert(parcelasRows, { onConflict: ['fat_ferias_id', 'parcela_num'] });
+      if (parcelasError) {
+        console.error('Erro ao salvar parcelas:', parcelasError);
+        toast.error('Férias atualizadas, mas parcelas detalhadas não foram salvas. Tente editar novamente.');
+      }
+      // Remover parcelas que não existem mais (ex.: tinha 3, passou a 2)
+      if (sortedParcelas.length < 3) {
+        await supabase
+          .from('fat_ferias_parcelas')
+          .delete()
+          .eq('fat_ferias_id', editingPolicial.id)
+          .gt('parcela_num', sortedParcelas.length);
       }
       
       toast.success('Férias atualizadas com sucesso');
@@ -1009,88 +1104,134 @@ const Ferias: React.FC = () => {
                 </div>
               </div>
 
-              {/* Parcelas */}
+              {/* Parcelas - sempre 3 editáveis: data início/término ou apenas mês (e dias) */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="text-base font-semibold">Parcelas de Férias</Label>
+                  <Label className="text-base font-semibold">Editar as 3 parcelas</Label>
                   <Badge variant={totalDiasParcelas === 30 ? 'default' : 'destructive'}>
                     {totalDiasParcelas}/30 dias
                   </Badge>
                 </div>
-                
+                <p className="text-xs text-muted-foreground">
+                  Para cada parcela: use <strong>data início e término</strong> ou apenas <strong>mês e dias</strong>.
+                </p>
                 <div className="space-y-3">
-                  {parcelas.map((parcela, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 rounded-xl border bg-background">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
-                        {index + 1}ª
-                      </div>
-                      
-                      <div className="flex-1 grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Mês</Label>
-                          <Select 
-                            value={String(parcela.mes)} 
-                            onValueChange={(v) => updateParcela(index, 'mes', parseInt(v))}
-                          >
-                            <SelectTrigger className="mt-1">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {MESES.map((mes, idx) => (
-                                <SelectItem key={mes} value={String(idx + 1)}>
-                                  {mes}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                  {[0, 1, 2].map((index) => {
+                    const parcela = parcelas[index];
+                    if (!parcela) return null;
+                    const usarDatas = !!(parcela.data_inicio && parcela.data_fim);
+                    return (
+                      <div key={index} className="space-y-2 p-3 rounded-xl border bg-background">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm shrink-0">
+                            {index + 1}ª
+                          </div>
+                          <div className="flex items-center gap-2 flex-1 flex-wrap">
+                            <Switch
+                              checked={usarDatas}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  const anoF = editingPolicial?.ano ?? new Date().getFullYear();
+                                  const mes = parcela.mes;
+                                  const primeiroDia = `${anoF}-${String(mes).padStart(2, '0')}-01`;
+                                  const ultimoDia = new Date(anoF, mes, 0);
+                                  const dataFim = `${anoF}-${String(mes).padStart(2, '0')}-${String(ultimoDia.getDate()).padStart(2, '0')}`;
+                                  setParcelas(prev => {
+                                    const next = [...prev];
+                                    const p = { ...(next[index] ?? { mes: 1, dias: 10 }), data_inicio: primeiroDia, data_fim: dataFim };
+                                    const di = new Date(p.data_inicio);
+                                    const df = new Date(p.data_fim);
+                                    if (!isNaN(di.getTime()) && !isNaN(df.getTime()) && df >= di) {
+                                      p.dias = Math.max(1, Math.ceil((df.getTime() - di.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+                                    }
+                                    next[index] = p;
+                                    return next;
+                                  });
+                                } else {
+                                  setParcelas(prev => {
+                                    const next = [...prev];
+                                    next[index] = { ...(next[index] ?? { mes: 1, dias: 10 }), data_inicio: undefined, data_fim: undefined };
+                                    return next;
+                                  });
+                                }
+                              }}
+                            />
+                            <Label className="text-xs text-muted-foreground cursor-pointer">
+                              Data início e término
+                            </Label>
+                          </div>
                         </div>
-                        
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Dias</Label>
-                          <Select 
-                            value={String(parcela.dias)} 
-                            onValueChange={(v) => updateParcela(index, 'dias', parseInt(v))}
-                          >
-                            <SelectTrigger className="mt-1">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Array.from({ length: 26 }, (_, i) => i + 5).map(dias => (
-                                <SelectItem key={dias} value={String(dias)}>
-                                  {dias} dias
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        {usarDatas ? (
+                          <div className="grid grid-cols-2 gap-3 pl-11">
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Data início</Label>
+                              <Input
+                                type="date"
+                                className="mt-1"
+                                value={parcela.data_inicio ?? ''}
+                                onChange={(e) => updateParcela(index, 'data_inicio', e.target.value || null)}
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Data término</Label>
+                              <Input
+                                type="date"
+                                className="mt-1"
+                                value={parcela.data_fim ?? ''}
+                                onChange={(e) => updateParcela(index, 'data_fim', e.target.value || null)}
+                              />
+                            </div>
+                            <div className="col-span-2 text-xs text-muted-foreground">
+                              Dias: {parcela.dias}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex-1 grid grid-cols-2 gap-3 pl-11">
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Mês</Label>
+                              <Select
+                                value={String(parcela.mes)}
+                                onValueChange={(v) => updateParcela(index, 'mes', parseInt(v))}
+                              >
+                                <SelectTrigger className="mt-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {MESES.map((mes, idx) => (
+                                    <SelectItem key={mes} value={String(idx + 1)}>
+                                      {mes}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Dias</Label>
+                              <Select
+                                value={String(parcela.dias)}
+                                onValueChange={(v) => updateParcela(index, 'dias', parseInt(v))}
+                              >
+                                <SelectTrigger className="mt-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 26 }, (_, i) => i + 5).map(dias => (
+                                    <SelectItem key={dias} value={String(dias)}>
+                                      {dias} dias
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      
-                      {parcelas.length > 1 && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => removeParcela(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
-                {parcelas.length < 3 && (
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={addParcela}
-                  >
-                    + Adicionar Parcela
-                  </Button>
-                )}
-
                 <p className="text-xs text-muted-foreground text-center">
-                  Máximo 3 parcelas • Mínimo 5 dias por parcela • Total: 30 dias
+                  Mínimo 5 dias por parcela • Total: 30 dias
                 </p>
               </div>
             </div>

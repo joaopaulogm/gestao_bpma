@@ -168,7 +168,7 @@ const DashboardPublico = () => {
             console.log(`✅ [DashboardPublico] ${tabela}: ${normalized.length} registros encontrados`);
           } else {
             // Para fat_registros_de_resgate e fat_resgates_diarios_2025
-            let query = supabase
+            let query = (supabase as any)
               .from(tabela)
               .select(`
                 *,

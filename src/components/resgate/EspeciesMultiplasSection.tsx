@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, Plus, Trash2, Image as ImageIcon, Camera } from 'lucide-react';
+import { AlertTriangle, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getFaunaImageUrl } from '@/services/especieService';
 import { AISpeciesIdentifier } from '@/components/species/AISpeciesIdentifier';
@@ -75,7 +75,6 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
   const [especieSearchById, setEspecieSearchById] = useState<Record<string, string>>({});
   const [estadosSaude, setEstadosSaude] = useState<DimensionItem[]>([]);
   const [estagiosVida, setEstagiosVida] = useState<DimensionItem[]>([]);
-  const [desfechosResgate, setDesfechosResgate] = useState<DimensionItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -145,16 +144,14 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
           console.warn('Nenhuma espécie encontrada na tabela dim_especies_fauna');
         }
 
-        // Fetch dimension tables
-        const [estadosSaudeRes, estagiosVidaRes, desfechosResgateRes] = await Promise.all([
+        // Fetch dimension tables (desfecho do resgate é único por registro, na seção Desfecho)
+        const [estadosSaudeRes, estagiosVidaRes] = await Promise.all([
           supabase.from('dim_estado_saude').select('id, nome').order('nome', { ascending: true }),
-          supabase.from('dim_estagio_vida').select('id, nome').order('nome', { ascending: true }),
-          supabase.from('dim_desfecho_resgates').select('id, nome').eq('tipo', 'resgate').order('nome', { ascending: true })
+          supabase.from('dim_estagio_vida').select('id, nome').order('nome', { ascending: true })
         ]);
 
         if (estadosSaudeRes.data) setEstadosSaude(estadosSaudeRes.data);
         if (estagiosVidaRes.data) setEstagiosVida(estagiosVidaRes.data);
-        if (desfechosResgateRes.data) setDesfechosResgate(desfechosResgateRes.data);
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
       }
@@ -284,14 +281,57 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
     onEspeciesChange(updated);
   };
 
+  const getQuantidadeField = (tipo: 'adulto' | 'filhote' | 'jovem'): keyof EspecieItem => {
+    if (tipo === 'adulto') return 'quantidadeAdulto';
+    if (tipo === 'filhote') return 'quantidadeFilhote';
+    return 'quantidadeJovem';
+  };
+
   const handleQuantidadeChange = (id: string, tipo: 'adulto' | 'filhote' | 'jovem', operacao: 'aumentar' | 'diminuir') => {
     const especie = especies.find(e => e.id === id);
     if (!especie) return;
 
-    const field = tipo === 'adulto' ? 'quantidadeAdulto' : tipo === 'filhote' ? 'quantidadeFilhote' : 'quantidadeJovem';
+    const field = getQuantidadeField(tipo);
     const currentValue = especie[field];
     const newValue = operacao === 'aumentar' ? currentValue + 1 : Math.max(0, currentValue - 1);
     handleEspecieChange(id, field, newValue);
+  };
+
+  const renderEspeciesSelectContent = (
+    isLoading: boolean,
+    esp: EspecieItem,
+    searchById: Record<string, string>,
+    getPorClasse: (classe: string) => EspecieFauna[]
+  ) => {
+    if (isLoading) {
+      return (
+        <div className="p-3 text-center text-muted-foreground text-sm">Carregando espécies...</div>
+      );
+    }
+    if (!esp.classeTaxonomica) {
+      return (
+        <div className="p-3 text-center text-muted-foreground text-sm">Selecione uma classe primeiro</div>
+      );
+    }
+    const especiesFiltradas = getPorClasse(esp.classeTaxonomica);
+    const searchTerm = (searchById[esp.id] ?? '').trim().toLowerCase();
+    const especiesComBusca = searchTerm
+      ? especiesFiltradas.filter((ef) =>
+          (ef.nome_popular ?? '').toLowerCase().includes(searchTerm)
+        )
+      : especiesFiltradas;
+    if (especiesComBusca.length === 0) {
+      return (
+        <div className="p-3 text-center text-muted-foreground text-sm">
+          {searchTerm ? 'Nenhuma espécie encontrada' : 'Nenhuma espécie disponível para esta classe'}
+        </div>
+      );
+    }
+    return especiesComBusca.map((ef) => (
+      <SelectItem key={ef.id} value={ef.id}>
+        {ef.nome_popular}
+      </SelectItem>
+    ));
   };
 
   return (
@@ -487,7 +527,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
               >
                 <SelectTrigger>
                   <SelectValue
-                    placeholder={!especie.classeTaxonomica ? "Selecione a classe primeiro" : "Selecione a espécie"}
+                    placeholder={especie.classeTaxonomica ? "Selecione a espécie" : "Selecione a classe primeiro"}
                   />
                 </SelectTrigger>
                 <SelectContent className="bg-background z-[100]" position="popper" sideOffset={4}>
@@ -503,40 +543,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                     />
                   </div>
                   <div className="max-h-[250px] overflow-y-auto">
-                    {loading ? (
-                      <div className="p-3 text-center text-muted-foreground text-sm">
-                        Carregando espécies...
-                      </div>
-                    ) : !especie.classeTaxonomica ? (
-                      <div className="p-3 text-center text-muted-foreground text-sm">
-                        Selecione uma classe primeiro
-                      </div>
-                    ) : (() => {
-                      // Calcular espécies filtradas uma única vez
-                      const especiesFiltradas = getEspeciesPorClasse(especie.classeTaxonomica);
-                      const searchTerm = (especieSearchById[especie.id] ?? '').trim().toLowerCase();
-                      const especiesComBusca = searchTerm 
-                        ? especiesFiltradas.filter((ef) =>
-                            (ef.nome_popular ?? '')
-                              .toLowerCase()
-                              .includes(searchTerm)
-                          )
-                        : especiesFiltradas;
-                      
-                      if (especiesComBusca.length === 0) {
-                        return (
-                          <div className="p-3 text-center text-muted-foreground text-sm">
-                            {searchTerm ? 'Nenhuma espécie encontrada' : 'Nenhuma espécie disponível para esta classe'}
-                          </div>
-                        );
-                      }
-                      
-                      return especiesComBusca.map((ef) => (
-                        <SelectItem key={ef.id} value={ef.id}>
-                          {ef.nome_popular}
-                        </SelectItem>
-                      ));
-                    })()}
+                    {renderEspeciesSelectContent(loading, especie, especieSearchById, getEspeciesPorClasse)}
                   </div>
                 </SelectContent>
               </Select>
@@ -595,14 +602,14 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
                       <div className="pt-3 border-t border-primary/10">
                         <p className="text-xs font-medium mb-2 text-muted-foreground uppercase tracking-wider">Fotos da Espécie</p>
                         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
-                          {imagensPaths.slice(0, 6).map((filename, imgIndex) => (
+                          {imagensPaths.slice(0, 6).map((filename) => (
                             <div 
-                              key={imgIndex} 
+                              key={filename} 
                               className="aspect-square rounded-lg overflow-hidden border border-border bg-muted shadow-sm hover:shadow-md transition-shadow"
                             >
                               <img
                                 src={getFaunaImageUrl(filename)}
-                                alt={`${selectedEspecie.nome_popular} ${imgIndex + 1}`}
+                                alt={`${selectedEspecie.nome_popular} ${filename}`}
                                 className="w-full h-full object-cover"
                                 loading="lazy"
                                 onError={(e) => {
@@ -757,26 +764,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
               </FormField>
             </div>
 
-            {/* Desfecho do Resgate */}
-            <div className="md:col-span-2 pt-4 border-t mt-4">
-              <FormField id={`desfechoResgate-${especie.id}`} label="Desfecho do Resgate" required={!isEvadido}>
-                <Select
-                  value={especie.desfechoResgate}
-                  onValueChange={(value) => handleEspecieChange(especie.id, 'desfechoResgate', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o desfecho" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {desfechosResgate.map((desfecho) => (
-                      <SelectItem key={desfecho.id} value={desfecho.nome}>
-                        {desfecho.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormField>
-            </div>
+            {/* Desfecho do Resgate: removido daqui; usar apenas a seção "Desfecho do Resgate" (um por registro). */}
 
             {/* Destinação por Espécie */}
             <div className="md:col-span-2 pt-4 border-t mt-4">

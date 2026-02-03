@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RegiaoAdministrativaSearchField from '@/components/prevencao/RegiaoAdministrativaSearchField';
 import NumeroOSField from '@/components/prevencao/NumeroOSField';
 import EquipeSectionPrevencao, { MembroEquipePrevencao } from '@/components/prevencao/EquipeSectionPrevencao';
+import AreaProtegidaSection from '@/components/prevencao/AreaProtegidaSection';
 
 interface TipoAtividade {
   id: string;
@@ -35,9 +36,9 @@ const AtividadesPrevencao: React.FC = () => {
   // Dimension data
   const [tiposAtividades, setTiposAtividades] = useState<TipoAtividade[]>([]);
   
-  // Form state
+  // Form state (data em branco permitido para escolher no calendário ou digitar)
   const [formData, setFormData] = useState({
-    data: new Date().toISOString().split('T')[0],
+    data: '',
     tipoAtividadeId: '',
     regiaoAdministrativaId: '',
     latitude: '',
@@ -48,6 +49,9 @@ const AtividadesPrevencao: React.FC = () => {
     horarioTermino: '',
     missao: '',
     numeroOS: '',
+    emAreaProtegida: false,
+    areaProtegidaId: '',
+    areaProtegidaCompetencia: '',
   });
   
   // Equipe state
@@ -108,6 +112,8 @@ const AtividadesPrevencao: React.FC = () => {
           horario_termino: formData.horarioTermino || null,
           missao: formData.missao || null,
           numero_os: formData.numeroOS || null,
+          em_area_protegida: formData.emAreaProtegida,
+          area_protegida_id: formData.areaProtegidaId || null,
         })
         .select('id')
         .single();
@@ -146,6 +152,9 @@ const AtividadesPrevencao: React.FC = () => {
         horarioTermino: '',
         missao: '',
         numeroOS: '',
+        emAreaProtegida: false,
+        areaProtegidaId: '',
+        areaProtegidaCompetencia: '',
       });
       setMembrosEquipe([]);
       setActiveTab('prevencao');
@@ -201,6 +210,15 @@ const AtividadesPrevencao: React.FC = () => {
     selectedActivity.categoria === 'Saber Cerrado'
   );
   
+  // Verificar se é uma atividade que permite área protegida
+  // (Prevenção em Áreas Ambientais ou Prevenção à Incêndios Florestais)
+  const allowsAreaProtegida = selectedActivity && (
+    selectedActivity.nome.toLowerCase().includes('áreas ambientais') ||
+    selectedActivity.nome.toLowerCase().includes('areas ambientais') ||
+    selectedActivity.nome.toLowerCase().includes('incêndios florestais') ||
+    selectedActivity.nome.toLowerCase().includes('incendios florestais')
+  );
+  
   if (isLoading) {
     return (
       <Layout title="Atividades de Prevenção e Policiamento Comunitário" showBackButton>
@@ -237,23 +255,50 @@ const AtividadesPrevencao: React.FC = () => {
               </TabsList>
               
               <TabsContent value="prevencao">
-                <div className="space-y-2">
-                  <Label>Atividade de Prevenção</Label>
-                  <Select
-                    value={categorias['Prevenção'].some(t => t.id === formData.tipoAtividadeId) ? formData.tipoAtividadeId : ''}
-                    onValueChange={(value) => handleInputChange('tipoAtividadeId', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a atividade..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categorias['Prevenção'].map((atividade) => (
-                        <SelectItem key={atividade.id} value={atividade.id}>
-                          {atividade.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Atividade de Prevenção</Label>
+                    <Select
+                      value={categorias['Prevenção'].some(t => t.id === formData.tipoAtividadeId) ? formData.tipoAtividadeId : ''}
+                      onValueChange={(value) => {
+                        handleInputChange('tipoAtividadeId', value);
+                        // Reset área protegida ao mudar atividade
+                        handleInputChange('emAreaProtegida', false);
+                        handleInputChange('areaProtegidaId', '');
+                        handleInputChange('areaProtegidaCompetencia', '');
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a atividade..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categorias['Prevenção'].map((atividade) => (
+                          <SelectItem key={atividade.id} value={atividade.id}>
+                            {atividade.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Toggle de Área Protegida - aparece apenas para atividades específicas */}
+                  {allowsAreaProtegida && (
+                    <AreaProtegidaSection
+                      emAreaProtegida={formData.emAreaProtegida}
+                      areaProtegidaId={formData.areaProtegidaId}
+                      onEmAreaProtegidaChange={(value) => {
+                        handleInputChange('emAreaProtegida', value);
+                        if (!value) {
+                          handleInputChange('areaProtegidaId', '');
+                          handleInputChange('areaProtegidaCompetencia', '');
+                        }
+                      }}
+                      onAreaProtegidaChange={(id, competencia) => {
+                        handleInputChange('areaProtegidaId', id);
+                        handleInputChange('areaProtegidaCompetencia', competencia);
+                      }}
+                    />
+                  )}
                 </div>
               </TabsContent>
               
@@ -394,13 +439,12 @@ const AtividadesPrevencao: React.FC = () => {
           <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label htmlFor="data" className="text-sm">Data *</Label>
+                <Label htmlFor="data" className="text-sm">Data</Label>
                 <Input
                   id="data"
                   type="date"
-                  value={formData.data}
+                  value={formData.data || ''}
                   onChange={(e) => handleInputChange('data', e.target.value)}
-                  required
                   className="h-10 sm:h-11"
                 />
               </div>
@@ -449,7 +493,7 @@ const AtividadesPrevencao: React.FC = () => {
                   type="number"
                   min="0"
                   value={formData.quantidadePublico}
-                  onChange={(e) => handleInputChange('quantidadePublico', parseInt(e.target.value) || 0)}
+                  onChange={(e) => handleInputChange('quantidadePublico', Number.parseInt(e.target.value, 10) || 0)}
                   className="h-10 sm:h-11"
                 />
               </div>

@@ -1,5 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Clipboard, LogIn, Shield, BookOpen, Lock, Trophy, Briefcase, Users, Wrench, Settings, Gavel, HeartHandshake, BarChart3, FileText, Database, Upload, AlertTriangle, TreePine } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Clipboard, LogIn, Shield, BookOpen, Lock, Trophy, Briefcase, Users, Wrench, Settings, HeartHandshake, BarChart3, FileText, Database, AlertTriangle, TreePine, Package, ClipboardList } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import logoBpma from '@/assets/logo-bpma.svg';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -9,7 +9,7 @@ const CheckeredDivider = () => {
   return <div className="flex gap-[2px] sm:gap-[3px]">
       {Array.from({
       length: count
-    }).map((_, i) => <div key={i} className="flex flex-col gap-[2px] sm:gap-[3px]">
+    }).map((_, i) => <div key={`checkered-${i}`} className="flex flex-col gap-[2px] sm:gap-[3px]">
           <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 ${i % 2 === 0 ? 'bg-primary' : 'bg-transparent'}`} />
           <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 ${i % 2 === 1 ? 'bg-primary' : 'bg-transparent'}`} />
         </div>)}
@@ -55,7 +55,7 @@ const AtividadeOperacionalSection = () => <div className="space-y-3 sm:space-y-4
     </div>
   </div>;
 
-// Componente para Seção Operacional
+// Componente para Seção Operacional (mesmos cards que /secao-operacional)
 const SecaoOperacionalSection = () => <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
     <div className="flex items-center gap-2 text-primary font-semibold px-1">
       <Briefcase className="h-4 w-4" />
@@ -65,15 +65,17 @@ const SecaoOperacionalSection = () => <div className="space-y-3 sm:space-y-4 pt-
       <HomeCard title="Resgate de Fauna" icon={HeartHandshake} to="/secao-operacional/resgate-cadastro" />
       <HomeCard title="Crimes Ambientais" icon={AlertTriangle} to="/secao-operacional/crimes-ambientais" />
       <HomeCard title="Crimes Comuns" icon={Shield} to="/secao-operacional/crimes-comuns" />
-      <HomeCard title="Prevenção" icon={TreePine} to="/secao-operacional/atividades-prevencao" />
-      <HomeCard title="Dashboard Operacional" icon={BarChart3} to="/secao-operacional/dashboard" />
+      <HomeCard title="Atividades de Prevenção" icon={TreePine} to="/secao-operacional/atividades-prevencao" />
+      <HomeCard title="Dashboard" icon={BarChart3} to="/secao-operacional/dashboard" />
       <HomeCard title="Registros" icon={Clipboard} to="/secao-operacional/registros" />
       <HomeCard title="Hotspots" icon={Trophy} to="/secao-operacional/hotspots" />
       <HomeCard title="Relatórios" icon={FileText} to="/secao-operacional/relatorios" />
-      <HomeCard title="Fauna Cadastro" icon={Clipboard} to="/secao-operacional/fauna-cadastro" />
+      <HomeCard title="Bens Apreendidos" icon={Package} to="/secao-operacional/bens-apreendidos" />
+      <HomeCard title="Cadastrar Fauna" icon={Clipboard} to="/secao-operacional/fauna-cadastro" />
       <HomeCard title="Fauna Cadastrada" icon={Database} to="/secao-operacional/fauna-cadastrada" />
-      <HomeCard title="Flora Cadastro" icon={Clipboard} to="/secao-operacional/flora-cadastro" />
+      <HomeCard title="Cadastrar Flora" icon={Clipboard} to="/secao-operacional/flora-cadastro" />
       <HomeCard title="Flora Cadastrada" icon={Database} to="/secao-operacional/flora-cadastrada" />
+      <HomeCard title="Controle de OS" icon={ClipboardList} to="/secao-operacional/controle-os" />
       <HomeCard title="Monitorar RAPs" icon={Briefcase} to="/secao-operacional/monitorar-raps" />
     </div>
   </div>;
@@ -125,9 +127,7 @@ const Index = () => {
     isAuthenticated,
     isAdmin,
     userRole,
-    hasAccess
   } = useAuth();
-  const isMobile = useIsMobile();
 
   // Determinar quais seções mostrar com base no role
   const showSecaoOperacional = isAdmin || userRole === 'secao_operacional';
@@ -178,16 +178,7 @@ const Index = () => {
       </div>
       
       <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8">
-        {!isAuthenticated ? (/* Usuário não autenticado - mostrar apenas botão de login */
-      <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-center gap-2 text-primary font-semibold px-1">
-              <Lock className="h-4 w-4" />
-              <span className="text-xs sm:text-sm">Área Restrita</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-              <HomeCard title="Fazer Login" icon={LogIn} to="/login" />
-            </div>
-          </div>) : (/* Usuário autenticado - mostrar seções conforme permissão */
+        {isAuthenticated ? (/* Usuário autenticado - mostrar seções conforme permissão */
       <>
             {/* Atividade Operacional - TODOS os usuários autenticados têm acesso */}
             <AtividadeOperacionalSection />
@@ -203,7 +194,17 @@ const Index = () => {
             
             {/* Administração - apenas admin */}
             {showAdministracao && <AdministracaoSection />}
-          </>)}
+          </>
+        ) : (/* Usuário não autenticado - mostrar apenas botão de login */
+      <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 text-primary font-semibold px-1">
+              <Lock className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Área Restrita</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+              <HomeCard title="Fazer Login" icon={LogIn} to="/login" />
+            </div>
+          </div>)}
 
         {/* Footer with Legal Links */}
         <footer className="pt-8 pb-4 border-t border-border/30 mt-8">
