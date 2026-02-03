@@ -40,6 +40,7 @@ import {
   UserMinus,
   LayoutDashboard,
   CalendarDays,
+  Presentation,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -124,6 +125,7 @@ const navSections: NavSection[] = [
           { path: '/secao-operacional/atividades-prevencao', label: 'Atividades Prevenção', icon: Shield },
           { path: '/secao-operacional/bens-apreendidos', label: 'Bens Apreendidos', icon: Package },
           { path: '/secao-operacional/controle-os', label: 'Controle OS', icon: FileCheck },
+          { path: '/secao-operacional/apresentacao', label: 'Apresentação', icon: Presentation },
         ],
       },
     ],
@@ -151,6 +153,7 @@ const navSections: NavSection[] = [
           { path: '/comando/pessoal/ferias', label: 'Férias', icon: Palmtree },
           { path: '/comando/pessoal/abono', label: 'Abono', icon: Gift },
           { path: '/comando/logistica', label: 'Logística', icon: Wrench },
+          { path: '/comando/apresentacao', label: 'Apresentação', icon: Presentation },
         ],
       },
     ],

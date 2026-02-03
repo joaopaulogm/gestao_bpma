@@ -458,23 +458,31 @@ const CrimesComuns = () => {
                 {isSearchingMembro ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Search className="h-4 w-4 mr-2" />Buscar</>}
               </Button>
             </div>
-            {grupamentoServicoOptions.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Grupamento ou Serviço</Label>
-                <Select value={grupamentoServicoId || undefined} onValueChange={setGrupamentoServicoId}>
-                  <SelectTrigger className="input-glass">
-                    <SelectValue placeholder="Selecione o grupamento ou serviço" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {grupamentoServicoOptions.map((opt) => (
-                      <SelectItem key={opt.id} value={opt.id}>
-                        {opt.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Grupamento ou Serviço</Label>
+              <Select
+                value={grupamentoServicoId || undefined}
+                onValueChange={setGrupamentoServicoId}
+                disabled={grupamentoServicoOptions.length === 0}
+              >
+                <SelectTrigger className="input-glass">
+                  <SelectValue
+                    placeholder={
+                      grupamentoServicoOptions.length === 0
+                        ? 'Nenhum grupamento cadastrado'
+                        : 'Selecione o grupamento ou serviço'
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {grupamentoServicoOptions.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.id}>
+                      {opt.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {membrosEquipe.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-muted-foreground">Policiais na Equipe ({membrosEquipe.length})</Label>

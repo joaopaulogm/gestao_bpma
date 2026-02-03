@@ -207,13 +207,23 @@ const EquipeSection: React.FC<EquipeSectionProps> = ({
           </Button>
         </div>
 
-        {/* Grupamento ou Serviço (abaixo do campo de busca e inclusão de policiais) */}
-        {grupamentoServicoOptions.length > 0 && onGrupamentoServicoChange && (
+        {/* Grupamento ou Serviço (abaixo do campo de busca e inclusão de policiais) - sempre visível */}
+        {onGrupamentoServicoChange && (
           <div className="space-y-2">
             <Label className="text-sm font-medium">Grupamento ou Serviço</Label>
-            <Select value={grupamentoServicoId || undefined} onValueChange={onGrupamentoServicoChange}>
+            <Select
+              value={grupamentoServicoId || undefined}
+              onValueChange={onGrupamentoServicoChange}
+              disabled={grupamentoServicoOptions.length === 0}
+            >
               <SelectTrigger className="input-glass">
-                <SelectValue placeholder="Selecione o grupamento ou serviço" />
+                <SelectValue
+                  placeholder={
+                    grupamentoServicoOptions.length === 0
+                      ? 'Nenhum grupamento cadastrado'
+                      : 'Selecione o grupamento ou serviço'
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {grupamentoServicoOptions.map((opt) => (

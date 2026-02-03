@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Calendar, CalendarDays, BarChart3, Users, Wrench } from 'lucide-react';
+import { LayoutDashboard, Calendar, CalendarDays, BarChart3, Users, Wrench, Presentation } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const menuItems = [
@@ -9,6 +9,7 @@ const menuItems = [
   { title: 'Dashboard', description: 'Visão geral do Comando', icon: BarChart3, path: '/comando/dashboard' },
   { title: 'Pessoal', description: 'Efetivo, escalas, férias e abono', icon: Users, path: '/comando/pessoal' },
   { title: 'Logística', description: 'Frota e patrimônio', icon: Wrench, path: '/comando/logistica' },
+  { title: 'Apresentação', description: 'Apresentação BPMA', icon: Presentation, path: '/comando/apresentacao' },
 ];
 
 const Comando: React.FC = () => {

@@ -198,12 +198,22 @@ const EquipeSectionPrevencao: React.FC<EquipeSectionPrevencaoProps> = ({
             </Button>
           </div>
 
-          {grupamentoServicoOptions.length > 0 && onGrupamentoServicoChange && (
+          {onGrupamentoServicoChange && (
             <div className="space-y-2">
               <Label className="text-sm font-medium">Grupamento ou Serviço</Label>
-              <Select value={grupamentoServicoId || undefined} onValueChange={onGrupamentoServicoChange}>
+              <Select
+                value={grupamentoServicoId || undefined}
+                onValueChange={onGrupamentoServicoChange}
+                disabled={grupamentoServicoOptions.length === 0}
+              >
                 <SelectTrigger className="h-10 sm:h-11">
-                  <SelectValue placeholder="Selecione o grupamento ou serviço" />
+                  <SelectValue
+                    placeholder={
+                      grupamentoServicoOptions.length === 0
+                        ? 'Nenhum grupamento cadastrado'
+                        : 'Selecione o grupamento ou serviço'
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {grupamentoServicoOptions.map((opt) => (
