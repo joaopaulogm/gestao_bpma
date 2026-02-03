@@ -71,7 +71,7 @@ const MONTHS = [
 const YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
 
 const DashboardPublico = () => {
-  const [selectedYear, setSelectedYear] = useState<number | null>(2026);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [selectedClasse, setSelectedClasse] = useState<string | null>(null);
 
@@ -87,9 +87,12 @@ const DashboardPublico = () => {
       let tabelas: string[] = [];
       
       if (!selectedYear) {
-        // Sem ano selecionado - buscar de todas as tabelas disponíveis (2026+)
-        tabelas = ['fat_registros_de_resgate'];
-        console.log('📊 [DashboardPublico] Sem ano selecionado, buscando de fat_registros_de_resgate');
+        // Sem ano selecionado - buscar de todas as tabelas disponíveis (todos os anos)
+        const tabelasHistoricas = YEARS
+          .filter((year) => year <= 2025 && year >= 2020)
+          .map((year) => (year === 2025 ? 'fat_resgates_diarios_2025' : `fat_resgates_diarios_${year}`));
+        tabelas = ['fat_registros_de_resgate', ...tabelasHistoricas];
+        console.log('📊 [DashboardPublico] Sem ano selecionado, buscando em todas as tabelas de resgates');
       } else if (selectedYear >= 2026) {
         // Para 2026 e anos seguintes, usar APENAS fat_registros_de_resgate
         tabelas = ['fat_registros_de_resgate'];
@@ -240,26 +243,29 @@ const DashboardPublico = () => {
   const { data: crimesData } = useQuery({
     queryKey: ['public-dashboard-crimes', selectedYear, selectedMonth],
     queryFn: async () => {
-      if (!selectedYear || selectedYear < 2026) return { ambientais: 0, comuns: 0 };
+      const startDate = selectedYear ? `${selectedYear}-01-01` : null;
+      const endDate = selectedYear ? `${selectedYear}-12-31` : null;
 
-      const startDate = `${selectedYear}-01-01`;
-      const endDate = `${selectedYear}-12-31`;
+      const ambientaisQuery = supabaseAny
+        .from('fat_registros_de_crimes_ambientais')
+        .select('id');
+      const comunsQuery = supabase
+        .from('fat_crimes_comuns')
+        .select('id');
 
-      const [ambientaisRes, comunsRes] = await Promise.all([
-        supabaseAny.from('fat_registros_de_crimes_ambientais')
-          .select('id')
-          .gte('data', startDate).lte('data', endDate),
-        supabase.from('fat_crimes_comuns')
-          .select('id')
-          .gte('data', startDate).lte('data', endDate)
-      ]);
+      if (startDate && endDate) {
+        ambientaisQuery.gte('data', startDate).lte('data', endDate);
+        comunsQuery.gte('data', startDate).lte('data', endDate);
+      }
+
+      const [ambientaisRes, comunsRes] = await Promise.all([ambientaisQuery, comunsQuery]);
 
       return {
         ambientais: ambientaisRes.data?.length || 0,
         comuns: comunsRes.data?.length || 0
       };
     },
-    enabled: !!selectedYear && selectedYear >= 2026,
+    enabled: true,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -267,15 +273,18 @@ const DashboardPublico = () => {
   const { data: prevencaoData } = useQuery({
     queryKey: ['public-dashboard-prevencao', selectedYear, selectedMonth],
     queryFn: async () => {
-      if (!selectedYear || selectedYear < 2026) return { atividades: 0, publico: 0 };
+      const startDate = selectedYear ? `${selectedYear}-01-01` : null;
+      const endDate = selectedYear ? `${selectedYear}-12-31` : null;
 
-      const startDate = `${selectedYear}-01-01`;
-      const endDate = `${selectedYear}-12-31`;
-
-      const { data, error } = await supabase
+      let query = supabase
         .from('fat_atividades_prevencao')
-        .select('quantidade_publico')
-        .gte('data', startDate).lte('data', endDate);
+        .select('quantidade_publico');
+
+      if (startDate && endDate) {
+        query = query.gte('data', startDate).lte('data', endDate);
+      }
+
+      const { data, error } = await query;
 
       if (error) return { atividades: 0, publico: 0 };
 
@@ -285,7 +294,7 @@ const DashboardPublico = () => {
         publico: total
       };
     },
-    enabled: !!selectedYear && selectedYear >= 2026,
+    enabled: true,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -316,12 +325,12 @@ const DashboardPublico = () => {
   const { data: pontosMapaCalor } = useQuery({
     queryKey: ['public-dashboard-mapa-calor', selectedYear],
     queryFn: async () => {
-      if (!selectedYear || selectedYear < 2026) return [];
-      
-      const startDate = `${selectedYear}-01-01`;
-      const endDate = `${selectedYear}-12-31`;
-      
-      const { data, error } = await supabase
+      if (selectedYear && selectedYear < 2026) return [];
+
+      const startDate = selectedYear ? `${selectedYear}-01-01` : null;
+      const endDate = selectedYear ? `${selectedYear}-12-31` : null;
+
+      let query = supabase
         .from('fat_registros_de_resgate')
         .select(`
           id, 
@@ -332,8 +341,13 @@ const DashboardPublico = () => {
           atropelamento,
           especie_id,
           regiao_administrativa_id
-        `)
-        .gte('data', startDate).lte('data', endDate);
+        `);
+
+      if (startDate && endDate) {
+        query = query.gte('data', startDate).lte('data', endDate);
+      }
+
+      const { data, error } = await query;
       
       if (error || !data) return [];
       
@@ -530,12 +544,12 @@ const DashboardPublico = () => {
   }, [rawData, isHistorico, historicalData]);
 
   const clearFilters = () => {
-    setSelectedYear(2026);
+    setSelectedYear(null);
     setSelectedMonth(null);
     setSelectedClasse(null);
   };
 
-  const hasFilters = selectedMonth || selectedClasse || selectedYear !== 2026;
+  const hasFilters = selectedMonth || selectedClasse || selectedYear !== null;
 
   if (isLoading) {
     return (
@@ -735,7 +749,10 @@ const DashboardPublico = () => {
             value={metrics.filhotes}
             color="purple"
           />
-          {selectedYear && selectedYear >= 2026 && (
+          {(
+            selectedYear === null ||
+            selectedYear >= 2026
+          ) && (
             <>
               <MetricCard
                 icon={<AlertTriangle className="h-5 w-5" />}
@@ -1106,11 +1123,11 @@ const DashboardPublico = () => {
 
           {/* Mapa de Calor Tab */}
           <TabsContent value="mapa">
-            {selectedYear && selectedYear >= 2026 ? (
+            {(selectedYear === null || selectedYear >= 2026) ? (
               <DashboardMapaCalor 
                 pontos={pontosMapaCalor || []}
                 isPublico={true}
-                ano={selectedYear}
+                ano={selectedYear ?? new Date().getFullYear()}
               />
             ) : (
               <Card className="glass-card">
