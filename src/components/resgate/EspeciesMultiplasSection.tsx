@@ -292,7 +292,7 @@ const EspeciesMultiplasSection: React.FC<EspeciesMultiplasSectionProps> = ({
     if (!especie) return;
 
     const field = getQuantidadeField(tipo);
-    const currentValue = especie[field];
+    const currentValue = Number(especie[field]) || 0;
     const newValue = operacao === 'aumentar' ? currentValue + 1 : Math.max(0, currentValue - 1);
     handleEspecieChange(id, field, newValue);
   };

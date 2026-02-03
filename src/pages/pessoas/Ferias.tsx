@@ -615,7 +615,7 @@ const Ferias: React.FC = () => {
       }));
       const { error: parcelasError } = await supabase
         .from('fat_ferias_parcelas')
-        .upsert(parcelasRows, { onConflict: ['fat_ferias_id', 'parcela_num'] });
+        .upsert(parcelasRows, { onConflict: 'fat_ferias_id,parcela_num' });
       if (parcelasError) {
         console.error('Erro ao salvar parcelas:', parcelasError);
         toast.error('Férias atualizadas, mas parcelas detalhadas não foram salvas. Tente editar novamente.');

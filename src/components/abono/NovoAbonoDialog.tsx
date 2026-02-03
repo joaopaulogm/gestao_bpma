@@ -91,7 +91,11 @@ export const NovoAbonoDialog: React.FC<NovoAbonoDialogProps> = ({ selectedYear, 
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedYear]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const filteredMilitares = useMemo(() => {
     if (!searchTerm) return militares.slice(0, 20);
@@ -161,9 +165,10 @@ export const NovoAbonoDialog: React.FC<NovoAbonoDialogProps> = ({ selectedYear, 
       setOpen(false);
       resetForm();
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao cadastrar abono';
       console.error('Erro ao cadastrar abono:', error);
-      toast.error(error.message || 'Erro ao cadastrar abono');
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
