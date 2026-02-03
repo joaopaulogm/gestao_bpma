@@ -1,13 +1,12 @@
-
 import React from 'react';
-import { RefreshCw, Calendar, Download, Filter } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardExport from './DashboardExport';
 import DashboardDateFilter from './DashboardDateFilter';
 import DashboardTypeFilter from './DashboardTypeFilter';
 import DashboardAdvancedFilters from './DashboardAdvancedFilters';
-
 import { FilterState } from '@/hooks/useFilterState';
+import { DashboardData } from '@/types/hotspots';
 
 interface DashboardHeaderProps {
   year: number;
@@ -19,7 +18,7 @@ interface DashboardHeaderProps {
   filters: FilterState;
   onFilterChange: (filters: Partial<FilterState>) => void;
   onRefresh: () => void;
-  data: Record<string, unknown>;
+  data: DashboardData;
   isLoading: boolean;
 }
 

@@ -704,19 +704,22 @@ export type Database = {
       }
       dim_grupamento_servico: {
         Row: {
+          característica: string | null
           id: string
           nome: string
-          ordem: number | null
+          ordem: number
         }
         Insert: {
+          característica?: string | null
           id?: string
           nome: string
-          ordem?: number | null
+          ordem?: number
         }
         Update: {
+          característica?: string | null
           id?: string
           nome?: string
-          ordem?: number | null
+          ordem?: number
         }
         Relationships: []
       }
@@ -1014,6 +1017,20 @@ export type Database = {
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "efetivo_roles_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "efetivo_roles_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
+          },
         ]
       }
       fact_indicador_mensal_bpma: {
@@ -1272,6 +1289,20 @@ export type Database = {
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fat_abono_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_abono_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
+          },
         ]
       }
       fat_atividades_prevencao: {
@@ -1331,17 +1362,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fat_atividades_prevencao_grupamento_servico_id_fkey"
-            columns: ["grupamento_servico_id"]
-            isOneToOne: false
-            referencedRelation: "dim_grupamento_servico"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fat_atividades_prevencao_area_protegida_id_fkey"
             columns: ["area_protegida_id"]
             isOneToOne: false
             referencedRelation: "dim_area_especialmente_protegida"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_atividades_prevencao_grupamento_servico_id_fkey"
+            columns: ["grupamento_servico_id"]
+            isOneToOne: false
+            referencedRelation: "dim_grupamento_servico"
             referencedColumns: ["id"]
           },
           {
@@ -1481,6 +1512,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_campanha_membros_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_campanha_membros_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
           },
           {
             foreignKeyName: "fat_campanha_membros_equipe_id_fkey"
@@ -1708,17 +1753,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fat_crimes_comuns_grupamento_servico_id_fkey"
-            columns: ["grupamento_servico_id"]
-            isOneToOne: false
-            referencedRelation: "dim_grupamento_servico"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fat_crimes_comuns_desfecho_id_fkey"
             columns: ["desfecho_id"]
             isOneToOne: false
             referencedRelation: "dim_desfecho_crime_comum"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_crimes_comuns_grupamento_servico_id_fkey"
+            columns: ["grupamento_servico_id"]
+            isOneToOne: false
+            referencedRelation: "dim_grupamento_servico"
             referencedColumns: ["id"]
           },
           {
@@ -1778,6 +1823,20 @@ export type Database = {
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fat_equipe_atividades_prevencao_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_equipe_atividades_prevencao_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
+          },
         ]
       }
       fat_equipe_crime: {
@@ -1806,6 +1865,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_equipe_crime_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_equipe_crime_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
           },
           {
             foreignKeyName: "fat_equipe_crime_registro_id_fkey"
@@ -1842,6 +1915,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_equipe_crime_comum_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_equipe_crime_comum_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
           },
           {
             foreignKeyName: "fat_equipe_crime_comum_registro_id_fkey"
@@ -1883,6 +1970,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fat_equipe_membros_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_equipe_membros_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
             foreignKeyName: "fat_equipe_membros_equipe_id_fkey"
             columns: ["equipe_id"]
             isOneToOne: false
@@ -1917,6 +2018,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_equipe_resgate_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_equipe_resgate_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
           },
         ]
       }
@@ -1985,6 +2100,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_ferias_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_ferias_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
           },
         ]
       }
@@ -2101,6 +2230,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_licencas_medicas_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_licencas_medicas_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
           },
         ]
       }
@@ -2284,11 +2427,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fat_ordens_servico_chefe_operacoes_id_fkey"
+            columns: ["chefe_operacoes_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_ordens_servico_chefe_operacoes_id_fkey"
+            columns: ["chefe_operacoes_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
             foreignKeyName: "fat_ordens_servico_comandante_id_fkey"
             columns: ["comandante_id"]
             isOneToOne: false
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_ordens_servico_comandante_id_fkey"
+            columns: ["comandante_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_ordens_servico_comandante_id_fkey"
+            columns: ["comandante_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
           },
           {
             foreignKeyName: "fat_ordens_servico_regiao_administrativa_id_fkey"
@@ -2334,6 +2505,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_os_efetivo_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_os_efetivo_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
           },
           {
             foreignKeyName: "fat_os_efetivo_os_id_fkey"
@@ -2494,13 +2679,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fat_registros_de_crimes_ambientais_grupamento_servico_id_fkey"
-            columns: ["grupamento_servico_id"]
-            isOneToOne: false
-            referencedRelation: "dim_grupamento_servico"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fat_registros_de_crime_desfecho_id_fkey"
             columns: ["desfecho_id"]
             isOneToOne: false
@@ -2521,6 +2699,13 @@ export type Database = {
             referencedRelation: "dim_tipo_de_area"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fat_registros_de_crimes_ambientais_grupamento_servico_id_fkey"
+            columns: ["grupamento_servico_id"]
+            isOneToOne: false
+            referencedRelation: "dim_grupamento_servico"
+            referencedColumns: ["id"]
+          },
         ]
       }
       fat_registros_de_resgate: {
@@ -2534,6 +2719,7 @@ export type Database = {
           especie_id: string | null
           estado_saude_id: string | null
           estagio_vida_id: string | null
+          grupamento_servico_id: string | null
           hora_guarda_ceapa: string | null
           horario_acionamento: string | null
           horario_termino: string | null
@@ -2554,7 +2740,6 @@ export type Database = {
           quantidade_total: number | null
           regiao_administrativa_id: string | null
           tipo_area_id: string | null
-          grupamento_servico_id: string | null
         }
         Insert: {
           animal_identificado?: boolean | null
@@ -2566,6 +2751,7 @@ export type Database = {
           especie_id?: string | null
           estado_saude_id?: string | null
           estagio_vida_id?: string | null
+          grupamento_servico_id?: string | null
           hora_guarda_ceapa?: string | null
           horario_acionamento?: string | null
           horario_termino?: string | null
@@ -2586,7 +2772,6 @@ export type Database = {
           quantidade_total?: number | null
           regiao_administrativa_id?: string | null
           tipo_area_id?: string | null
-          grupamento_servico_id?: string | null
         }
         Update: {
           animal_identificado?: boolean | null
@@ -2598,6 +2783,7 @@ export type Database = {
           especie_id?: string | null
           estado_saude_id?: string | null
           estagio_vida_id?: string | null
+          grupamento_servico_id?: string | null
           hora_guarda_ceapa?: string | null
           horario_acionamento?: string | null
           horario_termino?: string | null
@@ -2618,16 +2804,8 @@ export type Database = {
           quantidade_total?: number | null
           regiao_administrativa_id?: string | null
           tipo_area_id?: string | null
-          grupamento_servico_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fat_registros_de_resgate_grupamento_servico_id_fkey"
-            columns: ["grupamento_servico_id"]
-            isOneToOne: false
-            referencedRelation: "dim_grupamento_servico"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "fat_registros_de_resgate_desfecho_id_fkey"
             columns: ["desfecho_id"]
@@ -2696,6 +2874,13 @@ export type Database = {
             columns: ["estagio_vida_id"]
             isOneToOne: false
             referencedRelation: "dim_estagio_vida"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_registros_de_resgate_grupamento_servico_id_fkey"
+            columns: ["grupamento_servico_id"]
+            isOneToOne: false
+            referencedRelation: "dim_grupamento_servico"
             referencedColumns: ["id"]
           },
           {
@@ -3440,6 +3625,20 @@ export type Database = {
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fat_restricoes_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_restricoes_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
+          },
         ]
       }
       fila_imagens_especies: {
@@ -4155,6 +4354,20 @@ export type Database = {
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_roles_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "user_roles_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
+          },
         ]
       }
       usuarios_permitidos: {
@@ -4292,6 +4505,20 @@ export type Database = {
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "usuarios_por_login_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "usuarios_por_login_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
+          },
         ]
       }
     }
@@ -4325,6 +4552,175 @@ export type Database = {
           removido_em?: string | null
         }
         Relationships: []
+      }
+      v_dim_efetivo_sem_efetivo_roles: {
+        Row: {
+          dim_efetivo_id: string | null
+          lotacao: string | null
+          matricula: string | null
+          nome: string | null
+          nome_guerra: string | null
+          posto_graduacao: string | null
+        }
+        Relationships: []
+      }
+      v_dim_efetivo_unificado: {
+        Row: {
+          antiguidade: number | null
+          ativo: boolean | null
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          contato: string | null
+          cpf: number | null
+          created_at: string | null
+          data_inclusao: string | null
+          data_nascimento: string | null
+          dim_efetivo_id: string | null
+          efetivo_roles_ids: string[] | null
+          efetivo_roles_roles: Database["public"]["Enums"]["app_role"][] | null
+          email: string | null
+          email_2: string | null
+          equipe: string | null
+          escala: string | null
+          grupamento: string | null
+          idade: number | null
+          logradouro: string | null
+          lotacao: string | null
+          matricula: string | null
+          nome: string | null
+          nome_guerra: string | null
+          numero: string | null
+          porte_arma: string | null
+          posto_graduacao: string | null
+          quadro: string | null
+          quadro_sigla: string | null
+          sexo: string | null
+          telefone: string | null
+          telefone_2: string | null
+          uf: string | null
+          user_roles_id: string | null
+          user_roles_login: string | null
+          user_roles_role: Database["public"]["Enums"]["app_role"] | null
+          user_roles_user_id: string | null
+          usuarios_permitidos_ids: string[] | null
+        }
+        Insert: {
+          antiguidade?: number | null
+          ativo?: boolean | null
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          contato?: string | null
+          cpf?: number | null
+          created_at?: string | null
+          data_inclusao?: string | null
+          data_nascimento?: string | null
+          dim_efetivo_id?: string | null
+          efetivo_roles_ids?: never
+          efetivo_roles_roles?: never
+          email?: string | null
+          email_2?: string | null
+          equipe?: string | null
+          escala?: string | null
+          grupamento?: string | null
+          idade?: number | null
+          logradouro?: string | null
+          lotacao?: string | null
+          matricula?: string | null
+          nome?: string | null
+          nome_guerra?: string | null
+          numero?: string | null
+          porte_arma?: string | null
+          posto_graduacao?: string | null
+          quadro?: string | null
+          quadro_sigla?: string | null
+          sexo?: string | null
+          telefone?: string | null
+          telefone_2?: string | null
+          uf?: string | null
+          user_roles_id?: never
+          user_roles_login?: never
+          user_roles_role?: never
+          user_roles_user_id?: never
+          usuarios_permitidos_ids?: never
+        }
+        Update: {
+          antiguidade?: number | null
+          ativo?: boolean | null
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          contato?: string | null
+          cpf?: number | null
+          created_at?: string | null
+          data_inclusao?: string | null
+          data_nascimento?: string | null
+          dim_efetivo_id?: string | null
+          efetivo_roles_ids?: never
+          efetivo_roles_roles?: never
+          email?: string | null
+          email_2?: string | null
+          equipe?: string | null
+          escala?: string | null
+          grupamento?: string | null
+          idade?: number | null
+          logradouro?: string | null
+          lotacao?: string | null
+          matricula?: string | null
+          nome?: string | null
+          nome_guerra?: string | null
+          numero?: string | null
+          porte_arma?: string | null
+          posto_graduacao?: string | null
+          quadro?: string | null
+          quadro_sigla?: string | null
+          sexo?: string | null
+          telefone?: string | null
+          telefone_2?: string | null
+          uf?: string | null
+          user_roles_id?: never
+          user_roles_login?: never
+          user_roles_role?: never
+          user_roles_user_id?: never
+          usuarios_permitidos_ids?: never
+        }
+        Relationships: []
+      }
+      v_efetivo_roles_matriculas_faltando_dim_efetivo: {
+        Row: {
+          efetivo_roles_created_at: string | null
+          efetivo_roles_efetivo_id: string | null
+          efetivo_roles_id: string | null
+          efetivo_roles_role: Database["public"]["Enums"]["app_role"] | null
+          motivo: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "efetivo_roles_efetivo_id_fkey"
+            columns: ["efetivo_roles_efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "dim_efetivo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "efetivo_roles_efetivo_id_fkey"
+            columns: ["efetivo_roles_efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "efetivo_roles_efetivo_id_fkey"
+            columns: ["efetivo_roles_efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+        ]
       }
       vw_anos_disponiveis: {
         Row: {
@@ -4365,6 +4761,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "dim_efetivo"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_ferias_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_sem_efetivo_roles"
+            referencedColumns: ["dim_efetivo_id"]
+          },
+          {
+            foreignKeyName: "fat_ferias_efetivo_id_fkey"
+            columns: ["efetivo_id"]
+            isOneToOne: false
+            referencedRelation: "v_dim_efetivo_unificado"
+            referencedColumns: ["dim_efetivo_id"]
           },
         ]
       }
@@ -4790,8 +5200,8 @@ export type Database = {
         | "secao_operacional"
         | "secao_pessoas"
         | "secao_logistica"
-        | "comando"
         | "publico"
+        | "comando"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4926,8 +5336,8 @@ export const Constants = {
         "secao_operacional",
         "secao_pessoas",
         "secao_logistica",
-        "comando",
         "publico",
+        "comando",
       ],
     },
   },

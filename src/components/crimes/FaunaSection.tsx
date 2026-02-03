@@ -108,9 +108,9 @@ const FaunaSection: React.FC<FaunaSectionProps> = ({
         const especiesResult = { data: allEspecies, error: null };
 
         if (especiesResult.data) {
-          setEspeciesFauna(especiesResult.data);
+          setEspeciesFauna(especiesResult.data as EspecieFauna[]);
           // Extrair classes taxonômicas únicas da coluna classe_taxonomica
-          const classes = [...new Set(especiesResult.data.map(e => e.classe_taxonomica).filter(Boolean))].sort((a, b) => 
+          const classes = [...new Set((especiesResult.data as EspecieFauna[]).map(e => e.classe_taxonomica).filter(Boolean))].sort((a, b) => 
             (a || '').localeCompare(b || '', 'pt-BR')
           );
           setClassesTaxonomicas(classes);

@@ -61,7 +61,7 @@ const AreaProtegidaSection: React.FC<AreaProtegidaSectionProps> = ({
         .order('nome');
 
       if (error) throw error;
-      setAreasProtegidas(data || []);
+      setAreasProtegidas((data || []) as AreaProtegida[]);
     } catch (error) {
       console.error('Erro ao carregar áreas protegidas:', error);
     } finally {
