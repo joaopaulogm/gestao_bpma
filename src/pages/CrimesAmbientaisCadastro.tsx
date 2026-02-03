@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import FormSection from '@/components/resgate/FormSection';
 import { Button } from '@/components/ui/button';
@@ -103,6 +104,9 @@ interface AreaProtegida {
 }
 
 const CrimesAmbientaisCadastro = () => {
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit') || null;
+  const [loadingEdit, setLoadingEdit] = useState(!!editId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Dimension data
@@ -223,6 +227,114 @@ const CrimesAmbientaisCadastro = () => {
   useEffect(() => {
     loadDimensions();
   }, []);
+
+  // Carregar registro para edição quando ?edit=id (após dimensões para preencher selects)
+  useEffect(() => {
+    if (!editId || regioes.length === 0) return;
+    const loadForEdit = async () => {
+      setLoadingEdit(true);
+      try {
+        const { data: row, error } = await supabaseAny
+          .from('fat_registros_de_crimes_ambientais')
+          .select('*')
+          .eq('id', editId)
+          .single();
+        if (error || !row) {
+          toast.error('Registro não encontrado');
+          setLoadingEdit(false);
+          return;
+        }
+        const dataStr = row.data ? String(row.data).split('T')[0] : '';
+        setData(dataStr);
+        setHorarioAcionamento(row.horario_acionamento || '');
+        setHorarioTermino(row.horario_desfecho || '');
+        setRegiaoId(row.regiao_administrativa_id || '');
+        setTipoAreaId(row.tipo_area_id || '');
+        setAreaProtegida(!!row.area_protegida);
+        setAreasProtegidasSelecionadas(Array.isArray(row.areas_protegidas_ids) ? row.areas_protegidas_ids : []);
+        setLatitude(row.latitude || '');
+        setLongitude(row.longitude || '');
+        setTipoCrimeId(row.tipo_crime_id || '');
+        setEnquadramentoId(row.enquadramento_id || '');
+        setOcorreuApreensao(!!row.ocorreu_apreensao);
+        setTipoPoluicao(row.tipo_poluicao || '');
+        setDescricaoPoluicao(row.descricao_poluicao || '');
+        setMaterialVisivel(row.material_visivel || '');
+        setVolumeAparente(row.volume_aparente || '');
+        setOrigemAparente(row.origem_aparente || '');
+        setAnimalAfetado(!!row.animal_afetado);
+        setVegetacaoAfetada(!!row.vegetacao_afetada);
+        setAlteracaoVisual(!!row.alteracao_visual);
+        setOdorForte(!!row.odor_forte);
+        setMortandadeAnimais(!!row.mortandade_animais);
+        setRiscoImediato(!!row.risco_imediato);
+        setIntensidadePercebida(row.intensidade_percebida || '');
+        setTipoIntervencao(row.tipo_intervencao || '');
+        setEstruturasEncontradas(row.estruturas_encontradas || '');
+        setQtdEstruturas(Number(row.qtd_estruturas) || 0);
+        setDanoPerceptivel(row.dano_perceptivel || '');
+        setMaquinasPresentes(!!row.maquinas_presentes);
+        setMaterialApreendidoOrd(!!row.material_apreendido_ord);
+        setDescricaoMaterialOrd(row.descricao_material_ord || '');
+        setTipoImpedimento(row.tipo_impedimento || '');
+        setDescricaoAdmAmbiental(row.descricao_adm_ambiental || '');
+        setDocIrregular(!!row.doc_irregular);
+        setTipoIrregularidade(row.tipo_irregularidade_visual || '');
+        setVeiculoRelacionado(!!row.veiculo_relacionado);
+        setMaterialApreendidoAdm(!!row.material_apreendido_adm);
+        setDescricaoMaterialAdm(row.descricao_material_adm || '');
+        setDesfechoId(row.desfecho_id || '');
+        setProcedimentoLegal(row.procedimento_legal || '');
+        setQtdDetidosMaior(Number(row.qtd_detidos_maior) || 0);
+        setQtdDetidosMenor(Number(row.qtd_detidos_menor) || 0);
+        setQtdLiberadosMaior(Number(row.qtd_liberados_maior) || 0);
+        setQtdLiberadosMenor(Number(row.qtd_liberados_menor) || 0);
+        setGrupamentoServicoId(row.grupamento_servico_id || '');
+        const { data: equipe } = await supabaseAny.from('fat_equipe_crime').select('efetivo_id').eq('registro_id', editId);
+        if (equipe?.length) {
+          const ids = equipe.map((e: { efetivo_id: string }) => e.efetivo_id);
+          const { data: efetivos } = await supabaseAny.from('dim_efetivo').select('id, matricula, posto_graduacao, nome_guerra').in('id', ids);
+          setMembrosEquipe((efetivos || []).map((e: any) => ({ id: crypto.randomUUID(), efetivo_id: e.id, matricula: e.matricula || '', posto_graduacao: e.posto_graduacao || '', nome_guerra: e.nome_guerra || '' })));
+        }
+        const { data: faunaRows } = await supabaseAny.from('fat_crime_fauna').select('*').eq('id_ocorrencia', editId);
+        if (faunaRows?.length) {
+          setFaunaItems(faunaRows.map((f: any) => ({
+            id: crypto.randomUUID(),
+            classeTaxonomica: '',
+            especieId: f.especie_id,
+            estadoSaudeId: f.estado_saude_id || '',
+            atropelamento: !!f.atropelamento,
+            estagioVidaId: f.estagio_vida_id || '',
+            quantidadeAdulto: Number(f.quantidade_adulto) || 0,
+            quantidadeFilhote: Number(f.quantidade_filhote) || 0,
+            destinacaoId: f.destinacao_id || ''
+          })));
+        }
+        const { data: floraRows } = await supabaseAny.from('fat_crime_flora').select('*').eq('id_ocorrencia', editId);
+        if (floraRows?.length) {
+          setFloraItems(floraRows.map((f: any) => ({
+            id: crypto.randomUUID(),
+            especieId: f.especie_id,
+            condicao: f.condicao || '',
+            quantidade: Number(f.quantidade) || 1,
+            destinacao: f.destinacao || ''
+          })));
+        }
+        const { data: bensRows } = await supabaseAny.from('fat_ocorrencia_apreensao').select('id_item_apreendido, quantidade').eq('id_ocorrencia', editId);
+        if (bensRows?.length) {
+          const { data: itensDim } = await supabaseAny.from('dim_itens_apreensao').select('id, Item');
+          const itensMap = new Map((itensDim || []).map((i: any) => [i.id, i.Item]));
+          setBensApreendidos(bensRows.map((b: any) => ({ id: crypto.randomUUID(), itemId: b.id_item_apreendido, itemLabel: itensMap.get(b.id_item_apreendido) || '', quantidade: b.quantidade || 1 })));
+        }
+      } catch (e) {
+        console.error(e);
+        toast.error('Erro ao carregar registro para edição');
+      } finally {
+        setLoadingEdit(false);
+      }
+    };
+    loadForEdit();
+  }, [editId, regioes.length]);
 
   const loadDimensions = async () => {
     try {
@@ -458,7 +570,6 @@ const CrimesAmbientaisCadastro = () => {
     setIsSubmitting(true);
     
     try {
-      // Insert main record — tabela correta no banco: fat_registros_de_crimes_ambientais
       const insertPayload = {
           data,
           horario_acionamento: horarioAcionamento || null,
@@ -472,7 +583,6 @@ const CrimesAmbientaisCadastro = () => {
           tipo_crime_id: tipoCrimeId,
           enquadramento_id: enquadramentoId,
           ocorreu_apreensao: ocorreuApreensao,
-          // Poluição
           tipo_poluicao: isPoluicao ? tipoPoluicao : null,
           descricao_poluicao: isPoluicao ? descricaoPoluicao : null,
           material_visivel: isPoluicao ? materialVisivel : null,
@@ -485,7 +595,6 @@ const CrimesAmbientaisCadastro = () => {
           mortandade_animais: isPoluicao ? mortandadeAnimais : null,
           risco_imediato: isPoluicao ? riscoImediato : null,
           intensidade_percebida: isPoluicao ? intensidadePercebida : null,
-          // Ordenamento
           tipo_intervencao: isOrdenamento ? tipoIntervencao : null,
           estruturas_encontradas: isOrdenamento ? estruturasEncontradas : null,
           qtd_estruturas: isOrdenamento ? qtdEstruturas : null,
@@ -493,7 +602,6 @@ const CrimesAmbientaisCadastro = () => {
           maquinas_presentes: isOrdenamento ? maquinasPresentes : null,
           material_apreendido_ord: isOrdenamento ? materialApreendidoOrd : null,
           descricao_material_ord: isOrdenamento ? descricaoMaterialOrd : null,
-          // Administração
           tipo_impedimento: isAdministracao ? tipoImpedimento : null,
           descricao_adm_ambiental: isAdministracao ? descricaoAdmAmbiental : null,
           doc_irregular: isAdministracao ? docIrregular : null,
@@ -501,7 +609,6 @@ const CrimesAmbientaisCadastro = () => {
           veiculo_relacionado: isAdministracao ? veiculoRelacionado : null,
           material_apreendido_adm: isAdministracao ? materialApreendidoAdm : null,
           descricao_material_adm: isAdministracao ? descricaoMaterialAdm : null,
-          // Conclusão
           desfecho_id: desfechoId || null,
           procedimento_legal: isFlagrante ? procedimentoLegal : null,
           qtd_detidos_maior: qtdDetidosMaior,
@@ -511,17 +618,27 @@ const CrimesAmbientaisCadastro = () => {
           grupamento_servico_id: grupamentoServicoId || null
         };
 
-      const { data: dataCrime, error: errCrime } = await supabaseAny
-        .from('fat_registros_de_crimes_ambientais')
-        .insert(insertPayload)
-        .select('id')
-        .single();
-
-      if (errCrime) throw errCrime;
-      const crimeRecord = dataCrime;
-      if (!crimeRecord?.id) throw new Error('Insert não retornou id');
-
-      const ocorrenciaId = crimeRecord.id;
+      let ocorrenciaId: string;
+      if (editId) {
+        const { error: updateErr } = await supabaseAny.from('fat_registros_de_crimes_ambientais').update(insertPayload).eq('id', editId);
+        if (updateErr) throw updateErr;
+        ocorrenciaId = editId;
+        await supabaseAny.from('fat_equipe_crime').delete().eq('registro_id', editId);
+        await supabaseAny.from('fat_crime_fauna').delete().eq('id_ocorrencia', editId);
+        await supabaseAny.from('fat_crime_flora').delete().eq('id_ocorrencia', editId);
+        await supabaseAny.from('fat_ocorrencia_apreensao').delete().eq('id_ocorrencia', editId);
+        toast.success('Ocorrência atualizada com sucesso!');
+      } else {
+        const { data: dataCrime, error: errCrime } = await supabaseAny
+          .from('fat_registros_de_crimes_ambientais')
+          .insert(insertPayload)
+          .select('id')
+          .single();
+        if (errCrime) throw errCrime;
+        if (!dataCrime?.id) throw new Error('Insert não retornou id');
+        ocorrenciaId = dataCrime.id;
+        toast.success('Ocorrência registrada com sucesso!');
+      }
 
       // Insert fauna items
       if (isFauna && ocorreuApreensao && faunaItems.length > 0) {
@@ -579,24 +696,13 @@ const CrimesAmbientaisCadastro = () => {
         }
       }
 
-      // Save team members
       if (membrosEquipe.length > 0) {
-        const equipeRecords = membrosEquipe.map(m => ({
-          registro_id: ocorrenciaId,
-          efetivo_id: m.efetivo_id
-        }));
-        const { error: equipeError } = await supabase
-          .from('fat_equipe_crime')
-          .insert(equipeRecords);
-        if (equipeError) {
-          console.error('Erro ao salvar equipe:', equipeError);
-        }
+        const equipeRecords = membrosEquipe.map(m => ({ registro_id: ocorrenciaId, efetivo_id: m.efetivo_id }));
+        const { error: equipeError } = await supabase.from('fat_equipe_crime').insert(equipeRecords);
+        if (equipeError) console.error('Erro ao salvar equipe:', equipeError);
       }
 
-      toast.success('Ocorrência registrada com sucesso!');
-      
-      // Reset form
-      resetForm();
+      if (!editId) resetForm();
       
     } catch (error: any) {
       console.error('Erro ao salvar:', error);
@@ -685,6 +791,17 @@ const CrimesAmbientaisCadastro = () => {
     acc[cat].push(item);
     return acc;
   }, {} as Record<string, ItemApreendido[]>);
+
+  if (loadingEdit) {
+    return (
+      <Layout title="Ocorrências Crimes Ambientais" showBackButton>
+        <div className="flex items-center justify-center min-h-[200px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Carregando registro...</span>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="Ocorrências Crimes Ambientais" showBackButton>
@@ -1665,7 +1782,7 @@ const CrimesAmbientaisCadastro = () => {
                 Salvando...
               </>
             ) : (
-              'Registrar Ocorrência'
+              editId ? 'Salvar alterações' : 'Registrar Ocorrência'
             )}
           </Button>
         </div>

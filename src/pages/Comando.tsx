@@ -7,9 +7,9 @@ const menuItems = [
   { title: 'Agenda OS', description: 'Agenda de Ordens de Serviço', icon: Calendar, path: '/comando/agenda-OS' },
   { title: 'Agenda CMD', description: 'Agenda do Comando', icon: CalendarDays, path: '/comando/agenda-CMD' },
   { title: 'Dashboard', description: 'Visão geral do Comando', icon: BarChart3, path: '/comando/dashboard' },
+  { title: 'Apresentação', description: 'Apresentação BPMA', icon: Presentation, path: '/comando/apresentacao' },
   { title: 'Pessoal', description: 'Efetivo, escalas, férias e abono', icon: Users, path: '/comando/pessoal' },
   { title: 'Logística', description: 'Frota e patrimônio', icon: Wrench, path: '/comando/logistica' },
-  { title: 'Apresentação', description: 'Apresentação BPMA', icon: Presentation, path: '/comando/apresentacao' },
 ];
 
 const Comando: React.FC = () => {

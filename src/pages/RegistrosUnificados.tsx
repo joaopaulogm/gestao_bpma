@@ -873,17 +873,25 @@ const RegistrosUnificados: React.FC = () => {
     }
   };
 
+  // Exibe data sem deslocamento de timezone (backend envia YYYY-MM-DD; new Date(str) interpreta como UTC e pode mostrar dia anterior)
   const formatDate = (dateStr: string) => {
     try {
+      if (!dateStr) return '-';
+      const part = dateStr.split('T')[0];
+      const [y, m, d] = part.split('-');
+      if (y && m && d) return `${d}/${m}/${y}`;
       return format(new Date(dateStr), 'dd/MM/yyyy', { locale: ptBR });
     } catch {
-      return dateStr;
+      return dateStr || '-';
     }
   };
 
   const formatDateRelative = (dateStr: string) => {
     try {
-      const date = new Date(dateStr);
+      if (!dateStr) return dateStr;
+      const part = dateStr.split('T')[0];
+      const [y, m, d] = part.split('-').map(Number);
+      const date = y && m && d ? new Date(y, m - 1, d) : new Date(dateStr);
       const now = new Date();
       const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
       

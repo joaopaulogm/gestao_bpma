@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import FormSection from '@/components/resgate/FormSection';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,9 @@ interface ItemApreendido {
 }
 
 const CrimesComuns = () => {
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit') || null;
+  const [loadingEdit, setLoadingEdit] = useState(!!editId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Dimension data
@@ -112,6 +115,74 @@ const CrimesComuns = () => {
   useEffect(() => {
     loadDimensions();
   }, []);
+
+  // Carregar registro para edição quando ?edit=id
+  useEffect(() => {
+    if (!editId) return;
+    const loadForEdit = async () => {
+      setLoadingEdit(true);
+      try {
+        const { data: row, error } = await (supabase as any)
+          .from('fat_crimes_comuns')
+          .select('*')
+          .eq('id', editId)
+          .single();
+        if (error || !row) {
+          toast.error('Registro não encontrado');
+          setLoadingEdit(false);
+          return;
+        }
+        setData(row.data ? String(row.data).split('T')[0] : '');
+        setHorarioAcionamento(row.horario_acionamento || '');
+        setHorarioTermino(row.horario_desfecho || '');
+        setRegiaoId(row.regiao_administrativa_id || '');
+        setTipoAreaId(row.tipo_area_id || '');
+        setLatitude(row.latitude || '');
+        setLongitude(row.longitude || '');
+        setTipoPenalId(row.tipo_penal_id || '');
+        setNaturezaCrime(row.natureza_crime || '');
+        setEnquadramentoLegal(row.enquadramento_legal || '');
+        setOcorreuApreensao(!!row.ocorreu_apreensao);
+        setDescricaoOcorrencia(row.descricao_ocorrencia || '');
+        setLocalEspecifico(row.local_especifico || '');
+        setVitimasEnvolvidas(Number(row.vitimas_envolvidas) || 0);
+        setSuspeitosEnvolvidos(Number(row.suspeitos_envolvidos) || 0);
+        setArmaUtilizada(!!row.arma_utilizada);
+        setTipoArma(row.tipo_arma || '');
+        setMaterialApreendido(!!row.material_apreendido);
+        setDescricaoMaterial(row.descricao_material || '');
+        setVeiculoEnvolvido(!!row.veiculo_envolvido);
+        setTipoVeiculo(row.tipo_veiculo || '');
+        setPlacaVeiculo(row.placa_veiculo || '');
+        setDesfechoId(row.desfecho_id || '');
+        setProcedimentoLegal(row.procedimento_legal || '');
+        setQtdDetidosMaior(Number(row.qtd_detidos_maior) || 0);
+        setQtdDetidosMenor(Number(row.qtd_detidos_menor) || 0);
+        setQtdLiberadosMaior(Number(row.qtd_liberados_maior) || 0);
+        setQtdLiberadosMenor(Number(row.qtd_liberados_menor) || 0);
+        setObservacoes(row.observacoes || '');
+        setGrupamentoServicoId(row.grupamento_servico_id || '');
+        const { data: equipe } = await (supabase as any).from('fat_equipe_crime_comum').select('efetivo_id').eq('registro_id', editId);
+        if (equipe?.length) {
+          const ids = equipe.map((e: { efetivo_id: string }) => e.efetivo_id);
+          const { data: efetivos } = await (supabase as any).from('dim_efetivo').select('id, matricula, posto_graduacao, nome_guerra').in('id', ids);
+          setMembrosEquipe((efetivos || []).map((e: any) => ({ id: crypto.randomUUID(), efetivo_id: e.id, matricula: e.matricula || '', posto_graduacao: e.posto_graduacao || '', nome_guerra: e.nome_guerra || '' })));
+        }
+        const { data: bens } = await (supabase as any).from('fat_ocorrencia_apreensao_crime_comum').select('id_item_apreendido, quantidade').eq('id_ocorrencia', editId);
+        if (bens?.length) {
+          const { data: itensDim } = await (supabase as any).from('dim_itens_apreensao').select('id, Item');
+          const itensMap = new Map((itensDim || []).map((i: any) => [i.id, i.Item]));
+          setBensApreendidos(bens.map((b: any) => ({ id: crypto.randomUUID(), itemId: b.id_item_apreendido, itemLabel: itensMap.get(b.id_item_apreendido) || '', quantidade: b.quantidade || 1 })));
+        }
+      } catch (e) {
+        console.error(e);
+        toast.error('Erro ao carregar registro para edição');
+      } finally {
+        setLoadingEdit(false);
+      }
+    };
+    loadForEdit();
+  }, [editId]);
 
   const loadDimensions = async () => {
     try {
@@ -196,86 +267,78 @@ const CrimesComuns = () => {
     }
     
     setIsSubmitting(true);
-    
+    const supabaseAny = supabase as any;
     try {
-      // Insert main record
-      const { data: crimeRecord, error: crimeError } = await supabase
-        .from('fat_crimes_comuns')
-        .insert({
-          data,
-          horario_acionamento: horarioAcionamento || null,
-          horario_desfecho: horarioTermino || null,
-          regiao_administrativa_id: regiaoId,
-          tipo_area_id: tipoAreaId || null,
-          latitude,
-          longitude,
-          tipo_penal_id: tipoPenalId,
-          natureza_crime: naturezaCrime || null,
-          enquadramento_legal: enquadramentoLegal || null,
-          ocorreu_apreensao: ocorreuApreensao,
-          descricao_ocorrencia: descricaoOcorrencia || null,
-          local_especifico: localEspecifico || null,
-          vitimas_envolvidas: vitimasEnvolvidas,
-          suspeitos_envolvidos: suspeitosEnvolvidos,
-          arma_utilizada: armaUtilizada,
-          tipo_arma: armaUtilizada ? tipoArma : null,
-          material_apreendido: materialApreendido,
-          descricao_material: materialApreendido ? descricaoMaterial : null,
-          veiculo_envolvido: veiculoEnvolvido,
-          tipo_veiculo: veiculoEnvolvido ? tipoVeiculo : null,
-          placa_veiculo: veiculoEnvolvido ? placaVeiculo : null,
-          desfecho_id: desfechoId,
-          procedimento_legal: procedimentoLegal || null,
-          qtd_detidos_maior: qtdDetidosMaior,
-          qtd_detidos_menor: qtdDetidosMenor,
-          qtd_liberados_maior: qtdLiberadosMaior,
-          qtd_liberados_menor: qtdLiberadosMenor,
-          observacoes: observacoes || null,
-          grupamento_servico_id: grupamentoServicoId || null
-        })
-        .select('id')
-        .single();
+      let ocorrenciaId: string;
+      const payload = {
+        data,
+        horario_acionamento: horarioAcionamento || null,
+        horario_desfecho: horarioTermino || null,
+        regiao_administrativa_id: regiaoId,
+        tipo_area_id: tipoAreaId || null,
+        latitude,
+        longitude,
+        tipo_penal_id: tipoPenalId,
+        natureza_crime: naturezaCrime || null,
+        enquadramento_legal: enquadramentoLegal || null,
+        ocorreu_apreensao: ocorreuApreensao,
+        descricao_ocorrencia: descricaoOcorrencia || null,
+        local_especifico: localEspecifico || null,
+        vitimas_envolvidas: vitimasEnvolvidas,
+        suspeitos_envolvidos: suspeitosEnvolvidos,
+        arma_utilizada: armaUtilizada,
+        tipo_arma: armaUtilizada ? tipoArma : null,
+        material_apreendido: materialApreendido,
+        descricao_material: materialApreendido ? descricaoMaterial : null,
+        veiculo_envolvido: veiculoEnvolvido,
+        tipo_veiculo: veiculoEnvolvido ? tipoVeiculo : null,
+        placa_veiculo: veiculoEnvolvido ? placaVeiculo : null,
+        desfecho_id: desfechoId,
+        procedimento_legal: procedimentoLegal || null,
+        qtd_detidos_maior: qtdDetidosMaior,
+        qtd_detidos_menor: qtdDetidosMenor,
+        qtd_liberados_maior: qtdLiberadosMaior,
+        qtd_liberados_menor: qtdLiberadosMenor,
+        observacoes: observacoes || null,
+        grupamento_servico_id: grupamentoServicoId || null
+      };
+      if (editId) {
+        const { error: updateError } = await supabaseAny.from('fat_crimes_comuns').update(payload).eq('id', editId);
+        if (updateError) throw updateError;
+        ocorrenciaId = editId;
+        await supabaseAny.from('fat_equipe_crime_comum').delete().eq('registro_id', editId);
+        await supabaseAny.from('fat_ocorrencia_apreensao_crime_comum').delete().eq('id_ocorrencia', editId);
+        toast.success('Ocorrência atualizada com sucesso!');
+      } else {
+        const { data: crimeRecord, error: crimeError } = await supabase
+          .from('fat_crimes_comuns')
+          .insert(payload)
+          .select('id')
+          .single();
+        if (crimeError) throw crimeError;
+        ocorrenciaId = crimeRecord.id;
+        toast.success('Ocorrência registrada com sucesso!');
+      }
 
-      if (crimeError) throw crimeError;
-
-      const ocorrenciaId = crimeRecord.id;
-
-      // Insert bens apreendidos
       if (ocorreuApreensao && bensApreendidos.length > 0) {
         const bensRecords = bensApreendidos.filter(b => b.itemId).map(b => ({
           id_ocorrencia: ocorrenciaId,
           id_item_apreendido: b.itemId,
           quantidade: b.quantidade
         }));
-
         if (bensRecords.length > 0) {
-          const supabaseAny = supabase as any;
-          const { error: bensError } = await supabaseAny
-            .from('fat_ocorrencia_apreensao_crime_comum')
-            .insert(bensRecords);
+          const { error: bensError } = await supabaseAny.from('fat_ocorrencia_apreensao_crime_comum').insert(bensRecords);
           if (bensError) throw bensError;
         }
       }
 
-      // Save team members
       if (membrosEquipe.length > 0) {
-        const equipeRecords = membrosEquipe.map(m => ({
-          registro_id: ocorrenciaId,
-          efetivo_id: m.efetivo_id
-        }));
-        const supabaseAny = supabase as any;
-        const { error: equipeError } = await supabaseAny
-          .from('fat_equipe_crime_comum')
-          .insert(equipeRecords);
-        if (equipeError) {
-          console.error('Erro ao salvar equipe:', equipeError);
-        }
+        const equipeRecords = membrosEquipe.map(m => ({ registro_id: ocorrenciaId, efetivo_id: m.efetivo_id }));
+        const { error: equipeError } = await supabaseAny.from('fat_equipe_crime_comum').insert(equipeRecords);
+        if (equipeError) console.error('Erro ao salvar equipe:', equipeError);
       }
 
-      toast.success('Ocorrência registrada com sucesso!');
-      
-      // Reset form
-      resetForm();
+      if (!editId) resetForm();
       
     } catch (error) {
       console.error('Erro ao salvar:', error);
@@ -328,6 +391,17 @@ const CrimesComuns = () => {
     acc[cat].push(item);
     return acc;
   }, {} as Record<string, ItemApreendido[]>);
+
+  if (loadingEdit) {
+    return (
+      <Layout title="Crimes Comuns" showBackButton>
+        <div className="flex items-center justify-center min-h-[200px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Carregando registro...</span>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="Crimes Comuns" showBackButton>
@@ -821,7 +895,7 @@ const CrimesComuns = () => {
                 Salvando...
               </>
             ) : (
-              'Registrar Ocorrência'
+              editId ? 'Salvar alterações' : 'Registrar Ocorrência'
             )}
           </Button>
         </div>

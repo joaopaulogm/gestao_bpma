@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,9 +31,13 @@ interface TipoAtividade {
 }
 
 const AtividadesPrevencao: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit') || null;
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('prevencao');
+  const [loadingEdit, setLoadingEdit] = useState(!!editId);
   
   // Dimension data
   const [tiposAtividades, setTiposAtividades] = useState<TipoAtividade[]>([]);
@@ -63,6 +68,70 @@ const AtividadesPrevencao: React.FC = () => {
   useEffect(() => {
     fetchDimensionData();
   }, []);
+
+  // Carregar registro para edição quando ?edit=id
+  useEffect(() => {
+    if (!editId) return;
+    const loadForEdit = async () => {
+      setLoadingEdit(true);
+      try {
+        const supabaseAny = supabase as any;
+        const { data: atividade, error: errAtiv } = await supabaseAny
+          .from('fat_atividades_prevencao')
+          .select('*')
+          .eq('id', editId)
+          .single();
+        if (errAtiv || !atividade) {
+          toast.error('Registro não encontrado');
+          setLoadingEdit(false);
+          return;
+        }
+        const dataStr = atividade.data ? String(atividade.data).split('T')[0] : '';
+        setFormData({
+          data: dataStr,
+          tipoAtividadeId: atividade.tipo_atividade_id || '',
+          regiaoAdministrativaId: atividade.regiao_administrativa_id || '',
+          latitude: atividade.latitude || '',
+          longitude: atividade.longitude || '',
+          quantidadePublico: Number(atividade.quantidade_publico) || 0,
+          observacoes: atividade.observacoes || '',
+          horarioInicio: atividade.horario_inicio || '',
+          horarioTermino: atividade.horario_termino || '',
+          missao: atividade.missao || '',
+          numeroOS: atividade.numero_os || '',
+          emAreaProtegida: !!atividade.em_area_protegida,
+          areaProtegidaId: atividade.area_protegida_id || '',
+          areaProtegidaCompetencia: '',
+        });
+        setGrupamentoServicoId(atividade.grupamento_servico_id || '');
+        const { data: equipe } = await supabaseAny
+          .from('fat_equipe_atividades_prevencao')
+          .select('efetivo_id')
+          .eq('atividade_prevencao_id', editId);
+        if (equipe && equipe.length > 0) {
+          const efetivoIds = equipe.map((e: { efetivo_id: string }) => e.efetivo_id);
+          const { data: efetivos } = await supabaseAny
+            .from('dim_efetivo')
+            .select('id, matricula, posto_graduacao, nome_guerra')
+            .in('id', efetivoIds);
+          const membros: MembroEquipePrevencao[] = (efetivos || []).map((e: any) => ({
+            id: crypto.randomUUID(),
+            efetivo_id: e.id,
+            matricula: e.matricula || '',
+            posto_graduacao: e.posto_graduacao || '',
+            nome_guerra: e.nome_guerra || '',
+          }));
+          setMembrosEquipe(membros);
+        }
+      } catch (e) {
+        console.error(e);
+        toast.error('Erro ao carregar registro para edição');
+      } finally {
+        setLoadingEdit(false);
+      }
+    };
+    loadForEdit();
+  }, [editId]);
   
   const fetchDimensionData = async () => {
     setIsLoading(true);
@@ -99,71 +168,82 @@ const AtividadesPrevencao: React.FC = () => {
     setIsSaving(true);
     try {
       const supabaseAny = supabase as any;
+      const payload = {
+        data: formData.data,
+        tipo_atividade_id: formData.tipoAtividadeId,
+        regiao_administrativa_id: formData.regiaoAdministrativaId || null,
+        latitude: formData.latitude || null,
+        longitude: formData.longitude || null,
+        quantidade_publico: formData.quantidadePublico || null,
+        observacoes: formData.observacoes || null,
+        horario_inicio: formData.horarioInicio || null,
+        horario_termino: formData.horarioTermino || null,
+        missao: formData.missao || null,
+        numero_os: formData.numeroOS || null,
+        em_area_protegida: formData.emAreaProtegida,
+        area_protegida_id: formData.areaProtegidaId || null,
+        grupamento_servico_id: grupamentoServicoId || null,
+      };
       
-      // Inserir atividade
-      const { data: atividadeData, error: atividadeError } = await supabaseAny
-        .from('fat_atividades_prevencao')
-        .insert({
-          data: formData.data,
-          tipo_atividade_id: formData.tipoAtividadeId,
-          regiao_administrativa_id: formData.regiaoAdministrativaId || null,
-          latitude: formData.latitude || null,
-          longitude: formData.longitude || null,
-          quantidade_publico: formData.quantidadePublico || null,
-          observacoes: formData.observacoes || null,
-          horario_inicio: formData.horarioInicio || null,
-          horario_termino: formData.horarioTermino || null,
-          missao: formData.missao || null,
-          numero_os: formData.numeroOS || null,
-          em_area_protegida: formData.emAreaProtegida,
-          area_protegida_id: formData.areaProtegidaId || null,
-          grupamento_servico_id: grupamentoServicoId || null,
-        })
-        .select('id')
-        .single();
+      let atividadeId: string;
+      if (editId) {
+        const { error: updateError } = await supabaseAny
+          .from('fat_atividades_prevencao')
+          .update(payload)
+          .eq('id', editId);
+        if (updateError) throw updateError;
+        atividadeId = editId;
+        toast.success('Atividade atualizada com sucesso!');
+      } else {
+        const { data: atividadeData, error: atividadeError } = await supabaseAny
+          .from('fat_atividades_prevencao')
+          .insert(payload)
+          .select('id')
+          .single();
+        if (atividadeError) throw atividadeError;
+        atividadeId = atividadeData.id;
+        toast.success('Atividade registrada com sucesso!');
+      }
       
-      if (atividadeError) throw atividadeError;
-      
-      // Inserir equipe se houver membros
-      if (membrosEquipe.length > 0 && atividadeData?.id) {
+      if (editId) {
+        await supabaseAny.from('fat_equipe_atividades_prevencao').delete().eq('atividade_prevencao_id', editId);
+      }
+      if (membrosEquipe.length > 0 && atividadeId) {
         const equipeRecords = membrosEquipe.map(m => ({
-          atividade_prevencao_id: atividadeData.id,
+          atividade_prevencao_id: atividadeId,
           efetivo_id: m.efetivo_id
         }));
-        
-        const { error: equipeError } = await (supabase as any)
+        const { error: equipeError } = await supabaseAny
           .from('fat_equipe_atividades_prevencao')
           .insert(equipeRecords);
-        
         if (equipeError) {
           console.error('Erro ao salvar equipe:', equipeError);
-          toast.warning('Atividade salva, mas houve erro ao salvar a equipe');
+          toast.warning(editId ? 'Atividade atualizada, mas houve erro ao atualizar a equipe' : 'Atividade salva, mas houve erro ao salvar a equipe');
         }
       }
       
-      toast.success('Atividade registrada com sucesso!');
-      
-      // Reset form
-      setFormData({
-        data: new Date().toISOString().split('T')[0],
-        tipoAtividadeId: '',
-        regiaoAdministrativaId: '',
-        latitude: '',
-        longitude: '',
-        quantidadePublico: 0,
-        observacoes: '',
-        horarioInicio: '',
-        horarioTermino: '',
-        missao: '',
-        numeroOS: '',
-        emAreaProtegida: false,
-        areaProtegidaId: '',
-        areaProtegidaCompetencia: '',
-      });
-      setMembrosEquipe([]);
-      setGrupamentoServicoId('');
-      setActiveTab('prevencao');
-      setSubTab('teatro');
+      if (!editId) {
+        setFormData({
+          data: new Date().toISOString().split('T')[0],
+          tipoAtividadeId: '',
+          regiaoAdministrativaId: '',
+          latitude: '',
+          longitude: '',
+          quantidadePublico: 0,
+          observacoes: '',
+          horarioInicio: '',
+          horarioTermino: '',
+          missao: '',
+          numeroOS: '',
+          emAreaProtegida: false,
+          areaProtegidaId: '',
+          areaProtegidaCompetencia: '',
+        });
+        setMembrosEquipe([]);
+        setGrupamentoServicoId('');
+        setActiveTab('prevencao');
+        setSubTab('teatro');
+      }
     } catch (error: any) {
       console.error('Erro ao salvar:', error);
       toast.error(`Erro ao salvar: ${error.message}`);
@@ -224,7 +304,7 @@ const AtividadesPrevencao: React.FC = () => {
     selectedActivity.nome.toLowerCase().includes('incendios florestais')
   );
   
-  if (isLoading) {
+  if (isLoading || loadingEdit) {
     return (
       <Layout title="Atividades de Prevenção e Policiamento Comunitário" showBackButton>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -619,7 +699,7 @@ const AtividadesPrevencao: React.FC = () => {
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                <span>Registrar Atividade</span>
+                <span>{editId ? 'Salvar alterações' : 'Registrar Atividade'}</span>
               </>
             )}
           </Button>

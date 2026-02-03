@@ -112,6 +112,7 @@ const navSections: NavSection[] = [
         children: [
           { path: '/secao-operacional/dashboard', label: 'Dashboard', icon: BarChart3 },
           { path: '/secao-operacional/registros', label: 'Registros', icon: FolderOpen },
+          { path: '/secao-operacional/apresentacao', label: 'Apresentação', icon: Presentation },
           { path: '/secao-operacional/hotspots', label: 'Hotspots', icon: MapPin },
           { path: '/secao-operacional/relatorios', label: 'Relatórios', icon: FileText },
           { path: '/secao-operacional/fauna-cadastro', label: 'Fauna — Cadastrar', icon: PawPrint },
@@ -125,7 +126,6 @@ const navSections: NavSection[] = [
           { path: '/secao-operacional/atividades-prevencao', label: 'Atividades Prevenção', icon: Shield },
           { path: '/secao-operacional/bens-apreendidos', label: 'Bens Apreendidos', icon: Package },
           { path: '/secao-operacional/controle-os', label: 'Controle OS', icon: FileCheck },
-          { path: '/secao-operacional/apresentacao', label: 'Apresentação', icon: Presentation },
         ],
       },
     ],
@@ -143,6 +143,7 @@ const navSections: NavSection[] = [
           { path: '/comando/agenda-OS', label: 'Agenda OS', icon: Calendar },
           { path: '/comando/agenda-CMD', label: 'Agenda CMD', icon: CalendarDays },
           { path: '/comando/dashboard', label: 'Dashboard', icon: BarChart3 },
+          { path: '/comando/apresentacao', label: 'Apresentação', icon: Presentation },
           { path: '/comando/pessoal', label: 'Pessoal', icon: Users },
           { path: '/comando/pessoal/campanha', label: 'Campanha', icon: Target },
           { path: '/comando/pessoal/efetivo', label: 'Efetivo BPMA', icon: UsersRound },
@@ -153,7 +154,6 @@ const navSections: NavSection[] = [
           { path: '/comando/pessoal/ferias', label: 'Férias', icon: Palmtree },
           { path: '/comando/pessoal/abono', label: 'Abono', icon: Gift },
           { path: '/comando/logistica', label: 'Logística', icon: Wrench },
-          { path: '/comando/apresentacao', label: 'Apresentação', icon: Presentation },
         ],
       },
     ],
@@ -252,6 +252,7 @@ const Sidebar = () => {
   const isActive = (path: string) =>
     location.pathname === path || (path !== '/' && path !== '/inicio' && location.pathname.startsWith(path + '/'));
 
+  // ADMIN vê todos os itens do menu (hasAccess já retorna true para admin).
   const showItem = (item: NavItem): boolean => {
     if (item.roles?.includes('guest')) return !isAuthenticated;
     if (item.roles?.includes('admin')) return isAdmin;

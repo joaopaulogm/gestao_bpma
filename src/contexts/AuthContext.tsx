@@ -205,6 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isAdmin = userRole === 'admin';
 
+  // ADMIN tem acesso a todas as páginas (rotas e itens do menu).
   const hasAccess = (requiredRoles: AppRole[]): boolean => {
     if (!userRole) return false;
     if (userRole === 'admin') return true;

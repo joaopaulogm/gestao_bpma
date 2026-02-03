@@ -7,14 +7,16 @@ import { Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
 
 const menuItems = [
-  // Formulários de Cadastro - Primeiro
+  // Destaque: Dashboard, Registros e Apresentação no topo
+  { title: 'Dashboard', description: 'Visualizar estatísticas', icon: BarChart, path: '/secao-operacional/dashboard' },
+  { title: 'Registros', description: 'Todos os registros unificados', icon: Table, path: '/secao-operacional/registros' },
+  { title: 'Apresentação', description: 'Apresentação BPMA', icon: Presentation, path: '/secao-operacional/apresentacao' },
+  // Formulários de Cadastro
   { title: 'Resgate de Fauna', description: 'Registrar resgate de animais', icon: Bird, path: '/secao-operacional/resgate-cadastro' },
   { title: 'Crimes Ambientais', description: 'Registrar crimes ambientais', icon: AlertTriangle, path: '/secao-operacional/crimes-ambientais' },
   { title: 'Crimes Comuns', description: 'Registrar crimes comuns', icon: Shield, path: '/secao-operacional/crimes-comuns' },
   { title: 'Atividades de Prevenção', description: 'Registrar atividades educativas', icon: TreePine, path: '/secao-operacional/atividades-prevencao' },
-  // Demais cards
-  { title: 'Dashboard', description: 'Visualizar estatísticas', icon: BarChart, path: '/secao-operacional/dashboard' },
-  { title: 'Registros', description: 'Todos os registros unificados', icon: Table, path: '/secao-operacional/registros' },
+  // Demais
   { title: 'Hotspots', description: 'Mapa de ocorrências', icon: MapPin, path: '/secao-operacional/hotspots' },
   { title: 'Relatórios', description: 'Gerar relatórios', icon: FileText, path: '/secao-operacional/relatorios' },
   { title: 'Bens Apreendidos', description: 'Gerenciar apreensões', icon: Package, path: '/secao-operacional/bens-apreendidos' },
@@ -24,7 +26,6 @@ const menuItems = [
   { title: 'Flora Cadastrada', description: 'Listar espécies de flora', icon: List, path: '/secao-operacional/flora-cadastrada' },
   { title: 'Controle de OS', description: 'Gerenciar Ordens de Serviço', icon: ClipboardList, path: '/secao-operacional/controle-os' },
   { title: 'Monitorar RAPs', description: 'Processar RAPs automaticamente', icon: FolderSearch, path: '/secao-operacional/monitorar-raps' },
-  { title: 'Apresentação', description: 'Apresentação BPMA', icon: Presentation, path: '/secao-operacional/apresentacao' },
 ];
 
 const SecaoOperacional: React.FC = () => {
