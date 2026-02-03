@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const supabaseAny = supabase as any;
 import { processDashboardData } from '@/utils/dashboardDataProcessor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabaseAny = supabase as any;
 import { 
   BarChart, 
   Bar, 
