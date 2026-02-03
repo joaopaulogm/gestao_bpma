@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-const supabaseAny = supabase as any;
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   BarChart, 
@@ -18,7 +17,7 @@ import { Loader2 } from 'lucide-react';
 interface DashboardCrimesEnquadramentoProps {
   tipoCrimeId: string;
   tipoCrimeNome: string;
-  filters: any;
+  filters: { year?: number };
 }
 
 interface EnquadramentoData {
@@ -67,7 +66,7 @@ const DashboardCrimesEnquadramento: React.FC<DashboardCrimesEnquadramentoProps> 
         }
 
         // Buscar estatísticas de crimes por enquadramento
-        let query = supabaseAny
+        let query = supabase
           .from('fat_registros_de_crimes_ambientais')
           .select('enquadramento_id')
           .eq('tipo_crime_id', tipoCrimeId);
@@ -87,7 +86,7 @@ const DashboardCrimesEnquadramento: React.FC<DashboardCrimesEnquadramentoProps> 
           // Agrupar por enquadramento
           const statsMap = new Map<string, EnquadramentoData>();
           
-          (crimesData || []).forEach((crime: any) => {
+          (crimesData || []).forEach((crime: { enquadramento_id?: string; dim_enquadramento?: { Enquadramento?: string } }) => {
             const enquadramentoId = crime.enquadramento_id;
             const enquadramentoNome = crime.dim_enquadramento?.Enquadramento || 'Não especificado';
             

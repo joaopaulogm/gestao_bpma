@@ -33,19 +33,25 @@ export interface ChartCardProps {
   subtitle?: string;
   children?: ReactNode;
   className?: string;
-  data?: ChartDataItem[] | any[];
+  data?: ChartDataItem[];
   type?: string;
   dataKey?: string;
   nameKey?: string;
   showLegend?: boolean;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayloadItem {
+  name?: string;
+  value?: number;
+  color?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: TooltipPayloadItem[]; label?: string }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white/95 backdrop-blur-md p-4 border border-green-200 rounded-lg shadow-xl ring-1 ring-green-100">
         <p className="font-semibold text-sm mb-2 text-green-700">{label || payload[0]?.name}</p>
-        {payload.map((item: any, index: number) => (
+        {payload.map((item: TooltipPayloadItem, index: number) => (
           <p key={index} className="text-sm text-green-600 flex items-center gap-2">
             <span 
               className="w-3 h-3 rounded-full inline-block" 
@@ -61,7 +67,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: { cx: number; cy: number; midAngle: number; innerRadius: number; outerRadius: number; percent: number }) => {
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -137,7 +143,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
               name="Quantidade" 
               radius={[6, 6, 0, 0]}
             >
-              {data.map((_entry: any, index: number) => (
+              {data.map((_entry: ChartDataItem, index: number) => (
                 <Cell 
                   key={`cell-${index}`} 
                   fill={CHART_COLORS[index % CHART_COLORS.length]} 
@@ -173,7 +179,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
               stroke="hsl(var(--background))"
               strokeWidth={2}
             >
-              {data.map((_entry: any, index: number) => (
+              {data.map((_entry: ChartDataItem, index: number) => (
                 <Cell 
                   key={`cell-${index}`} 
                   fill={CHART_COLORS[index % CHART_COLORS.length]} 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
@@ -209,7 +209,7 @@ export const NovoAfastamentoDialog: React.FC<NovoAfastamentoDialogProps> = ({ an
       feriasForm.reset();
       setOpen(false);
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao cadastrar férias:', error);
       toast.error(error.message || 'Erro ao cadastrar férias');
     } finally {
@@ -238,9 +238,9 @@ export const NovoAfastamentoDialog: React.FC<NovoAfastamentoDialogProps> = ({ an
       licencaForm.reset();
       setOpen(false);
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao cadastrar licença:', error);
-      toast.error(error.message || 'Erro ao cadastrar licença');
+      toast.error(error instanceof Error ? error.message : 'Erro ao cadastrar licença');
     } finally {
       setLoading(false);
     }
@@ -265,15 +265,15 @@ export const NovoAfastamentoDialog: React.FC<NovoAfastamentoDialogProps> = ({ an
       restricaoForm.reset();
       setOpen(false);
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao cadastrar restrição:', error);
-      toast.error(error.message || 'Erro ao cadastrar restrição');
+      toast.error(error instanceof Error ? error.message : 'Erro ao cadastrar restrição');
     } finally {
       setLoading(false);
     }
   };
 
-  const renderPolicialSelect = (form: any, name: string) => (
+  const renderPolicialSelect = (form: UseFormReturn<{ efetivo_id?: string }>, name: string) => (
     <FormField
       control={form.control}
       name={name}

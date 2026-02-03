@@ -54,7 +54,7 @@ const AreaProtegidaSection: React.FC<AreaProtegidaSectionProps> = ({
   const fetchAreasProtegidas = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('dim_area_especialmente_protegida')
         .select('id, nome, competencia, tipo')
         .order('competencia')

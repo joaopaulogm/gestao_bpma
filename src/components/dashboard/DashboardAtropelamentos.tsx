@@ -56,7 +56,7 @@ const DashboardAtropelamentos: React.FC<DashboardAtropelamentosProps> = ({ year 
       const regioesLookup: Record<string, string> = {};
       (regioesRes.data || []).forEach(r => { regioesLookup[r.id] = r.nome; });
 
-      let atropelamentos: AtropelamentoData[] = [];
+      const atropelamentos: AtropelamentoData[] = [];
 
       if (year >= 2026) {
         const startDate = `${year}-01-01`;
@@ -86,7 +86,7 @@ const DashboardAtropelamentos: React.FC<DashboardAtropelamentosProps> = ({ year 
             .from(tableName as any)
             .select('nome_popular, regiao_administrativa, quantidade_resgates, origem_ocorrencia');
 
-          (resgates || []).forEach((r: any) => {
+          (resgates || []).forEach((r: { nome_popular?: string; regiao_administrativa?: string; quantidade_resgates?: number; origem_ocorrencia?: string }) => {
             // Verificar se foi atropelamento baseado na origem da ocorrência
             if (r.origem_ocorrencia?.toLowerCase().includes('atropel') || 
                 r.origem_ocorrencia?.toLowerCase().includes('roadkill')) {

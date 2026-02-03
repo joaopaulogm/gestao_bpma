@@ -170,6 +170,7 @@ const Sidebar = () => {
   const [openKeys, setOpenKeys] = useState<Set<string>>(() => new Set());
   const [indicatorStyle, setIndicatorStyle] = useState({ top: 0, height: 36, opacity: 0 });
   const navRef = useRef<HTMLElement | null>(null);
+  const sidebarContentRef = useRef<HTMLDivElement | null>(null);
   const { isAuthenticated, isAdmin, hasAccess, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -186,6 +187,25 @@ const Sidebar = () => {
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, []);
+
+  useEffect(() => {
+    const root = sidebarContentRef.current;
+    if (!root) return;
+    const matcher = /n[ãa]o se trata de uma quest[aã]o de/i;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodesToHide: HTMLElement[] = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text;
+      const text = node.textContent?.trim() || '';
+      if (text && matcher.test(text)) {
+        const parent = node.parentElement;
+        if (parent && !nodesToHide.includes(parent)) nodesToHide.push(parent);
+      }
+    }
+    nodesToHide.forEach((el) => {
+      el.style.display = 'none';
+    });
+  }, [isOpen, isMobile, isMobileOpen, user?.email]);
 
   const toggleSidebar = () => {
     if (isMobile) setIsMobileOpen(!isMobileOpen);
@@ -327,7 +347,7 @@ const Sidebar = () => {
 
   const sidebarContent = (
     <TooltipProvider>
-      <div className="relative flex flex-col h-full pl-1">
+      <div ref={sidebarContentRef} className="relative flex flex-col h-full pl-1">
         <div className="flex items-center justify-between p-4 flex-shrink-0">
           {(isOpen || isMobile) && (
             <div className="flex-1 text-center">

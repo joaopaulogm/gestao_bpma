@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit2, Users, Building2 } from 'lucide-react';
-import { TeamForDay, TeamType, UnitType, AdminSectionType, STATUS_COLORS } from '@/hooks/useCampanhaCalendar';
+import { TeamForDay, TeamType, UnitType, AdminSectionType, STATUS_COLORS, MemberWithStatus } from '@/hooks/useCampanhaCalendar';
 import { TeamMemberCard } from './TeamMemberCard';
 
 const teamColors: Record<TeamType, string> = {
@@ -18,7 +18,7 @@ interface CampanhaDayTeamsProps {
   onEditTeam?: (unidade: UnitType) => void;
   editMode?: boolean;
   adminSections?: AdminSectionType[];
-  getMembrosForAdminSection?: (section: AdminSectionType) => any[];
+  getMembrosForAdminSection?: (section: AdminSectionType) => { id: string; efetivo?: { nome_guerra?: string; nome?: string } }[];
   administrativoTrabalha?: boolean;
   isFeriado?: boolean;
 }
@@ -159,7 +159,7 @@ export const CampanhaDayTeams: React.FC<CampanhaDayTeamsProps> = ({
                         <p className="text-xs text-muted-foreground italic">Sem membros</p>
                       ) : (
                         <div className="flex flex-wrap gap-1">
-                          {membros.slice(0, 5).map((m: any) => (
+                          {membros.slice(0, 5).map((m: MemberWithStatus) => (
                             <Badge key={m.id} variant="secondary" className="text-[10px]">
                               {m.efetivo?.nome_guerra || m.efetivo?.nome || '—'}
                             </Badge>

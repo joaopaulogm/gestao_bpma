@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { ArrowLeft, FileText, Loader2, Printer, Calendar, FileSpreadsheet, FileDown, Save, Check } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { format, addDays, parseISO } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,8 +38,8 @@ interface FeriasMinuta {
   matricula: string;
   nome: string;
   dias: number;
-  data_inicio: Date;
-  data_fim: Date;
+  data_inicio: string;
+  data_fim: string;
   processoSei: string;
   hasChanges: boolean;
   saving: boolean;
@@ -64,15 +64,35 @@ function extractSeiFromObservacao(observacao: string | null): string {
   return (match?.[1] || '').trim();
 }
 
+function hasReprogramacaoInfo(observacao: string | null): boolean {
+  if (!observacao) return false;
+  return /reprogram/i.test(observacao);
+}
+
 function normalizeMinutaDate(isoDate: string, ano: number): string {
   // alguns registros estão com ano incorreto (ex.: 2025) apesar de fat_ferias.ano = 2026
   // Aqui preservamos mês/dia e forçamos o ano da minuta.
-  const d = parseISO(isoDate);
-  if (Number.isNaN(d.getTime())) return isoDate;
-  const y = d.getFullYear();
-  if (y === ano) return format(d, 'yyyy-MM-dd');
-  const fixed = new Date(ano, d.getMonth(), d.getDate());
-  return format(fixed, 'yyyy-MM-dd');
+  const parts = isoDate.split('-');
+  if (parts.length !== 3) return isoDate;
+  const [y, m, d] = parts.map((p) => parseInt(p, 10));
+  if (!y || !m || !d) return isoDate;
+  if (y === ano) return isoDate;
+  const mm = String(m).padStart(2, '0');
+  const dd = String(d).padStart(2, '0');
+  return `${ano}-${mm}-${dd}`;
+}
+
+function formatDateString(dateStr?: string | null): string {
+  if (!dateStr) return '-';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const [y, m, d] = parts;
+  if (!y || !m || !d) return dateStr;
+  return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+}
+
+function toLocalDate(dateStr: string): Date {
+  return new Date(`${dateStr}T00:00:00`);
 }
 
 const postoOrdem: Record<string, number> = {
@@ -139,23 +159,28 @@ const MinutaFerias: React.FC = () => {
       
       ferias?.forEach((f: any) => {
         const diasNoMes = getParcelaForMonth(f.observacao, f.mes_inicio, f.dias, mes);
-        const hasProcessoSei = Boolean(
+
+        const seiFromObservacao = extractSeiFromObservacao(f.observacao);
+        const seiFromMinutaObs = extractSeiFromObservacao(f.minuta_observacao);
+        const hasSei = Boolean(
           (f.numero_processo_sei || '').trim() ||
           (f.minuta_observacao || '').trim() ||
-          extractSeiFromObservacao(f.observacao)
+          seiFromObservacao ||
+          seiFromMinutaObs
         );
-        // Apenas quem confirmou as férias (confirmado ON) e tem processo SEI, com datas confirmadas
+        const hasReprogramacao = hasReprogramacaoInfo(f.observacao) || hasReprogramacaoInfo(f.minuta_observacao);
+
         if (
           diasNoMes &&
           f.efetivo &&
           f.minuta_data_inicio &&
           f.minuta_data_fim &&
           f.confirmado === true &&
-          hasProcessoSei
+          (hasSei || hasReprogramacao)
         ) {
-          const dataInicio = parseISO(f.minuta_data_inicio);
-          const dataFim = parseISO(f.minuta_data_fim);
-          
+          const dataInicio = normalizeMinutaDate(f.minuta_data_inicio, ano);
+          const dataFim = normalizeMinutaDate(f.minuta_data_fim, ano);
+
           minutaData.push({
             id: f.id,
             quadro: f.efetivo.quadro || '-',
@@ -165,7 +190,7 @@ const MinutaFerias: React.FC = () => {
             dias: diasNoMes,
             data_inicio: dataInicio,
             data_fim: dataFim,
-            processoSei: f.numero_processo_sei || f.minuta_observacao || '',
+            processoSei: f.numero_processo_sei || seiFromMinutaObs || seiFromObservacao || f.minuta_observacao || '',
             hasChanges: false,
             saving: false,
           });
@@ -275,7 +300,12 @@ const MinutaFerias: React.FC = () => {
     setData(prev => prev.map(item => {
       if (item.id === id) {
         const newDataFim = addDays(newDate, item.dias - 1);
-        return { ...item, data_inicio: newDate, data_fim: newDataFim, hasChanges: true };
+        return { 
+          ...item, 
+          data_inicio: format(newDate, 'yyyy-MM-dd'), 
+          data_fim: format(newDataFim, 'yyyy-MM-dd'), 
+          hasChanges: true 
+        };
       }
       return item;
     }));
@@ -284,7 +314,7 @@ const MinutaFerias: React.FC = () => {
   const updateDataFim = (id: string, newDate: Date) => {
     setData(prev => prev.map(item => {
       if (item.id === id) {
-        return { ...item, data_fim: newDate, hasChanges: true };
+        return { ...item, data_fim: format(newDate, 'yyyy-MM-dd'), hasChanges: true };
       }
       return item;
     }));
@@ -309,8 +339,8 @@ const MinutaFerias: React.FC = () => {
       const { error } = await supabase
         .from('fat_ferias')
         .update({
-          minuta_data_inicio: format(item.data_inicio, 'yyyy-MM-dd'),
-          minuta_data_fim: format(item.data_fim, 'yyyy-MM-dd'),
+          minuta_data_inicio: item.data_inicio,
+          minuta_data_fim: item.data_fim,
           minuta_observacao: item.processoSei || null,
         })
         .eq('id', id);
@@ -340,8 +370,8 @@ const MinutaFerias: React.FC = () => {
         const { error } = await supabase
           .from('fat_ferias')
           .update({
-            minuta_data_inicio: format(item.data_inicio, 'yyyy-MM-dd'),
-            minuta_data_fim: format(item.data_fim, 'yyyy-MM-dd'),
+            minuta_data_inicio: item.data_inicio,
+            minuta_data_fim: item.data_fim,
             minuta_observacao: item.processoSei || null,
           })
           .eq('id', item.id);
@@ -380,8 +410,8 @@ const MinutaFerias: React.FC = () => {
       item.matricula,
       item.nome,
       item.dias,
-      format(item.data_inicio, 'dd/MM/yyyy'),
-      format(item.data_fim, 'dd/MM/yyyy'),
+      formatDateString(item.data_inicio),
+      formatDateString(item.data_fim),
       item.processoSei || '-',
     ]);
 
@@ -422,8 +452,8 @@ const MinutaFerias: React.FC = () => {
         item.matricula,
         item.nome,
         item.dias,
-        format(item.data_inicio, 'dd/MM/yyyy'),
-        format(item.data_fim, 'dd/MM/yyyy'),
+        formatDateString(item.data_inicio),
+        formatDateString(item.data_fim),
         item.processoSei || '',
       ]),
     ];
@@ -472,8 +502,8 @@ const MinutaFerias: React.FC = () => {
                 <td>${item.matricula}</td>
                 <td>${item.nome}</td>
                 <td style="text-align: center;">${item.dias}</td>
-                <td>${format(item.data_inicio, 'dd/MM/yyyy')}</td>
-                <td>${format(item.data_fim, 'dd/MM/yyyy')}</td>
+                <td>${formatDateString(item.data_inicio)}</td>
+                <td>${formatDateString(item.data_fim)}</td>
                 <td>${item.processoSei || '-'}</td>
               </tr>
             `).join('')}
@@ -706,13 +736,13 @@ const MinutaFerias: React.FC = () => {
                               <PopoverTrigger asChild>
                                 <Button variant="outline" size="sm" className="min-w-[100px] h-8 px-2 text-xs justify-start font-normal">
                                   <Calendar className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                                  {format(item.data_inicio, 'dd/MM/yyyy')}
+                                  {formatDateString(item.data_inicio)}
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
                                 <CalendarComponent
                                   mode="single"
-                                  selected={item.data_inicio}
+                  selected={item.data_inicio ? toLocalDate(item.data_inicio) : undefined}
                                   onSelect={(date) => date && updateDataInicio(item.id, date)}
                                   initialFocus
                                   className={cn("p-3 pointer-events-auto")}
@@ -725,13 +755,13 @@ const MinutaFerias: React.FC = () => {
                               <PopoverTrigger asChild>
                                 <Button variant="outline" size="sm" className="min-w-[100px] h-8 px-2 text-xs justify-start font-normal">
                                   <Calendar className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                                  {format(item.data_fim, 'dd/MM/yyyy')}
+                                  {formatDateString(item.data_fim)}
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
                                 <CalendarComponent
                                   mode="single"
-                                  selected={item.data_fim}
+                  selected={item.data_fim ? toLocalDate(item.data_fim) : undefined}
                                   onSelect={(date) => date && updateDataFim(item.id, date)}
                                   initialFocus
                                   className={cn("p-3 pointer-events-auto")}
@@ -740,10 +770,10 @@ const MinutaFerias: React.FC = () => {
                             </Popover>
                           </TableCell>
                           <TableCell className="hidden py-2 align-middle print:table-cell text-xs">
-                            {format(item.data_inicio, 'dd/MM/yyyy')}
+                            {formatDateString(item.data_inicio)}
                           </TableCell>
                           <TableCell className="hidden py-2 align-middle print:table-cell text-xs">
-                            {format(item.data_fim, 'dd/MM/yyyy')}
+                            {formatDateString(item.data_fim)}
                           </TableCell>
                           <TableCell className="py-2 align-middle print:hidden">
                             <Input
@@ -754,7 +784,7 @@ const MinutaFerias: React.FC = () => {
                             />
                           </TableCell>
                           <TableCell className="hidden py-2 align-middle print:table-cell text-xs">
-                            {item.processoSei || '-'}
+                            <span className="break-words">{item.processoSei || '-'}</span>
                           </TableCell>
                           <TableCell className="py-2 align-middle print:hidden">
                             <Button

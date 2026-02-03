@@ -707,6 +707,7 @@ export const useCampanhaCalendar = (year: number, month: number) => {
   return {
     loading,
     equipes,
+    configs,
     efetivo,
     equipesReais,
     TEAMS,

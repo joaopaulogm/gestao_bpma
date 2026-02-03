@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
-const supabaseAny = supabase as any;
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
@@ -115,7 +114,7 @@ const CrimeAmbientalEditDialog: React.FC<CrimeAmbientalEditDialogProps> = ({
 
     setIsSaving(true);
     try {
-      const { error } = await supabaseAny
+      const { error } = await supabase
         .from('fat_registros_de_crimes_ambientais')
         .update({
           data: formData.data,
@@ -139,9 +138,9 @@ const CrimeAmbientalEditDialog: React.FC<CrimeAmbientalEditDialogProps> = ({
       toast.success('Registro atualizado com sucesso');
       onOpenChange(false);
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar registro:', error);
-      toast.error(`Erro ao atualizar registro: ${error.message}`);
+      toast.error(`Erro ao atualizar registro: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsSaving(false);
     }

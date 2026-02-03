@@ -812,7 +812,7 @@ const RegistrosUnificados: React.FC = () => {
           .map((r: any) => r.id_ocorrencia)
       )];
       
-      let ocorrenciasAmbientalMap = new Map<string, string>();
+      const ocorrenciasAmbientalMap = new Map<string, string>();
       if (ocorrenciaIdsAmbiental.length > 0) {
         const { data: ocorrenciasData } = await supabaseAny
           .from('fat_registros_de_crimes_ambientais')
@@ -830,7 +830,7 @@ const RegistrosUnificados: React.FC = () => {
           .map((r: any) => r.id_ocorrencia)
       )];
       
-      let ocorrenciasComumMap = new Map<string, string>();
+      const ocorrenciasComumMap = new Map<string, string>();
       if (ocorrenciaIdsComum.length > 0) {
         const { data: ocorrenciasData } = await supabaseAny
           .from('fat_crimes_comuns')

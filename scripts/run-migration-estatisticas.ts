@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
+import { createInterface } from 'readline';
 import { join } from 'path';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
@@ -86,8 +87,8 @@ async function runMigration(filePath: string, description: string) {
                       process.stdout.write(`\rExecutados: ${executed}/${commands.length}`);
                     }
                   }
-                } catch (err: any) {
-                  console.error(`Erro: ${err.message}`);
+                } catch (err: unknown) {
+                  console.error(`Erro: ${err instanceof Error ? err.message : String(err)}`);
                   errors++;
                 }
               }
@@ -100,8 +101,8 @@ async function runMigration(filePath: string, description: string) {
           executed += batch.length;
           process.stdout.write(`\rExecutados: ${executed}/${commands.length}`);
         }
-      } catch (err: any) {
-        console.error(`\nErro no lote ${i / batchSize + 1}:`, err.message);
+      } catch (err: unknown) {
+        console.error(`\nErro no lote ${i / batchSize + 1}:`, err instanceof Error ? err.message : err);
         errors++;
       }
     }
@@ -112,8 +113,8 @@ async function runMigration(filePath: string, description: string) {
       console.log(`⚠ Erros: ${errors}`);
     }
     
-  } catch (error: any) {
-    console.error(`\n✗ Erro ao executar migração:`, error.message);
+  } catch (error: unknown) {
+    console.error(`\n✗ Erro ao executar migração:`, error instanceof Error ? error.message : error);
     console.error('\nNota: Para arquivos grandes, você pode precisar executar manualmente no Supabase Dashboard SQL Editor');
     process.exit(1);
   }
@@ -135,19 +136,19 @@ async function main() {
   console.log('⚠️  Recomendado executar manualmente no Supabase Dashboard SQL Editor');
   console.log(`⚠️  Arquivo: ${migration2}\n`);
   
-  const readline = require('readline').createInterface({
+  const rl = createInterface({
     input: process.stdin,
     output: process.stdout
   });
-  
-  readline.question('Deseja tentar executar mesmo assim? (s/N): ', async (answer: string) => {
+
+  rl.question('Deseja tentar executar mesmo assim? (s/N): ', async (answer: string) => {
     if (answer.toLowerCase() === 's' || answer.toLowerCase() === 'sim') {
       await runMigration(migration2, 'Popular Dados (6.239 atendimentos + 3.520 resgates)');
     } else {
       console.log('\n✓ Pulando segunda migration. Execute manualmente no Supabase Dashboard.');
     }
     
-    readline.close();
+    rl.close();
     console.log('\n✅ Processo concluído!\n');
   });
 }

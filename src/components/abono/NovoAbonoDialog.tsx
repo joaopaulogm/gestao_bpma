@@ -76,7 +76,7 @@ export const NovoAbonoDialog: React.FC<NovoAbonoDialogProps> = ({ selectedYear, 
         .from('fat_abono')
         .select('efetivo_id, mes')
         .eq('ano', selectedYear);
-      
+
       // Fetch férias existentes do ano
       const { data: feriasData } = await supabase
         .from('fat_ferias')

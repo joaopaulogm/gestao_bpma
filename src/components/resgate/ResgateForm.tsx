@@ -9,7 +9,7 @@ import { EspecieItem } from './EspeciesMultiplasSection';
 interface ResgateFormProps {
   form: UseFormReturn<ResgateFormData>;
   formData: ResgateFormData;
-  errors: any;
+  errors: Record<string, { message?: string } | undefined>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
   handleQuantidadeChange: (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;

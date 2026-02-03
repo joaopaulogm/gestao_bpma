@@ -453,7 +453,7 @@ const Ferias: React.FC = () => {
       const restante = 30 - totalAgora;
       base.push({ mes: 1, dias: Math.max(5, Math.min(restante, 25)) });
     }
-    let totalDias = base.reduce((s, p) => s + p.dias, 0);
+    const totalDias = base.reduce((s, p) => s + p.dias, 0);
     if (totalDias !== 30 && base.length > 0) {
       if (totalDias > 30) {
         // Reduzir da primeira parcela(s) até total = 30
@@ -892,7 +892,7 @@ const Ferias: React.FC = () => {
                   <p className="text-sm sm:text-base text-muted-foreground">Nenhum policial programado para este mês</p>
                 </div>
               ) : (
-                <Table className="w-full">
+                <Table className="w-full table-fixed">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-center whitespace-nowrap">#</TableHead>
@@ -926,7 +926,7 @@ const Ferias: React.FC = () => {
                               {item.ferias.efetivo?.posto_graduacao}
                             </Badge>
                           </TableCell>
-                          <TableCell className="font-medium text-xs md:text-sm truncate py-1.5">
+                          <TableCell className="font-medium text-xs md:text-sm break-words py-1.5">
                             {item.ferias.efetivo?.nome_guerra || item.ferias.efetivo?.nome}
                           </TableCell>
                           <TableCell className="text-muted-foreground text-[10px] md:text-xs font-mono py-1.5">

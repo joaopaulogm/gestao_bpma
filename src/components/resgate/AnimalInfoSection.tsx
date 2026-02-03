@@ -8,7 +8,7 @@ interface AnimalInfoSectionProps {
   formData: ResgateFormData;
   handleSelectChange: (name: string, value: string) => void;
   handleQuantidadeChange: (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;
-  errors: any;
+  errors: Record<string, { message?: string } | undefined>;
   isEvadido?: boolean;
 }
 

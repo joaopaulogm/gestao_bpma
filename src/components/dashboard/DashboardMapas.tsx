@@ -20,7 +20,7 @@ import { DashboardData } from '@/types/hotspots';
 import 'leaflet/dist/leaflet.css';
 
 // Fix the marker icon issue in Leaflet with React
-// @ts-ignore
+// @ts-expect-error Leaflet icon prototype fix for bundler
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',

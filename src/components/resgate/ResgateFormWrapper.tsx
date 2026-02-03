@@ -17,7 +17,7 @@ interface ResgateFormWrapperProps {
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
   handleQuantidadeChange: (tipo: 'adulto' | 'filhote', operacao: 'aumentar' | 'diminuir') => void;
-  handleFormSubmit: (data: any) => Promise<void>;
+  handleFormSubmit: (data: ResgateFormData & { animalIdentificado?: boolean }) => Promise<void>;
   isSubmitting: boolean;
   isEditing: boolean;
   fetchError?: string | null;
@@ -61,7 +61,7 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
   };
 
   // Wrap form submit to include animalIdentificado
-  const handleFormSubmitWithAnimalId = async (data: any) => {
+  const handleFormSubmitWithAnimalId = async (data: ResgateFormData) => {
     await handleFormSubmit({
       ...data,
       animalIdentificado

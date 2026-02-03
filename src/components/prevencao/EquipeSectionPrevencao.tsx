@@ -126,7 +126,7 @@ const EquipeSectionPrevencao: React.FC<EquipeSectionPrevencaoProps> = ({ membros
       onMembrosChange([...membros, novoMembro]);
       setMatriculaInput('');
       toast.success(`${policialEncontrado.posto_graduacao || ''} ${policialEncontrado.nome_guerra || ''} adicionado à equipe`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao buscar policial:', err);
       toast.error(`Erro ao buscar policial: ${err?.message || 'Erro desconhecido'}`);
     } finally {

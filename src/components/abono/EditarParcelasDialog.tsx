@@ -121,7 +121,7 @@ export const EditarParcelasDialog: React.FC<EditarParcelasDialogProps> = ({
       toast.success(`Parcelas de ${militar.nome_guerra} atualizadas`);
       onOpenChange(false);
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar parcelas:', error);
       toast.error('Erro ao atualizar parcelas');
     } finally {

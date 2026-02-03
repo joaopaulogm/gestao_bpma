@@ -47,7 +47,7 @@ interface EspecieFauna {
   tipo_de_fauna: string;
   estado_de_conservacao: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  imagens_paths?: any;
+  imagens_paths?: string[] | null;
 }
 
 interface DimensionItem {

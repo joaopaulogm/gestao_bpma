@@ -17,7 +17,7 @@ interface InformacoesGeraisSectionProps {
   formData: ResgateFormData;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
-  errors: any;
+  errors: Record<string, { message?: string } | undefined>;
 }
 
 const InformacoesGeraisSection: React.FC<InformacoesGeraisSectionProps> = ({

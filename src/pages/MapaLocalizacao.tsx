@@ -12,6 +12,12 @@ import KmlLayerControls, { KML_LAYERS, KmlLayer } from '@/components/mapa/KmlLay
 import AreaVerificationGrid from '@/components/mapa/AreaVerificationGrid';
 import { kml as kmlToGeoJSON } from '@tmcw/togeojson';
 
+declare global {
+  interface Window {
+    gm_authFailure?: () => void;
+  }
+}
+
 interface Coordenadas {
   latitude: number;
   longitude: number;
@@ -39,6 +45,14 @@ const MapaLocalizacao: React.FC = () => {
   // Função para carregar Google Maps (extraída para poder ser chamada novamente)
   const loadGoogleMaps = async () => {
       try {
+        // Capturar falha de autenticação do Google Maps (chave inválida/restrita/billing)
+        window.gm_authFailure = () => {
+          setError(
+            'Falha de autenticação no Google Maps. Verifique: chave correta do Maps JavaScript API, ' +
+            'billing ativo no Google Cloud, e restrições de referrer liberando este domínio.'
+          );
+        };
+
         const response = await supabase.functions.invoke('get-google-maps-token');
         
         if (response.error) {
@@ -76,7 +90,7 @@ const MapaLocalizacao: React.FC = () => {
         }
 
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker,places&v=weekly`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker,places&v=weekly&loading=async`;
         script.async = true;
         script.defer = true;
         script.onload = () => {

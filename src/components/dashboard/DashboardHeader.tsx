@@ -19,7 +19,7 @@ interface DashboardHeaderProps {
   filters: FilterState;
   onFilterChange: (filters: Partial<FilterState>) => void;
   onRefresh: () => void;
-  data: any;
+  data: Record<string, unknown>;
   isLoading: boolean;
 }
 

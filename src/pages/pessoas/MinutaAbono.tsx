@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { ArrowLeft, FileText, Loader2, Calendar, Gift, FileSpreadsheet, FileDown, Save, Check } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { format, addDays, parseISO } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,8 +39,8 @@ interface AbonoMinuta {
   nome: string;
   parcela: number;
   dias: number;
-  data_inicio: Date;
-  data_fim: Date;
+  data_inicio: string;
+  data_fim: string;
   sei: string;
   hasChanges: boolean;
   saving: boolean;
@@ -55,6 +55,19 @@ const postoOrdem: Record<string, number> = {
   'TC': 1, 'MAJ': 2, 'CAP': 3, '1º TEN': 4, '2º TEN': 5, 'ASP OF': 6,
   'ST': 7, '1º SGT': 8, '2º SGT': 9, '3º SGT': 10, 'CB': 11, 'SD': 12
 };
+
+function formatDateString(dateStr?: string | null): string {
+  if (!dateStr) return '-';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const [y, m, d] = parts;
+  if (!y || !m || !d) return dateStr;
+  return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+}
+
+function toLocalDate(dateStr: string): Date {
+  return new Date(`${dateStr}T00:00:00`);
+}
 
 const MinutaAbono: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -102,9 +115,9 @@ const MinutaAbono: React.FC = () => {
         
         const addParcela = (parcelaNum: number, inicio: string | null, fim: string | null, diasParcela: number | null) => {
           if (inicio && fim) {
-            const dataInicio = parseISO(inicio);
-            const dataFim = parseISO(fim);
-            const diffTime = Math.abs(dataFim.getTime() - dataInicio.getTime());
+            const dataInicio = inicio;
+            const dataFim = fim;
+            const diffTime = Math.abs(toLocalDate(fim).getTime() - toLocalDate(inicio).getTime());
             const diffDays = diasParcela || Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
             
             minutaData.push({
@@ -158,7 +171,12 @@ const MinutaAbono: React.FC = () => {
     setData(prev => prev.map(item => {
       if (item.id === id) {
         const newDataFim = addDays(newDate, item.dias - 1);
-        return { ...item, data_inicio: newDate, data_fim: newDataFim, hasChanges: true };
+        return { 
+          ...item, 
+          data_inicio: format(newDate, 'yyyy-MM-dd'), 
+          data_fim: format(newDataFim, 'yyyy-MM-dd'), 
+          hasChanges: true 
+        };
       }
       return item;
     }));
@@ -167,7 +185,7 @@ const MinutaAbono: React.FC = () => {
   const updateDataFim = (id: string, newDate: Date) => {
     setData(prev => prev.map(item => {
       if (item.id === id) {
-        return { ...item, data_fim: newDate, hasChanges: true };
+        return { ...item, data_fim: format(newDate, 'yyyy-MM-dd'), hasChanges: true };
       }
       return item;
     }));
@@ -197,16 +215,16 @@ const MinutaAbono: React.FC = () => {
       };
       
       if (parcela === 1) {
-        updateData.parcela1_inicio = format(item.data_inicio, 'yyyy-MM-dd');
-        updateData.parcela1_fim = format(item.data_fim, 'yyyy-MM-dd');
-        updateData.data_inicio = format(item.data_inicio, 'yyyy-MM-dd');
-        updateData.data_fim = format(item.data_fim, 'yyyy-MM-dd');
+        updateData.parcela1_inicio = item.data_inicio;
+        updateData.parcela1_fim = item.data_fim;
+        updateData.data_inicio = item.data_inicio;
+        updateData.data_fim = item.data_fim;
       } else if (parcela === 2) {
-        updateData.parcela2_inicio = format(item.data_inicio, 'yyyy-MM-dd');
-        updateData.parcela2_fim = format(item.data_fim, 'yyyy-MM-dd');
+        updateData.parcela2_inicio = item.data_inicio;
+        updateData.parcela2_fim = item.data_fim;
       } else if (parcela === 3) {
-        updateData.parcela3_inicio = format(item.data_inicio, 'yyyy-MM-dd');
-        updateData.parcela3_fim = format(item.data_fim, 'yyyy-MM-dd');
+        updateData.parcela3_inicio = item.data_inicio;
+        updateData.parcela3_fim = item.data_fim;
       }
       
       const { error } = await supabase
@@ -240,8 +258,8 @@ const MinutaAbono: React.FC = () => {
         const { error } = await supabase
           .from('fat_abono')
           .update({
-            data_inicio: format(item.data_inicio, 'yyyy-MM-dd'),
-            data_fim: format(item.data_fim, 'yyyy-MM-dd'),
+            data_inicio: item.data_inicio,
+            data_fim: item.data_fim,
             observacao: item.sei || null,
           })
           .eq('id', realId);
@@ -275,8 +293,8 @@ const MinutaAbono: React.FC = () => {
       item.matricula,
       item.nome_guerra,
       item.nome,
-      format(item.data_inicio, 'dd/MM/yyyy'),
-      format(item.data_fim, 'dd/MM/yyyy'),
+      formatDateString(item.data_inicio),
+      formatDateString(item.data_fim),
       item.dias,
       item.sei || '-',
     ]);
@@ -318,8 +336,8 @@ const MinutaAbono: React.FC = () => {
         item.matricula,
         item.nome_guerra,
         item.nome,
-        format(item.data_inicio, 'dd/MM/yyyy'),
-        format(item.data_fim, 'dd/MM/yyyy'),
+        formatDateString(item.data_inicio),
+        formatDateString(item.data_fim),
         item.dias,
         item.sei || '',
       ]),
@@ -368,8 +386,8 @@ const MinutaAbono: React.FC = () => {
                 <td>${item.matricula}</td>
                 <td>${item.nome_guerra}</td>
                 <td>${item.nome}</td>
-                <td>${format(item.data_inicio, 'dd/MM/yyyy')}</td>
-                <td>${format(item.data_fim, 'dd/MM/yyyy')}</td>
+                <td>${formatDateString(item.data_inicio)}</td>
+                <td>${formatDateString(item.data_fim)}</td>
                 <td style="text-align: center;">${item.dias}</td>
                 <td>${item.sei || '-'}</td>
               </tr>
@@ -538,18 +556,18 @@ const MinutaAbono: React.FC = () => {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <Table>
+                  <Table className="w-full table-fixed">
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[50px]">#</TableHead>
+                        <TableHead className="w-[50px] whitespace-normal">#</TableHead>
                         <TableHead>Posto/Grad</TableHead>
                         <TableHead>Matrícula</TableHead>
-                        <TableHead>Nome de Guerra</TableHead>
-                        <TableHead>Nome Completo</TableHead>
-                        <TableHead>Data Início</TableHead>
-                        <TableHead>Data Término</TableHead>
+                        <TableHead className="whitespace-normal">Nome de Guerra</TableHead>
+                        <TableHead className="whitespace-normal">Nome Completo</TableHead>
+                        <TableHead className="whitespace-normal">Data Início</TableHead>
+                        <TableHead className="whitespace-normal">Data Término</TableHead>
                         <TableHead className="text-center">Qtd. Dias</TableHead>
-                        <TableHead className="min-w-[200px]">N° do Processo SEI-GDF</TableHead>
+                        <TableHead className="whitespace-normal">N° do Processo SEI-GDF</TableHead>
                         <TableHead className="w-[80px]">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -559,20 +577,20 @@ const MinutaAbono: React.FC = () => {
                           <TableCell className="font-medium">{index + 1}</TableCell>
                           <TableCell>{item.posto_graduacao}</TableCell>
                           <TableCell>{item.matricula}</TableCell>
-                          <TableCell className="font-medium">{item.nome_guerra}</TableCell>
-                          <TableCell>{item.nome}</TableCell>
+                          <TableCell className="font-medium break-words">{item.nome_guerra}</TableCell>
+                          <TableCell className="break-words">{item.nome}</TableCell>
                           <TableCell>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button variant="outline" size="sm" className="w-[110px] justify-start text-left font-normal">
                                   <Calendar className="mr-2 h-4 w-4" />
-                                  {format(item.data_inicio, 'dd/MM/yyyy')}
+                                  {formatDateString(item.data_inicio)}
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
                                 <CalendarComponent
                                   mode="single"
-                                  selected={item.data_inicio}
+                                  selected={item.data_inicio ? toLocalDate(item.data_inicio) : undefined}
                                   onSelect={(date) => date && updateDataInicio(item.id, date)}
                                   initialFocus
                                   className={cn("p-3 pointer-events-auto")}
@@ -585,13 +603,13 @@ const MinutaAbono: React.FC = () => {
                               <PopoverTrigger asChild>
                                 <Button variant="outline" size="sm" className="w-[110px] justify-start text-left font-normal">
                                   <Calendar className="mr-2 h-4 w-4" />
-                                  {format(item.data_fim, 'dd/MM/yyyy')}
+                                  {formatDateString(item.data_fim)}
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
                                 <CalendarComponent
                                   mode="single"
-                                  selected={item.data_fim}
+                                  selected={item.data_fim ? toLocalDate(item.data_fim) : undefined}
                                   onSelect={(date) => date && updateDataFim(item.id, date)}
                                   initialFocus
                                   className={cn("p-3 pointer-events-auto")}
@@ -602,7 +620,7 @@ const MinutaAbono: React.FC = () => {
                           <TableCell className="text-center">
                             <Badge variant="secondary">{item.dias}</Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="break-words">
                             <Input
                               value={item.sei}
                               onChange={(e) => updateSEI(item.id, e.target.value)}

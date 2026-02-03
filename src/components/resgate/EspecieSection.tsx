@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface EspecieSectionProps {
   formData: ResgateFormData;
   handleSelectChange: (name: string, value: string) => void;
-  errors: any;
+  errors: Record<string, { message?: string } | undefined>;
   especieSelecionada: Especie | null;
   carregandoEspecie: boolean;
   isEvadido?: boolean;

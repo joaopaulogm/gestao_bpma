@@ -174,7 +174,7 @@ export const DashboardPublicoExport: React.FC<DashboardPublicoExportProps> = ({
         styles: { fontSize: 10 }
       });
       
-      yPos = (doc as any).lastAutoTable.finalY + 15;
+      yPos = ((doc as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 0) + 15;
       
       // Monthly distribution
       if (monthlyData.length > 0) {
@@ -197,7 +197,7 @@ export const DashboardPublicoExport: React.FC<DashboardPublicoExportProps> = ({
           styles: { fontSize: 10 }
         });
         
-        yPos = (doc as any).lastAutoTable.finalY + 15;
+        yPos = ((doc as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 0) + 15;
       }
       
       // Class distribution
@@ -225,7 +225,7 @@ export const DashboardPublicoExport: React.FC<DashboardPublicoExportProps> = ({
           styles: { fontSize: 10 }
         });
         
-        yPos = (doc as any).lastAutoTable.finalY + 15;
+        yPos = ((doc as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 0) + 15;
       }
       
       // Top species

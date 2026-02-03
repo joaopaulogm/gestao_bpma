@@ -20,7 +20,21 @@ interface DashboardChartsProps {
 }
 
 const DashboardCharts = ({ data, year = 2025 }: DashboardChartsProps) => {
-  // Validar dados
+  // Calcular estatísticas baseado no ano (hooks no topo para regras do React)
+  const rescueStatistics: RescueStatistics = useMemo(() => {
+    if (!data?.rawData) return {} as RescueStatistics;
+    const rawData = data.rawData;
+    if (year >= 2020 && year <= 2025) {
+      return transformHistoricalRescueStatistics(rawData);
+    }
+    return transformCurrentRescueStatistics(rawData as unknown[]);
+  }, [data?.rawData, year]);
+
+  const weekdayDistribution = useMemo(() => {
+    return transformWeekdayDistribution(data?.rawData || []);
+  }, [data?.rawData]);
+
+  // Validar dados para render
   if (!data) {
     return (
       <div className="text-center text-muted-foreground p-8">
@@ -28,24 +42,6 @@ const DashboardCharts = ({ data, year = 2025 }: DashboardChartsProps) => {
       </div>
     );
   }
-
-  // Calcular estatísticas baseado no ano
-  const rescueStatistics: RescueStatistics = useMemo(() => {
-    const rawData = data.rawData || [];
-    
-    // Para anos 2020-2025, usar dados agregados das tabelas históricas
-    if (year >= 2020 && year <= 2025) {
-      return transformHistoricalRescueStatistics(rawData);
-    }
-    
-    // Para 2026+, usar dados do formulário de resgate
-    return transformCurrentRescueStatistics(rawData as any);
-  }, [data.rawData, year]);
-
-  // Calcular distribuição por dia da semana
-  const weekdayDistribution = useMemo(() => {
-    return transformWeekdayDistribution(data.rawData || []);
-  }, [data.rawData]);
   
   return (
     <div className="space-y-6 animate-fade-in">

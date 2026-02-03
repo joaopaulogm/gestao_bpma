@@ -26,7 +26,7 @@ interface TeamMembersDialogProps {
   team: TeamType;
   unidade: UnitType;
   membros: EquipeMembro[];
-  allEfetivo: any[];
+  allEfetivo: { id: string; nome?: string; nome_guerra?: string; matricula?: string; posto_graduacao?: string }[];
   allMembros: CampanhaMembro[];
   onAddMembro: (efetivoId: string, funcao?: string) => Promise<boolean>;
   onRemoveMembro: (membroId: string) => Promise<boolean>;

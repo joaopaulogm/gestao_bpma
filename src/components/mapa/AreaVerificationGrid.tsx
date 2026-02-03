@@ -137,13 +137,28 @@ const AreaVerificationGrid: React.FC<AreaVerificationGridProps> = ({
         <div className="grid grid-cols-2 gap-2">
           {AREA_STATUSES.map((area) => {
             const Icon = area.icon;
+            const dentro = (() => {
+              if (!geographicInfo) return false;
+              switch (area.id) {
+                case 'app':
+                  return geographicInfo.app;
+                case 'uc_federal':
+                  return geographicInfo.ucFederal;
+                case 'uc_distrital':
+                  return geographicInfo.ucDistrital;
+                case 'reserva_legal':
+                  return geographicInfo.reservaLegal;
+                default:
+                  return false;
+              }
+            })();
             
             return (
               <div
                 key={area.id}
                 className={cn(
                   "flex flex-col items-center justify-center p-3 rounded-xl border transition-all",
-                  area.dentro 
+                  dentro 
                     ? "bg-red-500/10 border-red-500/30" 
                     : "bg-muted/30 border-border/50 hover:bg-muted/50"
                 )}
@@ -157,7 +172,7 @@ const AreaVerificationGrid: React.FC<AreaVerificationGridProps> = ({
                 </span>
                 
                 <div className="flex items-center gap-1 mt-1.5">
-                  {area.dentro ? (
+                  {dentro ? (
                     <>
                       <XCircle className="h-3 w-3 text-red-500" />
                       <span className="text-[10px] text-red-500 font-medium">Dentro</span>

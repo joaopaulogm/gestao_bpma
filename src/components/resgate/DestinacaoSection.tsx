@@ -8,7 +8,7 @@ interface DestinacaoSectionProps {
   formData: ResgateFormData;
   handleSelectChange: (name: string, value: string) => void;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  errors: any;
+  errors: Record<string, { message?: string } | undefined>;
 }
 
 const DestinacaoSection: React.FC<DestinacaoSectionProps> = ({

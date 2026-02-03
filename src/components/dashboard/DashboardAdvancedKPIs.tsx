@@ -48,7 +48,7 @@ const DashboardAdvancedKPIs: React.FC<DashboardAdvancedKPIsProps> = ({ data, yea
     let totalMesAnterior = 0;
     let totalPeriodo = 0;
     let totalSolturas = 0;
-    let especiesMap = new Map<string, { nome: string, quantidade: number }>();
+    const especiesMap = new Map<string, { nome: string, quantidade: number }>();
     let especiesDistintas = 0;
     
     if (usarNovasTabelas) {

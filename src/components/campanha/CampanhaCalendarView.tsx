@@ -120,10 +120,11 @@ export const CampanhaCalendarView: React.FC<CampanhaCalendarViewProps> = ({
     switch (viewMode) {
       case 'month':
         return format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
-      case 'week':
+      case 'week': {
         const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
         const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
         return `${format(weekStart, 'd MMM', { locale: ptBR })} - ${format(weekEnd, "d MMM 'de' yyyy", { locale: ptBR })}`;
+      }
       case 'day':
         return format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR });
       case 'year':

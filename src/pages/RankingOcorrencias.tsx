@@ -44,7 +44,7 @@ const RankingOcorrencias: React.FC = () => {
 
       if (filterType === 'policial') {
         // Count rescues per officer
-        let query = supabase
+        const query = supabase
           .from('fat_equipe_resgate')
           .select(`
             efetivo_id,
@@ -65,8 +65,8 @@ const RankingOcorrencias: React.FC = () => {
 
         // Combine and count
         const countMap = new Map<string, { nome: string; total: number }>();
-        
-        [...(resgateData || []), ...(crimeData || [])].forEach((item: any) => {
+        type ItemWithEfetivo = { dim_efetivo: { id: string; nome_guerra: string; posto_graduacao: string } };
+        [...(resgateData || []), ...(crimeData || [])].forEach((item: ItemWithEfetivo) => {
           const efetivo = item.dim_efetivo;
           const key = efetivo.id;
           const nome = `${efetivo.posto_graduacao} ${efetivo.nome_guerra}`;
@@ -127,7 +127,7 @@ const RankingOcorrencias: React.FC = () => {
         const equipeMap = new Map<string, { nomes: string[]; total: number }>();
         const registroEquipe = new Map<string, string[]>();
 
-        (resgateData || []).forEach((item: any) => {
+        (resgateData || []).forEach((item: { registro_id: string; dim_efetivo: { nome_guerra: string; posto_graduacao: string } }) => {
           const registroId = item.registro_id;
           const nome = `${item.dim_efetivo.posto_graduacao} ${item.dim_efetivo.nome_guerra}`;
           

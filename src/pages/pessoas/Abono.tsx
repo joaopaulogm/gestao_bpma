@@ -412,14 +412,14 @@ const Abono: React.FC = () => {
 
   // Tabela para Previstos (sem colunas de parcelas)
   const renderPrevistosTable = (militares: MilitarAbono[]) => (
-    <Table className="w-full">
+    <Table className="w-full table-fixed">
       <TableHeader>
         <TableRow>
-          <TableHead className="whitespace-nowrap">Posto</TableHead>
-          <TableHead>Nome</TableHead>
-          <TableHead className="whitespace-nowrap">Matrícula</TableHead>
-          <TableHead className="text-center whitespace-nowrap">Previsão</TableHead>
-          <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
+          <TableHead className="whitespace-normal">Posto</TableHead>
+          <TableHead className="whitespace-normal">Nome</TableHead>
+          <TableHead className="whitespace-normal">Matrícula</TableHead>
+          <TableHead className="text-center whitespace-normal">Previsão</TableHead>
+          <TableHead className="text-center whitespace-normal">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -430,8 +430,8 @@ const Abono: React.FC = () => {
                 {militar.posto}
               </Badge>
             </TableCell>
-            <TableCell className="font-medium text-xs md:text-sm truncate py-1.5">{militar.nome_guerra}</TableCell>
-            <TableCell className="text-muted-foreground text-xs md:text-sm py-1.5">{militar.matricula}</TableCell>
+            <TableCell className="font-medium text-xs md:text-sm break-words py-1.5">{militar.nome_guerra}</TableCell>
+            <TableCell className="text-muted-foreground text-xs md:text-sm break-words py-1.5">{militar.matricula}</TableCell>
             <TableCell className="text-center py-1.5">
               {militar.mes_reprogramado && militar.mes_reprogramado !== (militar.mes_previsao || militar.mes) ? (
                 <Badge variant="outline" className="text-[9px] md:text-[10px] h-5 bg-amber-500/10 text-amber-600 border-amber-500/30">
@@ -456,15 +456,15 @@ const Abono: React.FC = () => {
 
   // Tabela para Marcados/Reprogramados (com coluna Parcelas consolidada)
   const renderMarcadosTable = (militares: MilitarAbono[]) => (
-    <Table className="w-full">
+    <Table className="w-full table-fixed">
       <TableHeader>
         <TableRow>
-          <TableHead className="whitespace-nowrap">Posto</TableHead>
-          <TableHead>Nome</TableHead>
-          <TableHead className="whitespace-nowrap">Matrícula</TableHead>
-          <TableHead className="text-center whitespace-nowrap">Previsão</TableHead>
-          <TableHead>Parcelas</TableHead>
-          <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
+          <TableHead className="whitespace-normal">Posto</TableHead>
+          <TableHead className="whitespace-normal">Nome</TableHead>
+          <TableHead className="whitespace-normal">Matrícula</TableHead>
+          <TableHead className="text-center whitespace-normal">Previsão</TableHead>
+          <TableHead className="whitespace-normal">Parcelas</TableHead>
+          <TableHead className="text-center whitespace-normal">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -475,8 +475,8 @@ const Abono: React.FC = () => {
                 {militar.posto}
               </Badge>
             </TableCell>
-            <TableCell className="font-medium text-xs md:text-sm truncate py-1.5">{militar.nome_guerra}</TableCell>
-            <TableCell className="text-muted-foreground text-xs md:text-sm py-1.5">{militar.matricula}</TableCell>
+            <TableCell className="font-medium text-xs md:text-sm break-words py-1.5">{militar.nome_guerra}</TableCell>
+            <TableCell className="text-muted-foreground text-xs md:text-sm break-words py-1.5">{militar.matricula}</TableCell>
             <TableCell className="text-center py-1.5">
               {militar.mes_reprogramado && militar.mes_reprogramado !== (militar.mes_previsao || militar.mes) ? (
                 <Badge variant="outline" className="text-[9px] md:text-[10px] h-5 bg-amber-500/10 text-amber-600 border-amber-500/30">

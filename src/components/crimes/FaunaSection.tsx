@@ -75,7 +75,7 @@ const FaunaSection: React.FC<FaunaSectionProps> = ({
       try {
         // Carregar espécies com paginação
         const PAGE_SIZE = 1000;
-        let allEspecies: any[] = [];
+        let allEspecies: unknown[] = [];
         let from = 0;
         let hasMore = true;
 

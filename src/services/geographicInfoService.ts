@@ -15,6 +15,10 @@ export interface GeographicInfo {
   riscoRecargaAquifero: boolean;
   riscoErosaoSolo: boolean;
   riscoPerdaCerrado: boolean;
+  app: boolean;
+  ucFederal: boolean;
+  ucDistrital: boolean;
+  reservaLegal: boolean;
 }
 
 /**
@@ -63,8 +67,17 @@ function pointInPolygonCoordinates(point: [number, number], polygon: number[][])
 /**
  * Carrega e parseia um arquivo KML
  */
-async function loadKMLFile(filePath: string): Promise<any> {
+/** Resultado do togeojson: objeto com features opcional para pointInPolygon */
+interface KmlGeoJSONLike {
+  features?: Array<{ geometry?: unknown }>;
+}
+const kmlCache = new Map<string, KmlGeoJSONLike>();
+
+async function loadKMLFile(filePath: string): Promise<KmlGeoJSONLike | null> {
   try {
+    if (kmlCache.has(filePath)) {
+      return kmlCache.get(filePath);
+    }
     const url = `${window.location.origin}${filePath}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -73,11 +86,25 @@ async function loadKMLFile(filePath: string): Promise<any> {
     const doc = new DOMParser().parseFromString(text, 'text/xml');
     const geojson = kmlToGeoJSON(doc, { skipNullGeometry: true });
     
+    kmlCache.set(filePath, geojson);
     return geojson;
   } catch (error) {
     console.error(`Erro ao carregar KML ${filePath}:`, error);
     return null;
   }
+}
+
+async function isInAnyKml(latitude: number, longitude: number, filePaths: string[]): Promise<boolean> {
+  const point: [number, number] = [longitude, latitude];
+  for (const filePath of filePaths) {
+    const geojson = await loadKMLFile(filePath);
+    if (!geojson?.features) continue;
+    const inside = geojson.features.some((feature) => {
+      return feature.geometry && pointInPolygon(point, feature.geometry);
+    });
+    if (inside) return true;
+  }
+  return false;
 }
 
 /**
@@ -177,51 +204,42 @@ async function getRegiaoAdministrativa(latitude: number, longitude: number): Pro
       const geocoder = new google.maps.Geocoder();
       const latlng = { lat: latitude, lng: longitude };
       
-      return new Promise(async (resolve) => {
-        geocoder.geocode({ location: latlng }, async (results, status) => {
-          if (status === 'OK' && results && results.length > 0) {
-            // Procurar por "administrative_area_level_2" ou "locality" nos resultados
-            const result = results[0];
-            const addressComponents = result.address_components || [];
-            
-            // Procurar por componente que indique região administrativa
-            let raNome: string | null = null;
-            for (const component of addressComponents) {
-              if (component.types.includes('administrative_area_level_2') ||
-                  component.types.includes('locality') ||
-                  component.types.includes('sublocality')) {
-                raNome = component.long_name;
-                break;
+      return new Promise((resolve) => {
+        geocoder.geocode({ location: latlng }, (results, status) => {
+          void (async () => {
+            if (status === 'OK' && results && results.length > 0) {
+              const result = results[0];
+              const addressComponents = result.address_components || [];
+              let raNome: string | null = null;
+              for (const component of addressComponents) {
+                if (component.types.includes('administrative_area_level_2') ||
+                    component.types.includes('locality') ||
+                    component.types.includes('sublocality')) {
+                  raNome = component.long_name;
+                  break;
+                }
+              }
+              if (!raNome && result.formatted_address) {
+                const parts = result.formatted_address.split(',');
+                if (parts.length > 0) {
+                  raNome = parts[parts.length - 2]?.trim() || null;
+                }
+              }
+              if (raNome) {
+                const { data } = await supabase
+                  .from('dim_regiao_administrativa')
+                  .select('id, nome')
+                  .ilike('nome', `%${raNome}%`)
+                  .limit(1)
+                  .single();
+                if (data) {
+                  resolve({ id: data.id, nome: data.nome });
+                  return;
+                }
               }
             }
-            
-            // Se não encontrou, usar o formatted_address e tentar extrair
-            if (!raNome && result.formatted_address) {
-              // Tentar extrair nome da RA do endereço formatado
-              const parts = result.formatted_address.split(',');
-              if (parts.length > 0) {
-                raNome = parts[parts.length - 2]?.trim() || null;
-              }
-            }
-            
-            if (raNome) {
-              // Buscar no banco de dados
-              const { data } = await supabase
-                .from('dim_regiao_administrativa')
-                .select('id, nome')
-                .ilike('nome', `%${raNome}%`)
-                .limit(1)
-                .single();
-              
-              if (data) {
-                resolve({ id: data.id, nome: data.nome });
-                return;
-              }
-            }
-          }
-          
-          // Fallback: buscar por proximidade usando coordenadas conhecidas
-          resolve(getRegiaoAdministrativaByProximity(latitude, longitude));
+            resolve(await getRegiaoAdministrativaByProximity(latitude, longitude));
+          })();
         });
       });
     }
@@ -323,12 +341,34 @@ export async function getGeographicInfo(
     riscoRecargaAquifero,
     riscoErosaoSolo,
     riscoPerdaCerrado,
+    app,
+    ucFederal,
+    ucDistrital,
+    reservaLegal,
   ] = await Promise.all([
     getRegiaoAdministrativa(latitude, longitude),
     getClasseSolo(latitude, longitude),
     isRiscoRecargaAquifero(latitude, longitude),
     isRiscoErosaoSolo(latitude, longitude),
     isRiscoPerdaCerrado(latitude, longitude),
+    isInAnyKml(latitude, longitude, [
+      '/data/kml/Corpos_dagua_do_Distrito_Federal.kml',
+      '/data/kml/Drenagem_do_Distrito_Federal.kml',
+    ]),
+    isInAnyKml(latitude, longitude, [
+      '/data/kml/Parque_Nacional_de_Brasilia.kml',
+      '/data/kml/Reserva_da_Biosfera_do_Cerrado_RESBIO.kml',
+    ]),
+    isInAnyKml(latitude, longitude, [
+      '/data/kml/Estacoes_Ecologicas_do_Distrito_Federal.kml',
+      '/data/kml/Reservas_Biologicas_do_Distrito_Federal.kml',
+      '/data/kml/Parques_do_Distrito_Federal.kml',
+      '/data/kml/Parques_de_Brasilia.kml',
+      '/data/kml/ARIE_Distrito_Federal.kml',
+    ]),
+    isInAnyKml(latitude, longitude, [
+      '/data/kml/RPPN_Distrito_Federal.kml',
+    ]),
   ]);
   
   return {
@@ -337,5 +377,9 @@ export async function getGeographicInfo(
     riscoRecargaAquifero,
     riscoErosaoSolo,
     riscoPerdaCerrado,
+    app,
+    ucFederal,
+    ucDistrital,
+    reservaLegal,
   };
 }

@@ -10,11 +10,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import DashboardCrimesEnquadramento from './DashboardCrimesEnquadramento';
 
+interface TipoCrime {
+  id_tipo_de_crime: string;
+  [key: string]: unknown;
+}
+
 interface DashboardCrimesProps {
-  tiposCrime: any[];
+  tiposCrime: TipoCrime[];
   loadingTipos: boolean;
-  filters: any;
-  onFilterChange: (filters: any) => void;
+  filters: Record<string, unknown>;
+  onFilterChange: (filters: Record<string, unknown>) => void;
 }
 
 const DashboardCrimes: React.FC<DashboardCrimesProps> = ({ 
