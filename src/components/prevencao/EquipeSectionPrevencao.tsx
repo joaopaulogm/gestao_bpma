@@ -139,7 +139,7 @@ const EquipeSectionPrevencao: React.FC<EquipeSectionPrevencaoProps> = ({
       toast.success(`${policialEncontrado.posto_graduacao || ''} ${policialEncontrado.nome_guerra || ''} adicionado à equipe`);
     } catch (err: unknown) {
       console.error('Erro ao buscar policial:', err);
-      toast.error(`Erro ao buscar policial: ${err?.message || 'Erro desconhecido'}`);
+      toast.error(`Erro ao buscar policial: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
     } finally {
       setIsSearching(false);
     }

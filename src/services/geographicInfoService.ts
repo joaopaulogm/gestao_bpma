@@ -68,8 +68,12 @@ function pointInPolygonCoordinates(point: [number, number], polygon: number[][])
  * Carrega e parseia um arquivo KML
  */
 /** Resultado do togeojson: objeto com features opcional para pointInPolygon */
+interface KmlFeature {
+  geometry?: unknown;
+  properties?: { name?: string; Name?: string; description?: string; Description?: string };
+}
 interface KmlGeoJSONLike {
-  features?: Array<{ geometry?: unknown }>;
+  features?: KmlFeature[];
 }
 const kmlCache = new Map<string, KmlGeoJSONLike>();
 

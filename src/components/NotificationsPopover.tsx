@@ -44,7 +44,7 @@ const NotificationsPopover = () => {
     
     setLoading(true);
     try {
-      const { data, error } = await (supabase as { rpc: (name: string, params: object) => Promise<{ data: Notificacao[] | null; error: unknown }> }).rpc('buscar_notificacoes_usuario', {
+      const { data, error } = await (supabase as unknown as { rpc: (name: string, params: object) => Promise<{ data: Notificacao[] | null; error: unknown }> }).rpc('buscar_notificacoes_usuario', {
         p_user_id: user.id,
         p_apenas_nao_lidas: false
       });
@@ -60,7 +60,7 @@ const NotificationsPopover = () => {
 
   const marcarComoLida = async (notificacaoId: string) => {
     try {
-      await (supabase as { rpc: (name: string, params: object) => Promise<{ error: unknown }> }).rpc('marcar_notificacao_lida', {
+      await (supabase as unknown as { rpc: (name: string, params: object) => Promise<{ error: unknown }> }).rpc('marcar_notificacao_lida', {
         p_notificacao_id: notificacaoId
       });
 

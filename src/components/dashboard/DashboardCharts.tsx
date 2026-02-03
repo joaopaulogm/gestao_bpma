@@ -27,7 +27,8 @@ const DashboardCharts = ({ data, year = 2025 }: DashboardChartsProps) => {
     if (year >= 2020 && year <= 2025) {
       return transformHistoricalRescueStatistics(rawData);
     }
-    return transformCurrentRescueStatistics(rawData as unknown[]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return transformCurrentRescueStatistics(rawData as any[]);
   }, [data?.rawData, year]);
 
   const weekdayDistribution = useMemo(() => {

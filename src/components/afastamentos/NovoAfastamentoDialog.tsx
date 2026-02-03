@@ -211,7 +211,7 @@ export const NovoAfastamentoDialog: React.FC<NovoAfastamentoDialogProps> = ({ an
       onSuccess?.();
     } catch (error: unknown) {
       console.error('Erro ao cadastrar férias:', error);
-      toast.error(error.message || 'Erro ao cadastrar férias');
+      toast.error(error instanceof Error ? error.message : 'Erro ao cadastrar férias');
     } finally {
       setLoading(false);
     }
@@ -273,7 +273,7 @@ export const NovoAfastamentoDialog: React.FC<NovoAfastamentoDialogProps> = ({ an
     }
   };
 
-  const renderPolicialSelect = (form: UseFormReturn<{ efetivo_id?: string }>, name: string) => (
+  const renderPolicialSelect = (form: UseFormReturn<{ efetivo_id?: string }>, name: 'efetivo_id') => (
     <FormField
       control={form.control}
       name={name}

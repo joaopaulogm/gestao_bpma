@@ -82,11 +82,12 @@ const DashboardAtropelamentos: React.FC<DashboardAtropelamentosProps> = ({ year 
         const tableName = year === 2025 ? 'fat_resgates_diarios_2025' : `fat_resgates_diarios_${year}`;
         
         try {
-          const { data: resgates } = await supabase
-            .from(tableName as any)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: resgates } = await (supabase as any)
+            .from(tableName)
             .select('nome_popular, regiao_administrativa, quantidade_resgates, origem_ocorrencia');
 
-          (resgates || []).forEach((r: { nome_popular?: string; regiao_administrativa?: string; quantidade_resgates?: number; origem_ocorrencia?: string }) => {
+          ((resgates || []) as Array<{ nome_popular?: string; regiao_administrativa?: string; quantidade_resgates?: number; origem_ocorrencia?: string }>).forEach((r) => {
             // Verificar se foi atropelamento baseado na origem da ocorrência
             if (r.origem_ocorrencia?.toLowerCase().includes('atropel') || 
                 r.origem_ocorrencia?.toLowerCase().includes('roadkill')) {

@@ -72,7 +72,7 @@ const DashboardCrimes: React.FC<DashboardCrimesProps> = ({
               value={tipo.id_tipo_de_crime}
               className="data-[state=active]:bg-red-500 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium text-xs lg:text-sm px-2 lg:px-4 py-2 whitespace-nowrap"
             >
-              {tipo["Tipo de Crime"]}
+              {tipo["Tipo de Crime"] as string}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -82,7 +82,7 @@ const DashboardCrimes: React.FC<DashboardCrimesProps> = ({
           <TabsContent key={tipo.id_tipo_de_crime} value={tipo.id_tipo_de_crime} className="mt-6">
             <DashboardCrimesEnquadramento 
               tipoCrimeId={tipo.id_tipo_de_crime}
-              tipoCrimeNome={tipo["Tipo de Crime"]}
+              tipoCrimeNome={tipo["Tipo de Crime"] as string}
               filters={filters}
             />
           </TabsContent>
