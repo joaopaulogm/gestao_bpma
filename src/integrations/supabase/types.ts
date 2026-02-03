@@ -4732,6 +4732,7 @@ export type Database = {
         | "secao_operacional"
         | "secao_pessoas"
         | "secao_logistica"
+        | "comando"
         | "publico"
     }
     CompositeTypes: {
@@ -4867,6 +4868,7 @@ export const Constants = {
         "secao_operacional",
         "secao_pessoas",
         "secao_logistica",
+        "comando",
         "publico",
       ],
     },

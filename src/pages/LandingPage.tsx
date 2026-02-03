@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import { Shield, BarChart3, Leaf, MapPin, LogIn, FileText } from 'lucide-react';
 import logoBpma from '@/assets/logo-bpma.png';
+import { useViewportCompact } from '@/hooks/use-viewport-compact';
 
 const LandingPage = () => {
+  const compact = useViewportCompact();
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#071d49]/5 via-background to-background">
-      {/* Hero */}
-      <header className="relative overflow-hidden py-12 sm:py-16 px-4 sm:px-6">
+      {/* Hero - padding e títulos reduzidos em viewport compacto (ex.: 1366×768) */}
+      <header className={compact ? 'relative overflow-hidden py-8 sm:py-10 px-4 sm:px-6' : 'relative overflow-hidden py-12 sm:py-16 px-4 sm:px-6'}>
         {/* Fundo com gradiente animado sutil */}
         <div 
           className="absolute inset-0 opacity-30 pointer-events-none"
@@ -40,14 +42,14 @@ const LandingPage = () => {
               <img 
                 src={logoBpma} 
                 alt="BPMA" 
-                className="h-20 w-20 sm:h-28 sm:w-28 md:h-36 md:w-36 object-contain drop-shadow-lg"
+                className={compact ? 'h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 object-contain drop-shadow-lg' : 'h-20 w-20 sm:h-28 sm:w-28 md:h-32 md:w-32 lg:h-36 lg:w-36 object-contain drop-shadow-lg'}
               />
               <div className="absolute inset-0 rounded-full bg-[#ffcc00]/10 blur-2xl -z-10" />
             </div>
           </div>
 
           <h1 
-            className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#071d49] mb-3 opacity-0 animate-fade-in-up delay-100"
+            className={compact ? 'text-2xl sm:text-3xl md:text-3xl font-bold text-[#071d49] mb-3 opacity-0 animate-fade-in-up delay-100' : 'text-3xl sm:text-4xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-[#071d49] mb-3 opacity-0 animate-fade-in-up delay-100'}
             style={{ animationFillMode: 'forwards' }}
           >
             Gestão BPMA
@@ -80,11 +82,11 @@ const LandingPage = () => {
         </div>
       </header>
 
-      {/* Seção: O que é o app */}
-      <section className="flex-1 py-12 sm:py-16 px-4 sm:px-6">
+      {/* Seção: O que é o app - padding alinhado ao Layout/Index */}
+      <section className={compact ? 'flex-1 py-8 sm:py-10 px-4 sm:px-6' : 'flex-1 py-12 sm:py-16 px-4 sm:px-6'}>
         <div className="max-w-4xl mx-auto">
           <h2 
-            className="text-xl sm:text-2xl font-semibold text-[#071d49] text-center mb-8 opacity-0 animate-fade-in-up delay-300"
+            className={compact ? 'text-lg sm:text-xl font-semibold text-[#071d49] text-center mb-6 opacity-0 animate-fade-in-up delay-300' : 'text-xl sm:text-2xl md:text-2xl lg:text-2xl font-semibold text-[#071d49] text-center mb-8 opacity-0 animate-fade-in-up delay-300'}
             style={{ animationFillMode: 'forwards' }}
           >
             O que é o Gestão BPMA?

@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Clipboard, LogIn, Shield, BookOpen, Lock, Trophy, Briefcase, Users, Wrench, Settings, HeartHandshake, BarChart3, FileText, Database, AlertTriangle, TreePine, Package, ClipboardList } from 'lucide-react';
+import { Clipboard, LogIn, Shield, BookOpen, Lock, Trophy, Briefcase, Users, Wrench, Settings, HeartHandshake, BarChart3, FileText, Database, AlertTriangle, TreePine, Package, ClipboardList, LayoutDashboard, Calendar, CalendarDays } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import logoBpma from '@/assets/logo-bpma.svg';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useViewportCompact } from '@/hooks/use-viewport-compact';
 const CheckeredDivider = () => {
   const isMobile = useIsMobile();
   const count = isMobile ? 10 : 20;
@@ -34,7 +35,7 @@ const HomeCard = ({
         active:shadow-[0_0px_0_0_#041230,0_1px_3px_rgba(0,0,0,0.1)]
         active:translate-y-[3px]
         transition-all duration-150 aspect-square w-[75%] mx-auto">
-      <Icon className="w-[40%] h-[40%] text-accent shrink-0" />
+      <Icon className="w-[34%] h-[34%] text-accent shrink-0" />
       <span className="text-[clamp(10px,2.5vw,14px)] font-semibold text-center text-primary-foreground leading-tight break-words hyphens-auto px-1 line-clamp-2">{title}</span>
     </Link>;
 };
@@ -79,6 +80,24 @@ const SecaoOperacionalSection = () => <div className="space-y-3 sm:space-y-4 pt-
       <HomeCard title="Monitorar RAPs" icon={Briefcase} to="/secao-operacional/monitorar-raps" />
     </div>
   </div>;
+
+// Componente para Comando (admin + comando)
+const ComandoSection = () => (
+  <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
+    <div className="flex items-center gap-2 text-primary font-semibold px-1">
+      <LayoutDashboard className="h-4 w-4" />
+      <span className="text-xs sm:text-sm">Comando</span>
+    </div>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+      <HomeCard title="Comando" icon={LayoutDashboard} to="/comando" />
+      <HomeCard title="Agenda OS" icon={Calendar} to="/comando/agenda-OS" />
+      <HomeCard title="Agenda CMD" icon={CalendarDays} to="/comando/agenda-CMD" />
+      <HomeCard title="Dashboard" icon={BarChart3} to="/comando/dashboard" />
+      <HomeCard title="Pessoal" icon={Users} to="/comando/pessoal" />
+      <HomeCard title="Logística" icon={Wrench} to="/comando/logistica" />
+    </div>
+  </div>
+);
 
 // Componente para Seção de Pessoas
 const SecaoPessoasSection = () => <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
@@ -130,11 +149,13 @@ const Index = () => {
   } = useAuth();
 
   // Determinar quais seções mostrar com base no role
+  const showComando = isAdmin || userRole === 'comando';
   const showSecaoOperacional = isAdmin || userRole === 'secao_operacional';
   const showSecaoPessoas = isAdmin || userRole === 'secao_pessoas';
   const showSecaoLogistica = isAdmin || userRole === 'secao_logistica';
   const showAdministracao = isAdmin;
-  return <div className="p-4 sm:p-6 md:p-10 min-h-screen">
+  const compact = useViewportCompact();
+  return <div className={compact ? 'p-4 min-h-screen' : 'p-4 sm:p-6 md:p-6 lg:p-6 xl:p-8 min-h-screen'}>
       {/* Header */}
       <div className="text-center mb-6 sm:mb-8">
         <div className="flex items-center justify-center mx-auto mb-4 sm:mb-5">
@@ -169,7 +190,7 @@ const Index = () => {
         </div>
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-4">
           <CheckeredDivider />
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#071d49] whitespace-nowrap tracking-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-3xl lg:text-3xl xl:text-4xl font-bold text-[#071d49] whitespace-nowrap tracking-tight">
             Gestão - BPMA
           </h1>
           <CheckeredDivider />
@@ -182,6 +203,9 @@ const Index = () => {
       <>
             {/* Atividade Operacional - TODOS os usuários autenticados têm acesso */}
             <AtividadeOperacionalSection />
+
+            {/* Comando - admin ou comando */}
+            {showComando && <ComandoSection />}
             
             {/* Seção Operacional - apenas secao_operacional ou admin */}
             {showSecaoOperacional && <SecaoOperacionalSection />}

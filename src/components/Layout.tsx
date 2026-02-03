@@ -18,7 +18,8 @@ const Layout = ({ children, title, showBackButton = false }: LayoutProps) => {
   const isWideLayout = location.pathname === '/registros' || 
                        location.pathname === '/hotspots' ||
                        location.pathname.startsWith('/dashboard') ||
-                       location.pathname.startsWith('/secao-operacional');
+                       location.pathname.startsWith('/secao-operacional') ||
+                       location.pathname.startsWith('/comando');
   
   // Responsive fluid container instead of fixed widths
   const containerClass = isWideLayout 
@@ -30,7 +31,7 @@ const Layout = ({ children, title, showBackButton = false }: LayoutProps) => {
       <Header />
       
       <ScrollArea className="flex-1">
-        <main className={`px-4 sm:px-6 md:px-8 lg:px-12 py-4 md:py-6 ${containerClass}`}>
+        <main className={`px-4 sm:px-6 md:px-8 lg:px-8 xl:px-12 py-3 md:py-4 ${containerClass}`}>
           <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
             {showBackButton && (
               <button 
@@ -41,7 +42,7 @@ const Layout = ({ children, title, showBackButton = false }: LayoutProps) => {
                 <ArrowLeft className="h-5 w-5" />
               </button>
             )}
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground tracking-tight truncate">{title}</h1>
+            <h1 className="text-xl sm:text-2xl md:text-2xl lg:text-3xl font-semibold text-foreground tracking-tight truncate">{title}</h1>
           </div>
           
           {children}

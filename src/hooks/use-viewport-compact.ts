@@ -14,7 +14,12 @@ export function useViewportCompact(): boolean {
 
   React.useEffect(() => {
     const mql = window.matchMedia(`(max-height: ${COMPACT_VIEWPORT_HEIGHT}px)`);
-    const onChange = () => setCompact(window.innerHeight <= COMPACT_VIEWPORT_HEIGHT);
+    const onChange = () => {
+      const next = window.innerHeight <= COMPACT_VIEWPORT_HEIGHT;
+      setCompact(next);
+      // Para validar em 1366×768: descomente a linha abaixo, abra o DevTools e redimensione a janela
+      // if (typeof window !== 'undefined') console.log('useViewportCompact', { compact: next, width: window.innerWidth, height: window.innerHeight });
+    };
     mql.addEventListener('change', onChange);
     setCompact(window.innerHeight <= COMPACT_VIEWPORT_HEIGHT);
     return () => mql.removeEventListener('change', onChange);

@@ -49,6 +49,7 @@ const ROLE_LABELS: Record<AppRole, string> = {
   secao_operacional: 'Seção Operacional',
   secao_pessoas: 'Seção de Pessoas',
   secao_logistica: 'Seção de Logística e Manutenção',
+  comando: 'Comando',
   publico: 'Público',
 };
 

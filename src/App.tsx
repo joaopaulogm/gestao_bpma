@@ -44,6 +44,12 @@ const Campanha = lazy(() => import(/* webpackChunkName: "campanha" */ '@/pages/p
 const CampanhaDia = lazy(() => import(/* webpackChunkName: "campanha-dia" */ '@/pages/pessoas/CampanhaDia'));
 const SecaoOperacional = lazy(() => import(/* webpackChunkName: "secao-operacional" */ '@/pages/SecaoOperacional'));
 const SecaoLogistica = lazy(() => import(/* webpackChunkName: "secao-logistica" */ '@/pages/SecaoLogistica'));
+const Comando = lazy(() => import(/* webpackChunkName: "comando" */ '@/pages/Comando'));
+const AgendaOS = lazy(() => import(/* webpackChunkName: "comando-agenda-os" */ '@/pages/comando/AgendaOS'));
+const AgendaCMD = lazy(() => import(/* webpackChunkName: "comando-agenda-cmd" */ '@/pages/comando/AgendaCMD'));
+const ComandoDashboard = lazy(() => import(/* webpackChunkName: "comando-dashboard" */ '@/pages/comando/ComandoDashboard'));
+const ComandoPessoal = lazy(() => import(/* webpackChunkName: "comando-pessoal" */ '@/pages/comando/ComandoPessoal'));
+const ApresentacaoBPMADeck = lazy(() => import(/* webpackChunkName: "apresentacao-bpma" */ '@/pages/apresentacao/ApresentacaoBPMADeck'));
 const MaterialApoio = lazy(() => import(/* webpackChunkName: "material-apoio" */ '@/pages/MaterialApoio'));
 const IdentificarEspecie = lazy(() => import(/* webpackChunkName: "identificar-especie" */ '@/pages/apoio/IdentificarEspecie'));
 const ManualRAP = lazy(() => import(/* webpackChunkName: "manual-rap" */ '@/pages/apoio/ManualRAP'));
@@ -141,6 +147,7 @@ function App() {
               <Route path="/secao-operacional/flora-cadastrada" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/monitorar-raps" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><MonitorarRAPs /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/controle-os" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ControleOS /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/apresentacao" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ApresentacaoBPMADeck /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/raps/logs" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RapsLogs /></SidebarLayout></ProtectedRoute>} />
               
               {/* Seção Pessoas */}
@@ -159,7 +166,27 @@ function App() {
               
               {/* Seção Logística */}
               <Route path="/secao-logistica" element={<ProtectedRoute requiredRoles={['secao_logistica']}><SidebarLayout><SecaoLogistica /></SidebarLayout></ProtectedRoute>} />
-              
+
+              {/* Comando (admin + comando) */}
+              <Route path="/comando" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><Comando /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/agenda-OS" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><AgendaOS /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/agenda-CMD" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><AgendaCMD /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/dashboard" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><ComandoDashboard /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/pessoal" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><ComandoPessoal /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/pessoal/efetivo" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><EfetivoBPMA /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/pessoal/equipes" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><Equipes /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/pessoal/escalas" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><Escalas /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/pessoal/afastamentos" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><Afastamentos /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/pessoal/licencas" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><Licencas /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/pessoal/ferias" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><Ferias /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/pessoal/ferias/minuta" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><MinutaFerias /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/pessoal/abono" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><Abono /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/pessoal/abono/minuta" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><MinutaAbono /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/pessoal/campanha" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><Campanha /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/pessoal/campanha/:data" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><CampanhaDia /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/apresentacao" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><ApresentacaoBPMADeck /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/logistica" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><SecaoLogistica /></SidebarLayout></ProtectedRoute>} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

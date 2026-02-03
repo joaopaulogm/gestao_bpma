@@ -66,6 +66,7 @@ const ROLE_LABELS: Record<string, string> = {
   secao_operacional: 'Seção Operacional',
   secao_pessoas: 'Seção de Pessoas',
   secao_logistica: 'Seção de Logística',
+  comando: 'Comando',
 };
 
 const Perfil = () => {

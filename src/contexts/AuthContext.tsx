@@ -229,7 +229,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return true;
       }
     }
-    
+
+    // comando tem acesso a /comando/* (admin + comando)
+    if (userRole === 'comando') {
+      if (requiredRoles.includes('comando')) {
+        return true;
+      }
+    }
+
     // Section roles also have operator access
     const operatorRoles: AppRole[] = ['operador', 'secao_operacional', 'secao_pessoas', 'secao_logistica'];
     

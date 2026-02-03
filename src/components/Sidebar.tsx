@@ -38,6 +38,8 @@ import {
   Target,
   Camera,
   UserMinus,
+  LayoutDashboard,
+  CalendarDays,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -122,6 +124,33 @@ const navSections: NavSection[] = [
           { path: '/secao-operacional/atividades-prevencao', label: 'Atividades Prevenção', icon: Shield },
           { path: '/secao-operacional/bens-apreendidos', label: 'Bens Apreendidos', icon: Package },
           { path: '/secao-operacional/controle-os', label: 'Controle OS', icon: FileCheck },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Comando',
+    icon: LayoutDashboard,
+    items: [
+      {
+        path: '/comando',
+        label: 'Comando',
+        icon: LayoutDashboard,
+        roles: ['admin', 'comando'],
+        children: [
+          { path: '/comando/agenda-OS', label: 'Agenda OS', icon: Calendar },
+          { path: '/comando/agenda-CMD', label: 'Agenda CMD', icon: CalendarDays },
+          { path: '/comando/dashboard', label: 'Dashboard', icon: BarChart3 },
+          { path: '/comando/pessoal', label: 'Pessoal', icon: Users },
+          { path: '/comando/pessoal/campanha', label: 'Campanha', icon: Target },
+          { path: '/comando/pessoal/efetivo', label: 'Efetivo BPMA', icon: UsersRound },
+          { path: '/comando/pessoal/equipes', label: 'Equipes', icon: Users },
+          { path: '/comando/pessoal/escalas', label: 'Escalas', icon: Calendar },
+          { path: '/comando/pessoal/afastamentos', label: 'Afastamentos', icon: UserMinus },
+          { path: '/comando/pessoal/licencas', label: 'Licenças', icon: FileCheck },
+          { path: '/comando/pessoal/ferias', label: 'Férias', icon: Palmtree },
+          { path: '/comando/pessoal/abono', label: 'Abono', icon: Gift },
+          { path: '/comando/logistica', label: 'Logística', icon: Wrench },
         ],
       },
     ],
@@ -484,7 +513,7 @@ const Sidebar = () => {
         )}
         <aside
           className={cn(
-            'fixed top-0 left-0 h-screen z-50 flex flex-col w-72 shadow-2xl transition-transform duration-300 ease-out rounded-r-2xl overflow-hidden',
+            'fixed top-0 left-0 h-screen z-50 flex flex-col w-64 xl:w-72 shadow-2xl transition-transform duration-300 ease-out rounded-r-2xl overflow-hidden',
             isMobileOpen ? 'translate-x-0' : '-translate-x-full'
           )}
           style={{ background: NAVY }}
@@ -499,7 +528,7 @@ const Sidebar = () => {
     <aside
       className={cn(
         'h-screen flex flex-col transition-[width] duration-300 ease-out overflow-hidden rounded-r-2xl relative',
-        isOpen ? 'w-72' : 'w-[4.5rem]'
+        isOpen ? 'w-64 xl:w-72' : 'w-[4.5rem]'
       )}
       style={{ background: NAVY }}
     >

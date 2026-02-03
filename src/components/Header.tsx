@@ -33,6 +33,7 @@ const Header = () => {
           <ul className="py-2">
             {[
               { to: '/', label: 'Página Inicial' },
+              { to: '/comando', label: 'Comando' },
               { to: '/secao-operacional', label: 'Seção Operacional' },
               { to: '/material-apoio', label: 'Material de Apoio' },
               { to: '/ranking', label: 'Ranking de Ocorrências' },
