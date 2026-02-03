@@ -20,6 +20,7 @@ import RegiaoAdministrativaSearchField from '@/components/prevencao/RegiaoAdmini
 import NumeroOSField from '@/components/prevencao/NumeroOSField';
 import EquipeSectionPrevencao, { MembroEquipePrevencao } from '@/components/prevencao/EquipeSectionPrevencao';
 import AreaProtegidaSection from '@/components/prevencao/AreaProtegidaSection';
+import { useGrupamentoServico } from '@/hooks/useGrupamentoServico';
 
 interface TipoAtividade {
   id: string;
@@ -56,6 +57,8 @@ const AtividadesPrevencao: React.FC = () => {
   
   // Equipe state
   const [membrosEquipe, setMembrosEquipe] = useState<MembroEquipePrevencao[]>([]);
+  const [grupamentoServicoId, setGrupamentoServicoId] = useState('');
+  const { options: grupamentoServicoOptions } = useGrupamentoServico();
   
   useEffect(() => {
     fetchDimensionData();
@@ -114,6 +117,7 @@ const AtividadesPrevencao: React.FC = () => {
           numero_os: formData.numeroOS || null,
           em_area_protegida: formData.emAreaProtegida,
           area_protegida_id: formData.areaProtegidaId || null,
+          grupamento_servico_id: grupamentoServicoId || null,
         })
         .select('id')
         .single();
@@ -157,6 +161,7 @@ const AtividadesPrevencao: React.FC = () => {
         areaProtegidaCompetencia: '',
       });
       setMembrosEquipe([]);
+      setGrupamentoServicoId('');
       setActiveTab('prevencao');
       setSubTab('teatro');
     } catch (error: any) {
@@ -541,6 +546,9 @@ const AtividadesPrevencao: React.FC = () => {
         <EquipeSectionPrevencao
           membros={membrosEquipe}
           onMembrosChange={setMembrosEquipe}
+          grupamentoServicoOptions={grupamentoServicoOptions}
+          grupamentoServicoId={grupamentoServicoId}
+          onGrupamentoServicoChange={setGrupamentoServicoId}
         />
         
         {/* Localização */}

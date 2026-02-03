@@ -14,6 +14,7 @@ import { Loader2, Plus, Trash2, Search, Image as ImageIcon } from 'lucide-react'
 import { Switch } from '@/components/ui/switch';
 import BensApreendidosSection, { BemApreendido as BemApreendidoType } from '@/components/crimes/BensApreendidosSection';
 import { getFaunaImageUrl } from '@/services/especieService';
+import { useGrupamentoServico } from '@/hooks/useGrupamentoServico';
 
 // Interface for team member
 interface MembroEquipeCrime {
@@ -179,6 +180,8 @@ const CrimesAmbientaisCadastro = () => {
   const [membrosEquipe, setMembrosEquipe] = useState<MembroEquipeCrime[]>([]);
   const [matriculaInput, setMatriculaInput] = useState('');
   const [isSearchingMembro, setIsSearchingMembro] = useState(false);
+  const [grupamentoServicoId, setGrupamentoServicoId] = useState('');
+  const { options: grupamentoServicoOptions } = useGrupamentoServico();
   
   // Conclusão
   const [autoresIdentificados, setAutoresIdentificados] = useState<boolean>(true);
@@ -504,7 +507,8 @@ const CrimesAmbientaisCadastro = () => {
           qtd_detidos_maior: qtdDetidosMaior,
           qtd_detidos_menor: qtdDetidosMenor,
           qtd_liberados_maior: qtdLiberadosMaior,
-          qtd_liberados_menor: qtdLiberadosMenor
+          qtd_liberados_menor: qtdLiberadosMenor,
+          grupamento_servico_id: grupamentoServicoId || null
         };
 
       const { data: dataCrime, error: errCrime } = await supabaseAny
@@ -647,6 +651,7 @@ const CrimesAmbientaisCadastro = () => {
     setBensApreendidos([]);
     setMembrosEquipe([]);
     setMatriculaInput('');
+    setGrupamentoServicoId('');
     setDesfechoId('');
     setProcedimentoLegal('');
     setQtdDetidosMaior(0);
@@ -825,6 +830,23 @@ const CrimesAmbientaisCadastro = () => {
         {/* Card: Identificação da Equipe */}
         <FormSection title="Identificação da Equipe">
           <div className="space-y-4">
+            {grupamentoServicoOptions.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Grupamento / Serviço</Label>
+                <Select value={grupamentoServicoId || undefined} onValueChange={setGrupamentoServicoId}>
+                  <SelectTrigger className="input-glass">
+                    <SelectValue placeholder="Selecione o grupamento ou serviço" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {grupamentoServicoOptions.map((opt) => (
+                      <SelectItem key={opt.id} value={opt.id}>
+                        {opt.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="flex gap-2 items-end">
               <div className="flex-1 space-y-2">
                 <Label htmlFor="matriculaCrime" className="text-sm font-medium">Matrícula ou Nome do Policial</Label>

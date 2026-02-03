@@ -47,11 +47,16 @@ const ResgateFormContainer = () => {
     }
   }, [editingId, location.state]);
   
-  const onFormSubmit = async (data: ResgateFormData, membrosEquipe?: MembroEquipe[], especies?: EspecieItem[]) => {
+  const onFormSubmit = async (
+    data: ResgateFormData,
+    membrosEquipe?: MembroEquipe[],
+    especies?: EspecieItem[],
+    grupamentoServicoId?: string | null
+  ) => {
     if (isEditing) {
       await handleFormSubmitEdit(data, isEditing, editingId, originalRegistro, null);
     } else {
-      await handleSubmit(data, membrosEquipe, especies);
+      await handleSubmit(data, membrosEquipe, especies, grupamentoServicoId);
     }
   };
 

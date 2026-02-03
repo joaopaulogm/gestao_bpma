@@ -9,6 +9,7 @@ import InformacoesGeraisSection from './InformacoesGeraisSection';
 import DesfechoResgateSection from './DesfechoResgateSection';
 import EspeciesMultiplasSection, { EspecieItem } from './EspeciesMultiplasSection';
 import EquipeSection, { MembroEquipe } from './EquipeSection';
+import type { GrupamentoServicoOption } from '@/hooks/useGrupamentoServico';
 
 interface ResgateFormWrapperProps {
   form: UseFormReturn<ResgateFormData>;
@@ -25,6 +26,9 @@ interface ResgateFormWrapperProps {
   onMembrosEquipeChange: (membros: MembroEquipe[]) => void;
   especies: EspecieItem[];
   onEspeciesChange: (especies: EspecieItem[]) => void;
+  grupamentoServicoOptions?: GrupamentoServicoOption[];
+  grupamentoServicoId?: string;
+  onGrupamentoServicoChange?: (id: string) => void;
 }
 
 const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
@@ -40,7 +44,10 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
   membrosEquipe,
   onMembrosEquipeChange,
   especies,
-  onEspeciesChange
+  onEspeciesChange,
+  grupamentoServicoOptions,
+  grupamentoServicoId,
+  onGrupamentoServicoChange,
 }) => {
   // State for "animal identificado" question
   const [animalIdentificado, setAnimalIdentificado] = useState(true);
@@ -93,6 +100,9 @@ const ResgateFormWrapper: React.FC<ResgateFormWrapperProps> = ({
         <EquipeSection
           membros={membrosEquipe}
           onMembrosChange={onMembrosEquipeChange}
+          grupamentoServicoOptions={grupamentoServicoOptions}
+          grupamentoServicoId={grupamentoServicoId}
+          onGrupamentoServicoChange={onGrupamentoServicoChange}
         />
 
         {/* Seção Desfecho do Resgate - sempre visível */}

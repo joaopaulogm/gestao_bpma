@@ -2,11 +2,13 @@ import React, { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, Search, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield } from 'lucide-react';
+import type { GrupamentoServicoOption } from '@/hooks/useGrupamentoServico';
 
 export interface MembroEquipePrevencao {
   id: string;
@@ -19,9 +21,18 @@ export interface MembroEquipePrevencao {
 interface EquipeSectionPrevencaoProps {
   membros: MembroEquipePrevencao[];
   onMembrosChange: (membros: MembroEquipePrevencao[]) => void;
+  grupamentoServicoOptions?: GrupamentoServicoOption[];
+  grupamentoServicoId?: string;
+  onGrupamentoServicoChange?: (id: string) => void;
 }
 
-const EquipeSectionPrevencao: React.FC<EquipeSectionPrevencaoProps> = ({ membros, onMembrosChange }) => {
+const EquipeSectionPrevencao: React.FC<EquipeSectionPrevencaoProps> = ({
+  membros,
+  onMembrosChange,
+  grupamentoServicoOptions = [],
+  grupamentoServicoId = '',
+  onGrupamentoServicoChange,
+}) => {
   const [matriculaInput, setMatriculaInput] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
@@ -155,6 +166,23 @@ const EquipeSectionPrevencao: React.FC<EquipeSectionPrevencaoProps> = ({ membros
       </CardHeader>
       <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
         <div className="space-y-4">
+          {grupamentoServicoOptions.length > 0 && onGrupamentoServicoChange && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Grupamento / Serviço</Label>
+              <Select value={grupamentoServicoId || undefined} onValueChange={onGrupamentoServicoChange}>
+                <SelectTrigger className="h-10 sm:h-11">
+                  <SelectValue placeholder="Selecione o grupamento ou serviço" />
+                </SelectTrigger>
+                <SelectContent>
+                  {grupamentoServicoOptions.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.id}>
+                      {opt.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="flex gap-2 items-end">
             <div className="flex-1 space-y-2">
               <Label htmlFor="matricula" className="text-sm font-medium">

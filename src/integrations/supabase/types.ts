@@ -702,6 +702,24 @@ export type Database = {
           },
         ]
       }
+      dim_grupamento_servico: {
+        Row: {
+          id: string
+          nome: string
+          ordem: number | null
+        }
+        Insert: {
+          id?: string
+          nome: string
+          ordem?: number | null
+        }
+        Update: {
+          id?: string
+          nome?: string
+          ordem?: number | null
+        }
+        Relationships: []
+      }
       dim_indicador_bpma: {
         Row: {
           categoria: string | null
@@ -1262,6 +1280,7 @@ export type Database = {
           created_at: string | null
           data: string
           em_area_protegida: boolean | null
+          grupamento_servico_id: string | null
           horario_inicio: string | null
           horario_termino: string | null
           id: string
@@ -1279,6 +1298,7 @@ export type Database = {
           created_at?: string | null
           data: string
           em_area_protegida?: boolean | null
+          grupamento_servico_id?: string | null
           horario_inicio?: string | null
           horario_termino?: string | null
           id?: string
@@ -1296,6 +1316,7 @@ export type Database = {
           created_at?: string | null
           data?: string
           em_area_protegida?: boolean | null
+          grupamento_servico_id?: string | null
           horario_inicio?: string | null
           horario_termino?: string | null
           id?: string
@@ -1309,6 +1330,13 @@ export type Database = {
           tipo_atividade_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fat_atividades_prevencao_grupamento_servico_id_fkey"
+            columns: ["grupamento_servico_id"]
+            isOneToOne: false
+            referencedRelation: "dim_grupamento_servico"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fat_atividades_prevencao_area_protegida_id_fkey"
             columns: ["area_protegida_id"]
@@ -1581,6 +1609,7 @@ export type Database = {
           descricao_ocorrencia: string | null
           desfecho_id: string | null
           enquadramento_legal: string | null
+          grupamento_servico_id: string | null
           horario_acionamento: string | null
           horario_desfecho: string | null
           id: string
@@ -1615,6 +1644,7 @@ export type Database = {
           descricao_ocorrencia?: string | null
           desfecho_id?: string | null
           enquadramento_legal?: string | null
+          grupamento_servico_id?: string | null
           horario_acionamento?: string | null
           horario_desfecho?: string | null
           id?: string
@@ -1649,6 +1679,7 @@ export type Database = {
           descricao_ocorrencia?: string | null
           desfecho_id?: string | null
           enquadramento_legal?: string | null
+          grupamento_servico_id?: string | null
           horario_acionamento?: string | null
           horario_desfecho?: string | null
           id?: string
@@ -1676,6 +1707,13 @@ export type Database = {
           vitimas_envolvidas?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fat_crimes_comuns_grupamento_servico_id_fkey"
+            columns: ["grupamento_servico_id"]
+            isOneToOne: false
+            referencedRelation: "dim_grupamento_servico"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fat_crimes_comuns_desfecho_id_fkey"
             columns: ["desfecho_id"]
@@ -2323,6 +2361,7 @@ export type Database = {
           doc_irregular: boolean | null
           enquadramento_id: string | null
           estruturas_encontradas: string | null
+          grupamento_servico_id: string | null
           horario_acionamento: string | null
           horario_desfecho: string | null
           id: string
@@ -2371,6 +2410,7 @@ export type Database = {
           doc_irregular?: boolean | null
           enquadramento_id?: string | null
           estruturas_encontradas?: string | null
+          grupamento_servico_id?: string | null
           horario_acionamento?: string | null
           horario_desfecho?: string | null
           id?: string
@@ -2419,6 +2459,7 @@ export type Database = {
           doc_irregular?: boolean | null
           enquadramento_id?: string | null
           estruturas_encontradas?: string | null
+          grupamento_servico_id?: string | null
           horario_acionamento?: string | null
           horario_desfecho?: string | null
           id?: string
@@ -2452,6 +2493,13 @@ export type Database = {
           volume_aparente?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fat_registros_de_crimes_ambientais_grupamento_servico_id_fkey"
+            columns: ["grupamento_servico_id"]
+            isOneToOne: false
+            referencedRelation: "dim_grupamento_servico"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fat_registros_de_crime_desfecho_id_fkey"
             columns: ["desfecho_id"]
@@ -2506,6 +2554,7 @@ export type Database = {
           quantidade_total: number | null
           regiao_administrativa_id: string | null
           tipo_area_id: string | null
+          grupamento_servico_id: string | null
         }
         Insert: {
           animal_identificado?: boolean | null
@@ -2537,6 +2586,7 @@ export type Database = {
           quantidade_total?: number | null
           regiao_administrativa_id?: string | null
           tipo_area_id?: string | null
+          grupamento_servico_id?: string | null
         }
         Update: {
           animal_identificado?: boolean | null
@@ -2568,8 +2618,16 @@ export type Database = {
           quantidade_total?: number | null
           regiao_administrativa_id?: string | null
           tipo_area_id?: string | null
+          grupamento_servico_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fat_registros_de_resgate_grupamento_servico_id_fkey"
+            columns: ["grupamento_servico_id"]
+            isOneToOne: false
+            referencedRelation: "dim_grupamento_servico"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fat_registros_de_resgate_desfecho_id_fkey"
             columns: ["desfecho_id"]

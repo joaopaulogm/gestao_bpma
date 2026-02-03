@@ -2,10 +2,12 @@ import React, { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, Search, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import FormSection from './FormSection';
+import type { GrupamentoServicoOption } from '@/hooks/useGrupamentoServico';
 
 export interface MembroEquipe {
   id: string;
@@ -18,9 +20,19 @@ export interface MembroEquipe {
 interface EquipeSectionProps {
   membros: MembroEquipe[];
   onMembrosChange: (membros: MembroEquipe[]) => void;
+  /** Opções de grupamento/serviço (ex.: RP Ambiental, GOC, Lacustre). Se não passar, o select não é exibido. */
+  grupamentoServicoOptions?: GrupamentoServicoOption[];
+  grupamentoServicoId?: string;
+  onGrupamentoServicoChange?: (id: string) => void;
 }
 
-const EquipeSection: React.FC<EquipeSectionProps> = ({ membros, onMembrosChange }) => {
+const EquipeSection: React.FC<EquipeSectionProps> = ({
+  membros,
+  onMembrosChange,
+  grupamentoServicoOptions = [],
+  grupamentoServicoId = '',
+  onGrupamentoServicoChange,
+}) => {
   const [matriculaInput, setMatriculaInput] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
@@ -162,6 +174,25 @@ const EquipeSection: React.FC<EquipeSectionProps> = ({ membros, onMembrosChange 
   return (
     <FormSection title="Identificação da Equipe">
       <div className="space-y-4">
+        {/* Grupamento/Serviço */}
+        {grupamentoServicoOptions.length > 0 && onGrupamentoServicoChange && (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Grupamento / Serviço</Label>
+            <Select value={grupamentoServicoId || undefined} onValueChange={onGrupamentoServicoChange}>
+              <SelectTrigger className="input-glass">
+                <SelectValue placeholder="Selecione o grupamento ou serviço" />
+              </SelectTrigger>
+              <SelectContent>
+                {grupamentoServicoOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {opt.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         {/* Input para buscar policial */}
         <div className="flex gap-2 items-end">
           <div className="flex-1 space-y-2">

@@ -60,6 +60,7 @@ interface PrepararDadosParams {
   estagioVidaId: string | null;
   destinacaoId: string | null;
   desfechoId: string | null;
+  grupamentoServicoId?: string | null;
 }
 
 /**
@@ -79,6 +80,7 @@ const prepararDadosParaInsercao = async (params: PrepararDadosParams): Promise<R
     estagioVidaId,
     destinacaoId,
     desfechoId,
+    grupamentoServicoId,
   } = params;
   // Se for tabela histórica (2020-2024), usar estrutura diferente
   if (isTabelaHistorica(tabela)) {
@@ -137,7 +139,7 @@ const prepararDadosParaInsercao = async (params: PrepararDadosParams): Promise<R
   }
   
   // Tabelas modernas (2025+ e fat_registros_de_resgate)
-  return {
+  const base: Record<string, unknown> = {
     data: dataFormatada,
     horario_acionamento: data.horarioAcionamento || null,
     horario_termino: data.horarioTermino || null,
@@ -165,6 +167,10 @@ const prepararDadosParaInsercao = async (params: PrepararDadosParams): Promise<R
     longitude_soltura: especie.longitudeSoltura || null,
     outro_destinacao: especie.outroDestinacao || null
   };
+  if (tabela === 'fat_registros_de_resgate' && grupamentoServicoId) {
+    base.grupamento_servico_id = grupamentoServicoId;
+  }
+  return base;
 };
 
 export interface MembroEquipeSubmit {
@@ -178,7 +184,8 @@ export const useResgateSubmission = () => {
   const salvarRegistroNoBanco = async (
     data: ResgateFormData, 
     especies: EspecieItem[],
-    membrosEquipe?: MembroEquipeSubmit[]
+    membrosEquipe?: MembroEquipeSubmit[],
+    grupamentoServicoId?: string | null
   ) => {
     // Validar que tem pelo menos uma espécie (a menos que seja evadido)
     const isEvadido = data.desfechoResgate === "Evadido";
@@ -259,6 +266,7 @@ export const useResgateSubmission = () => {
           estagioVidaId,
           destinacaoId,
           desfechoId: especieDesfechoId,
+          grupamentoServicoId,
         });
 
         const { data: insertedRecord, error } = await supabaseAny

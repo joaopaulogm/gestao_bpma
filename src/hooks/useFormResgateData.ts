@@ -34,7 +34,12 @@ export const useFormResgateData = () => {
     handleQuantidadeChange 
   } = useResgateFormFields(form);
 
-  const handleSubmitWithData = async (data: ResgateFormData, membrosEquipe?: MembroEquipe[], especies?: EspecieItem[]) => {
+  const handleSubmitWithData = async (
+    data: ResgateFormData,
+    membrosEquipe?: MembroEquipe[],
+    especies?: EspecieItem[],
+    grupamentoServicoId?: string | null
+  ) => {
     console.log('Form submitted:', data);
     console.log('Espécies:', especies);
     
@@ -45,7 +50,7 @@ export const useFormResgateData = () => {
         efetivo_id: m.efetivo_id
       }));
       
-      const sucesso = await salvarRegistroNoBanco(data, especies || [], membrosSubmit);
+      const sucesso = await salvarRegistroNoBanco(data, especies || [], membrosSubmit, grupamentoServicoId);
       
       if (sucesso) {
         toast.success('Registro de resgate cadastrado com sucesso!');
