@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_dim_efetivo_duplicatas_removidas: {
+        Row: {
+          id_mantido: string
+          id_removido: string
+          matricula_mantida: string | null
+          matricula_original: string | null
+          nome_guerra_original: string | null
+          nome_original: string | null
+          removido_em: string | null
+        }
+        Insert: {
+          id_mantido: string
+          id_removido: string
+          matricula_mantida?: string | null
+          matricula_original?: string | null
+          nome_guerra_original?: string | null
+          nome_original?: string | null
+          removido_em?: string | null
+        }
+        Update: {
+          id_mantido?: string
+          id_removido?: string
+          matricula_mantida?: string | null
+          matricula_original?: string | null
+          nome_guerra_original?: string | null
+          nome_original?: string | null
+          removido_em?: string | null
+        }
+        Relationships: []
+      }
       dim_area_especialmente_protegida: {
         Row: {
           competencia: string
@@ -138,44 +168,104 @@ export type Database = {
         Row: {
           antiguidade: number | null
           ativo: boolean
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          contato: string | null
+          cpf: number | null
           created_at: string
+          data_inclusao: string | null
+          data_nascimento: string | null
+          email: string | null
+          email_2: string | null
+          equipe: string | null
+          escala: string | null
+          grupamento: string | null
           id: string
+          idade: number | null
+          logradouro: string | null
           lotacao: string
           matricula: string
           nome: string
           nome_guerra: string
+          numero: string | null
+          porte_arma: string | null
           posto_graduacao: string
           quadro: string
           quadro_sigla: string
           sexo: string
+          telefone: string | null
+          telefone_2: string | null
+          uf: string | null
         }
         Insert: {
           antiguidade?: number | null
           ativo?: boolean
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          contato?: string | null
+          cpf?: number | null
           created_at?: string
+          data_inclusao?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          email_2?: string | null
+          equipe?: string | null
+          escala?: string | null
+          grupamento?: string | null
           id?: string
+          idade?: number | null
+          logradouro?: string | null
           lotacao?: string
           matricula: string
           nome: string
           nome_guerra: string
+          numero?: string | null
+          porte_arma?: string | null
           posto_graduacao: string
           quadro: string
           quadro_sigla: string
           sexo: string
+          telefone?: string | null
+          telefone_2?: string | null
+          uf?: string | null
         }
         Update: {
           antiguidade?: number | null
           ativo?: boolean
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          contato?: string | null
+          cpf?: number | null
           created_at?: string
+          data_inclusao?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          email_2?: string | null
+          equipe?: string | null
+          escala?: string | null
+          grupamento?: string | null
           id?: string
+          idade?: number | null
+          logradouro?: string | null
           lotacao?: string
           matricula?: string
           nome?: string
           nome_guerra?: string
+          numero?: string | null
+          porte_arma?: string | null
           posto_graduacao?: string
           quadro?: string
           quadro_sigla?: string
           sexo?: string
+          telefone?: string | null
+          telefone_2?: string | null
+          uf?: string | null
         }
         Relationships: []
       }
@@ -4148,6 +4238,36 @@ export type Database = {
       }
     }
     Views: {
+      v_audit_dim_efetivo_quem_foi_apagado: {
+        Row: {
+          id_mantido: string | null
+          id_removido: string | null
+          matricula_mantida: string | null
+          matricula_original: string | null
+          nome_guerra_original: string | null
+          nome_original: string | null
+          removido_em: string | null
+        }
+        Insert: {
+          id_mantido?: string | null
+          id_removido?: string | null
+          matricula_mantida?: string | null
+          matricula_original?: string | null
+          nome_guerra_original?: string | null
+          nome_original?: string | null
+          removido_em?: string | null
+        }
+        Update: {
+          id_mantido?: string | null
+          id_removido?: string | null
+          matricula_mantida?: string | null
+          matricula_original?: string | null
+          nome_guerra_original?: string | null
+          nome_original?: string | null
+          removido_em?: string | null
+        }
+        Relationships: []
+      }
       vw_anos_disponiveis: {
         Row: {
           ano: number | null
@@ -4398,6 +4518,19 @@ export type Database = {
           p_user_role_id: string
         }
         Returns: string
+      }
+      diagnostico_primeiro_acesso: {
+        Args: { p_cpf: string; p_matricula: string }
+        Returns: {
+          cpf_bigint: number
+          matricula_normalizada: string
+          mensagem: string
+          tem_dim_efetivo: boolean
+          tem_user_roles: boolean
+          tem_usuarios_permitidos: boolean
+          tem_usuarios_por_login: boolean
+          user_roles_cpf_preenchido: boolean
+        }[]
       }
       exec_sql: { Args: { sql_query: string }; Returns: undefined }
       fn_nome_cientifico_prefix: { Args: { nome: string }; Returns: string }
