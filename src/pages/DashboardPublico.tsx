@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabaseAny = supabase as any;
 import { processDashboardData } from '@/utils/dashboardDataProcessor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -171,7 +173,7 @@ const DashboardPublico = () => {
             console.log(`✅ [DashboardPublico] ${tabela}: ${normalized.length} registros encontrados`);
           } else {
             // Para fat_registros_de_resgate e fat_resgates_diarios_2025
-            let query = (supabase as any)
+            let query = supabaseAny
               .from(tabela)
               .select(`
                 *,

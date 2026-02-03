@@ -168,7 +168,7 @@ serve(async (req: Request) => {
               
              if (listError) throw listError;
              
-             const existing = usersList?.users?.find((u) => (u.email || "").toLowerCase() === email);
+             const existing = usersList?.users?.find((u: { email?: string; id: string }) => (u.email || "").toLowerCase() === email);
              
              if (existing) {
                  const { error: updateError } = await supabase.auth.admin.updateUserById(existing.id, {
