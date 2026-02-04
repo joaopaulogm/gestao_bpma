@@ -662,113 +662,115 @@ const GerenciarPermissoes: React.FC = () => {
                   Nenhum nível de acesso cadastrado
                 </p>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>ID do Usuário</TableHead>
-                        <TableHead>id user</TableHead>
-                        <TableHead>Nome Completo</TableHead>
-                        <TableHead>CPF</TableHead>
-                        <TableHead>Nome de Guerra</TableHead>
-                        <TableHead>Nível de Acesso</TableHead>
-                        <TableHead>Data de Criação</TableHead>
-                        <TableHead className="w-32">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {userRoles.map((userRole) => {
-                        const usuario = usuarios.find(u => u.auth_user_id === userRole.user_id);
-                        return (
-                        <TableRow key={userRole.id}>
-                          <TableCell className="font-mono text-xs">
-                            {usuario?.id ? (
-                              <span title={usuario.id}>{usuario.id.slice(0, 8)}...</span>
-                            ) : '-'}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs" title={userRole.user_id}>
-                            {userRole.user_id.slice(0, 8)}...
-                          </TableCell>
-                          <TableCell>{usuario?.nome ?? '-'}</TableCell>
-                          <TableCell className="font-mono text-sm text-muted-foreground">
-                            {formatCPFDisplay(usuario?.cpf)}
-                          </TableCell>
-                          <TableCell>{usuario?.nome_guerra ?? '-'}</TableCell>
-                          <TableCell>
-                            <Select 
-                              value={userRole.role} 
-                              onValueChange={(value: AppRole) => handleUpdateRole(userRole.id, value)}
-                            >
-                              <SelectTrigger className="w-56 bg-background/50">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                                  <SelectItem key={value} value={value}>
-                                    {label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {userRole.created_at 
-                              ? new Date(userRole.created_at).toLocaleDateString('pt-BR')
-                              : '-'}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setViewRoleId(userRole.id)}
-                                className="h-8 w-8"
-                                title="Visualizar"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteRole(userRole.id)}
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8"
-                                title="Excluir"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
+                <>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID do Usuário</TableHead>
+                          <TableHead>id user</TableHead>
+                          <TableHead>Nome Completo</TableHead>
+                          <TableHead>CPF</TableHead>
+                          <TableHead>Nome de Guerra</TableHead>
+                          <TableHead>Nível de Acesso</TableHead>
+                          <TableHead>Data de Criação</TableHead>
+                          <TableHead className="w-32">Ações</TableHead>
                         </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {userRoles.map((userRole) => {
+                          const usuario = usuarios.find(u => u.auth_user_id === userRole.user_id);
+                          return (
+                            <TableRow key={userRole.id}>
+                              <TableCell className="font-mono text-xs">
+                                {usuario?.id ? (
+                                  <span title={usuario.id}>{usuario.id.slice(0, 8)}...</span>
+                                ) : '-'}
+                              </TableCell>
+                              <TableCell className="font-mono text-xs" title={userRole.user_id}>
+                                {userRole.user_id.slice(0, 8)}...
+                              </TableCell>
+                              <TableCell>{usuario?.nome ?? '-'}</TableCell>
+                              <TableCell className="font-mono text-sm text-muted-foreground">
+                                {formatCPFDisplay(usuario?.cpf)}
+                              </TableCell>
+                              <TableCell>{usuario?.nome_guerra ?? '-'}</TableCell>
+                              <TableCell>
+                                <Select 
+                                  value={userRole.role} 
+                                  onValueChange={(value: AppRole) => handleUpdateRole(userRole.id, value)}
+                                >
+                                  <SelectTrigger className="w-56 bg-background/50">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                                      <SelectItem key={value} value={value}>
+                                        {label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {userRole.created_at 
+                                  ? new Date(userRole.created_at).toLocaleDateString('pt-BR')
+                                  : '-'}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setViewRoleId(userRole.id)}
+                                    className="h-8 w-8"
+                                    title="Visualizar"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDeleteRole(userRole.id)}
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8"
+                                    title="Excluir"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
 
-                {/* Modal Visualizar nível manual */}
-                <Dialog open={viewRoleId !== null} onOpenChange={(open) => !open && setViewRoleId(null)}>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Detalhes do Nível de Acesso</DialogTitle>
-                    </DialogHeader>
-                    {viewRoleId && (() => {
-                      const userRole = userRoles.find(r => r.id === viewRoleId);
-                      const usuario = userRole ? usuarios.find(u => u.auth_user_id === userRole.user_id) : null;
-                      if (!userRole) return null;
-                      return (
-                        <div className="grid gap-2 text-sm">
-                          <p><span className="font-medium text-muted-foreground">ID do Usuário:</span> {usuario?.id ?? '-'}</p>
-                          <p><span className="font-medium text-muted-foreground">id user:</span> <span className="font-mono break-all">{userRole.user_id}</span></p>
-                          <p><span className="font-medium text-muted-foreground">Nome Completo:</span> {usuario?.nome ?? '-'}</p>
-                          <p><span className="font-medium text-muted-foreground">CPF:</span> {formatCPFDisplay(usuario?.cpf)}</p>
-                          <p><span className="font-medium text-muted-foreground">Nome de Guerra:</span> {usuario?.nome_guerra ?? '-'}</p>
-                          <p><span className="font-medium text-muted-foreground">Nível de Acesso:</span> {ROLE_LABELS[userRole.role]}</p>
-                          <p><span className="font-medium text-muted-foreground">Data de Criação:</span> {userRole.created_at ? new Date(userRole.created_at).toLocaleString('pt-BR') : '-'}</p>
-                        </div>
-                      );
-                    })()}
-                  </DialogContent>
-                </Dialog>
+                  {/* Modal Visualizar nível manual */}
+                  <Dialog open={viewRoleId !== null} onOpenChange={(open) => !open && setViewRoleId(null)}>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Detalhes do Nível de Acesso</DialogTitle>
+                      </DialogHeader>
+                      {viewRoleId && (() => {
+                        const userRole = userRoles.find(r => r.id === viewRoleId);
+                        const usuario = userRole ? usuarios.find(u => u.auth_user_id === userRole.user_id) : null;
+                        if (!userRole) return null;
+                        return (
+                          <div className="grid gap-2 text-sm">
+                            <p><span className="font-medium text-muted-foreground">ID do Usuário:</span> {usuario?.id ?? '-'}</p>
+                            <p><span className="font-medium text-muted-foreground">id user:</span> <span className="font-mono break-all">{userRole.user_id}</span></p>
+                            <p><span className="font-medium text-muted-foreground">Nome Completo:</span> {usuario?.nome ?? '-'}</p>
+                            <p><span className="font-medium text-muted-foreground">CPF:</span> {formatCPFDisplay(usuario?.cpf)}</p>
+                            <p><span className="font-medium text-muted-foreground">Nome de Guerra:</span> {usuario?.nome_guerra ?? '-'}</p>
+                            <p><span className="font-medium text-muted-foreground">Nível de Acesso:</span> {ROLE_LABELS[userRole.role]}</p>
+                            <p><span className="font-medium text-muted-foreground">Data de Criação:</span> {userRole.created_at ? new Date(userRole.created_at).toLocaleString('pt-BR') : '-'}</p>
+                          </div>
+                        );
+                      })()}
+                    </DialogContent>
+                  </Dialog>
+                </>
               )}
             </CardContent>
           </Card>
