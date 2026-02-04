@@ -22,8 +22,8 @@ const PatrimonioDashboard: React.FC<PatrimonioDashboardProps> = ({
 
   const localizacoes = useMemo(() => {
     const set = new Set<string>();
-    Object.keys(estatisticasFrota?.porLocalizacao ?? {}).forEach(set.add);
-    Object.keys(estatisticasTGRL?.porLocalizacao ?? {}).forEach(set.add);
+    Object.keys(estatisticasFrota?.porLocalizacao ?? {}).forEach((key) => set.add(key));
+    Object.keys(estatisticasTGRL?.porLocalizacao ?? {}).forEach((key) => set.add(key));
     return Array.from(set).filter(Boolean).sort();
   }, [estatisticasFrota?.porLocalizacao, estatisticasTGRL?.porLocalizacao]);
 
