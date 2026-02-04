@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Trash2, UserPlus, Shield, Users, Search, UserCheck, Check, X, Eye } from 'lucide-react';
+import { Trash2, UserPlus, Shield, Users, Search, UserCheck, Check, X, Eye, ChevronsUpDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Database } from '@/integrations/supabase/types';
 import { Switch } from '@/components/ui/switch';
 
@@ -16,9 +18,19 @@ type AppRole = Database['public']['Enums']['app_role'];
 
 interface UserRole {
   id: string;
-  user_id: string;
+  user_id: string | null;
+  efetivo_id: string | null;
   role: AppRole;
   created_at: string | null;
+}
+
+interface EfetivoInfo {
+  id: string;
+  nome: string | null;
+  nome_guerra: string | null;
+  matricula: string | null;
+  cpf: number | null;
+  posto_graduacao: string | null;
 }
 
 interface UsuarioPorLogin {
@@ -58,11 +70,15 @@ const ROLE_LABELS: Record<AppRole, string> = {
 const GerenciarPermissoes: React.FC = () => {
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [usuarios, setUsuarios] = useState<UsuarioWithRole[]>([]);
+  const [dimEfetivoMap, setDimEfetivoMap] = useState<Map<string, EfetivoInfo>>(new Map());
   const [loading, setLoading] = useState(true);
   const [loadingUsuarios, setLoadingUsuarios] = useState(true);
   const [searchUsuarios, setSearchUsuarios] = useState('');
   
-  // Form states for permissions
+  // Form states for permissions (manual: busca por nome → efetivo_id)
+  const [searchManualQuery, setSearchManualQuery] = useState('');
+  const [manualSelectedEfetivo, setManualSelectedEfetivo] = useState<EfetivoInfo | null>(null);
+  const [manualOpen, setManualOpen] = useState(false);
   const [newUserId, setNewUserId] = useState('');
   const [newRole, setNewRole] = useState<AppRole>('operador');
   const [adding, setAdding] = useState(false);
@@ -76,11 +92,27 @@ const GerenciarPermissoes: React.FC = () => {
   // Modal visualizar nível manual
   const [viewRoleId, setViewRoleId] = useState<string | null>(null);
 
+  // Lista de efetivos filtrada por nome para o combobox (Alterar Nível Manual)
+  const manualEfetivoList = React.useMemo(() => {
+    const list = Array.from(dimEfetivoMap.values());
+    const q = (searchManualQuery || '').trim().toLowerCase();
+    if (!q) return list.slice(0, 50);
+    const filtered = list.filter(
+      (e) =>
+        (e.nome?.toLowerCase().includes(q) ?? false) ||
+        (e.nome_guerra?.toLowerCase().includes(q) ?? false) ||
+        (e.matricula?.toLowerCase().includes(q) ?? false)
+    );
+    return filtered
+      .sort((a, b) => (a.nome ?? '').localeCompare(b.nome ?? ''))
+      .slice(0, 50);
+  }, [dimEfetivoMap, searchManualQuery]);
+
   const fetchUserRoles = async () => {
     try {
       const { data, error } = await supabase
         .from('user_roles')
-        .select('*')
+        .select('id, user_id, efetivo_id, role, created_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -90,6 +122,21 @@ const GerenciarPermissoes: React.FC = () => {
       toast.error('Erro ao carregar permissões');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDimEfetivo = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dim_efetivo')
+        .select('id, nome, nome_guerra, matricula, cpf, posto_graduacao');
+
+      if (error) throw error;
+      const map = new Map<string, EfetivoInfo>();
+      (data || []).forEach((row: EfetivoInfo) => map.set(row.id, row));
+      setDimEfetivoMap(map);
+    } catch (error: unknown) {
+      console.error('Error fetching dim_efetivo:', error);
     }
   };
 
@@ -140,28 +187,34 @@ const GerenciarPermissoes: React.FC = () => {
   useEffect(() => {
     fetchUserRoles();
     fetchUsuarios();
+    fetchDimEfetivo();
   }, []);
 
   const handleAddRole = async () => {
-    if (!newUserId.trim()) {
-      toast.error('Informe o ID do usuário');
+    const efetivoId = manualSelectedEfetivo?.id;
+    const userId = newUserId.trim();
+    if (!efetivoId && !userId) {
+      toast.error('Busque e selecione um usuário pelo nome na lista');
       return;
     }
 
     setAdding(true);
     try {
+      const payload = efetivoId
+        ? { efetivo_id: efetivoId, role: newRole }
+        : { user_id: userId, role: newRole };
       const { error } = await supabase
         .from('user_roles')
-        .insert({
-          user_id: newUserId.trim(),
-          role: newRole,
-        });
+        .insert(payload);
 
       if (error) throw error;
 
       toast.success('Permissão adicionada com sucesso');
+      setManualSelectedEfetivo(null);
+      setSearchManualQuery('');
       setNewUserId('');
       setNewRole('operador');
+      setManualOpen(false);
       fetchUserRoles();
       fetchUsuarios();
     } catch (error: unknown) {
@@ -627,13 +680,70 @@ const GerenciarPermissoes: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <Input
-                    placeholder="ID do Usuário (UUID)"
-                    value={newUserId}
-                    onChange={(e) => setNewUserId(e.target.value)}
-                    className="bg-background/50"
-                  />
+                <div className="flex-1 min-w-0 flex gap-2">
+                  <Popover open={manualOpen} onOpenChange={setManualOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={manualOpen}
+                        className="flex-1 justify-between bg-background/50 font-normal min-w-0"
+                      >
+                        <span className="truncate">
+                          {manualSelectedEfetivo
+                            ? `${manualSelectedEfetivo.nome ?? ''} ${manualSelectedEfetivo.nome_guerra ? `(${manualSelectedEfetivo.nome_guerra})` : ''}`.trim() || manualSelectedEfetivo.matricula ?? '—'
+                            : 'Buscar por nome completo ou nome de guerra...'}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                      <Command shouldFilter={false}>
+                        <CommandInput
+                          placeholder="Digite o nome..."
+                          value={searchManualQuery}
+                          onValueChange={setSearchManualQuery}
+                        />
+                        <CommandList>
+                          <CommandEmpty>Nenhum resultado.</CommandEmpty>
+                          <CommandGroup>
+                            {manualEfetivoList.map((ef) => (
+                              <CommandItem
+                                key={ef.id}
+                                value={ef.id}
+                                onSelect={() => {
+                                  setManualSelectedEfetivo(ef);
+                                  setManualOpen(false);
+                                  setSearchManualQuery('');
+                                }}
+                              >
+                                <div className="flex flex-col items-start gap-0.5">
+                                  <span className="font-medium">{ef.nome ?? '—'}</span>
+                                  {(ef.nome_guerra || ef.matricula) && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {[ef.nome_guerra, ef.matricula].filter(Boolean).join(' · ')}
+                                    </span>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  {manualSelectedEfetivo && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() => { setManualSelectedEfetivo(null); setSearchManualQuery(''); }}
+                      aria-label="Limpar seleção"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
                 <div className="w-full sm:w-64">
                   <Select value={newRole} onValueChange={(value: AppRole) => setNewRole(value)}>
@@ -692,22 +802,27 @@ const GerenciarPermissoes: React.FC = () => {
                     </TableHeader>
                     <TableBody>
                       {userRoles.map((userRole) => {
-                        const usuario = usuarios.find(u => u.auth_user_id === userRole.user_id);
+                        const efetivo = userRole.efetivo_id ? dimEfetivoMap.get(userRole.efetivo_id) : null;
+                        const usuario = userRole.user_id ? usuarios.find(u => u.auth_user_id === userRole.user_id) : null;
+                        const idUsuario = efetivo?.id ?? usuario?.id;
+                        const nomeCompleto = efetivo?.nome ?? usuario?.nome;
+                        const cpf = efetivo?.cpf ?? usuario?.cpf;
+                        const nomeGuerra = efetivo?.nome_guerra ?? usuario?.nome_guerra;
                         return (
                             <TableRow key={userRole.id}>
                               <TableCell className="font-mono text-xs">
-                                {usuario?.id ? (
-                                  <span title={usuario.id}>{usuario.id.slice(0, 8)}...</span>
+                                {idUsuario ? (
+                                  <span title={idUsuario}>{idUsuario.slice(0, 8)}...</span>
                                 ) : '-'}
                               </TableCell>
-                              <TableCell className="font-mono text-xs" title={userRole.user_id}>
-                                {userRole.user_id.slice(0, 8)}...
+                              <TableCell className="font-mono text-xs" title={userRole.user_id ?? ''}>
+                                {userRole.user_id ? `${userRole.user_id.slice(0, 8)}...` : '-'}
                               </TableCell>
-                              <TableCell>{usuario?.nome ?? '-'}</TableCell>
+                              <TableCell>{nomeCompleto ?? '-'}</TableCell>
                               <TableCell className="font-mono text-sm text-muted-foreground">
-                                {formatCPFDisplay(usuario?.cpf)}
+                                {formatCPFDisplay(cpf)}
                               </TableCell>
-                              <TableCell>{usuario?.nome_guerra ?? '-'}</TableCell>
+                              <TableCell>{nomeGuerra ?? '-'}</TableCell>
                               <TableCell>
                                 <Select 
                                   value={userRole.role} 
@@ -767,15 +882,17 @@ const GerenciarPermissoes: React.FC = () => {
                     </DialogHeader>
                     {viewRoleId && (() => {
                       const userRole = userRoles.find(r => r.id === viewRoleId);
-                      const usuario = userRole ? usuarios.find(u => u.auth_user_id === userRole.user_id) : null;
+                      const efetivo = userRole?.efetivo_id ? dimEfetivoMap.get(userRole.efetivo_id) : null;
+                      const usuario = userRole?.user_id ? usuarios.find(u => u.auth_user_id === userRole.user_id) : null;
                       if (!userRole) return null;
                       return (
                         <div className="grid gap-2 text-sm">
-                          <p><span className="font-medium text-muted-foreground">ID do Usuário:</span> {usuario?.id ?? '-'}</p>
-                          <p><span className="font-medium text-muted-foreground">id user:</span> <span className="font-mono break-all">{userRole.user_id}</span></p>
-                          <p><span className="font-medium text-muted-foreground">Nome Completo:</span> {usuario?.nome ?? '-'}</p>
-                          <p><span className="font-medium text-muted-foreground">CPF:</span> {formatCPFDisplay(usuario?.cpf)}</p>
-                          <p><span className="font-medium text-muted-foreground">Nome de Guerra:</span> {usuario?.nome_guerra ?? '-'}</p>
+                          <p><span className="font-medium text-muted-foreground">ID do Usuário (dim_efetivo):</span> {efetivo?.id ?? usuario?.id ?? '-'}</p>
+                          <p><span className="font-medium text-muted-foreground">id user:</span> <span className="font-mono break-all">{userRole.user_id ?? '-'}</span></p>
+                          <p><span className="font-medium text-muted-foreground">Nome Completo:</span> {efetivo?.nome ?? usuario?.nome ?? '-'}</p>
+                          <p><span className="font-medium text-muted-foreground">CPF:</span> {formatCPFDisplay(efetivo?.cpf ?? usuario?.cpf)}</p>
+                          <p><span className="font-medium text-muted-foreground">Nome de Guerra:</span> {efetivo?.nome_guerra ?? usuario?.nome_guerra ?? '-'}</p>
+                          <p><span className="font-medium text-muted-foreground">Matrícula:</span> {efetivo?.matricula ?? usuario?.matricula ?? '-'}</p>
                           <p><span className="font-medium text-muted-foreground">Nível de Acesso:</span> {ROLE_LABELS[userRole.role]}</p>
                           <p><span className="font-medium text-muted-foreground">Data de Criação:</span> {userRole.created_at ? new Date(userRole.created_at).toLocaleString('pt-BR') : '-'}</p>
                         </div>
