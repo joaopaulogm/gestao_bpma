@@ -5015,6 +5015,18 @@ export type Database = {
         }[]
       }
       get_current_user_efetivo_id: { Args: never; Returns: string }
+      get_efetivo_counts: {
+        Args: { p_efetivo_ids: string[] }
+        Returns: {
+          efetivo_id: string
+          total_abono: number
+          total_equipes: number
+          total_ferias: number
+          total_licencas: number
+          total_os: number
+          total_restricoes: number
+        }[]
+      }
       get_usuario_by_login_senha: {
         Args: { p_login: string; p_senha: string }
         Returns: {
