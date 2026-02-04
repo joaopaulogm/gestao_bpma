@@ -55,6 +55,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+// Type-safe wrapper for untyped table
+const supabaseAny = supabase as any;
+
 export interface AgendaCMDEvent {
   id: string;
   title: string;
@@ -103,7 +106,7 @@ const AgendaCMD: React.FC = () => {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAny
         .from('agenda_cmd_events')
         .select('*')
         .order('start_at', { ascending: true });
@@ -201,17 +204,17 @@ const AgendaCMD: React.FC = () => {
         enviar_lembrete_comandante: form.enviar_lembrete_comandante,
       };
       if (eventToEdit) {
-        const { error } = await supabase
+        const { error } = await supabaseAny
           .from('agenda_cmd_events')
           .update(payload)
           .eq('id', eventToEdit.id);
         if (error) throw error;
         toast.success('Evento atualizado.');
       } else {
-        const { data: user } = await supabase.auth.getUser();
-        const { error } = await supabase.from('agenda_cmd_events').insert({
+        const { data: userData } = await supabase.auth.getUser();
+        const { error } = await supabaseAny.from('agenda_cmd_events').insert({
           ...payload,
-          created_by: user.data.user?.id ?? null,
+          created_by: userData.user?.id ?? null,
         });
         if (error) throw error;
         toast.success('Evento criado.');
@@ -232,7 +235,7 @@ const AgendaCMD: React.FC = () => {
     if (!eventToDelete) return;
     setDeleting(true);
     try {
-      const { error } = await supabase
+      const { error } = await supabaseAny
         .from('agenda_cmd_events')
         .delete()
         .eq('id', eventToDelete.id);
