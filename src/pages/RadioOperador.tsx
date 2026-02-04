@@ -40,9 +40,10 @@ const RadioOperador: React.FC = () => {
         .order('row_index', { ascending: true });
 
       if (error) throw error;
-      setRows((data as RadioRow[]) || []);
+      const typedData = (data || []) as RadioRow[];
+      setRows(typedData);
 
-      const headerRow = (data || []).find((r: RadioRow) => r.row_index === 0);
+      const headerRow = typedData.find((r) => r.row_index === 0);
       if (headerRow?.synced_at) {
         setLastSync(headerRow.synced_at);
       }

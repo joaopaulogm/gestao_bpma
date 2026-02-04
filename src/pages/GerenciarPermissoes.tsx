@@ -691,7 +691,7 @@ const GerenciarPermissoes: React.FC = () => {
                       >
                         <span className="truncate">
                           {manualSelectedEfetivo
-                            ? `${manualSelectedEfetivo.nome ?? ''} ${manualSelectedEfetivo.nome_guerra ? `(${manualSelectedEfetivo.nome_guerra})` : ''}`.trim() || manualSelectedEfetivo.matricula ?? '—'
+                            ? (`${manualSelectedEfetivo.nome ?? ''} ${manualSelectedEfetivo.nome_guerra ? `(${manualSelectedEfetivo.nome_guerra})` : ''}`.trim() || (manualSelectedEfetivo.matricula ?? '—'))
                             : 'Buscar por nome completo ou nome de guerra...'}
                         </span>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

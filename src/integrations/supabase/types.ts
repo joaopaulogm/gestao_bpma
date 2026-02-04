@@ -3793,6 +3793,27 @@ export type Database = {
         }
         Relationships: []
       }
+      radio_operador_data: {
+        Row: {
+          data: Json
+          id: string
+          row_index: number
+          synced_at: string
+        }
+        Insert: {
+          data?: Json
+          id?: string
+          row_index: number
+          synced_at?: string
+        }
+        Update: {
+          data?: Json
+          id?: string
+          row_index?: number
+          synced_at?: string
+        }
+        Relationships: []
+      }
       rap_processados: {
         Row: {
           confidence_score: number | null
@@ -4192,27 +4213,6 @@ export type Database = {
           id?: string
           status_final?: string | null
           tipo?: string
-        }
-        Relationships: []
-      }
-      radio_operador_data: {
-        Row: {
-          id: string
-          synced_at: string
-          row_index: number
-          data: Json
-        }
-        Insert: {
-          id?: string
-          synced_at?: string
-          row_index: number
-          data?: Json
-        }
-        Update: {
-          id?: string
-          synced_at?: string
-          row_index?: number
-          data?: Json
         }
         Relationships: []
       }
@@ -5230,12 +5230,12 @@ export type Database = {
         | "admin"
         | "user"
         | "operador"
-        | "operador_radio"
         | "secao_operacional"
         | "secao_pessoas"
         | "secao_logistica"
         | "publico"
         | "comando"
+        | "operador_radio"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5367,12 +5367,12 @@ export const Constants = {
         "admin",
         "user",
         "operador",
-        "operador_radio",
         "secao_operacional",
         "secao_pessoas",
         "secao_logistica",
         "publico",
         "comando",
+        "operador_radio",
       ],
     },
   },
