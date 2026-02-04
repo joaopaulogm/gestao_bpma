@@ -214,70 +214,82 @@ const GerenciarPermissoes: React.FC = () => {
 
   const handleSetUsuarioRole = async (usuario: UsuarioWithRole, role: AppRole | 'remove') => {
     try {
-      // Primeiro, buscar o efetivo_id pela matricula
       if (!usuario.matricula) {
         toast.error('Usuário não possui matrícula cadastrada');
         return;
       }
-      
-      const { data: efetivoData } = await supabase
+
+      const matriculaTrim = usuario.matricula.trim();
+      const matriculaVariantes = [matriculaTrim];
+      if (matriculaTrim.length < 8) matriculaVariantes.push(matriculaTrim.padStart(8, '0'));
+      // Buscar efetivo por matrícula (com ou sem zero à esquerda)
+      const { data: efetivoExistente } = await supabase
         .from('dim_efetivo')
         .select('id')
-        .eq('matricula', usuario.matricula)
-        .single();
-      
-      if (!efetivoData) {
-        // Se não existe no efetivo, criar user_role diretamente via auth_user_id
-        if (!usuario.auth_user_id) {
-          toast.error('Usuário ainda não vinculou conta Google');
+        .in('matricula', matriculaVariantes)
+        .limit(1)
+        .maybeSingle();
+
+      let efetivoId: string | null = efetivoExistente?.id ?? null;
+
+      // Se não existe no efetivo, criar registro mínimo em dim_efetivo para permitir atribuir nível antes do primeiro login
+      if (!efetivoId) {
+        const { data: novoEfetivo, error: errInsert } = await supabase
+          .from('dim_efetivo')
+          .insert({
+            matricula: matriculaTrim,
+            nome: usuario.nome || matriculaTrim,
+            nome_guerra: usuario.nome_guerra || usuario.nome || matriculaTrim,
+            posto_graduacao: usuario.post_grad || '',
+            quadro: usuario.quadro || '',
+            quadro_sigla: (usuario.quadro || '').slice(0, 2) || '',
+            sexo: '',
+            lotacao: usuario.lotacao || 'BPMA',
+            ativo: true,
+            cpf: usuario.cpf ?? null,
+          })
+          .select('id')
+          .single();
+
+        if (errInsert) {
+          console.error('Erro ao criar registro no efetivo:', errInsert);
+          toast.error('Não foi possível cadastrar a matrícula no efetivo. Tente novamente.');
           return;
         }
-        
-        if (role === 'remove') {
-          const { error } = await supabase
-            .from('user_roles')
-            .delete()
-            .eq('user_id', usuario.auth_user_id);
-          if (error) throw error;
-          toast.success('Nível de acesso removido');
-        } else {
-          const { error } = await supabase
-            .from('user_roles')
-            .upsert({
-              user_id: usuario.auth_user_id,
-              role: role,
-            }, { onConflict: 'user_id' });
-          if (error) throw error;
-          toast.success('Nível de acesso atualizado');
-        }
-      } else {
-        // Usar efetivo_roles
-        if (role === 'remove' && usuario.roleId) {
-          const { error } = await supabase
-            .from('efetivo_roles')
-            .delete()
-            .eq('id', usuario.roleId);
-          if (error) throw error;
-          toast.success('Nível de acesso removido');
-        } else if (usuario.roleId && role !== 'remove') {
-          const { error } = await supabase
-            .from('efetivo_roles')
-            .update({ role: role as AppRole })
-            .eq('id', usuario.roleId);
-          if (error) throw error;
-          toast.success('Nível de acesso atualizado');
-        } else if (!usuario.roleId && role !== 'remove') {
-          const { error } = await supabase
-            .from('efetivo_roles')
-            .insert({
-              efetivo_id: efetivoData.id,
-              role: role as AppRole,
-            });
-          if (error) throw error;
-          toast.success('Nível de acesso definido');
-        }
+        efetivoId = novoEfetivo?.id ?? null;
       }
-      
+
+      if (!efetivoId) {
+        toast.error('Não foi possível obter o cadastro do efetivo para esta matrícula.');
+        return;
+      }
+
+      // Atribuir ou alterar nível em efetivo_roles (vale antes do primeiro login)
+      if (role === 'remove' && usuario.roleId) {
+        const { error } = await supabase
+          .from('efetivo_roles')
+          .delete()
+          .eq('id', usuario.roleId);
+        if (error) throw error;
+        toast.success('Nível de acesso removido');
+      } else if (usuario.roleId && role !== 'remove') {
+        const { error } = await supabase
+          .from('efetivo_roles')
+          .update({ role: role as AppRole })
+          .eq('id', usuario.roleId);
+        if (error) throw error;
+        toast.success('Nível de acesso atualizado');
+      } else if (!usuario.roleId && role !== 'remove') {
+        const { error } = await supabase
+          .from('efetivo_roles')
+          .insert({
+            efetivo_id: efetivoId,
+            role: role as AppRole,
+          });
+        if (error) throw error;
+        toast.success('Nível de acesso definido (válido já no primeiro login)');
+      }
+
       fetchUsuarios();
     } catch (error: unknown) {
       console.error('Error setting usuario role:', error);
@@ -468,7 +480,7 @@ const GerenciarPermissoes: React.FC = () => {
                 Usuários Cadastrados
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Gerencie usuários e seus níveis de acesso. Login: Matrícula | Senha: CPF
+                Gerencie usuários e seus níveis de acesso. Login: Matrícula | Senha: CPF. Você pode atribuir o nível de acesso antes do primeiro login do policial.
               </p>
             </CardHeader>
             <CardContent>
@@ -662,6 +674,7 @@ const GerenciarPermissoes: React.FC = () => {
                   Nenhum nível de acesso cadastrado
                 </p>
               ) : (
+                <>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -769,6 +782,7 @@ const GerenciarPermissoes: React.FC = () => {
                     })()}
                   </DialogContent>
                 </Dialog>
+                </>
               )}
             </CardContent>
           </Card>
