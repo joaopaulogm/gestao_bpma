@@ -43,6 +43,8 @@ const MinutaAbono = lazy(() => import(/* webpackChunkName: "minuta-abono" */ '@/
 const Campanha = lazy(() => import(/* webpackChunkName: "campanha" */ '@/pages/pessoas/Campanha'));
 const CampanhaDia = lazy(() => import(/* webpackChunkName: "campanha-dia" */ '@/pages/pessoas/CampanhaDia'));
 const SecaoOperacional = lazy(() => import(/* webpackChunkName: "secao-operacional" */ '@/pages/SecaoOperacional'));
+const RegistrarRAP = lazy(() => import(/* webpackChunkName: "registrar-rap" */ '@/pages/secao-operacional/RegistrarRAP'));
+const ControleFaunaFlora = lazy(() => import(/* webpackChunkName: "controle-fauna-flora" */ '@/pages/secao-operacional/ControleFaunaFlora'));
 const SecaoLogistica = lazy(() => import(/* webpackChunkName: "secao-logistica" */ '@/pages/SecaoLogistica'));
 const Comando = lazy(() => import(/* webpackChunkName: "comando" */ '@/pages/Comando'));
 const AgendaOS = lazy(() => import(/* webpackChunkName: "comando-agenda-os" */ '@/pages/comando/AgendaOS'));
@@ -117,7 +119,9 @@ function App() {
               
               {/* Seção Operacional */}
               <Route path="/secao-operacional" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><SecaoOperacional /></SidebarLayout></ProtectedRoute>} />
-              {/* Formulários de Registro - dentro de Seção Operacional */}
+              <Route path="/secao-operacional/registrar-RAP" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistrarRAP /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/secao-operacional/controle-fauna-flora" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ControleFaunaFlora /></SidebarLayout></ProtectedRoute>} />
+              {/* Formulários de Registro - dentro de Seção Operacional (rotas legadas, redirecionam para abas em registrar-RAP / controle-fauna-flora) */}
               <Route path="/secao-operacional/resgate-cadastro" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ResgateCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/crimes-ambientais" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><CrimesAmbientaisCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/crimes-comuns" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><CrimesComuns /></SidebarLayout></ProtectedRoute>} />
