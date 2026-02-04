@@ -52,6 +52,7 @@ const ControleOS = lazy(() => import(/* webpackChunkName: "controle-os" */ '@/pa
 const RegistrosUnificados = lazy(() => import(/* webpackChunkName: "registros-unificados" */ '@/pages/RegistrosUnificados'));
 const Perfil = lazy(() => import(/* webpackChunkName: "perfil" */ '@/pages/Perfil'));
 const MapaLocalizacao = lazy(() => import(/* webpackChunkName: "mapa-localizacao" */ '@/pages/MapaLocalizacao'));
+const RadioOperador = lazy(() => import(/* webpackChunkName: "radio-operador" */ '@/pages/RadioOperador'));
 
 // Legal pages
 const PoliticaPrivacidade = lazy(() => import(/* webpackChunkName: "politica-privacidade" */ '@/pages/PoliticaPrivacidade'));
@@ -87,7 +88,7 @@ function App() {
               
               {/* Página inicial pública - sem login */}
               <Route path="/" element={<LandingPage />} />
-              <Route path="/inicio" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><Index /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/inicio" element={<ProtectedRoute requiredRoles={['operador', 'operador_radio']}><SidebarLayout><Index /></SidebarLayout></ProtectedRoute>} />
               
               {/* Operador level - requires authentication */}
               <Route path="/resgate-cadastro" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><ResgateCadastro /></SidebarLayout></ProtectedRoute>} />
@@ -98,6 +99,7 @@ function App() {
               <Route path="/ranking" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><RankingOcorrencias /></SidebarLayout></ProtectedRoute>} />
               <Route path="/perfil" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><Perfil /></SidebarLayout></ProtectedRoute>} />
               <Route path="/mapa-localizacao" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><MapaLocalizacao /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/radio-operador" element={<ProtectedRoute requiredRoles={['operador_radio', 'operador']}><SidebarLayout><RadioOperador /></SidebarLayout></ProtectedRoute>} />
               
               {/* Admin only */}
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />

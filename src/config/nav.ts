@@ -32,6 +32,7 @@ import {
   Gift,
   Wrench,
   Settings,
+  Radio,
 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -75,6 +76,7 @@ export const navSections: NavSection[] = [
       },
       { path: '/mapa-localizacao', label: 'Mapa e Localização', icon: MapPin, roles: ['operador'] },
       { path: '/ranking', label: 'Ranking de Ocorrências', icon: Trophy, roles: ['operador'] },
+      { path: '/radio-operador', label: 'Rádio Operador', icon: Radio, roles: ['operador_radio', 'operador'] },
     ],
   },
   {

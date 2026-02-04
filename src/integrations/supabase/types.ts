@@ -4195,6 +4195,27 @@ export type Database = {
         }
         Relationships: []
       }
+      radio_operador_data: {
+        Row: {
+          id: string
+          synced_at: string
+          row_index: number
+          data: Json
+        }
+        Insert: {
+          id?: string
+          synced_at?: string
+          row_index: number
+          data?: Json
+        }
+        Update: {
+          id?: string
+          synced_at?: string
+          row_index?: number
+          data?: Json
+        }
+        Relationships: []
+      }
       sync_run_logs: {
         Row: {
           created_at: string
@@ -5209,6 +5230,7 @@ export type Database = {
         | "admin"
         | "user"
         | "operador"
+        | "operador_radio"
         | "secao_operacional"
         | "secao_pessoas"
         | "secao_logistica"
@@ -5345,6 +5367,7 @@ export const Constants = {
         "admin",
         "user",
         "operador",
+        "operador_radio",
         "secao_operacional",
         "secao_pessoas",
         "secao_logistica",
