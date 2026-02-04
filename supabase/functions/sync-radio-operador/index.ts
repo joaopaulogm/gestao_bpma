@@ -9,6 +9,9 @@ const corsHeaders = {
 const SPREADSHEET_ID = '16xtQDV3bppeJS_32RkXot4TyxaVPCA2nVqUXP8RyEfI';
 const RANGE = 'A:Z';
 
+/** Nomes das abas para exibição (aba 0 = Resgates de Fauna, aba 1 = Crimes Ambientais) */
+const SHEET_LABELS: [string, string] = ['Resgates de Fauna', 'Crimes Ambientais'];
+
 async function getServiceAccountToken(): Promise<string> {
   const saJson = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_JSON');
   if (!saJson) throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON not configured');
@@ -70,14 +73,13 @@ async function getServiceAccountToken(): Promise<string> {
   return tokenData.access_token;
 }
 
-async function getFirstSheetName(accessToken: string): Promise<string> {
+async function getSheetNames(accessToken: string): Promise<string[]> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties.title`;
   const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
   if (!response.ok) throw new Error(`Failed to get sheet names: ${await response.text()}`);
   const data = await response.json();
-  const first = data.sheets?.[0]?.properties?.title;
-  if (!first) throw new Error('No sheets found in spreadsheet');
-  return first;
+  const titles = (data.sheets || []).map((s: any) => s?.properties?.title).filter(Boolean);
+  return titles;
 }
 
 async function readSheet(accessToken: string, sheetName: string, range: string): Promise<any[][]> {
@@ -101,61 +103,83 @@ serve(async (req) => {
 
   try {
     const accessToken = await getServiceAccountToken();
-    const sheetName = await getFirstSheetName(accessToken);
-    const rows = await readSheet(accessToken, sheetName, RANGE);
-    if (rows.length === 0) {
-      return new Response(JSON.stringify({ success: true, rows_synced: 0, message: 'Planilha vazia' }), {
+    const sheetNames = await getSheetNames(accessToken);
+    if (sheetNames.length === 0) {
+      return new Response(JSON.stringify({ success: true, rows_synced: 0, message: 'Nenhuma aba encontrada' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
     }
 
-    const headers = (rows[0] || []).map((h: any, idx: number) => String(h ?? '').trim() || `Coluna ${idx + 1}`);
-    const syncedAt = new Date().toISOString();
-
-    // Remove old data (all rows)
+    // Remove todos os dados antigos
     const { error: delError } = await supabase
       .from('radio_operador_data')
       .delete()
       .gte('row_index', -1);
     if (delError) throw delError;
 
-    // Insert header row (row_index 0)
-    const { error: ins0Error } = await supabase
-      .from('radio_operador_data')
-      .insert({
+    const syncedAt = new Date().toISOString();
+    let totalRows = 0;
+    const details: { sheet: string; rows: number; headers: number }[] = [];
+
+    // Sincronizar até as duas primeiras abas (Resgates de Fauna, Crimes Ambientais)
+    const sheetsToSync = sheetNames.slice(0, 2);
+    for (let s = 0; s < sheetsToSync.length; s++) {
+      const sheetTitle = sheetsToSync[s];
+      const sheetLabel = SHEET_LABELS[s] ?? sheetTitle;
+      const rows = await readSheet(accessToken, sheetTitle, RANGE);
+      if (rows.length === 0) {
+        details.push({ sheet: sheetLabel, rows: 0, headers: 0 });
+        continue;
+      }
+
+      // Número de colunas = maior quantidade de células em qualquer linha (como nos HTMLs exportados)
+      const maxCols = Math.max(...rows.map((r: any[]) => (r || []).length), 1);
+      const rawFirst = rows[0] || [];
+      const headers: string[] = Array.from({ length: maxCols }, (_, idx) => {
+        const v = rawFirst[idx];
+        const s = v != null ? String(v).trim() : '';
+        return s || `Coluna ${idx + 1}`;
+      });
+
+      const inserts: { synced_at: string; row_index: number; sheet_name: string; data: Record<string, unknown> }[] = [];
+
+      inserts.push({
         synced_at: syncedAt,
         row_index: 0,
+        sheet_name: sheetLabel,
         data: { _headers: headers },
       });
-    if (ins0Error) throw ins0Error;
 
-    // Insert data rows (row_index 1, 2, ...)
-    const inserts: { synced_at: string; row_index: number; data: Record<string, unknown> }[] = [];
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i] || [];
-      const obj: Record<string, unknown> = {};
-      headers.forEach((h: string, colIndex: number) => {
-        const val = row[colIndex];
-        obj[h] = val !== undefined && val !== null && String(val).trim() !== '' ? String(val).trim() : null;
-      });
-      inserts.push({ synced_at: syncedAt, row_index: i, data: obj });
-    }
-
-    if (inserts.length > 0) {
-      const batchSize = 100;
-      for (let i = 0; i < inserts.length; i += batchSize) {
-        const chunk = inserts.slice(i, i + batchSize);
-        const { error: insError } = await supabase.from('radio_operador_data').insert(chunk);
-        if (insError) throw insError;
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i] || [];
+        const obj: Record<string, unknown> = {};
+        headers.forEach((h: string, colIndex: number) => {
+          const val = row[colIndex];
+          obj[h] = val !== undefined && val !== null && String(val).trim() !== '' ? String(val).trim() : null;
+        });
+        inserts.push({ synced_at: syncedAt, row_index: i, sheet_name: sheetLabel, data: obj });
       }
+
+      if (inserts.length > 0) {
+        const batchSize = 100;
+        for (let i = 0; i < inserts.length; i += batchSize) {
+          const chunk = inserts.slice(i, i + batchSize);
+          const { error: insError } = await supabase.from('radio_operador_data').insert(chunk);
+          if (insError) throw insError;
+        }
+      }
+
+      const dataRowCount = inserts.length - 1;
+      totalRows += dataRowCount;
+      details.push({ sheet: sheetLabel, rows: dataRowCount, headers: headers.length });
     }
 
     return new Response(JSON.stringify({
       success: true,
-      rows_synced: inserts.length,
-      headers_count: headers.length,
+      rows_synced: totalRows,
       synced_at: syncedAt,
+      sheets: details,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
