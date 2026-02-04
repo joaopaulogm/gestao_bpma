@@ -12,20 +12,11 @@ const LandingPage = lazy(() => import(/* webpackChunkName: "landing" */ '@/pages
 const Index = lazy(() => import(/* webpackChunkName: "index" */ '@/pages/Index'));
 const DashboardOperacional = lazy(() => import(/* webpackChunkName: "dashboard-operacional" */ '@/pages/DashboardOperacional'));
 const Hotspots = lazy(() => import(/* webpackChunkName: "hotspots" */ '@/pages/Hotspots'));
-const RegistrosCrimes = lazy(() => import(/* webpackChunkName: "registros-crimes" */ '@/pages/RegistrosCrimes'));
-const RegistrosCrimesComuns = lazy(() => import(/* webpackChunkName: "registros-crimes-comuns" */ '@/pages/RegistrosCrimesComuns'));
-const RegistrosPrevencao = lazy(() => import(/* webpackChunkName: "registros-prevencao" */ '@/pages/RegistrosPrevencao'));
-const RegistroDetalhes = lazy(() => import(/* webpackChunkName: "registro-detalhes" */ '@/pages/RegistroDetalhes'));
 const ResgateCadastro = lazy(() => import(/* webpackChunkName: "resgate-cadastro" */ '@/pages/ResgateCadastro'));
-const FaunaCadastrada = lazy(() => import(/* webpackChunkName: "fauna-cadastrada" */ '@/pages/FaunaCadastrada'));
-const FaunaCadastro = lazy(() => import(/* webpackChunkName: "fauna-cadastro" */ '@/pages/FaunaCadastro'));
 const Relatorios = lazy(() => import(/* webpackChunkName: "relatorios" */ '@/pages/Relatorios'));
 const NotFound = lazy(() => import(/* webpackChunkName: "not-found" */ '@/pages/NotFound'));
 const Login = lazy(() => import(/* webpackChunkName: "login" */ '@/pages/Login'));
-const ResgateEditar = lazy(() => import(/* webpackChunkName: "resgate-editar" */ '@/pages/ResgateEditar'));
 const BensApreendidosCadastro = lazy(() => import(/* webpackChunkName: "bens-apreendidos" */ '@/pages/BensApreendidosCadastro'));
-const FloraCadastro = lazy(() => import(/* webpackChunkName: "flora-cadastro" */ '@/pages/FloraCadastro'));
-const FloraCadastrada = lazy(() => import(/* webpackChunkName: "flora-cadastrada" */ '@/pages/FloraCadastrada'));
 const EfetivoBPMA = lazy(() => import(/* webpackChunkName: "efetivo" */ '@/pages/EfetivoBPMA'));
 const POP = lazy(() => import(/* webpackChunkName: "pop" */ '@/pages/POP'));
 const CrimesAmbientaisCadastro = lazy(() => import(/* webpackChunkName: "crimes" */ '@/pages/CrimesAmbientaisCadastro'));
@@ -57,10 +48,8 @@ const ManualRAP = lazy(() => import(/* webpackChunkName: "manual-rap" */ '@/page
 const RankingOcorrencias = lazy(() => import(/* webpackChunkName: "ranking" */ '@/pages/RankingOcorrencias'));
 const AtividadesPrevencao = lazy(() => import(/* webpackChunkName: "atividades-prevencao" */ '@/pages/AtividadesPrevencao'));
 const DashboardPublico = lazy(() => import(/* webpackChunkName: "dashboard-publico" */ '@/pages/DashboardPublico'));
-const MonitorarRAPs = lazy(() => import(/* webpackChunkName: "monitorar-raps" */ '@/pages/MonitorarRAPs'));
 const ControleOS = lazy(() => import(/* webpackChunkName: "controle-os" */ '@/pages/ControleOS'));
 const RegistrosUnificados = lazy(() => import(/* webpackChunkName: "registros-unificados" */ '@/pages/RegistrosUnificados'));
-const RapsLogs = lazy(() => import(/* webpackChunkName: "raps-logs" */ '@/pages/RapsLogs'));
 const Perfil = lazy(() => import(/* webpackChunkName: "perfil" */ '@/pages/Perfil'));
 const MapaLocalizacao = lazy(() => import(/* webpackChunkName: "mapa-localizacao" */ '@/pages/MapaLocalizacao'));
 
@@ -102,37 +91,26 @@ function App() {
               
               {/* Operador level - requires authentication */}
               <Route path="/resgate-cadastro" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><ResgateCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/crimes-ambientais" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><CrimesAmbientaisCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/crimes-comuns" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><CrimesComuns /></SidebarLayout></ProtectedRoute>} />
               <Route path="/material-apoio" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><MaterialApoio /></SidebarLayout></ProtectedRoute>} />
               <Route path="/material-apoio/pop" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><POP /></SidebarLayout></ProtectedRoute>} />
               <Route path="/material-apoio/identificar-especie" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><IdentificarEspecie /></SidebarLayout></ProtectedRoute>} />
               <Route path="/material-apoio/manual-rap" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><ManualRAP /></SidebarLayout></ProtectedRoute>} />
               <Route path="/ranking" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><RankingOcorrencias /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/atividades-prevencao" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><AtividadesPrevencao /></SidebarLayout></ProtectedRoute>} />
               <Route path="/perfil" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><Perfil /></SidebarLayout></ProtectedRoute>} />
               <Route path="/mapa-localizacao" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><MapaLocalizacao /></SidebarLayout></ProtectedRoute>} />
+              
               {/* Admin only */}
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/registro-detalhes/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistroDetalhes /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/resgate-editar/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ResgateEditar /></SidebarLayout></ProtectedRoute>} />
               
               {/* Seção Operacional */}
               <Route path="/secao-operacional" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><SecaoOperacional /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/registrar-RAP" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistrarRAP /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/controle-fauna-flora" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ControleFaunaFlora /></SidebarLayout></ProtectedRoute>} />
-              {/* Formulários de Registro - dentro de Seção Operacional (rotas legadas, redirecionam para abas em registrar-RAP / controle-fauna-flora) */}
               <Route path="/secao-operacional/resgate-cadastro" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ResgateCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/crimes-ambientais" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><CrimesAmbientaisCadastro /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/crimes-comuns" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><CrimesComuns /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/atividades-prevencao" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><AtividadesPrevencao /></SidebarLayout></ProtectedRoute>} />
-              {/* Demais páginas */}
-              <Route path="/secao-operacional/fauna-cadastro" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/fauna-cadastro/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FaunaCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/fauna-cadastrada" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FaunaCadastrada /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/dashboard" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><DashboardOperacional /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/dashboard-historico" element={<Navigate to="/secao-operacional/dashboard" replace />} />
-              <Route path="/secao-operacional/dashboard-antigo" element={<Navigate to="/secao-operacional/dashboard" replace />} />
               <Route path="/secao-operacional/hotspots" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Hotspots /></SidebarLayout></ProtectedRoute>} />
               {/* Página Unificada de Registros */}
               <Route path="/secao-operacional/registros" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistrosUnificados /></SidebarLayout></ProtectedRoute>} />
@@ -145,13 +123,8 @@ function App() {
               <Route path="/registros" element={<Navigate to="/secao-operacional/registros" replace />} />
               <Route path="/secao-operacional/relatorios" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Relatorios /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/bens-apreendidos" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><BensApreendidosCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/flora-cadastro" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/flora-cadastro/:id" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastro /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/flora-cadastrada" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><FloraCadastrada /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/monitorar-raps" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><MonitorarRAPs /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/controle-os" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ControleOS /></SidebarLayout></ProtectedRoute>} />
               <Route path="/secao-operacional/apresentacao" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><ApresentacaoBPMADeck /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/secao-operacional/raps/logs" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RapsLogs /></SidebarLayout></ProtectedRoute>} />
               
               {/* Seção Pessoas */}
               <Route path="/secao-pessoas" element={<ProtectedRoute requiredRoles={['secao_pessoas']}><SidebarLayout><SecaoPessoas /></SidebarLayout></ProtectedRoute>} />
