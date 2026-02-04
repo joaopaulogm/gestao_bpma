@@ -364,7 +364,7 @@ const CrimesAmbientaisCadastro = () => {
         supabase.from('dim_estagio_vida').select('id, nome'),
         supabase.from('dim_destinacao').select('id, nome'),
         supabase.from('dim_itens_apreensao').select('*'),
-        supabase.from('dim_area_protegida').select('id, nome')
+        supabase.from('dim_area_especialmente_protegida').select('id, nome').order('competencia').order('nome')
       ]);
 
       if (regioesRes.data) setRegioes(regioesRes.data);
