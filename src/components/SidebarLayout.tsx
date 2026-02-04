@@ -1,3 +1,4 @@
+/// <reference path="../vite-env.d.ts" />
 import React, { useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
@@ -20,7 +21,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
   }, [pathname]);
 
   return (
-    <div className="flex h-screen h-[100dvh] w-full bg-background overflow-hidden safe-top safe-bottom">
+    <div className="flex h-[100dvh] w-full bg-background overflow-hidden safe-top safe-bottom">
       <Sidebar />
       <ScrollArea ref={scrollRef} className={`flex-1 ${isMobile ? 'pt-14 sm:pt-16' : ''}`}>
         <div className="min-h-full">
