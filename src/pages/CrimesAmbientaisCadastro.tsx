@@ -356,8 +356,8 @@ const CrimesAmbientaisCadastro = () => {
         supabase.from('dim_tipo_de_area').select('id, "Tipo de Área"'),
         supabase.from('dim_tipo_de_crime').select('id_tipo_de_crime, "Tipo de Crime"'),
         supabase.from('dim_enquadramento').select('id_enquadramento, id_tipo_de_crime, "Enquadramento"'),
-        // FK em fat_registros_de_crimes_ambientais referencia dim_desfecho(id); carregar desfechos tipo 'crime'
-        (supabase as any).from('dim_desfecho').select('id, nome, tipo').eq('tipo', 'crime'),
+        // Usar dim_desfecho_crime_ambientais (FK da tabela fat_registros_de_crimes_ambientais)
+        (supabase as any).from('dim_desfecho_crime_ambientais').select('id, nome, tipo'),
         supabase.from('dim_especies_fauna').select('*').order('nome_popular'),
         supabase.from('dim_especies_flora').select('*').order('"Nome Popular"'),
         supabase.from('dim_estado_saude').select('id, nome'),
@@ -379,7 +379,7 @@ const CrimesAmbientaisCadastro = () => {
       if (!desfechosRes.error && desfechosRes.data?.length) {
         setDesfechos(desfechosRes.data);
       } else {
-        const fallbackDesfechos = await supabase.from('dim_desfecho_crime_ambientais').select('id, nome, tipo');
+        const fallbackDesfechos = await (supabase as any).from('dim_desfecho').select('id, nome, tipo').eq('tipo', 'crime');
         if (fallbackDesfechos.data?.length) setDesfechos(fallbackDesfechos.data);
       }
       if (especiesFaunaRes.data) setEspeciesFauna(especiesFaunaRes.data);

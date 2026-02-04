@@ -159,18 +159,13 @@ const AtividadesPrevencao: React.FC = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.data || !formData.tipoAtividadeId) {
-      toast.error('Preencha os campos obrigatórios: Data e Tipo de Atividade');
-      return;
-    }
-    
+    // Todos os campos são opcionais; o usuário pode preencher apenas o que desejar.
     setIsSaving(true);
     try {
       const supabaseAny = supabase as any;
       const payload = {
-        data: formData.data,
-        tipo_atividade_id: formData.tipoAtividadeId,
+        data: formData.data || null,
+        tipo_atividade_id: formData.tipoAtividadeId || null,
         regiao_administrativa_id: formData.regiaoAdministrativaId || null,
         latitude: formData.latitude || null,
         longitude: formData.longitude || null,
@@ -616,7 +611,7 @@ const AtividadesPrevencao: React.FC = () => {
               <NumeroOSField
                 value={formData.numeroOS}
                 onChange={(value) => handleInputChange('numeroOS', value)}
-                required={true}
+                required={false}
               />
             )}
           </CardContent>

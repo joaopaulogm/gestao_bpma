@@ -9,13 +9,14 @@ import { TrendingUp, TrendingDown, Calendar, Activity, Bug } from 'lucide-react'
 
 const MESES_NOME = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
+// Paleta distinta por ano (evita aspecto monocromático; ano mais recente em destaque)
 const CORES_ANOS = [
-  'hsl(var(--primary))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
-  '#94a3b8'
+  '#2563eb', // azul - ano atual
+  '#059669', // esmeralda
+  '#d97706', // âmbar
+  '#7c3aed', // violeta
+  '#0891b2', // ciano
+  '#64748b'  // slate (fallback)
 ];
 
 export interface SazonalidadeData {
@@ -237,15 +238,15 @@ const DashboardOperacionalSazonalidade: React.FC<Props> = ({ dados }) => {
                 dot={false}
               />
               
-              {/* Barras por ano */}
+              {/* Barras por ano - cores distintas por ano */}
               {anosDisponiveis.slice(0, 5).map((ano, i) => (
                 <Bar
                   key={ano}
                   dataKey={`resgates_${ano}`}
                   name={`${ano}`}
                   fill={CORES_ANOS[i]}
-                  opacity={i === 0 ? 1 : 0.6}
-                  radius={[2, 2, 0, 0]}
+                  opacity={i === 0 ? 1 : 0.88}
+                  radius={[3, 3, 0, 0]}
                 />
               ))}
             </ComposedChart>
@@ -301,8 +302,8 @@ const DashboardOperacionalSazonalidade: React.FC<Props> = ({ dados }) => {
                   name={`${ano}`}
                   stroke={CORES_ANOS[i]}
                   strokeWidth={i === 0 ? 3 : 2}
-                  dot={{ r: i === 0 ? 4 : 2 }}
-                  opacity={i === 0 ? 1 : 0.7}
+                  dot={{ r: i === 0 ? 4 : 3 }}
+                  opacity={i === 0 ? 1 : 0.9}
                 />
               ))}
             </LineChart>
