@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 const supabaseAny = supabase as any;
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, Search, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Plus, Trash2, Search, Image as ImageIcon, Shield } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import BensApreendidosSection, { BemApreendido as BemApreendidoType } from '@/components/crimes/BensApreendidosSection';
 import { getFaunaImageUrl } from '@/services/especieService';
@@ -881,38 +881,6 @@ const CrimesAmbientaisCadastro = () => {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Ocorrência em Área Protegida?</Label>
-            <Select value={areaProtegida ? 'sim' : 'nao'} onValueChange={(v) => setAreaProtegida(v === 'sim')}>
-              <SelectTrigger className="input-glass">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="nao">Não</SelectItem>
-                <SelectItem value="sim">Sim</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {areaProtegida && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Tipo de Área Protegida</Label>
-              <Select 
-                value={areasProtegidasSelecionadas[0] || ''} 
-                onValueChange={(v) => setAreasProtegidasSelecionadas([v])}
-              >
-                <SelectTrigger className="input-glass">
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {areasProtegidas.map(area => (
-                    <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           <div className="col-span-full grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="latitude" className="text-sm font-medium">
@@ -942,6 +910,46 @@ const CrimesAmbientaisCadastro = () => {
               />
             </div>
           </div>
+
+          {/* Ocorrências em Área Especialmente Protegida — após coordenadas */}
+          <div className="col-span-full flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
+            <div className="flex items-center gap-3">
+              <Shield className="h-5 w-5 text-primary" />
+              <div>
+                <Label htmlFor="areaProtegidaCrimes" className="text-sm font-medium cursor-pointer">
+                  Ocorrências em Área Especialmente Protegida?
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Marque se a ocorrência ocorreu em Unidade de Conservação, APP ou Reserva Legal
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="areaProtegidaCrimes"
+              checked={areaProtegida}
+              onCheckedChange={setAreaProtegida}
+            />
+          </div>
+
+          {areaProtegida && (
+            <div className="col-span-full space-y-2">
+              <Label className="text-sm font-medium">Área Especialmente Protegida</Label>
+              <Select
+                value={areasProtegidasSelecionadas[0] || ''}
+                onValueChange={(v) => setAreasProtegidasSelecionadas([v])}
+              >
+                <SelectTrigger className="input-glass">
+                  <SelectValue placeholder="Selecione a área..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {areasProtegidas.map(area => (
+                    <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
         </FormSection>
 
         {/* Card: Identificação da Equipe */}

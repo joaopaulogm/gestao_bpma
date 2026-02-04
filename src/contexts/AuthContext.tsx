@@ -81,6 +81,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   };
 
+  // Renovar sessão Supabase periodicamente e ao voltar à aba para evitar logout por inatividade
+  useEffect(() => {
+    const refreshSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { error } = await supabase.auth.refreshSession();
+          if (error) console.warn('Refresh de sessão:', error.message);
+        }
+      } catch (e) {
+        console.warn('Erro ao renovar sessão:', e);
+      }
+    };
+
+    const REFRESH_INTERVAL_MS = 25 * 60 * 1000; // 25 minutos (antes do JWT expirar em 1h)
+    const intervalId = setInterval(refreshSession, REFRESH_INTERVAL_MS);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshSession();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   useEffect(() => {
     // Listener para evento customizado de login local
     const handleLocalAuthEvent = (event: CustomEvent) => {

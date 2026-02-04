@@ -177,23 +177,60 @@ export interface MembroEquipeSubmit {
   efetivo_id: string;
 }
 
+/** Dados do formulário podem incluir animalIdentificado (quando não identificado, espécie é opcional). */
+export type ResgateFormDataComAnimalId = ResgateFormData & { animalIdentificado?: boolean };
+
+/** Cria um item "sem espécie" para inserir um registro quando animal evadiu ou não foi identificado. */
+function createEspecieItemSemIdentificacao(): EspecieItem {
+  return {
+    id: `evadido-${Date.now()}`,
+    especieId: '',
+    classeTaxonomica: '',
+    nomeCientifico: '',
+    ordemTaxonomica: '',
+    estadoConservacao: '',
+    tipoFauna: '',
+    estadoSaude: '',
+    atropelamento: '',
+    estagioVida: '',
+    quantidadeAdulto: 0,
+    quantidadeFilhote: 0,
+    quantidadeJovem: 0,
+    quantidadeTotal: 0,
+    desfechoResgate: '',
+    destinacao: '',
+    numeroTermoEntrega: '',
+    horaGuardaCEAPA: '',
+    motivoEntregaCEAPA: '',
+    latitudeSoltura: '',
+    longitudeSoltura: '',
+    outroDestinacao: '',
+  };
+}
+
 export const useResgateSubmission = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   const salvarRegistroNoBanco = async (
-    data: ResgateFormData, 
+    data: ResgateFormDataComAnimalId, 
     especies: EspecieItem[],
     membrosEquipe?: MembroEquipeSubmit[],
     grupamentoServicoId?: string | null
   ) => {
-    // Validar que tem pelo menos uma espécie (a menos que seja evadido)
     const isEvadido = data.desfechoResgate === "Evadido";
-    if (!isEvadido && especies.length === 0) {
+    const animalIdentificado = data.animalIdentificado !== false; // default true para não quebrar fluxos antigos
+
+    // Espécie obrigatória apenas quando o animal foi identificado e o desfecho não é Evadido
+    if (animalIdentificado && !isEvadido && especies.length === 0) {
       setSubmissionError("É necessário adicionar pelo menos uma espécie");
       toast.error("É necessário adicionar pelo menos uma espécie");
       return false;
     }
+
+    // Quando animal evadiu ou não foi identificado e não há espécies, inserir um registro sem espécie
+    const especiesParaInserir =
+      especies.length > 0 ? especies : [createEspecieItemSemIdentificacao()];
 
     setSubmissionError(null);
     
@@ -215,8 +252,8 @@ export const useResgateSubmission = () => {
       const dataFormatada = format(dataObj, 'yyyy-MM-dd');
       
       console.log('Saving date to database:', dataFormatada);
-      console.log('Espécies a salvar:', especies.length);
-      
+      console.log('Espécies a salvar:', especiesParaInserir.length);
+
       // Find dimension IDs (apenas os que não são por espécie)
       let desfechoId: string | null = null;
       if (data.desfechoApreensao) {
@@ -234,10 +271,10 @@ export const useResgateSubmission = () => {
       const isHistorica = isTabelaHistorica(tabelaDestino);
       console.log(`Usando tabela: ${tabelaDestino} para data: ${dataFormatada} (histórica: ${isHistorica})`);
 
-      // Criar um registro para cada espécie
+      // Criar um registro para cada espécie (ou um único registro sem espécie quando evadido/não identificado)
       const registrosInseridos: string[] = [];
 
-      for (const especie of especies) {
+      for (const especie of especiesParaInserir) {
         // Buscar detalhes da espécie se for tabela histórica
         let especieDetalhes: any = null;
         if (isHistorica && especie.especieId) {
