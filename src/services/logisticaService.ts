@@ -384,13 +384,14 @@ export interface EstatisticasFrota {
   baixadas: number;
   porTipo: Record<string, number>;
   porLocalizacao: Record<string, number>;
+  valorTotal: number;
 }
 
 export const buscarEstatisticasFrota = async (): Promise<EstatisticasFrota> => {
   try {
     const { data, error } = await supabase
       .from('dim_frota')
-      .select('situacao,tipo,localizacao');
+      .select('situacao,tipo,localizacao,valor_aquisicao');
 
     if (error) {
       console.error('Erro ao buscar estatísticas:', error);
@@ -401,6 +402,7 @@ export const buscarEstatisticasFrota = async (): Promise<EstatisticasFrota> => {
         baixadas: 0,
         porTipo: {},
         porLocalizacao: {},
+        valorTotal: 0,
       };
     }
 
@@ -409,6 +411,7 @@ export const buscarEstatisticasFrota = async (): Promise<EstatisticasFrota> => {
     const disponiveis = typedData.filter(v => v.situacao?.toLowerCase() === 'disponível').length;
     const indisponiveis = typedData.filter(v => v.situacao?.toLowerCase() === 'indisponível').length;
     const baixadas = typedData.filter(v => v.situacao?.toLowerCase() === 'baixada' || v.situacao?.toLowerCase() === 'descarga').length;
+    const valorTotal = typedData.reduce((sum, v) => sum + (Number((v as any).valor_aquisicao) || 0), 0);
 
     const porTipo: Record<string, number> = {};
     const porLocalizacao: Record<string, number> = {};
@@ -429,6 +432,7 @@ export const buscarEstatisticasFrota = async (): Promise<EstatisticasFrota> => {
       baixadas,
       porTipo,
       porLocalizacao,
+      valorTotal,
     };
   } catch (error) {
     console.error('Erro ao buscar estatísticas:', error);
@@ -439,6 +443,7 @@ export const buscarEstatisticasFrota = async (): Promise<EstatisticasFrota> => {
       baixadas: 0,
       porTipo: {},
       porLocalizacao: {},
+      valorTotal: 0,
     };
   }
 };

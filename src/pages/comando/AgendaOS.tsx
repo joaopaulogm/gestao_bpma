@@ -53,7 +53,13 @@ const AgendaOS: React.FC = () => {
       if (data?.error) throw new Error(typeof data.error === 'string' ? data.error : 'Erro ao carregar eventos');
       setEvents(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar a agenda.');
+      const msg = err instanceof Error ? err.message : 'Erro ao carregar a agenda.';
+      const isEdgeFailure = /edge function|failed to send/i.test(msg);
+      setError(
+        isEdgeFailure
+          ? 'Não foi possível conectar à agenda. Verifique se a Edge Function get-calendar-events está publicada no Supabase e tente novamente.'
+          : msg
+      );
       setEvents([]);
     } finally {
       setLoading(false);

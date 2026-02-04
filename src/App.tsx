@@ -47,7 +47,6 @@ const SecaoLogistica = lazy(() => import(/* webpackChunkName: "secao-logistica" 
 const Comando = lazy(() => import(/* webpackChunkName: "comando" */ '@/pages/Comando'));
 const AgendaOS = lazy(() => import(/* webpackChunkName: "comando-agenda-os" */ '@/pages/comando/AgendaOS'));
 const AgendaCMD = lazy(() => import(/* webpackChunkName: "comando-agenda-cmd" */ '@/pages/comando/AgendaCMD'));
-const ComandoDashboard = lazy(() => import(/* webpackChunkName: "comando-dashboard" */ '@/pages/comando/ComandoDashboard'));
 const ComandoPessoal = lazy(() => import(/* webpackChunkName: "comando-pessoal" */ '@/pages/comando/ComandoPessoal'));
 const ApresentacaoBPMADeck = lazy(() => import(/* webpackChunkName: "apresentacao-bpma" */ '@/pages/apresentacao/ApresentacaoBPMADeck'));
 const MaterialApoio = lazy(() => import(/* webpackChunkName: "material-apoio" */ '@/pages/MaterialApoio'));
@@ -171,7 +170,7 @@ function App() {
               <Route path="/comando" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><Comando /></SidebarLayout></ProtectedRoute>} />
               <Route path="/comando/agenda-OS" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><AgendaOS /></SidebarLayout></ProtectedRoute>} />
               <Route path="/comando/agenda-CMD" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><AgendaCMD /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/comando/dashboard" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><ComandoDashboard /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/comando/dashboard" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><DashboardOperacional /></SidebarLayout></ProtectedRoute>} />
               <Route path="/comando/pessoal" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><ComandoPessoal /></SidebarLayout></ProtectedRoute>} />
               <Route path="/comando/pessoal/efetivo" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><EfetivoBPMA /></SidebarLayout></ProtectedRoute>} />
               <Route path="/comando/pessoal/equipes" element={<ProtectedRoute requiredRoles={['admin', 'comando']}><SidebarLayout><Equipes /></SidebarLayout></ProtectedRoute>} />

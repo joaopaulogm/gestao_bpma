@@ -3,7 +3,6 @@ import { Wrench, Plus, Upload, Truck, Package, BarChart3, Loader2 } from 'lucide
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -25,8 +24,12 @@ import {
 } from '@/services/logisticaService';
 import FrotaTable from '@/components/logistica/FrotaTable';
 import TGRLTable from '@/components/logistica/TGRLTable';
+import PatrimonioDashboard from '@/components/logistica/PatrimonioDashboard';
 import * as XLSX from 'xlsx';
 import DeleteConfirmationDialog from '@/components/fauna/DeleteConfirmationDialog';
+import { buscarValorFipePorNome, parseValorFipe } from '@/services/fipeService';
+import { DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const SecaoLogistica: React.FC = () => {
   // Estados para Frota
@@ -65,6 +68,9 @@ const SecaoLogistica: React.FC = () => {
   const [frotaForm, setFrotaForm] = useState<Partial<Frota>>({});
   const [tgrlForm, setTGRLForm] = useState<Partial<TGRL>>({});
   const [importing, setImporting] = useState(false);
+  const [viewFrota, setViewFrota] = useState<Frota | null>(null);
+  const [viewTgrl, setViewTgrl] = useState<TGRL | null>(null);
+  const [fipeLoading, setFipeLoading] = useState(false);
 
   // Carregar dados
   useEffect(() => {
@@ -126,6 +132,7 @@ const SecaoLogistica: React.FC = () => {
         baixadas: 0,
         porTipo: {},
         porLocalizacao: {},
+        valorTotal: 0,
       });
       setEstatisticasTGRL(tgrlStats || {
         total: 0,
@@ -143,6 +150,7 @@ const SecaoLogistica: React.FC = () => {
         baixadas: 0,
         porTipo: {},
         porLocalizacao: {},
+        valorTotal: 0,
       });
       setEstatisticasTGRL({
         total: 0,
@@ -410,145 +418,19 @@ const SecaoLogistica: React.FC = () => {
         </div>
       </div>
 
-      {/* Cards de Gestão separados */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Card Gestão da Frota */}
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <CardHeader className="pb-3">
+      {/* ========== CARD 1: Gestão de Frota ========== */}
+      <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent shadow-lg">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
                 <Truck className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-lg">Gestão da Frota</CardTitle>
-                <CardDescription>Veículos e Viaturas</CardDescription>
+                <CardTitle className="text-lg">Gestão de Frota</CardTitle>
+                <CardDescription>Veículos e Viaturas. Busque por filtros; registre, edite, exclua ou visualize.</CardDescription>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3 bg-muted/50 rounded-lg">
-                <div className="text-2xl font-bold text-primary">{estatisticasFrota?.total || 0}</div>
-                <p className="text-xs text-muted-foreground">Total de Veículos</p>
-              </div>
-              <div className="text-center p-3 bg-green-500/10 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{estatisticasFrota?.disponiveis || 0}</div>
-                <p className="text-xs text-muted-foreground">Disponíveis</p>
-              </div>
-              <div className="text-center p-3 bg-amber-500/10 rounded-lg">
-                <div className="text-2xl font-bold text-amber-600">{estatisticasFrota?.indisponiveis || 0}</div>
-                <p className="text-xs text-muted-foreground">Indisponíveis</p>
-              </div>
-              <div className="text-center p-3 bg-red-500/10 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">{estatisticasFrota?.baixadas || 0}</div>
-                <p className="text-xs text-muted-foreground">Baixadas</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card Gestão de Patrimônio */}
-        <Card className="border-2 border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-secondary/10">
-                <Package className="h-6 w-6 text-secondary-foreground" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Gestão de Patrimônio</CardTitle>
-                <CardDescription>Equipamentos e Bens (TGRL)</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3 bg-muted/50 rounded-lg">
-                <div className="text-2xl font-bold text-primary">{estatisticasTGRL?.total || 0}</div>
-                <p className="text-xs text-muted-foreground">Total de Itens</p>
-              </div>
-              <div className="text-center p-3 bg-green-500/10 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{estatisticasTGRL?.porEstado?.['Bom'] || estatisticasTGRL?.porEstado?.['BOM'] || 0}</div>
-                <p className="text-xs text-muted-foreground">Bom Estado</p>
-              </div>
-              <div className="col-span-2 text-center p-3 bg-blue-500/10 rounded-lg">
-                <div className="text-xl font-bold text-blue-600">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(estatisticasTGRL?.valorTotal || 0)}
-                </div>
-                <p className="text-xs text-muted-foreground">Valor Total do Patrimônio</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Estatísticas Detalhadas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Veículos</CardTitle>
-            <Truck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{estatisticasFrota?.total || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {estatisticasFrota?.disponiveis || 0} disponíveis
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Equipamentos</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{estatisticasTGRL?.total || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Valor total: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(estatisticasTGRL?.valorTotal || 0)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Veículos Indisponíveis</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{estatisticasFrota?.indisponiveis || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {estatisticasFrota?.baixadas || 0} baixados
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Equipamentos em Bom Estado</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{estatisticasTGRL?.porEstado?.['BOM'] || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {estatisticasTGRL?.porEstado?.['REGULAR'] || 0} regulares
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabs para Frota e TGRL */}
-      <Tabs defaultValue="frota" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="frota">Frota</TabsTrigger>
-          <TabsTrigger value="tgrl">TGRL</TabsTrigger>
-        </TabsList>
-
-        {/* Tab Frota */}
-        <TabsContent value="frota" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <CardTitle>Frota de Veículos</CardTitle>
-                  <CardDescription>Gerencie os veículos da BPMA</CardDescription>
-                </div>
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                   <Dialog open={frotaDialogOpen} onOpenChange={setFrotaDialogOpen}>
                     <DialogTrigger asChild>
@@ -666,6 +548,53 @@ const SecaoLogistica: React.FC = () => {
                             onChange={(e) => setFrotaForm({ ...frotaForm, km_atual: e.target.value ? Number(e.target.value) : undefined })}
                           />
                         </div>
+                        <div className="space-y-2 flex flex-col sm:col-span-2">
+                          <Label>Valor de aquisição (R$) / Valor médio FIPE</Label>
+                          <div className="flex gap-2 flex-wrap">
+                            <Input
+                              type="number"
+                              placeholder="Valor ou consulte FIPE"
+                              className="flex-1 min-w-[140px]"
+                              value={frotaForm.valor_aquisicao ?? ''}
+                              onChange={(e) => setFrotaForm({ ...frotaForm, valor_aquisicao: e.target.value ? Number(e.target.value) : undefined })}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={!frotaForm.marca || fipeLoading}
+                              onClick={async () => {
+                                setFipeLoading(true);
+                                try {
+                                  const res = await buscarValorFipePorNome(
+                                    frotaForm.marca!,
+                                    frotaForm.modelo,
+                                    frotaForm.ano ?? (frotaForm as any).ano_fabricacao,
+                                    frotaForm.tipo
+                                  );
+                                  if (res.success && res.valor?.Valor) {
+                                    const num = parseValorFipe(res.valor.Valor);
+                                    if (num != null) {
+                                      setFrotaForm((f) => ({ ...f, valor_aquisicao: num }));
+                                      toast.success(`Valor FIPE: ${res.valor.Valor}`);
+                                    }
+                                  } else {
+                                    toast.error(res.error ?? 'Veículo não encontrado na tabela FIPE');
+                                  }
+                                } catch {
+                                  toast.error('Erro ao consultar FIPE');
+                                } finally {
+                                  setFipeLoading(false);
+                                }
+                              }}
+                            >
+                              {fipeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Consultar FIPE'}
+                            </Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Informe marca, modelo e ano e clique em &quot;Consultar FIPE&quot; para obter o valor médio (Tabela FIPE / veiculos.fipe.org.br).
+                          </p>
+                        </div>
                         <div className="space-y-2 col-span-1 sm:col-span-2">
                           <Label>Observações</Label>
                           <Textarea
@@ -703,18 +632,18 @@ const SecaoLogistica: React.FC = () => {
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
               <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                <div className="flex flex-wrap gap-2 sm:gap-4">
                   <Input
                     placeholder="Buscar por prefixo..."
                     value={frotaFiltros.prefixo}
                     onChange={(e) => setFrotaFiltros({ ...frotaFiltros, prefixo: e.target.value })}
-                    className="w-full sm:flex-1 sm:max-w-xs"
+                    className="w-full sm:max-w-[180px]"
                   />
                   <Select
                     value={frotaFiltros.situacao || 'all'}
                     onValueChange={(value) => setFrotaFiltros({ ...frotaFiltros, situacao: value === 'all' ? '' : value })}
                   >
-                    <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectTrigger className="w-full sm:w-[160px]">
                       <SelectValue placeholder="Situação" />
                     </SelectTrigger>
                     <SelectContent>
@@ -724,6 +653,18 @@ const SecaoLogistica: React.FC = () => {
                       <SelectItem value="Baixada">Baixada</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Input
+                    placeholder="Tipo..."
+                    value={frotaFiltros.tipo}
+                    onChange={(e) => setFrotaFiltros({ ...frotaFiltros, tipo: e.target.value })}
+                    className="w-full sm:max-w-[160px]"
+                  />
+                  <Input
+                    placeholder="Localização..."
+                    value={frotaFiltros.localizacao}
+                    onChange={(e) => setFrotaFiltros({ ...frotaFiltros, localizacao: e.target.value })}
+                    className="w-full sm:max-w-[180px]"
+                  />
                 </div>
                 {frotaLoading ? (
                   <div className="flex justify-center py-8">
@@ -732,6 +673,7 @@ const SecaoLogistica: React.FC = () => {
                 ) : (
                   <FrotaTable
                     frota={frota}
+                    onView={(id) => setViewFrota(frota.find((f) => f.id === id) ?? null)}
                     onEdit={handleEditarFrota}
                     onDelete={(id) => {
                       setSelectedId(id);
@@ -742,19 +684,22 @@ const SecaoLogistica: React.FC = () => {
                 )}
               </div>
             </CardContent>
-          </Card>
-        </TabsContent>
+      </Card>
 
-        {/* Tab TGRL */}
-        <TabsContent value="tgrl" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>TGRL - Equipamentos e Materiais</CardTitle>
-                  <CardDescription>Termo de Guarda, Responsabilidade e Localização</CardDescription>
-                </div>
-                <div className="flex gap-2">
+      {/* ========== CARD 2: Gestão de Equipamentos e Bens ========== */}
+      <Card className="border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent shadow-lg">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-emerald-500/10">
+                <Package className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Gestão de Equipamentos e Bens</CardTitle>
+                <CardDescription>TGRL. Busque por filtros; registre, edite, exclua ou visualize.</CardDescription>
+              </div>
+            </div>
+            <div className="flex gap-2 flex-wrap">
                   <Dialog open={tgrlDialogOpen} onOpenChange={setTGRLDialogOpen}>
                     <DialogTrigger asChild>
                       <Button onClick={() => { setTGRLForm({}); setEditingId(null); }}>
@@ -862,18 +807,30 @@ const SecaoLogistica: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 sm:gap-4">
                   <Input
                     placeholder="Buscar por tombamento..."
                     value={tgrlFiltros.tombamento}
                     onChange={(e) => setTGRLFiltros({ ...tgrlFiltros, tombamento: e.target.value })}
-                    className="max-w-xs"
+                    className="w-full sm:max-w-[180px]"
+                  />
+                  <Input
+                    placeholder="Subitem..."
+                    value={tgrlFiltros.subitem}
+                    onChange={(e) => setTGRLFiltros({ ...tgrlFiltros, subitem: e.target.value })}
+                    className="w-full sm:max-w-[140px]"
+                  />
+                  <Input
+                    placeholder="Localização..."
+                    value={tgrlFiltros.localizacao}
+                    onChange={(e) => setTGRLFiltros({ ...tgrlFiltros, localizacao: e.target.value })}
+                    className="w-full sm:max-w-[180px]"
                   />
                   <Select
                     value={tgrlFiltros.estado_conservacao || 'all'}
                     onValueChange={(value) => setTGRLFiltros({ ...tgrlFiltros, estado_conservacao: value === 'all' ? '' : value })}
                   >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full sm:w-[160px]">
                       <SelectValue placeholder="Estado" />
                     </SelectTrigger>
                     <SelectContent>
@@ -891,6 +848,7 @@ const SecaoLogistica: React.FC = () => {
                 ) : (
                   <TGRLTable
                     tgrl={tgrl}
+                    onView={(id) => setViewTgrl(tgrl.find((t) => t.id === id) ?? null)}
                     onEdit={handleEditarTGRL}
                     onDelete={(id) => {
                       setSelectedId(id);
@@ -901,9 +859,88 @@ const SecaoLogistica: React.FC = () => {
                 )}
               </div>
             </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      </Card>
+
+      {/* ========== CARD 3: Gestão de Patrimônio ========== */}
+      <Card className="border-2 border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent shadow-lg">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-amber-500/10">
+              <BarChart3 className="h-6 w-6 text-amber-600" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Gestão de Patrimônio</CardTitle>
+              <CardDescription>Informação de todo o patrimônio. Dashboard interativo com filtros e segmentação.</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <PatrimonioDashboard estatisticasFrota={estatisticasFrota} estatisticasTGRL={estatisticasTGRL} />
+        </CardContent>
+      </Card>
+
+      {/* Modal Ver Frota */}
+      <Dialog open={!!viewFrota} onOpenChange={() => setViewFrota(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Truck className="h-5 w-5" />
+              {viewFrota?.prefixo} {viewFrota?.placa && `· ${viewFrota.placa}`}
+            </DialogTitle>
+            <DialogDescription>Detalhes do veículo</DialogDescription>
+          </DialogHeader>
+          {viewFrota && (
+            <ScrollArea className="flex-1 pr-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><span className="text-muted-foreground">Tombamento:</span> {viewFrota.tombamento || '-'}</div>
+                <div><span className="text-muted-foreground">Tipo:</span> {viewFrota.tipo || '-'}</div>
+                <div><span className="text-muted-foreground">Marca/Modelo:</span> {[viewFrota.marca, viewFrota.modelo].filter(Boolean).join(' ') || '-'}</div>
+                <div><span className="text-muted-foreground">Ano:</span> {viewFrota.ano ?? viewFrota.ano_fabricacao ?? '-'}</div>
+                <div><span className="text-muted-foreground">Situação:</span> {viewFrota.situacao || '-'}</div>
+                <div><span className="text-muted-foreground">Localização:</span> {viewFrota.localizacao || '-'}</div>
+                <div className="col-span-2"><span className="text-muted-foreground">Observações:</span> {viewFrota.observacoes || '-'}</div>
+              </div>
+            </ScrollArea>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewFrota(null)}>Fechar</Button>
+            {viewFrota && (
+              <Button onClick={() => { handleEditarFrota(viewFrota.id); setViewFrota(null); }}>Editar</Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Ver TGRL */}
+      <Dialog open={!!viewTgrl} onOpenChange={() => setViewTgrl(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              {viewTgrl?.tombamento} {viewTgrl?.subitem && `· ${viewTgrl.subitem}`}
+            </DialogTitle>
+            <DialogDescription>Detalhes do equipamento / bem</DialogDescription>
+          </DialogHeader>
+          {viewTgrl && (
+            <ScrollArea className="flex-1 pr-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="col-span-2"><span className="text-muted-foreground">Descrição:</span> {viewTgrl.descricao || viewTgrl.especificacao_bem || '-'}</div>
+                <div><span className="text-muted-foreground">Valor:</span> {(viewTgrl.valor_aquisicao ?? viewTgrl.valor) != null ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(viewTgrl.valor_aquisicao ?? viewTgrl.valor)) : '-'}</div>
+                <div><span className="text-muted-foreground">Estado:</span> {viewTgrl.estado_conservacao || '-'}</div>
+                <div><span className="text-muted-foreground">Localização:</span> {viewTgrl.localizacao || '-'}</div>
+                <div><span className="text-muted-foreground">Chassi/Série:</span> {viewTgrl.chassi_serie || '-'}</div>
+                <div className="col-span-2"><span className="text-muted-foreground">Observações:</span> {viewTgrl.observacoes || '-'}</div>
+              </div>
+            </ScrollArea>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewTgrl(null)}>Fechar</Button>
+            {viewTgrl && (
+              <Button onClick={() => { handleEditarTGRL(viewTgrl.id); setViewTgrl(null); }}>Editar</Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de confirmação de exclusão */}
       <DeleteConfirmationDialog

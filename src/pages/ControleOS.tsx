@@ -8,11 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, RefreshCw, FileText, Calendar, Clock, MapPin, Users, CheckCircle, AlertCircle, Search, Filter, Eye } from 'lucide-react';
+import { Loader2, RefreshCw, FileText, Calendar, Clock, MapPin, Users, CheckCircle, AlertCircle, Search, Eye, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, startOfDay, isBefore } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface OrdemServico {
   id: string;
@@ -67,7 +68,10 @@ const ControleOS: React.FC = () => {
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
   const [filterMonth, setFilterMonth] = useState<string>('all');
   const [filterSituacao, setFilterSituacao] = useState<string>('all');
+  const [filterStatusValidade, setFilterStatusValidade] = useState<string>('all'); // ativo | inativo
   const [selectedOS, setSelectedOS] = useState<OrdemServico | null>(null);
+  const [osToDelete, setOsToDelete] = useState<OrdemServico | null>(null);
+  const [osToEdit, setOsToEdit] = useState<OrdemServico | null>(null);
 
   // Fetch OS cadastradas
   const { data: ordensServico, isLoading: isLoadingOS } = useQuery({
@@ -159,6 +163,22 @@ const ControleOS: React.FC = () => {
     }
   });
 
+  // Status por validade: ativo = data do evento dentro da validade (hoje ou futuro), inativo = data já passou
+  const getStatusValidade = (dataEvento: string): 'ativo' | 'inativo' => {
+    const hoje = startOfDay(new Date());
+    const dataEventoDay = startOfDay(new Date(dataEvento));
+    return isBefore(dataEventoDay, hoje) ? 'inativo' : 'ativo';
+  };
+
+  const getStatusValidadeBadge = (dataEvento: string) => {
+    const status = getStatusValidade(dataEvento);
+    return status === 'ativo' ? (
+      <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Ativo</Badge>
+    ) : (
+      <Badge className="bg-muted text-muted-foreground border-border">Inativo</Badge>
+    );
+  };
+
   const getSituacaoBadge = (situacao: string | null) => {
     switch (situacao?.toUpperCase()) {
       case 'ATIVA':
@@ -193,13 +213,54 @@ const ControleOS: React.FC = () => {
     return timeStr.substring(0, 5);
   };
 
-  // Stats
+  // Filtro por status (ativo/inativo por validade da data)
+  const ordensFiltradas = React.useMemo(() => {
+    if (!ordensServico) return [];
+    if (filterStatusValidade === 'ativo') return ordensServico.filter(o => getStatusValidade(o.data_evento) === 'ativo');
+    if (filterStatusValidade === 'inativo') return ordensServico.filter(o => getStatusValidade(o.data_evento) === 'inativo');
+    return ordensServico;
+  }, [ordensServico, filterStatusValidade]);
+
+  // Stats (status por validade: ativo = dentro da validade, inativo = passou da validade)
   const stats = {
     total: ordensServico?.length || 0,
-    ativas: ordensServico?.filter(o => o.situacao?.toUpperCase() === 'ATIVA').length || 0,
+    ativas: ordensServico?.filter(o => getStatusValidade(o.data_evento) === 'ativo').length || 0,
+    inativas: ordensServico?.filter(o => getStatusValidade(o.data_evento) === 'inativo').length || 0,
     concluidas: ordensServico?.filter(o => o.situacao?.toUpperCase() === 'CONCLUÍDA').length || 0,
     pendentes: driveStatus?.pending_count || 0
   };
+
+  // Mutation para excluir OS
+  const deleteOS = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('fat_ordens_servico').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fat_ordens_servico'] });
+      setOsToDelete(null);
+      toast.success('OS excluída com sucesso.');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Erro ao excluir OS.');
+    }
+  });
+
+  // Mutation para editar OS
+  const updateOS = useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: Partial<OrdemServico> }) => {
+      const { error } = await supabase.from('fat_ordens_servico').update(payload).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fat_ordens_servico'] });
+      setOsToEdit(null);
+      toast.success('OS atualizada com sucesso.');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Erro ao atualizar OS.');
+    }
+  });
 
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
@@ -275,12 +336,12 @@ const ControleOS: React.FC = () => {
         <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/20">
-                <Clock className="h-5 w-5 text-blue-400" />
+              <div className="p-2 rounded-lg bg-muted">
+                <Clock className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.concluidas}</p>
-                <p className="text-xs text-muted-foreground">Concluídas</p>
+                <p className="text-2xl font-bold">{stats.inativas}</p>
+                <p className="text-xs text-muted-foreground">Inativas</p>
               </div>
             </div>
           </CardContent>
@@ -376,6 +437,17 @@ const ControleOS: React.FC = () => {
                 <SelectItem value="CANCELADA">Cancelada</SelectItem>
               </SelectContent>
             </Select>
+
+            <Select value={filterStatusValidade} onValueChange={setFilterStatusValidade}>
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="ativo">Ativo</SelectItem>
+                <SelectItem value="inativo">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -388,7 +460,7 @@ const ControleOS: React.FC = () => {
             Ordens de Serviço Cadastradas
           </CardTitle>
           <CardDescription>
-            {ordensServico?.length || 0} registros encontrados
+            {ordensFiltradas?.length ?? 0} registros encontrados
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -396,23 +468,24 @@ const ControleOS: React.FC = () => {
             <div className="flex justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : ordensServico && ordensServico.length > 0 ? (
+          ) : ordensFiltradas && ordensFiltradas.length > 0 ? (
             <ScrollArea className="h-[500px]">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nº OS</TableHead>
-                    <TableHead>Data</TableHead>
+                    <TableHead>N° OS</TableHead>
+                    <TableHead>Data Início</TableHead>
+                    <TableHead>Data Término</TableHead>
                     <TableHead>Horário</TableHead>
                     <TableHead>Local</TableHead>
                     <TableHead>Tipo</TableHead>
-                    <TableHead>Situação</TableHead>
-                    <TableHead>Confiança</TableHead>
+                    <TableHead>Evento</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {ordensServico.map((os) => (
+                  {ordensFiltradas.map((os) => (
                     <TableRow key={os.id} className="hover:bg-muted/50">
                       <TableCell className="font-mono text-sm">
                         {os.numero_os}
@@ -425,8 +498,14 @@ const ControleOS: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          {formatDate(os.data_evento)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3 text-muted-foreground" />
-                          {formatTime(os.horario_inicio)} - {formatTime(os.horario_termino)}
+                          {formatTime(os.horario_inicio)} – {formatTime(os.horario_termino)}
                         </div>
                       </TableCell>
                       <TableCell className="max-w-[200px] truncate">
@@ -438,20 +517,42 @@ const ControleOS: React.FC = () => {
                       <TableCell className="max-w-[150px] truncate">
                         {os.tipo_servico || '-'}
                       </TableCell>
-                      <TableCell>
-                        {getSituacaoBadge(os.situacao)}
+                      <TableCell className="font-mono text-sm">
+                        {os.numero_evento || '-'}
                       </TableCell>
                       <TableCell>
-                        {getConfidenceBadge(os.confidence_score)}
+                        {getStatusValidadeBadge(os.data_evento)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedOS(os)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setSelectedOS(os)}
+                            title="Visualizar"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setOsToEdit(os)}
+                            title="Editar"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setOsToDelete(os)}
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -599,8 +700,166 @@ const ControleOS: React.FC = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Modal de exclusão */}
+      <AlertDialog open={!!osToDelete} onOpenChange={() => setOsToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir OS</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a OS {osToDelete?.numero_os}? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteOS.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => osToDelete && deleteOS.mutate(osToDelete.id)}
+              disabled={deleteOS.isPending}
+            >
+              {deleteOS.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Modal de edição */}
+      <Dialog open={!!osToEdit} onOpenChange={() => setOsToEdit(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar OS {osToEdit?.numero_os}</DialogTitle>
+            <DialogDescription>Altere os campos desejados e salve.</DialogDescription>
+          </DialogHeader>
+          {osToEdit && (
+            <FormEditarOS
+              os={osToEdit}
+              onSave={(payload) => updateOS.mutate({ id: osToEdit.id, payload })}
+              onCancel={() => setOsToEdit(null)}
+              isSaving={updateOS.isPending}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
+/** Formulário inline para edição rápida da OS */
+function FormEditarOS({
+  os,
+  onSave,
+  onCancel,
+  isSaving
+}: {
+  os: OrdemServico;
+  onSave: (payload: Partial<OrdemServico>) => void;
+  onCancel: () => void;
+  isSaving: boolean;
+}) {
+  const [dataEvento, setDataEvento] = useState(os.data_evento);
+  const [horarioInicio, setHorarioInicio] = useState(os.horario_inicio ?? '');
+  const [horarioTermino, setHorarioTermino] = useState(os.horario_termino ?? '');
+  const [localEvento, setLocalEvento] = useState(os.local_evento ?? '');
+  const [tipoServico, setTipoServico] = useState(os.tipo_servico ?? '');
+  const [numeroEvento, setNumeroEvento] = useState(os.numero_evento ?? '');
+  const [situacao, setSituacao] = useState(os.situacao ?? 'ATIVA');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      data_evento: dataEvento,
+      horario_inicio: horarioInicio || null,
+      horario_termino: horarioTermino || null,
+      local_evento: localEvento || null,
+      tipo_servico: tipoServico || null,
+      numero_evento: numeroEvento || null,
+      situacao: situacao || null
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium">Data do evento</label>
+          <Input
+            type="date"
+            value={dataEvento}
+            onChange={(e) => setDataEvento(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Situação</label>
+          <Select value={situacao} onValueChange={setSituacao}>
+            <SelectTrigger className="mt-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ATIVA">Ativa</SelectItem>
+              <SelectItem value="CONCLUÍDA">Concluída</SelectItem>
+              <SelectItem value="CANCELADA">Cancelada</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium">Horário início</label>
+          <Input
+            type="time"
+            value={horarioInicio}
+            onChange={(e) => setHorarioInicio(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Horário término</label>
+          <Input
+            type="time"
+            value={horarioTermino}
+            onChange={(e) => setHorarioTermino(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+      </div>
+      <div>
+        <label className="text-sm font-medium">Local</label>
+        <Input
+          value={localEvento}
+          onChange={(e) => setLocalEvento(e.target.value)}
+          placeholder="Local do evento"
+          className="mt-1"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Tipo de serviço</label>
+        <Input
+          value={tipoServico}
+          onChange={(e) => setTipoServico(e.target.value)}
+          placeholder="Ex: Policiamento ordinário"
+          className="mt-1"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Número do evento</label>
+        <Input
+          value={numeroEvento}
+          onChange={(e) => setNumeroEvento(e.target.value)}
+          placeholder="Ex: 190.31212.2026"
+          className="mt-1"
+        />
+      </div>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={isSaving}>
+          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar'}
+        </Button>
+      </div>
+    </form>
+  );
+}
 
 export default ControleOS;

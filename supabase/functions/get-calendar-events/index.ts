@@ -1,5 +1,27 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+// CORS: permitir origem do front (Lovable e localhost)
+const getAllowedOrigin = (requestOrigin: string | null): string => {
+  const allowedOrigins = [
+    "https://lovable.dev",
+    "https://preview--gestao-bpma.lovable.app",
+    "https://gestao-bpma.lovable.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:8080",
+    "http://localhost:8081",
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:8081",
+  ];
+  if (requestOrigin && allowedOrigins.some((o) => requestOrigin.startsWith(o.replace(/\/$/, "")))) {
+    return requestOrigin;
+  }
+  if (requestOrigin && (requestOrigin.includes(".lovable.app") || requestOrigin.includes(".lovableproject.com"))) {
+    return requestOrigin;
+  }
+  return allowedOrigins[0];
+};
+
 // Helper function to parse iCal DATE-TIME (YYYYMMDDTHHMMSSZ or YYYYMMDD)
 function parseIcalDate(icalDate: string): Date {
   const year = parseInt(icalDate.substring(0, 4));
@@ -21,6 +43,16 @@ function parseIcalDate(icalDate: string): Date {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get("origin");
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": getAllowedOrigin(origin),
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   const ICAL_URL = "https://calendar.google.com/calendar/ical/soi.bpma%40gmail.com/private-b1d15c8bb4e7822676c4dce01499231f/basic.ics";
 
   try {
@@ -83,12 +115,13 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify(events), {
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
