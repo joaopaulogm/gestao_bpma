@@ -185,28 +185,36 @@ const CrimesComuns = () => {
   }, [editId]);
 
   const loadDimensions = async () => {
+    const supabaseAny = supabase as any;
+    const queries = [
+      () => supabaseAny.from('dim_regiao_administrativa').select('id, nome').order('nome'),
+      () => supabaseAny.from('dim_tipo_de_area').select('*'),
+      () => supabaseAny.from('dim_tipo_penal').select('id, nome').order('nome'),
+      () => supabaseAny.from('dim_desfecho_crime_comum').select('id, nome').order('nome'),
+      () => supabaseAny.from('dim_itens_apreensao').select('*')
+    ];
     try {
-      const [
-        regioesRes,
-        tiposAreaRes,
-        tiposPenaisRes,
-        desfechosRes,
-        itensRes
-      ] = await Promise.all([
-        supabase.from('dim_regiao_administrativa').select('id, nome').order('nome'),
-        supabase.from('dim_tipo_de_area').select('id, "Tipo de Área"'),
-        supabase.from('dim_tipo_penal').select('*').order('nome'),
-        supabase.from('dim_desfecho_crime_comum').select('*').order('nome'),
-        supabase.from('dim_itens_apreensao').select('*')
-      ]);
+      const results = await Promise.allSettled(queries.map(q => q()));
+      const [regioesRes, tiposAreaRes, tiposPenaisRes, desfechosRes, itensRes] = results.map(r =>
+        r.status === 'fulfilled' ? r.value : { data: null, error: r.status === 'rejected' ? r.reason : null }
+      );
 
-      if (regioesRes.data) setRegioes(regioesRes.data);
-      if (tiposAreaRes.data) {
-        setTiposArea(tiposAreaRes.data.map(t => ({ id: t.id, nome: t['Tipo de Área'] || '' })));
+      if (regioesRes?.data) setRegioes(regioesRes.data);
+      if (tiposAreaRes?.data) {
+        setTiposArea(tiposAreaRes.data.map((t: { id: string; nome?: string; 'Tipo de Área'?: string }) => ({
+          id: t.id,
+          nome: t.nome ?? t['Tipo de Área'] ?? ''
+        })));
       }
-      if (tiposPenaisRes.data) setTiposPenais(tiposPenaisRes.data as TipoPenal[]);
-      if (desfechosRes.data) setDesfechos(desfechosRes.data);
-      if (itensRes.data) setItensApreendidos(itensRes.data as unknown as ItemApreendido[]);
+      if (tiposPenaisRes?.data) setTiposPenais(tiposPenaisRes.data as TipoPenal[]);
+      if (desfechosRes?.data) setDesfechos(desfechosRes.data);
+      if (itensRes?.data) setItensApreendidos(itensRes.data as unknown as ItemApreendido[]);
+
+      const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && r.value?.error));
+      if (failed.length > 0) {
+        console.warn('Algumas dimensões não carregaram:', failed);
+        toast.warning('Alguns dados podem estar incompletos. Verifique as opções dos campos.');
+      }
     } catch (error) {
       console.error('Erro ao carregar dimensões:', error);
       toast.error('Erro ao carregar dados');
