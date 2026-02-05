@@ -8,6 +8,7 @@
     "strict": false,
     "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
     "types": []
   },
   "include": ["**/*.ts", "deno-shim.d.ts"],

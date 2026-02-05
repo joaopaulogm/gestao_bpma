@@ -3796,6 +3796,7 @@ export type Database = {
       radio_operador_data: {
         Row: {
           data: Json
+          data_hash: string | null
           id: string
           row_index: number
           sheet_name: string | null
@@ -3803,6 +3804,7 @@ export type Database = {
         }
         Insert: {
           data?: Json
+          data_hash?: string | null
           id?: string
           row_index: number
           sheet_name?: string | null
@@ -3810,6 +3812,7 @@ export type Database = {
         }
         Update: {
           data?: Json
+          data_hash?: string | null
           id?: string
           row_index?: number
           sheet_name?: string | null

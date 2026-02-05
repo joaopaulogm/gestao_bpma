@@ -246,12 +246,21 @@ const RadioOperador: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('sync-radio-operador');
       if (error) throw error;
       if (data?.success) {
-        const total = data.rows_synced ?? 0;
-        const sheets = data.sheets;
-        const msg = sheets?.length
-          ? `Sincronizado: ${sheets.map((s: { sheet: string; rows: number }) => `${s.sheet} (${s.rows})`).join(', ')}`
-          : `${total} linhas importadas.`;
-        toast.success(msg);
+        const inserted = data.rows_inserted ?? 0;
+        const updated = data.rows_updated ?? 0;
+        const unchanged = data.rows_unchanged ?? 0;
+        const deleted = data.rows_deleted ?? 0;
+        
+        const parts: string[] = [];
+        if (inserted > 0) parts.push(`${inserted} novos`);
+        if (updated > 0) parts.push(`${updated} atualizados`);
+        if (deleted > 0) parts.push(`${deleted} removidos`);
+        
+        if (parts.length === 0) {
+          toast.info(`Dados já atualizados (${unchanged} linhas sem alteração)`);
+        } else {
+          toast.success(`Sincronização concluída: ${parts.join(', ')}`);
+        }
         fetchData();
       } else {
         toast.error(data?.error || 'Falha na sincronização');
