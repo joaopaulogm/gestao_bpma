@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Radio,
   RefreshCw,
   Calendar,
   Database,
-  LayoutList,
   FileSpreadsheet,
   Sparkles,
   ChevronRight,
   PawPrint,
   Scale,
+  GripVertical,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,6 +65,146 @@ function sortRowsByDateDesc(
   });
 }
 
+interface ResizableTableProps {
+  headers: string[];
+  dataRows: RadioRow[];
+  headerColor: string;
+  emptyMessage: string;
+}
+
+const ResizableTable: React.FC<ResizableTableProps> = ({
+  headers,
+  dataRows,
+  headerColor,
+  emptyMessage,
+}) => {
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [resizing, setResizing] = useState<string | null>(null);
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(0);
+
+  // Initialize column widths
+  useEffect(() => {
+    const initialWidths: Record<string, number> = {};
+    headers.forEach((h) => {
+      initialWidths[h] = 150;
+    });
+    setColumnWidths(initialWidths);
+  }, [headers]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent, header: string) => {
+    e.preventDefault();
+    setResizing(header);
+    startXRef.current = e.clientX;
+    startWidthRef.current = columnWidths[header] || 150;
+  }, [columnWidths]);
+
+  useEffect(() => {
+    if (!resizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const diff = e.clientX - startXRef.current;
+      const newWidth = Math.max(80, startWidthRef.current + diff);
+      setColumnWidths((prev) => ({
+        ...prev,
+        [resizing]: newWidth,
+      }));
+    };
+
+    const handleMouseUp = () => {
+      setResizing(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [resizing]);
+
+  if (headers.length === 0) {
+    return <p className="text-sm text-muted-foreground py-8 text-center">{emptyMessage}</p>;
+  }
+
+  return (
+    <div className="w-full overflow-x-auto overflow-y-auto max-h-[70vh] rounded-xl border border-border/30">
+      <table className="w-full border-collapse" style={{ minWidth: headers.length * 100 }}>
+        <thead className="sticky top-0 z-10">
+          <tr>
+            {headers.map((h) => (
+              <th
+                key={h}
+                className="text-left px-3 py-3 text-xs font-bold text-white whitespace-nowrap first:pl-4 last:pr-4 border-b border-r border-white/20 last:border-r-0 relative group select-none"
+                style={{
+                  background: headerColor,
+                  width: columnWidths[h] || 150,
+                  minWidth: 80,
+                }}
+              >
+                <span className="flex items-center gap-1 pr-4">
+                  <ChevronRight className="h-3.5 w-3.5 text-white/90 flex-shrink-0" />
+                  <span className="truncate">{h}</span>
+                </span>
+                {/* Resize handle */}
+                <div
+                  className="absolute right-0 top-0 bottom-0 w-4 cursor-col-resize flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-white/20 transition-opacity"
+                  onMouseDown={(e) => handleMouseDown(e, h)}
+                >
+                  <GripVertical className="h-4 w-4 text-white/70" />
+                </div>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {dataRows.length === 0 ? (
+            <tr>
+              <td colSpan={headers.length} className="text-center py-8 text-muted-foreground">
+                Nenhum registro encontrado
+              </td>
+            </tr>
+          ) : (
+            dataRows.map((row, idx) => (
+              <tr
+                key={row.id}
+                className={`
+                  border-b border-border/30
+                  hover:bg-accent/50
+                  transition-colors
+                  ${idx % 2 === 0 ? 'bg-background/50' : 'bg-muted/30'}
+                `}
+              >
+                {headers.map((header) => {
+                  const val = row.data[header];
+                  const display =
+                    val != null && String(val).trim() !== '' ? String(val) : '—';
+                  return (
+                    <td
+                      key={header}
+                      className="px-3 py-2 text-xs text-foreground first:pl-4 last:pr-4 border-r border-border/20 last:border-r-0"
+                      style={{
+                        width: columnWidths[header] || 150,
+                        minWidth: 80,
+                        maxWidth: columnWidths[header] || 150,
+                      }}
+                    >
+                      <div className="truncate" title={display}>
+                        {display}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 const RadioOperador: React.FC = () => {
   const [rows, setRows] = useState<RadioRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,7 +217,7 @@ const RadioOperador: React.FC = () => {
       const { data, error } = await supabase
         .from('radio_operador_data')
         .select('id, synced_at, row_index, sheet_name, data')
-        .order('sheet_name', { nullsFirst: true })
+        .order('sheet_name', { ascending: true })
         .order('row_index', { ascending: true });
 
       if (error) throw error;
@@ -134,15 +274,14 @@ const RadioOperador: React.FC = () => {
     return map;
   }, [rows]);
 
-  const resgatesRows = bySheet.get(SHEET_RESGATES) ?? bySheet.get('Resgates de Fauna') ?? [];
-  const crimesRows = bySheet.get(SHEET_CRIMES) ?? bySheet.get('Crimes Ambientais') ?? [];
+  const resgatesRows = bySheet.get(SHEET_RESGATES) ?? [];
+  const crimesRows = bySheet.get(SHEET_CRIMES) ?? [];
 
   const resgatesHeaderRow = resgatesRows.find((r) => r.row_index === 0);
   const crimesHeaderRow = crimesRows.find((r) => r.row_index === 0);
   const resgatesHeadersBase: string[] = (resgatesHeaderRow?.data?._headers as string[]) || [];
   const crimesHeadersBase: string[] = (crimesHeaderRow?.data?._headers as string[]) || [];
 
-  // Garantir todas as colunas: cabeçalhos + qualquer chave presente nas linhas de dados (como nos HTMLs)
   const resgatesDataRowsRaw = useMemo(() => resgatesRows.filter((r) => r.row_index > 0), [resgatesRows]);
   const crimesDataRowsRaw = useMemo(() => crimesRows.filter((r) => r.row_index > 0), [crimesRows]);
 
@@ -177,101 +316,27 @@ const RadioOperador: React.FC = () => {
 
   const hasData = resgatesHeaders.length > 0 || crimesHeaders.length > 0 || resgatesDataRows.length > 0 || crimesDataRows.length > 0;
 
-  const renderTable = (
-    headers: string[],
-    dataRows: RadioRow[],
-    headerColor: string
-  ) => (
-    <div className="w-full overflow-x-auto overflow-y-auto max-h-[70vh] rounded-xl border border-white/20 dark:border-white/10">
-      <table className="w-full border-collapse" style={{ minWidth: headers.length * 120 }}>
-        <thead className="sticky top-0 z-10">
-          <tr>
-            {headers.map((h, i) => (
-              <th
-                key={i}
-                className="text-left px-3 py-3 text-xs font-bold text-white whitespace-nowrap first:pl-4 last:pr-4 border-b border-r border-white/20 last:border-r-0"
-                style={{
-                  background: headerColor,
-                  minWidth: 100,
-                }}
-              >
-                <span className="flex items-center gap-1">
-                  <ChevronRight className="h-3.5 w-3.5 text-white/90 flex-shrink-0" />
-                  {h}
-                </span>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {dataRows.map((row, idx) => (
-            <tr
-              key={row.id}
-              className={`
-                border-b border-[#daeae3]/60 dark:border-white/10
-                hover:bg-[#daeae3]/40 dark:hover:bg-white/5
-                transition-colors
-                ${idx % 2 === 0 ? 'bg-[#f3f3f3]/70 dark:bg-white/[0.02]' : 'bg-white/50 dark:bg-white/[0.04]'}
-              `}
-            >
-              {headers.map((header, colIdx) => {
-                const val = row.data[header];
-                const display =
-                  val != null && String(val).trim() !== '' ? String(val) : '—';
-                return (
-                  <td
-                    key={colIdx}
-                    className="px-3 py-2 text-xs text-foreground whitespace-nowrap first:pl-4 last:pr-4 border-r border-[#daeae3]/50 dark:border-white/5 last:border-r-0"
-                    style={{ minWidth: 100 }}
-                  >
-                    {display}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-6 min-h-screen">
-      <div
-        className="fixed inset-0 -z-10 opacity-30 pointer-events-none"
-        aria-hidden
-        style={{
-          background:
-            'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.15), transparent), radial-gradient(ellipse 60% 40% at 100% 50%, hsl(142 45% 45% / 0.08), transparent)',
-        }}
-      />
-
-      <Card
-        className="overflow-hidden relative shadow-2xl rounded-2xl
-          bg-gradient-to-br from-white/90 via-white/70 to-white/50 dark:from-white/15 dark:via-white/10 dark:to-white/5
-          backdrop-blur-xl border border-white/40 dark:border-white/10"
-      >
+      {/* Header Card */}
+      <Card className="overflow-hidden relative shadow-lg rounded-2xl bg-card border-border">
         <CardHeader className="relative z-10 pb-2">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
               <div
-                className="p-4 rounded-2xl shadow-lg border border-white/30 dark:border-white/10"
+                className="p-4 rounded-2xl shadow-lg border border-border"
                 style={{
-                  background: 'linear-gradient(135deg, #7e9175 0%, #5a7a52 100%)',
-                  boxShadow: '0 4px 20px rgba(126, 145, 117, 0.35)',
+                  background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%)',
                 }}
               >
-                <Radio className="h-8 w-8 text-white" strokeWidth={2.5} />
+                <Radio className="h-8 w-8 text-primary-foreground" strokeWidth={2.5} />
               </div>
               <div>
                 <CardTitle className="text-2xl text-foreground flex items-center gap-2 flex-wrap">
                   Rádio Operador
-                  <Badge
-                    variant="secondary"
-                    className="font-normal text-xs border border-border/50 bg-white/60 dark:bg-white/10 backdrop-blur-sm"
-                  >
+                  <Badge variant="secondary" className="font-normal text-xs">
                     <Database className="h-3.5 w-3.5 mr-1 inline" />
-                    Planilha 1x/dia
+                    Planilha sincronizada
                   </Badge>
                 </CardTitle>
                 {lastSync && (
@@ -287,7 +352,7 @@ const RadioOperador: React.FC = () => {
               onClick={handleSync}
               disabled={syncing}
               size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all shrink-0 border-0"
+              className="shrink-0"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
               {syncing ? 'Sincronizando...' : 'Atualizar agora'}
@@ -296,29 +361,18 @@ const RadioOperador: React.FC = () => {
         </CardHeader>
       </Card>
 
-      <Card
-        className="overflow-hidden relative shadow-2xl rounded-2xl
-          bg-gradient-to-br from-white/85 via-white/60 to-white/40 dark:from-white/12 dark:via-white/8 dark:to-white/5
-          backdrop-blur-xl border border-white/30 dark:border-white/10"
-      >
+      {/* Data Card with Tabs */}
+      <Card className="overflow-hidden relative shadow-lg rounded-2xl bg-card border-border">
         <CardContent className="p-0 relative z-10">
           {loading ? (
             <div className="flex flex-col justify-center items-center py-20 gap-4">
-              <div
-                className="h-12 w-12 animate-spin rounded-full border-4 border-[#7e9175] border-t-transparent"
-                style={{ boxShadow: '0 0 20px rgba(126, 145, 117, 0.3)' }}
-              />
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
               <p className="text-sm text-muted-foreground">Carregando dados da planilha...</p>
             </div>
           ) : !hasData ? (
             <div className="text-center py-20 px-6">
-              <div
-                className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center border border-white/20"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(126,145,117,0.2) 0%, rgba(90,122,82,0.15) 100%)',
-                }}
-              >
-                <FileSpreadsheet className="h-10 w-10 text-[#7e9175]" />
+              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center border border-border bg-muted/50">
+                <FileSpreadsheet className="h-10 w-10 text-muted-foreground" />
               </div>
               <p className="text-foreground font-medium">Nenhum dado sincronizado ainda</p>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
@@ -328,7 +382,7 @@ const RadioOperador: React.FC = () => {
                 onClick={handleSync}
                 disabled={syncing}
                 variant="outline"
-                className="mt-6 border-[#7e9175]/50 text-[#5a7a52] hover:bg-[#7e9175]/10"
+                className="mt-6"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
                 Importar planilha
@@ -336,17 +390,22 @@ const RadioOperador: React.FC = () => {
             </div>
           ) : (
             <Tabs defaultValue={SHEET_RESGATES} className="w-full">
-              <div className="px-4 py-3 border-b border-white/20 dark:border-white/10 flex flex-wrap items-center gap-3">
-                <LayoutList className="h-4 w-4 text-muted-foreground" />
-                <TabsList className="bg-white/20 dark:bg-white/10 border border-white/20 h-10">
-                  <TabsTrigger value={SHEET_RESGATES} className="data-[state=active]:bg-[#7e9175] data-[state=active]:text-white gap-1.5">
+              <div className="px-4 py-3 border-b border-border flex flex-wrap items-center gap-3">
+                <TabsList className="h-10">
+                  <TabsTrigger
+                    value={SHEET_RESGATES}
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5"
+                  >
                     <PawPrint className="h-4 w-4" />
                     Resgates de Fauna
                     <Badge variant="secondary" className="ml-1 text-xs font-normal">
                       {resgatesDataRows.length}
                     </Badge>
                   </TabsTrigger>
-                  <TabsTrigger value={SHEET_CRIMES} className="data-[state=active]:bg-[#1c4587] data-[state=active]:text-white gap-1.5">
+                  <TabsTrigger
+                    value={SHEET_CRIMES}
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5"
+                  >
                     <Scale className="h-4 w-4" />
                     Crimes Ambientais
                     <Badge variant="secondary" className="ml-1 text-xs font-normal">
@@ -355,27 +414,23 @@ const RadioOperador: React.FC = () => {
                   </TabsTrigger>
                 </TabsList>
               </div>
+
               <TabsContent value={SHEET_RESGATES} className="mt-0 p-4">
-                {resgatesHeaders.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-8">Nenhuma coluna na aba Resgates de Fauna. Sincronize a planilha.</p>
-                ) : (
-                  renderTable(
-                    resgatesHeaders,
-                    resgatesDataRows,
-                    'linear-gradient(180deg, #7e9175 0%, #5a7a52 100%)'
-                  )
-                )}
+                <ResizableTable
+                  headers={resgatesHeaders}
+                  dataRows={resgatesDataRows}
+                  headerColor="linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%)"
+                  emptyMessage="Nenhuma coluna na aba Resgates de Fauna. Sincronize a planilha."
+                />
               </TabsContent>
+
               <TabsContent value={SHEET_CRIMES} className="mt-0 p-4">
-                {crimesHeaders.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-8">Nenhuma coluna na aba Crimes Ambientais. Sincronize a planilha.</p>
-                ) : (
-                  renderTable(
-                    crimesHeaders,
-                    crimesDataRows,
-                    'linear-gradient(180deg, #1c4587 0%, #0f2d5c 100%)'
-                  )
-                )}
+                <ResizableTable
+                  headers={crimesHeaders}
+                  dataRows={crimesDataRows}
+                  headerColor="linear-gradient(180deg, hsl(210 80% 40%) 0%, hsl(210 80% 30%) 100%)"
+                  emptyMessage="Nenhuma coluna na aba Crimes Ambientais. Sincronize a planilha."
+                />
               </TabsContent>
             </Tabs>
           )}
