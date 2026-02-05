@@ -2,13 +2,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-type SupabaseClient = {
-  from: (table: string) => {
-    delete: () => { gte: (col: string, val: number) => Promise<{ error: unknown }> };
-    insert: (data: unknown) => Promise<{ error: unknown }>;
-  };
-};
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -19,6 +12,18 @@ const RANGE = 'A:Z';
 
 /** Nomes das abas para exibição (aba 0 = Resgates de Fauna, aba 1 = Crimes Ambientais) */
 const SHEET_LABELS: [string, string] = ['Resgates de Fauna', 'Crimes Ambientais'];
+
+// Generate a hash for row data to detect changes
+function hashRowData(data: Record<string, unknown>): string {
+  const str = JSON.stringify(data);
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash.toString(36);
+}
 
 async function getServiceAccountToken(): Promise<string> {
   const saJson = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_JSON');
@@ -107,7 +112,7 @@ serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey) as SupabaseClient;
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
     const accessToken = await getServiceAccountToken();
@@ -119,45 +124,95 @@ serve(async (req) => {
       });
     }
 
-    // Remove todos os dados antigos
-    const { error: delError } = await supabase
+    // Buscar dados existentes para comparação incremental
+    const { data: existingData, error: fetchError } = await supabase
       .from('radio_operador_data')
-      .delete()
-      .gte('row_index', -1);
-    if (delError) throw delError;
+      .select('id,row_index,sheet_name,data,data_hash');
+    
+    if (fetchError) {
+      console.error('Error fetching existing data:', fetchError);
+    }
+
+    // Criar mapa de dados existentes por sheet_name + row_index
+    const existingMap = new Map<string, { id: string; data_hash: string }>();
+    const existingArray = existingData as any[] || [];
+    existingArray.forEach((row: any) => {
+      const key = `${row.sheet_name}::${row.row_index}`;
+      existingMap.set(key, { id: row.id, data_hash: row.data_hash || '' });
+    });
 
     const syncedAt = new Date().toISOString();
-    let totalRows = 0;
-    const details: { sheet: string; rows: number; headers: number }[] = [];
+    let totalInserted = 0;
+    let totalUpdated = 0;
+    let totalUnchanged = 0;
+    const details: { sheet: string; inserted: number; updated: number; unchanged: number; headers: number }[] = [];
 
     // Sincronizar até as duas primeiras abas (Resgates de Fauna, Crimes Ambientais)
     const sheetsToSync = sheetNames.slice(0, 2);
+    const currentSheetRows = new Set<string>(); // Track current rows in sheets
+
     for (let s = 0; s < sheetsToSync.length; s++) {
       const sheetTitle = sheetsToSync[s];
       const sheetLabel = SHEET_LABELS[s] ?? sheetTitle;
       const rows = await readSheet(accessToken, sheetTitle, RANGE);
+      
+      let sheetInserted = 0;
+      let sheetUpdated = 0;
+      let sheetUnchanged = 0;
+
       if (rows.length === 0) {
-        details.push({ sheet: sheetLabel, rows: 0, headers: 0 });
+        details.push({ sheet: sheetLabel, inserted: 0, updated: 0, unchanged: 0, headers: 0 });
         continue;
       }
 
-      // Número de colunas = maior quantidade de células em qualquer linha (como nos HTMLs exportados)
+      // Número de colunas = maior quantidade de células em qualquer linha
       const maxCols = Math.max(...rows.map((r: any[]) => (r || []).length), 1);
       const rawFirst = rows[0] || [];
       const headers: string[] = Array.from({ length: maxCols }, (_, idx) => {
         const v = rawFirst[idx];
-        const s = v != null ? String(v).trim() : '';
-        return s || `Coluna ${idx + 1}`;
+        const str = v != null ? String(v).trim() : '';
+        return str || `Coluna ${idx + 1}`;
       });
 
-      const inserts: { synced_at: string; row_index: number; sheet_name: string; data: Record<string, unknown> }[] = [];
+      // Processar header row (row_index = 0)
+      const headerKey = `${sheetLabel}::0`;
+      currentSheetRows.add(headerKey);
+      const headerData = { _headers: headers };
+      const headerHash = hashRowData(headerData);
+      const existingHeader = existingMap.get(headerKey);
 
-      inserts.push({
-        synced_at: syncedAt,
-        row_index: 0,
-        sheet_name: sheetLabel,
-        data: { _headers: headers },
-      });
+      if (!existingHeader) {
+        // Insert new header
+        const { error: insError } = await supabase
+          .from('radio_operador_data')
+          .insert({
+            synced_at: syncedAt,
+            row_index: 0,
+            sheet_name: sheetLabel,
+            data: headerData,
+            data_hash: headerHash,
+          });
+        if (insError) console.error('Error inserting header:', insError);
+        else sheetInserted++;
+      } else if (existingHeader.data_hash !== headerHash) {
+        // Update header
+        const { error: updError } = await supabase
+          .from('radio_operador_data')
+          .update({
+            synced_at: syncedAt,
+            data: headerData,
+            data_hash: headerHash,
+          })
+          .eq('id', existingHeader.id);
+        if (updError) console.error('Error updating header:', updError);
+        else sheetUpdated++;
+      } else {
+        sheetUnchanged++;
+      }
+
+      // Processar data rows
+      const toInsert: any[] = [];
+      const toUpdate: { id: string; data: any }[] = [];
 
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i] || [];
@@ -166,26 +221,101 @@ serve(async (req) => {
           const val = row[colIndex];
           obj[h] = val !== undefined && val !== null && String(val).trim() !== '' ? String(val).trim() : null;
         });
-        inserts.push({ synced_at: syncedAt, row_index: i, sheet_name: sheetLabel, data: obj });
-      }
 
-      if (inserts.length > 0) {
-        const batchSize = 100;
-        for (let i = 0; i < inserts.length; i += batchSize) {
-          const chunk = inserts.slice(i, i + batchSize);
-          const { error: insError } = await supabase.from('radio_operador_data').insert(chunk);
-          if (insError) throw insError;
+        const rowKey = `${sheetLabel}::${i}`;
+        currentSheetRows.add(rowKey);
+        const rowHash = hashRowData(obj);
+        const existingRow = existingMap.get(rowKey);
+
+        if (!existingRow) {
+          // New row
+          toInsert.push({
+            synced_at: syncedAt,
+            row_index: i,
+            sheet_name: sheetLabel,
+            data: obj,
+            data_hash: rowHash,
+          });
+        } else if (existingRow.data_hash !== rowHash) {
+          // Changed row
+          toUpdate.push({
+            id: existingRow.id,
+            data: {
+              synced_at: syncedAt,
+              data: obj,
+              data_hash: rowHash,
+            },
+          });
+        } else {
+          sheetUnchanged++;
         }
       }
 
-      const dataRowCount = inserts.length - 1;
-      totalRows += dataRowCount;
-      details.push({ sheet: sheetLabel, rows: dataRowCount, headers: headers.length });
+      // Batch insert new rows
+      if (toInsert.length > 0) {
+        const batchSize = 100;
+        for (let i = 0; i < toInsert.length; i += batchSize) {
+          const chunk = toInsert.slice(i, i + batchSize);
+          const { error: insError } = await supabase.from('radio_operador_data').insert(chunk);
+          if (insError) {
+            console.error('Error inserting batch:', insError);
+          } else {
+            sheetInserted += chunk.length;
+          }
+        }
+      }
+
+      // Update changed rows
+      for (const upd of toUpdate) {
+        const { error: updError } = await supabase
+          .from('radio_operador_data')
+          .update(upd.data)
+          .eq('id', upd.id);
+        if (updError) {
+          console.error('Error updating row:', updError);
+        } else {
+          sheetUpdated++;
+        }
+      }
+
+      totalInserted += sheetInserted;
+      totalUpdated += sheetUpdated;
+      totalUnchanged += sheetUnchanged;
+      details.push({ sheet: sheetLabel, inserted: sheetInserted, updated: sheetUpdated, unchanged: sheetUnchanged, headers: headers.length });
+    }
+
+    // Remove rows that no longer exist in the spreadsheet
+    const rowsToDelete: string[] = [];
+    existingMap.forEach((value, key) => {
+      if (!currentSheetRows.has(key)) {
+        rowsToDelete.push(value.id);
+      }
+    });
+
+    let totalDeleted = 0;
+    if (rowsToDelete.length > 0) {
+      const batchSize = 100;
+      for (let i = 0; i < rowsToDelete.length; i += batchSize) {
+        const chunk = rowsToDelete.slice(i, i + batchSize);
+        const { error: delError } = await supabase
+          .from('radio_operador_data')
+          .delete()
+          .in('id', chunk);
+        if (delError) {
+          console.error('Error deleting rows:', delError);
+        } else {
+          totalDeleted += chunk.length;
+        }
+      }
     }
 
     return new Response(JSON.stringify({
       success: true,
-      rows_synced: totalRows,
+      rows_synced: totalInserted + totalUpdated,
+      rows_inserted: totalInserted,
+      rows_updated: totalUpdated,
+      rows_unchanged: totalUnchanged,
+      rows_deleted: totalDeleted,
       synced_at: syncedAt,
       sheets: details,
     }), {
