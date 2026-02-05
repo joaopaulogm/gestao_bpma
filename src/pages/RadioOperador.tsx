@@ -10,11 +10,28 @@ import {
   PawPrint,
   Scale,
   GripVertical,
+  Filter,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -65,16 +82,68 @@ function sortRowsByDateDesc(
   });
 }
 
+/** Encontra coluna de data por nome */
+function findDateColumn(headers: string[]): string | null {
+  const col = headers.find(
+    (h) =>
+      /^data$/i.test(String(h).trim()) ||
+      /^dt$/i.test(String(h).trim()) ||
+      /data\s*(do)?\s*(resgate|registro|ocorrência|fato)?/i.test(String(h))
+  );
+  return col ?? null;
+}
+
+/** Encontra coluna de equipe por nome */
+function findEquipeColumn(headers: string[]): string | null {
+  const col = headers.find(
+    (h) => /^equipe$/i.test(String(h).trim()) || /equipe\s*(de)?\s*servi[cç]o?/i.test(String(h))
+  );
+  return col ?? null;
+}
+
+/** Extrai ano, mês (1-12), dia de um valor de data */
+function parseDateParts(
+  val: unknown
+): { year: number; month: number; day: number } | null {
+  if (val == null || val === '') return null;
+  const s = String(val).trim();
+  const ddmmyy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (ddmmyy) {
+    const [, d, m, y] = ddmmyy;
+    const year = y.length === 2 ? 2000 + parseInt(y, 10) : parseInt(y, 10);
+    return {
+      year,
+      month: parseInt(m, 10),
+      day: parseInt(d, 10),
+    };
+  }
+  const iso = Date.parse(s);
+  if (Number.isNaN(iso)) return null;
+  const date = new Date(iso);
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
+  };
+}
+
+const MESES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+];
+
 interface ResizableTableProps {
   headers: string[];
   dataRows: RadioRow[];
   emptyMessage: string;
+  onRowClick?: (row: RadioRow) => void;
 }
 
 const ResizableTable: React.FC<ResizableTableProps> = ({
   headers,
   dataRows,
   emptyMessage,
+  onRowClick,
 }) => {
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [resizing, setResizing] = useState<string | null>(null);
@@ -128,32 +197,46 @@ const ResizableTable: React.FC<ResizableTableProps> = ({
   }
 
   return (
-    <div className="w-full overflow-x-auto overflow-y-auto max-h-[70vh] rounded-2xl border border-border/40 bg-background/80 shadow-sm">
+    <div
+      className="w-full overflow-x-auto overflow-y-auto max-h-[70vh] rounded-2xl overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0.08) 100%)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.2)',
+        border: '1px solid rgba(255,255,255,0.18)',
+      }}
+    >
       <table className="w-full border-collapse" style={{ minWidth: headers.length * 100 }}>
         <thead className="sticky top-0 z-10">
-          <tr className="bg-muted/60 backdrop-blur-sm">
-            {/* Row number column */}
+          <tr
+            style={{
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.08) 100%)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              borderBottom: '1px solid rgba(255,255,255,0.2)',
+            }}
+          >
             <th
-              className="text-left px-3 py-3.5 text-xs font-semibold text-muted-foreground whitespace-nowrap border-b border-r border-border/30 w-16 min-w-[60px]"
+              className="text-left px-4 py-4 text-xs font-semibold uppercase tracking-wider text-foreground/70 whitespace-nowrap w-16 min-w-[56px] first:pl-5"
             >
               #
             </th>
             {headers.map((h) => (
               <th
                 key={h}
-                className="text-left px-3 py-3.5 text-xs font-semibold text-foreground/80 whitespace-nowrap border-b border-r border-border/30 last:border-r-0 relative group select-none"
+                className="text-left px-4 py-4 text-xs font-semibold uppercase tracking-wider text-foreground/80 whitespace-nowrap last:pr-5 relative group select-none"
                 style={{
                   width: columnWidths[h] || 150,
                   minWidth: 80,
                 }}
               >
-                <span className="flex items-center gap-1 pr-4">
+                <span className="flex items-center gap-1.5 pr-4">
                   <span className="truncate">{h}</span>
-                  <ChevronRight className="h-3 w-3 text-muted-foreground/60 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ChevronRight className="h-3 w-3 text-muted-foreground/50 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </span>
-                {/* Resize handle */}
                 <div
-                  className="absolute right-0 top-0 bottom-0 w-4 cursor-col-resize flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-primary/10 transition-opacity"
+                  className="absolute right-0 top-0 bottom-0 w-4 cursor-col-resize flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-r transition-opacity hover:bg-white/10"
                   onMouseDown={(e) => handleMouseDown(e, h)}
                 >
                   <GripVertical className="h-4 w-4 text-muted-foreground/50" />
@@ -165,7 +248,10 @@ const ResizableTable: React.FC<ResizableTableProps> = ({
         <tbody>
           {dataRows.length === 0 ? (
             <tr>
-              <td colSpan={headers.length + 1} className="text-center py-8 text-muted-foreground">
+              <td
+                colSpan={headers.length + 1}
+                className="text-center py-12 text-sm text-muted-foreground/80"
+              >
                 Nenhum registro encontrado
               </td>
             </tr>
@@ -175,21 +261,22 @@ const ResizableTable: React.FC<ResizableTableProps> = ({
               return (
                 <tr
                   key={row.id}
-                  onClick={() => setSelectedRow(isSelected ? null : row.id)}
+                  onClick={() => onRowClick?.(row) ?? setSelectedRow(isSelected ? null : row.id)}
                   className={`
-                    border-b border-border/20
-                    transition-all duration-150 cursor-pointer
-                    ${isSelected 
-                      ? 'bg-primary/10 shadow-[inset_4px_0_0_hsl(var(--primary))]' 
-                      : idx % 2 === 0 
-                        ? 'bg-background hover:bg-muted/40' 
-                        : 'bg-muted/20 hover:bg-muted/40'
+                    transition-all duration-200 cursor-pointer
+                    ${isSelected
+                      ? 'bg-primary/15 shadow-[inset_3px_0_0_hsl(var(--primary))]'
+                      : idx % 2 === 0
+                        ? 'bg-white/[0.02] hover:bg-white/[0.08]'
+                        : 'bg-white/[0.04] hover:bg-white/[0.08]'
                     }
                   `}
+                  style={{
+                    borderBottom: idx < dataRows.length - 1 ? '1px solid rgba(255,255,255,0.06)' : undefined,
+                  }}
                 >
-                  {/* Row number cell */}
-                  <td className="px-3 py-2.5 text-xs font-medium text-muted-foreground border-r border-border/20 w-16">
-                    <span className={`${isSelected ? 'text-primary font-semibold' : ''}`}>
+                  <td className="px-4 py-3.5 text-xs font-medium text-muted-foreground/90 w-16 first:pl-5">
+                    <span className={isSelected ? 'text-primary font-semibold' : ''}>
                       #{row.row_index}
                     </span>
                   </td>
@@ -200,7 +287,7 @@ const ResizableTable: React.FC<ResizableTableProps> = ({
                     return (
                       <td
                         key={header}
-                        className="px-3 py-2.5 text-xs text-foreground border-r border-border/15 last:border-r-0"
+                        className="px-4 py-3.5 text-sm text-foreground/90 last:pr-5"
                         style={{
                           width: columnWidths[header] || 150,
                           minWidth: 80,
@@ -222,11 +309,95 @@ const ResizableTable: React.FC<ResizableTableProps> = ({
     </div>
   );
 };
+export interface RadioFilters {
+  year: string;
+  month: string;
+  day: string;
+  equipe: string;
+}
+
+const EMPTY_FILTERS: RadioFilters = { year: '', month: '', day: '', equipe: '' };
+
+function applyFilters(
+  dataRows: RadioRow[],
+  headers: string[],
+  filters: RadioFilters
+): RadioRow[] {
+  if (Object.values(filters).every((v) => !v)) return dataRows;
+  const dateCol = findDateColumn(headers);
+  const equipeCol = findEquipeColumn(headers);
+
+  return dataRows.filter((row) => {
+    if (filters.year && dateCol) {
+      const parts = parseDateParts(row.data[dateCol]);
+      if (!parts || String(parts.year) !== filters.year) return false;
+    }
+    if (filters.month && dateCol) {
+      const parts = parseDateParts(row.data[dateCol]);
+      if (!parts || String(parts.month) !== filters.month) return false;
+    }
+    if (filters.day && dateCol) {
+      const parts = parseDateParts(row.data[dateCol]);
+      if (!parts || String(parts.day) !== filters.day) return false;
+    }
+    if (filters.equipe && equipeCol) {
+      const val = row.data[equipeCol];
+      const str = val != null ? String(val).trim() : '';
+      if (str !== filters.equipe) return false;
+    }
+    return true;
+  });
+}
+
 const RadioOperador: React.FC = () => {
   const [rows, setRows] = useState<RadioRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [filters, setFilters] = useState<RadioFilters>(EMPTY_FILTERS);
+  const [editingRow, setEditingRow] = useState<RadioRow | null>(null);
+  const [editingHeaders, setEditingHeaders] = useState<string[]>([]);
+  const [editFormData, setEditFormData] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  const openEdit = useCallback((row: RadioRow, headers: string[]) => {
+    setEditingRow(row);
+    setEditingHeaders(headers);
+    setEditFormData(
+      headers.reduce(
+        (acc, h) => ({ ...acc, [h]: String(row.data[h] ?? '').trim() }),
+        {} as Record<string, string>
+      )
+    );
+  }, []);
+
+  const handleSaveEdit = async () => {
+    if (!editingRow) return;
+    setSaving(true);
+    try {
+      const dataToSave: Record<string, unknown> = { ...editingRow.data };
+      editingHeaders.forEach((h) => {
+        const v = editFormData[h];
+        dataToSave[h] = v != null && v.trim() !== '' ? v.trim() : null;
+      });
+      delete (dataToSave as Record<string, unknown>)._headers;
+
+      const { error } = await supabase
+        .from('radio_operador_data')
+        .update({ data: dataToSave })
+        .eq('id', editingRow.id);
+
+      if (error) throw error;
+      toast.success('Registro atualizado.');
+      setEditingRow(null);
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao salvar alterações.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -303,13 +474,14 @@ const RadioOperador: React.FC = () => {
   const resgatesRows = bySheet.get(SHEET_RESGATES) ?? [];
   const crimesRows = bySheet.get(SHEET_CRIMES) ?? [];
 
-  const resgatesHeaderRow = resgatesRows.find((r) => r.row_index === 0);
-  const crimesHeaderRow = crimesRows.find((r) => r.row_index === 0);
+  // L2 da planilha = cabeçalho (row_index 1); L3+ = dados (row_index >= 2)
+  const resgatesHeaderRow = resgatesRows.find((r) => r.row_index === 1);
+  const crimesHeaderRow = crimesRows.find((r) => r.row_index === 1);
   const resgatesHeadersBase: string[] = (resgatesHeaderRow?.data?._headers as string[]) || [];
   const crimesHeadersBase: string[] = (crimesHeaderRow?.data?._headers as string[]) || [];
 
-  const resgatesDataRowsRaw = useMemo(() => resgatesRows.filter((r) => r.row_index > 0), [resgatesRows]);
-  const crimesDataRowsRaw = useMemo(() => crimesRows.filter((r) => r.row_index > 0), [crimesRows]);
+  const resgatesDataRowsRaw = useMemo(() => resgatesRows.filter((r) => r.row_index > 1), [resgatesRows]);
+  const crimesDataRowsRaw = useMemo(() => crimesRows.filter((r) => r.row_index > 1), [crimesRows]);
 
   const resgatesHeaders = useMemo(() => {
     const set = new Set<string>(resgatesHeadersBase);
@@ -339,6 +511,49 @@ const RadioOperador: React.FC = () => {
     () => sortRowsByDateDesc(crimesDataRowsRaw, crimesHeaders),
     [crimesDataRowsRaw, crimesHeaders]
   );
+
+  const resgatesFiltered = useMemo(
+    () => applyFilters(resgatesDataRows, resgatesHeaders, filters),
+    [resgatesDataRows, resgatesHeaders, filters]
+  );
+  const crimesFiltered = useMemo(
+    () => applyFilters(crimesDataRows, crimesHeaders, filters),
+    [crimesDataRows, crimesHeaders, filters]
+  );
+
+  const { uniqueYears, uniqueMonths, uniqueDays, uniqueEquipes } = useMemo(() => {
+    const allRows = [...resgatesDataRows, ...crimesDataRows];
+    const resgatesDateCol = findDateColumn(resgatesHeaders);
+    const crimesDateCol = findDateColumn(crimesHeaders);
+    const resgatesEquipeCol = findEquipeColumn(resgatesHeaders);
+    const crimesEquipeCol = findEquipeColumn(crimesHeaders);
+    const years = new Set<number>();
+    const months = new Set<number>();
+    const days = new Set<number>();
+    const equipes = new Set<string>();
+    for (const row of allRows) {
+      const dateCol = row.sheet_name === SHEET_CRIMES ? crimesDateCol : resgatesDateCol;
+      const equipeCol = row.sheet_name === SHEET_CRIMES ? crimesEquipeCol : resgatesEquipeCol;
+      if (dateCol && row.data[dateCol]) {
+        const parts = parseDateParts(row.data[dateCol]);
+        if (parts) {
+          years.add(parts.year);
+          months.add(parts.month);
+          days.add(parts.day);
+        }
+      }
+      if (equipeCol && row.data[equipeCol]) {
+        const v = row.data[equipeCol];
+        if (v != null && String(v).trim()) equipes.add(String(v).trim());
+      }
+    }
+    return {
+      uniqueYears: [...years].sort((a, b) => b - a).map(String),
+      uniqueMonths: [...months].sort((a, b) => a - b).map(String),
+      uniqueDays: [...days].sort((a, b) => a - b).map(String),
+      uniqueEquipes: [...equipes].sort((a, b) => a.localeCompare(b)),
+    };
+  }, [resgatesDataRows, crimesDataRows, resgatesHeaders, crimesHeaders]);
 
   const hasData = resgatesHeaders.length > 0 || crimesHeaders.length > 0 || resgatesDataRows.length > 0 || crimesDataRows.length > 0;
 
@@ -442,24 +657,232 @@ const RadioOperador: React.FC = () => {
               </div>
 
               <TabsContent value={SHEET_RESGATES} className="mt-0 p-4">
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-end gap-3">
+                    <div className="flex items-center gap-2">
+                      <Filter className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-muted-foreground">Filtros</span>
+                    </div>
+                    <div className="flex flex-wrap items-end gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Ano</Label>
+                        <Select
+                          value={filters.year || '__todos__'}
+                          onValueChange={(v) => setFilters((f) => ({ ...f, year: v === '__todos__' ? '' : v }))}
+                        >
+                          <SelectTrigger className="w-[100px]">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__todos__">Todos</SelectItem>
+                            {uniqueYears.map((y) => (
+                              <SelectItem key={y} value={y}>{y}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Mês</Label>
+                        <Select
+                          value={filters.month || '__todos__'}
+                          onValueChange={(v) => setFilters((f) => ({ ...f, month: v === '__todos__' ? '' : v }))}
+                        >
+                          <SelectTrigger className="w-[130px]">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__todos__">Todos</SelectItem>
+                            {uniqueMonths.map((m) => (
+                              <SelectItem key={m} value={m}>
+                                {MESES[parseInt(m, 10) - 1] ?? m}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Dia</Label>
+                        <Select
+                          value={filters.day || '__todos__'}
+                          onValueChange={(v) => setFilters((f) => ({ ...f, day: v === '__todos__' ? '' : v }))}
+                        >
+                          <SelectTrigger className="w-[80px]">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__todos__">Todos</SelectItem>
+                            {uniqueDays.map((d) => (
+                              <SelectItem key={d} value={d}>{d.padStart(2, '0')}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Equipe</Label>
+                        <Select
+                          value={filters.equipe || '__todos__'}
+                          onValueChange={(v) => setFilters((f) => ({ ...f, equipe: v === '__todos__' ? '' : v }))}
+                        >
+                          <SelectTrigger className="w-[180px] min-w-0">
+                            <SelectValue placeholder="Todas" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__todos__">Todas</SelectItem>
+                            {uniqueEquipes.map((eq) => (
+                              <SelectItem key={eq} value={eq}>{eq}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground"
+                        onClick={() => setFilters(EMPTY_FILTERS)}
+                      >
+                        Limpar filtros
+                      </Button>
+                    </div>
+                  </div>
                 <ResizableTable
                   headers={resgatesHeaders}
-                  dataRows={resgatesDataRows}
+                  dataRows={resgatesFiltered}
                   emptyMessage="Nenhuma coluna na aba Resgates de Fauna. Sincronize a planilha."
+                  onRowClick={(row) => openEdit(row, resgatesHeaders)}
                 />
+                </div>
               </TabsContent>
 
               <TabsContent value={SHEET_CRIMES} className="mt-0 p-4">
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-end gap-3">
+                    <div className="flex items-center gap-2">
+                      <Filter className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-muted-foreground">Filtros</span>
+                    </div>
+                    <div className="flex flex-wrap items-end gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Ano</Label>
+                        <Select
+                          value={filters.year || '__todos__'}
+                          onValueChange={(v) => setFilters((f) => ({ ...f, year: v === '__todos__' ? '' : v }))}
+                        >
+                          <SelectTrigger className="w-[100px]">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__todos__">Todos</SelectItem>
+                            {uniqueYears.map((y) => (
+                              <SelectItem key={y} value={y}>{y}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Mês</Label>
+                        <Select
+                          value={filters.month || '__todos__'}
+                          onValueChange={(v) => setFilters((f) => ({ ...f, month: v === '__todos__' ? '' : v }))}
+                        >
+                          <SelectTrigger className="w-[130px]">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__todos__">Todos</SelectItem>
+                            {uniqueMonths.map((m) => (
+                              <SelectItem key={m} value={m}>
+                                {MESES[parseInt(m, 10) - 1] ?? m}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Dia</Label>
+                        <Select
+                          value={filters.day || '__todos__'}
+                          onValueChange={(v) => setFilters((f) => ({ ...f, day: v === '__todos__' ? '' : v }))}
+                        >
+                          <SelectTrigger className="w-[80px]">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__todos__">Todos</SelectItem>
+                            {uniqueDays.map((d) => (
+                              <SelectItem key={d} value={d}>{d.padStart(2, '0')}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Equipe</Label>
+                        <Select
+                          value={filters.equipe || '__todos__'}
+                          onValueChange={(v) => setFilters((f) => ({ ...f, equipe: v === '__todos__' ? '' : v }))}
+                        >
+                          <SelectTrigger className="w-[180px] min-w-0">
+                            <SelectValue placeholder="Todas" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__todos__">Todas</SelectItem>
+                            {uniqueEquipes.map((eq) => (
+                              <SelectItem key={eq} value={eq}>{eq}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground"
+                        onClick={() => setFilters(EMPTY_FILTERS)}
+                      >
+                        Limpar filtros
+                      </Button>
+                    </div>
+                  </div>
                 <ResizableTable
                   headers={crimesHeaders}
-                  dataRows={crimesDataRows}
+                  dataRows={crimesFiltered}
                   emptyMessage="Nenhuma coluna na aba Crimes Ambientais. Sincronize a planilha."
+                  onRowClick={(row) => openEdit(row, crimesHeaders)}
                 />
+                </div>
               </TabsContent>
             </Tabs>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!editingRow} onOpenChange={(open) => !open && setEditingRow(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Editar ocorrência</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto space-y-3 py-2 pr-2 -mr-2">
+            {editingHeaders.map((header) => (
+              <div key={header} className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">{header}</Label>
+                <Input
+                  value={editFormData[header] ?? ''}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({ ...prev, [header]: e.target.value }))
+                  }
+                  className="text-sm"
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setEditingRow(null)} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

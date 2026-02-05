@@ -98,31 +98,35 @@ serve(async (req) => {
       
       if (!rows.length) { details.push({ sheet: label, inserted: 0, updated: 0 }); continue; }
 
+      // L1 = linha 1 (index 0), L2 = linha 2 (index 1) = cabeçalho, L3+ = dados
+      const headerRowIndex = 1;
+      const firstDataRowIndex = 2;
       const maxCols = Math.max(...rows.map(r => r?.length || 0), 1);
+      const headerSource = rows[headerRowIndex] ?? rows[0];
       const headers: string[] = [];
       for (let i = 0; i < maxCols; i++) {
-        const v = rows[0]?.[i];
+        const v = headerSource?.[i];
         headers.push(v ? String(v).trim() : `Coluna ${i + 1}`);
       }
 
       const toInsert: any[] = [];
       const toUpdate: any[] = [];
 
-      // Header row
-      const hKey = `${label}::0`;
+      // Linha de cabeçalho (L2) guardada com row_index 1
+      const hKey = `${label}::${headerRowIndex}`;
       currentKeys.add(hKey);
       const hData = { _headers: headers };
       const hHash = hashRow(hData);
       const hExist = existingMap.get(hKey);
       
       if (!hExist) {
-        toInsert.push({ synced_at: syncedAt, row_index: 0, sheet_name: label, data: hData, data_hash: hHash });
+        toInsert.push({ synced_at: syncedAt, row_index: headerRowIndex, sheet_name: label, data: hData, data_hash: hHash });
       } else if (hExist.hash !== hHash) {
         toUpdate.push({ id: hExist.id, synced_at: syncedAt, data: hData, data_hash: hHash });
       }
 
-      // Data rows
-      for (let i = 1; i < rows.length; i++) {
+      // Linhas de dados a partir de L3 (row_index 2, 3, ...)
+      for (let i = firstDataRowIndex; i < rows.length; i++) {
         const row = rows[i] || [];
         const obj: Record<string, unknown> = {};
         for (let j = 0; j < headers.length; j++) {
