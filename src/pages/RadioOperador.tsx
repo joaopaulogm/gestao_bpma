@@ -48,17 +48,13 @@ interface RadioRow {
 const SHEET_RESGATES = 'Resgates de Fauna';
 const SHEET_CRIMES = 'Crimes Ambientais';
 
-/** Detecta coluna de data por nome e ordena linhas por data decrescente */
+/** Ordena linhas por data decrescente (usa label para achar coluna de data). */
 function sortRowsByDateDesc(
   dataRows: RadioRow[],
-  headers: string[]
+  headerLabels: string[],
+  headerKeys: string[]
 ): RadioRow[] {
-  const dateCol = headers.find(
-    (h) =>
-      /^data$/i.test(String(h).trim()) ||
-      /^dt$/i.test(String(h).trim()) ||
-      /data\s*(do)?\s*(resgate|registro|ocorrência|fato)?/i.test(String(h))
-  );
+  const dateCol = findDateColumnKey(headerLabels, headerKeys);
   if (!dateCol || dataRows.length === 0) return dataRows;
 
   const parseDate = (val: unknown): number => {
@@ -82,23 +78,24 @@ function sortRowsByDateDesc(
   });
 }
 
-/** Encontra coluna de data por nome */
-function findDateColumn(headers: string[]): string | null {
-  const col = headers.find(
-    (h) =>
-      /^data$/i.test(String(h).trim()) ||
-      /^dt$/i.test(String(h).trim()) ||
-      /data\s*(do)?\s*(resgate|registro|ocorrência|fato)?/i.test(String(h))
+/** Dado labels (ex.: "Data", "Equipe") e keys (ex.: "Coluna 1", "Coluna 2"), devolve a key da coluna de data. */
+function findDateColumnKey(labels: string[], keys: string[]): string | null {
+  const i = labels.findIndex(
+    (label) =>
+      /^data$/i.test(String(label).trim()) ||
+      /^dt$/i.test(String(label).trim()) ||
+      /data\s*(do)?\s*(resgate|registro|ocorrência|fato)?/i.test(String(label))
   );
-  return col ?? null;
+  return i >= 0 && keys[i] != null ? keys[i] : null;
 }
 
-/** Encontra coluna de equipe por nome */
-function findEquipeColumn(headers: string[]): string | null {
-  const col = headers.find(
-    (h) => /^equipe$/i.test(String(h).trim()) || /equipe\s*(de)?\s*servi[cç]o?/i.test(String(h))
+/** Dado labels e keys, devolve a key da coluna de equipe. */
+function findEquipeColumnKey(labels: string[], keys: string[]): string | null {
+  const i = labels.findIndex(
+    (label) =>
+      /^equipe$/i.test(String(label).trim()) || /equipe\s*(de)?\s*servi[cç]o?/i.test(String(label))
   );
-  return col ?? null;
+  return i >= 0 && keys[i] != null ? keys[i] : null;
 }
 
 /** Extrai ano, mês (1-12), dia de um valor de data */
@@ -133,14 +130,18 @@ const MESES = [
 ];
 
 interface ResizableTableProps {
-  headers: string[];
+  /** Chaves para ler row.data[key]; mesma ordem que headerLabels */
+  headerKeys: string[];
+  /** Rótulos exibidos no cabeçalho da tabela (nomes das colunas) */
+  headerLabels: string[];
   dataRows: RadioRow[];
   emptyMessage: string;
   onRowClick?: (row: RadioRow) => void;
 }
 
 const ResizableTable: React.FC<ResizableTableProps> = ({
-  headers,
+  headerKeys,
+  headerLabels,
   dataRows,
   emptyMessage,
   onRowClick,
@@ -151,20 +152,19 @@ const ResizableTable: React.FC<ResizableTableProps> = ({
   const startXRef = useRef(0);
   const startWidthRef = useRef(0);
 
-  // Initialize column widths
   useEffect(() => {
     const initialWidths: Record<string, number> = {};
-    headers.forEach((h) => {
-      initialWidths[h] = 150;
+    headerKeys.forEach((k) => {
+      initialWidths[k] = 150;
     });
     setColumnWidths(initialWidths);
-  }, [headers]);
+  }, [headerKeys]);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent, header: string) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent, key: string) => {
     e.preventDefault();
-    setResizing(header);
+    setResizing(key);
     startXRef.current = e.clientX;
-    startWidthRef.current = columnWidths[header] || 150;
+    startWidthRef.current = columnWidths[key] || 150;
   }, [columnWidths]);
 
   useEffect(() => {
@@ -192,7 +192,7 @@ const ResizableTable: React.FC<ResizableTableProps> = ({
     };
   }, [resizing]);
 
-  if (headers.length === 0) {
+  if (headerKeys.length === 0) {
     return <p className="text-sm text-muted-foreground py-8 text-center">{emptyMessage}</p>;
   }
 
@@ -207,7 +207,7 @@ const ResizableTable: React.FC<ResizableTableProps> = ({
         border: '1px solid rgba(255,255,255,0.18)',
       }}
     >
-      <table className="w-full border-collapse" style={{ minWidth: headers.length * 100 }}>
+      <table className="w-full border-collapse" style={{ minWidth: headerKeys.length * 100 }}>
         <thead className="sticky top-0 z-10">
           <tr
             style={{
@@ -222,34 +222,37 @@ const ResizableTable: React.FC<ResizableTableProps> = ({
             >
               #
             </th>
-            {headers.map((h) => (
-              <th
-                key={h}
-                className="text-left px-4 py-4 text-xs font-semibold uppercase tracking-wider text-foreground/80 whitespace-nowrap last:pr-5 relative group select-none"
-                style={{
-                  width: columnWidths[h] || 150,
-                  minWidth: 80,
-                }}
-              >
-                <span className="flex items-center gap-1.5 pr-4">
-                  <span className="truncate">{h}</span>
-                  <ChevronRight className="h-3 w-3 text-muted-foreground/50 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </span>
-                <div
-                  className="absolute right-0 top-0 bottom-0 w-4 cursor-col-resize flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-r transition-opacity hover:bg-white/10"
-                  onMouseDown={(e) => handleMouseDown(e, h)}
+            {headerLabels.map((label, i) => {
+              const key = headerKeys[i];
+              return (
+                <th
+                  key={key ?? i}
+                  className="text-left px-4 py-4 text-xs font-semibold uppercase tracking-wider text-foreground/80 whitespace-nowrap last:pr-5 relative group select-none"
+                  style={{
+                    width: columnWidths[key] || 150,
+                    minWidth: 80,
+                  }}
                 >
-                  <GripVertical className="h-4 w-4 text-muted-foreground/50" />
-                </div>
-              </th>
-            ))}
+                  <span className="flex items-center gap-1.5 pr-4">
+                    <span className="truncate">{label}</span>
+                    <ChevronRight className="h-3 w-3 text-muted-foreground/50 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </span>
+                  <div
+                    className="absolute right-0 top-0 bottom-0 w-4 cursor-col-resize flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-r transition-opacity hover:bg-white/10"
+                    onMouseDown={(e) => handleMouseDown(e, key)}
+                  >
+                    <GripVertical className="h-4 w-4 text-muted-foreground/50" />
+                  </div>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
           {dataRows.length === 0 ? (
             <tr>
               <td
-                colSpan={headers.length + 1}
+                colSpan={headerKeys.length + 1}
                 className="text-center py-12 text-sm text-muted-foreground/80"
               >
                 Nenhum registro encontrado
@@ -280,18 +283,18 @@ const ResizableTable: React.FC<ResizableTableProps> = ({
                       #{row.row_index}
                     </span>
                   </td>
-                  {headers.map((header) => {
-                    const val = row.data[header];
+                  {headerKeys.map((key) => {
+                    const val = row.data[key];
                     const display =
                       val != null && String(val).trim() !== '' ? String(val) : '—';
                     return (
                       <td
-                        key={header}
+                        key={key}
                         className="px-4 py-3.5 text-sm text-foreground/90 last:pr-5"
                         style={{
-                          width: columnWidths[header] || 150,
+                          width: columnWidths[key] || 150,
                           minWidth: 80,
-                          maxWidth: columnWidths[header] || 150,
+                          maxWidth: columnWidths[key] || 150,
                         }}
                       >
                         <div className="truncate" title={display}>
@@ -320,12 +323,13 @@ const EMPTY_FILTERS: RadioFilters = { year: '', month: '', day: '', equipe: '' }
 
 function applyFilters(
   dataRows: RadioRow[],
-  headers: string[],
+  headerKeys: string[],
+  headerLabels: string[],
   filters: RadioFilters
 ): RadioRow[] {
   if (Object.values(filters).every((v) => !v)) return dataRows;
-  const dateCol = findDateColumn(headers);
-  const equipeCol = findEquipeColumn(headers);
+  const dateCol = findDateColumnKey(headerLabels, headerKeys);
+  const equipeCol = findEquipeColumnKey(headerLabels, headerKeys);
 
   return dataRows.filter((row) => {
     if (filters.year && dateCol) {
@@ -356,16 +360,18 @@ const RadioOperador: React.FC = () => {
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [filters, setFilters] = useState<RadioFilters>(EMPTY_FILTERS);
   const [editingRow, setEditingRow] = useState<RadioRow | null>(null);
-  const [editingHeaders, setEditingHeaders] = useState<string[]>([]);
+  const [editingHeaderKeys, setEditingHeaderKeys] = useState<string[]>([]);
+  const [editingHeaderLabels, setEditingHeaderLabels] = useState<string[]>([]);
   const [editFormData, setEditFormData] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
-  const openEdit = useCallback((row: RadioRow, headers: string[]) => {
+  const openEdit = useCallback((row: RadioRow, headerKeys: string[], headerLabels: string[]) => {
     setEditingRow(row);
-    setEditingHeaders(headers);
+    setEditingHeaderKeys(headerKeys);
+    setEditingHeaderLabels(headerLabels);
     setEditFormData(
-      headers.reduce(
-        (acc, h) => ({ ...acc, [h]: String(row.data[h] ?? '').trim() }),
+      headerKeys.reduce(
+        (acc, k) => ({ ...acc, [k]: String(row.data[k] ?? '').trim() }),
         {} as Record<string, string>
       )
     );
@@ -376,9 +382,9 @@ const RadioOperador: React.FC = () => {
     setSaving(true);
     try {
       const dataToSave: Record<string, unknown> = { ...editingRow.data };
-      editingHeaders.forEach((h) => {
-        const v = editFormData[h];
-        dataToSave[h] = v != null && v.trim() !== '' ? v.trim() : null;
+      editingHeaderKeys.forEach((k) => {
+        const v = editFormData[k];
+        dataToSave[k] = v != null && v.trim() !== '' ? v.trim() : null;
       });
       delete (dataToSave as Record<string, unknown>)._headers;
 
@@ -474,59 +480,81 @@ const RadioOperador: React.FC = () => {
   const resgatesRows = bySheet.get(SHEET_RESGATES) ?? [];
   const crimesRows = bySheet.get(SHEET_CRIMES) ?? [];
 
-  // L2 da planilha = cabeçalho (row_index 1); L3+ = dados (row_index >= 2)
-  const resgatesHeaderRow = resgatesRows.find((r) => r.row_index === 1);
-  const crimesHeaderRow = crimesRows.find((r) => r.row_index === 1);
-  const resgatesHeadersBase: string[] = (resgatesHeaderRow?.data?._headers as string[]) || [];
-  const crimesHeadersBase: string[] = (crimesHeaderRow?.data?._headers as string[]) || [];
+  // Formato novo: row_index 1 tem _headers (nomes das colunas). Formato antigo: row_index 0 tem _headers (Coluna 1, 2...), row_index 1 tem os nomes reais nos VALORES.
+  const resgatesRow0 = resgatesRows.find((r) => r.row_index === 0);
+  const resgatesRow1 = resgatesRows.find((r) => r.row_index === 1);
+  const crimesRow0 = crimesRows.find((r) => r.row_index === 0);
+  const crimesRow1 = crimesRows.find((r) => r.row_index === 1);
 
   const resgatesDataRowsRaw = useMemo(() => resgatesRows.filter((r) => r.row_index > 1), [resgatesRows]);
   const crimesDataRowsRaw = useMemo(() => crimesRows.filter((r) => r.row_index > 1), [crimesRows]);
 
-  const resgatesHeaders = useMemo(() => {
-    const set = new Set<string>(resgatesHeadersBase);
+  const { resgatesHeaderKeys, resgatesHeaderLabels } = useMemo(() => {
+    const row1Headers = (resgatesRow1?.data?._headers as string[]) || [];
+    if (row1Headers.length > 0) {
+      return { resgatesHeaderKeys: row1Headers, resgatesHeaderLabels: row1Headers };
+    }
+    const row0Headers: string[] = (resgatesRow0?.data?._headers as string[]) || [];
+    if (row0Headers.length > 0 && resgatesRow1?.data) {
+      const labels = row0Headers.map((k) => {
+        const v = resgatesRow1.data[k];
+        return v != null && String(v).trim() !== '' ? String(v).trim() : k;
+      });
+      return { resgatesHeaderKeys: row0Headers, resgatesHeaderLabels: labels };
+    }
+    const set = new Set<string>();
     resgatesDataRowsRaw.forEach((r) => {
       Object.keys(r.data || {}).filter((k) => k !== '_headers').forEach((k) => set.add(k));
     });
-    return resgatesHeadersBase.length > 0
-      ? [...resgatesHeadersBase, ...[...set].filter((k) => !resgatesHeadersBase.includes(k))]
-      : [...set];
-  }, [resgatesHeadersBase, resgatesDataRowsRaw]);
+    const keys = [...set];
+    return { resgatesHeaderKeys: keys, resgatesHeaderLabels: keys };
+  }, [resgatesRow0, resgatesRow1, resgatesDataRowsRaw]);
 
-  const crimesHeaders = useMemo(() => {
-    const set = new Set<string>(crimesHeadersBase);
+  const { crimesHeaderKeys, crimesHeaderLabels } = useMemo(() => {
+    const row1Headers = (crimesRow1?.data?._headers as string[]) || [];
+    if (row1Headers.length > 0) {
+      return { crimesHeaderKeys: row1Headers, crimesHeaderLabels: row1Headers };
+    }
+    const row0Headers: string[] = (crimesRow0?.data?._headers as string[]) || [];
+    if (row0Headers.length > 0 && crimesRow1?.data) {
+      const labels = row0Headers.map((k) => {
+        const v = crimesRow1.data[k];
+        return v != null && String(v).trim() !== '' ? String(v).trim() : k;
+      });
+      return { crimesHeaderKeys: row0Headers, crimesHeaderLabels: labels };
+    }
+    const set = new Set<string>();
     crimesDataRowsRaw.forEach((r) => {
       Object.keys(r.data || {}).filter((k) => k !== '_headers').forEach((k) => set.add(k));
     });
-    return crimesHeadersBase.length > 0
-      ? [...crimesHeadersBase, ...[...set].filter((k) => !crimesHeadersBase.includes(k))]
-      : [...set];
-  }, [crimesHeadersBase, crimesDataRowsRaw]);
+    const keys = [...set];
+    return { crimesHeaderKeys: keys, crimesHeaderLabels: keys };
+  }, [crimesRow0, crimesRow1, crimesDataRowsRaw]);
 
   const resgatesDataRows = useMemo(
-    () => sortRowsByDateDesc(resgatesDataRowsRaw, resgatesHeaders),
-    [resgatesDataRowsRaw, resgatesHeaders]
+    () => sortRowsByDateDesc(resgatesDataRowsRaw, resgatesHeaderLabels, resgatesHeaderKeys),
+    [resgatesDataRowsRaw, resgatesHeaderLabels, resgatesHeaderKeys]
   );
   const crimesDataRows = useMemo(
-    () => sortRowsByDateDesc(crimesDataRowsRaw, crimesHeaders),
-    [crimesDataRowsRaw, crimesHeaders]
+    () => sortRowsByDateDesc(crimesDataRowsRaw, crimesHeaderLabels, crimesHeaderKeys),
+    [crimesDataRowsRaw, crimesHeaderLabels, crimesHeaderKeys]
   );
 
   const resgatesFiltered = useMemo(
-    () => applyFilters(resgatesDataRows, resgatesHeaders, filters),
-    [resgatesDataRows, resgatesHeaders, filters]
+    () => applyFilters(resgatesDataRows, resgatesHeaderKeys, resgatesHeaderLabels, filters),
+    [resgatesDataRows, resgatesHeaderKeys, resgatesHeaderLabels, filters]
   );
   const crimesFiltered = useMemo(
-    () => applyFilters(crimesDataRows, crimesHeaders, filters),
-    [crimesDataRows, crimesHeaders, filters]
+    () => applyFilters(crimesDataRows, crimesHeaderKeys, crimesHeaderLabels, filters),
+    [crimesDataRows, crimesHeaderKeys, crimesHeaderLabels, filters]
   );
 
   const { uniqueYears, uniqueMonths, uniqueDays, uniqueEquipes } = useMemo(() => {
     const allRows = [...resgatesDataRows, ...crimesDataRows];
-    const resgatesDateCol = findDateColumn(resgatesHeaders);
-    const crimesDateCol = findDateColumn(crimesHeaders);
-    const resgatesEquipeCol = findEquipeColumn(resgatesHeaders);
-    const crimesEquipeCol = findEquipeColumn(crimesHeaders);
+    const resgatesDateCol = findDateColumnKey(resgatesHeaderLabels, resgatesHeaderKeys);
+    const crimesDateCol = findDateColumnKey(crimesHeaderLabels, crimesHeaderKeys);
+    const resgatesEquipeCol = findEquipeColumnKey(resgatesHeaderLabels, resgatesHeaderKeys);
+    const crimesEquipeCol = findEquipeColumnKey(crimesHeaderLabels, crimesHeaderKeys);
     const years = new Set<number>();
     const months = new Set<number>();
     const days = new Set<number>();
@@ -553,9 +581,9 @@ const RadioOperador: React.FC = () => {
       uniqueDays: [...days].sort((a, b) => a - b).map(String),
       uniqueEquipes: [...equipes].sort((a, b) => a.localeCompare(b)),
     };
-  }, [resgatesDataRows, crimesDataRows, resgatesHeaders, crimesHeaders]);
+  }, [resgatesDataRows, crimesDataRows, resgatesHeaderLabels, resgatesHeaderKeys, crimesHeaderLabels, crimesHeaderKeys]);
 
-  const hasData = resgatesHeaders.length > 0 || crimesHeaders.length > 0 || resgatesDataRows.length > 0 || crimesDataRows.length > 0;
+  const hasData = resgatesHeaderKeys.length > 0 || crimesHeaderKeys.length > 0 || resgatesDataRows.length > 0 || crimesDataRows.length > 0;
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-6 min-h-screen">
@@ -745,10 +773,11 @@ const RadioOperador: React.FC = () => {
                     </div>
                   </div>
                 <ResizableTable
-                  headers={resgatesHeaders}
+                  headerKeys={resgatesHeaderKeys}
+                  headerLabels={resgatesHeaderLabels}
                   dataRows={resgatesFiltered}
                   emptyMessage="Nenhuma coluna na aba Resgates de Fauna. Sincronize a planilha."
-                  onRowClick={(row) => openEdit(row, resgatesHeaders)}
+                  onRowClick={(row) => openEdit(row, resgatesHeaderKeys, resgatesHeaderLabels)}
                 />
                 </div>
               </TabsContent>
@@ -842,10 +871,11 @@ const RadioOperador: React.FC = () => {
                     </div>
                   </div>
                 <ResizableTable
-                  headers={crimesHeaders}
+                  headerKeys={crimesHeaderKeys}
+                  headerLabels={crimesHeaderLabels}
                   dataRows={crimesFiltered}
                   emptyMessage="Nenhuma coluna na aba Crimes Ambientais. Sincronize a planilha."
-                  onRowClick={(row) => openEdit(row, crimesHeaders)}
+                  onRowClick={(row) => openEdit(row, crimesHeaderKeys, crimesHeaderLabels)}
                 />
                 </div>
               </TabsContent>
@@ -860,13 +890,15 @@ const RadioOperador: React.FC = () => {
             <DialogTitle>Editar ocorrência</DialogTitle>
           </DialogHeader>
           <div className="overflow-y-auto space-y-3 py-2 pr-2 -mr-2">
-            {editingHeaders.map((header) => (
-              <div key={header} className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">{header}</Label>
+            {editingHeaderKeys.map((key, i) => (
+              <div key={key} className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  {editingHeaderLabels[i] ?? key}
+                </Label>
                 <Input
-                  value={editFormData[header] ?? ''}
+                  value={editFormData[key] ?? ''}
                   onChange={(e) =>
-                    setEditFormData((prev) => ({ ...prev, [header]: e.target.value }))
+                    setEditFormData((prev) => ({ ...prev, [key]: e.target.value }))
                   }
                   className="text-sm"
                 />
