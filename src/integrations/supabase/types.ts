@@ -3798,18 +3798,21 @@ export type Database = {
           data: Json
           id: string
           row_index: number
+          sheet_name: string | null
           synced_at: string
         }
         Insert: {
           data?: Json
           id?: string
           row_index: number
+          sheet_name?: string | null
           synced_at?: string
         }
         Update: {
           data?: Json
           id?: string
           row_index?: number
+          sheet_name?: string | null
           synced_at?: string
         }
         Relationships: []

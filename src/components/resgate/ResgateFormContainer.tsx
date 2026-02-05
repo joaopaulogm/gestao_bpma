@@ -24,7 +24,7 @@ const ResgateFormContainer = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const editingId = searchParams.get('editar');
-  const isFromEditPage = location.state?.fromEdit || false;
+  const isFromEditPage = (location.state as any)?.fromEdit || false;
   
   const {
     isEditing,

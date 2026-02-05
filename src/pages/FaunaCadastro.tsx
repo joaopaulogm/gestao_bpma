@@ -36,7 +36,7 @@ const TIPOS_FAUNA = ['Silvestre', 'Exótico'];
 
 const FaunaCadastro = () => {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const queryClient = useQueryClient();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
