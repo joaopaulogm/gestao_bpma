@@ -26,7 +26,7 @@ export const useResgateFormEdit = (
   useEffect(() => {
     if (editingId) {
       // Check for registro in location state
-      const registroFromState = location.state?.registro as Registro | undefined;
+      const registroFromState = (location.state as any)?.registro as Registro | undefined;
       
       if (registroFromState) {
         console.log("Registro encontrado no estado da navegação:", registroFromState);

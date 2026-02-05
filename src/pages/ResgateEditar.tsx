@@ -24,7 +24,7 @@ const selectResgate = (desfechoTable: string) => `
 `;
 
 const ResgateEditar = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [registro, setRegistro] = useState<Registro | null>(null);
   const navigate = useNavigate();
@@ -164,9 +164,7 @@ const ResgateEditar = () => {
 
         setRegistro(processedRegistro);
 
-        navigate(`/secao-operacional/resgate-cadastro?editar=${id}`, {
-          state: { registro: processedRegistro, fromEdit: true },
-        });
+        navigate(`/secao-operacional/resgate-cadastro?editar=${id}`);
       } catch (error: any) {
         console.error('❌ Erro ao buscar registro:', error);
         const errorMessage = error?.message || 'Erro desconhecido ao carregar o registro';

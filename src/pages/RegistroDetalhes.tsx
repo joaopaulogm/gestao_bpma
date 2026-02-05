@@ -22,7 +22,7 @@ import InformacoesDestinacaoCard from '@/components/registros/InformacoesDestina
 import { Registro } from '@/types/hotspots';
 
 const RegistroDetalhes = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
   const [registro, setRegistro] = useState<Registro | null>(null);
   const [isLoading, setIsLoading] = useState(true);

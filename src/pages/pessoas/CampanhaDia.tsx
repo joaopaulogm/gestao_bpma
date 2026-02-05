@@ -10,7 +10,7 @@ import { CampanhaDayTeams } from '@/components/campanha/CampanhaDayTeams';
 import { EditTeamDialog } from '@/components/campanha/EditTeamDialog';
 
 const CampanhaDia: React.FC = () => {
-  const { data: dataParam } = useParams<{ data: string }>();
+  const { data: dataParam } = useParams();
   const navigate = useNavigate();
   
   const [editDialogOpen, setEditDialogOpen] = useState(false);
