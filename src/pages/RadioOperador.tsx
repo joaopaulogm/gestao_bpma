@@ -68,18 +68,17 @@ function sortRowsByDateDesc(
 interface ResizableTableProps {
   headers: string[];
   dataRows: RadioRow[];
-  headerColor: string;
   emptyMessage: string;
 }
 
 const ResizableTable: React.FC<ResizableTableProps> = ({
   headers,
   dataRows,
-  headerColor,
   emptyMessage,
 }) => {
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [resizing, setResizing] = useState<string | null>(null);
+  const [selectedRow, setSelectedRow] = useState<string | null>(null);
   const startXRef = useRef(0);
   const startWidthRef = useRef(0);
 
@@ -129,30 +128,35 @@ const ResizableTable: React.FC<ResizableTableProps> = ({
   }
 
   return (
-    <div className="w-full overflow-x-auto overflow-y-auto max-h-[70vh] rounded-xl border border-border/30">
+    <div className="w-full overflow-x-auto overflow-y-auto max-h-[70vh] rounded-2xl border border-border/40 bg-background/80 shadow-sm">
       <table className="w-full border-collapse" style={{ minWidth: headers.length * 100 }}>
         <thead className="sticky top-0 z-10">
-          <tr>
+          <tr className="bg-muted/60 backdrop-blur-sm">
+            {/* Row number column */}
+            <th
+              className="text-left px-3 py-3.5 text-xs font-semibold text-muted-foreground whitespace-nowrap border-b border-r border-border/30 w-16 min-w-[60px]"
+            >
+              #
+            </th>
             {headers.map((h) => (
               <th
                 key={h}
-                className="text-left px-3 py-3 text-xs font-bold text-white whitespace-nowrap first:pl-4 last:pr-4 border-b border-r border-white/20 last:border-r-0 relative group select-none"
+                className="text-left px-3 py-3.5 text-xs font-semibold text-foreground/80 whitespace-nowrap border-b border-r border-border/30 last:border-r-0 relative group select-none"
                 style={{
-                  background: headerColor,
                   width: columnWidths[h] || 150,
                   minWidth: 80,
                 }}
               >
                 <span className="flex items-center gap-1 pr-4">
-                  <ChevronRight className="h-3.5 w-3.5 text-white/90 flex-shrink-0" />
                   <span className="truncate">{h}</span>
+                  <ChevronRight className="h-3 w-3 text-muted-foreground/60 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </span>
                 {/* Resize handle */}
                 <div
-                  className="absolute right-0 top-0 bottom-0 w-4 cursor-col-resize flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-white/20 transition-opacity"
+                  className="absolute right-0 top-0 bottom-0 w-4 cursor-col-resize flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-primary/10 transition-opacity"
                   onMouseDown={(e) => handleMouseDown(e, h)}
                 >
-                  <GripVertical className="h-4 w-4 text-white/70" />
+                  <GripVertical className="h-4 w-4 text-muted-foreground/50" />
                 </div>
               </th>
             ))}
@@ -161,50 +165,63 @@ const ResizableTable: React.FC<ResizableTableProps> = ({
         <tbody>
           {dataRows.length === 0 ? (
             <tr>
-              <td colSpan={headers.length} className="text-center py-8 text-muted-foreground">
+              <td colSpan={headers.length + 1} className="text-center py-8 text-muted-foreground">
                 Nenhum registro encontrado
               </td>
             </tr>
           ) : (
-            dataRows.map((row, idx) => (
-              <tr
-                key={row.id}
-                className={`
-                  border-b border-border/30
-                  hover:bg-accent/50
-                  transition-colors
-                  ${idx % 2 === 0 ? 'bg-background/50' : 'bg-muted/30'}
-                `}
-              >
-                {headers.map((header) => {
-                  const val = row.data[header];
-                  const display =
-                    val != null && String(val).trim() !== '' ? String(val) : '—';
-                  return (
-                    <td
-                      key={header}
-                      className="px-3 py-2 text-xs text-foreground first:pl-4 last:pr-4 border-r border-border/20 last:border-r-0"
-                      style={{
-                        width: columnWidths[header] || 150,
-                        minWidth: 80,
-                        maxWidth: columnWidths[header] || 150,
-                      }}
-                    >
-                      <div className="truncate" title={display}>
-                        {display}
-                      </div>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))
+            dataRows.map((row, idx) => {
+              const isSelected = selectedRow === row.id;
+              return (
+                <tr
+                  key={row.id}
+                  onClick={() => setSelectedRow(isSelected ? null : row.id)}
+                  className={`
+                    border-b border-border/20
+                    transition-all duration-150 cursor-pointer
+                    ${isSelected 
+                      ? 'bg-primary/10 shadow-[inset_4px_0_0_hsl(var(--primary))]' 
+                      : idx % 2 === 0 
+                        ? 'bg-background hover:bg-muted/40' 
+                        : 'bg-muted/20 hover:bg-muted/40'
+                    }
+                  `}
+                >
+                  {/* Row number cell */}
+                  <td className="px-3 py-2.5 text-xs font-medium text-muted-foreground border-r border-border/20 w-16">
+                    <span className={`${isSelected ? 'text-primary font-semibold' : ''}`}>
+                      #{row.row_index}
+                    </span>
+                  </td>
+                  {headers.map((header) => {
+                    const val = row.data[header];
+                    const display =
+                      val != null && String(val).trim() !== '' ? String(val) : '—';
+                    return (
+                      <td
+                        key={header}
+                        className="px-3 py-2.5 text-xs text-foreground border-r border-border/15 last:border-r-0"
+                        style={{
+                          width: columnWidths[header] || 150,
+                          minWidth: 80,
+                          maxWidth: columnWidths[header] || 150,
+                        }}
+                      >
+                        <div className="truncate" title={display}>
+                          {display}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
     </div>
   );
 };
-
 const RadioOperador: React.FC = () => {
   const [rows, setRows] = useState<RadioRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -428,7 +445,6 @@ const RadioOperador: React.FC = () => {
                 <ResizableTable
                   headers={resgatesHeaders}
                   dataRows={resgatesDataRows}
-                  headerColor="linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%)"
                   emptyMessage="Nenhuma coluna na aba Resgates de Fauna. Sincronize a planilha."
                 />
               </TabsContent>
@@ -437,7 +453,6 @@ const RadioOperador: React.FC = () => {
                 <ResizableTable
                   headers={crimesHeaders}
                   dataRows={crimesDataRows}
-                  headerColor="linear-gradient(180deg, hsl(210 80% 40%) 0%, hsl(210 80% 30%) 100%)"
                   emptyMessage="Nenhuma coluna na aba Crimes Ambientais. Sincronize a planilha."
                 />
               </TabsContent>
