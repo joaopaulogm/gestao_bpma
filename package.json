@@ -16,7 +16,8 @@
     "migrate-estatisticas": "tsx scripts/run-migration-estatisticas.ts",
     "executar-migrations-auto": "tsx scripts/executar-migrations-auto.ts",
     "sincronizar-user-roles": "tsx scripts/executar-sincronizacao-user-roles.ts",
-    "configurar-secrets-google": "tsx scripts/configurar-secrets-google.ts"
+    "configurar-secrets-google": "tsx scripts/configurar-secrets-google.ts",
+    "seed-radio-operador": "tsx scripts/seed_radio_operador_from_xlsx.ts"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.0.2",
@@ -51,6 +52,7 @@
     "@radix-ui/react-tooltip": "^1.1.4",
     "@supabase/supabase-js": "^2.49.1",
     "@tanstack/react-query": "^5.56.2",
+    "@tanstack/react-table": "^8.21.3",
     "@tmcw/togeojson": "^7.1.2",
     "@types/leaflet": "^1.9.8",
     "class-variance-authority": "^0.7.1",
