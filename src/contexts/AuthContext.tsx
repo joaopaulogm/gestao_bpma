@@ -259,9 +259,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    // comando tem acesso a /comando/* (admin + comando)
-    if (userRole === 'comando') {
-      if (requiredRoles.includes('comando')) {
+    // comando e secao_operacional têm acesso a /comando/*
+    if (userRole === 'comando' || userRole === 'secao_operacional') {
+      if (requiredRoles.includes('comando') || requiredRoles.includes('secao_operacional')) {
         return true;
       }
     }

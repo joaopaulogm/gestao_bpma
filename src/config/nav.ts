@@ -33,6 +33,7 @@ import {
   Wrench,
   Settings,
   Radio,
+  Truck,
 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -67,16 +68,16 @@ export const navSections: NavSection[] = [
         path: '/material-apoio',
         label: 'Material de Apoio',
         icon: BookOpen,
-        roles: ['operador'],
+        roles: ['operador', 'secao_pessoas', 'secao_operacional', 'secao_logistica', 'comando'],
         children: [
           { path: '/material-apoio/pop', label: 'POP', icon: FileText },
           { path: '/material-apoio/identificar-especie', label: 'Identificar Espécie', icon: Search },
           { path: '/material-apoio/manual-rap', label: 'Manual RAP', icon: BookOpen },
         ],
       },
-      { path: '/mapa-localizacao', label: 'Mapa e Localização', icon: MapPin, roles: ['operador'] },
-      { path: '/ranking', label: 'Ranking de Ocorrências', icon: Trophy, roles: ['operador'] },
-      { path: '/radio-operador', label: 'Rádio Operador', icon: Radio, roles: ['admin', 'operador_radio', 'operador'] },
+      { path: '/mapa-localizacao', label: 'Mapa e Localização', icon: MapPin, roles: ['operador', 'secao_pessoas', 'secao_operacional', 'secao_logistica', 'comando'] },
+      { path: '/ranking', label: 'Ranking de Ocorrências', icon: Trophy, roles: ['operador', 'secao_pessoas', 'secao_operacional', 'secao_logistica', 'comando'] },
+      { path: '/radio-operador', label: 'Rádio Operador', icon: Radio, roles: ['operador_radio', 'secao_operacional', 'comando'] },
     ],
   },
   {
@@ -110,7 +111,7 @@ export const navSections: NavSection[] = [
         path: '/comando',
         label: 'Comando',
         icon: LayoutDashboard,
-        roles: ['admin', 'comando'],
+        roles: ['comando', 'secao_operacional'],
         children: [
           { path: '/comando/agenda-OS', label: 'Agenda OS', icon: Calendar },
           { path: '/comando/agenda-CMD', label: 'Agenda CMD', icon: CalendarDays },
@@ -156,7 +157,17 @@ export const navSections: NavSection[] = [
     title: 'Seção Logística',
     icon: Wrench,
     items: [
-      { path: '/secao-logistica', label: 'Seção Logística', icon: Wrench, roles: ['secao_logistica'] },
+      {
+        path: '/secao-logistica',
+        label: 'Seção Logística',
+        icon: Wrench,
+        roles: ['secao_logistica'],
+        children: [
+          { path: '/secao-logistica/frota', label: 'Gestão de Frota', icon: Truck },
+          { path: '/secao-logistica/bens-equipamentos', label: 'Gestão de Bens e Equipamentos', icon: Package },
+          { path: '/secao-logistica/patrimonio', label: 'Painel de Gestão do Patrimônio', icon: BarChart3 },
+        ],
+      },
     ],
   },
   {
