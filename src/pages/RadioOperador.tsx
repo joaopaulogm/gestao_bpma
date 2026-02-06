@@ -3,6 +3,7 @@ import { PawPrint, Scale } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -117,6 +118,7 @@ const RadioOperador: React.FC = () => {
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [filters, setFilters] = useState<RadioFilters>(EMPTY_RADIO_FILTERS);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<string>(SHEET_RESGATES);
   const [viewRow, setViewRow] = useState<RadioRow | null>(null);
   const [editingRow, setEditingRow] = useState<RadioRow | null>(null);
   const [editingHeaderKeys, setEditingHeaderKeys] = useState<string[]>([]);
@@ -245,7 +247,10 @@ const RadioOperador: React.FC = () => {
     setEditingHeaderKeys(headerKeys);
     setEditingHeaderLabels(headerLabels);
     setEditFormData(
-      headerKeys.reduce((acc, k) => ({ ...acc, [k]: String(row.data[k] ?? '').trim() }), {} as Record<string, string>
+      headerKeys.reduce(
+        (acc, k) => ({ ...acc, [k]: String(row.data[k] ?? '').trim() }),
+        {} as Record<string, string>
+      )
     );
   }, []);
 
@@ -285,7 +290,7 @@ const RadioOperador: React.FC = () => {
       delete (dataToSave as Record<string, unknown>)._headers;
       const { error } = await supabase
         .from('radio_operador_data')
-        .update({ data: dataToSave })
+        .update({ data: dataToSave as any })
         .eq('id', editingRow.id);
       if (error) throw error;
       toast.success('Registro atualizado. Execute no SQL: SELECT * FROM popula_fat_radio_operador(); para atualizar totais.');
@@ -299,14 +304,21 @@ const RadioOperador: React.FC = () => {
     }
   }, [editingRow, editingHeaderKeys, editFormData, fetchData]);
 
-  const handleExport = useCallback(() => {
-    const tab = activeTab === SHEET_CRIMES ? 'crimes' : 'resgates';
+  const handleExport = useCallback((tabOverride?: 'resgates' | 'crimes') => {
+    const tab = tabOverride ?? (activeTab === SHEET_CRIMES ? 'crimes' : 'resgates');
     const list = tab === 'resgates' ? resgatesFiltered : crimesFiltered;
     const cols = tab === 'resgates' ? RESGATE_TABLE_COLUMNS : CRIMES_TABLE_COLUMNS;
     const header = cols.map((c) => c.header).join(';');
-    const body = list.map((row) =>
-      cols.map((c) => String((row.data[c.key] ?? '') || row.data['CRIME'] ?? '').replace(/;/g, ',')).join(';')
-    ).join('\n');
+    const body = list
+      .map((row) =>
+        cols
+          .map((c) => {
+            const raw = (row.data[c.key] ?? '') || (row.data['CRIME'] ?? '');
+            return String(raw).replace(/;/g, ',');
+          })
+          .join(';')
+      )
+      .join('\n');
     const csv = '\uFEFF' + header + '\n' + body;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
