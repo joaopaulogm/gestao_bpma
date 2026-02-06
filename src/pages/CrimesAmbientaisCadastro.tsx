@@ -378,9 +378,9 @@ const CrimesAmbientaisCadastro = () => {
       }
       if (!desfechosRes.error && desfechosRes.data?.length) {
         setDesfechos(desfechosRes.data);
-      } else {
-        const fallbackDesfechos = await (supabase as any).from('dim_desfecho').select('id, nome, tipo').eq('tipo', 'crime');
-        if (fallbackDesfechos.data?.length) setDesfechos(fallbackDesfechos.data);
+      } else if (desfechosRes.error) {
+        console.warn('Desfechos (dim_desfecho_crime_ambientais):', desfechosRes.error.message);
+        toast.error('Não foi possível carregar os desfechos. Execute a migração que popula dim_desfecho_crime_ambientais.');
       }
       if (especiesFaunaRes.data) setEspeciesFauna(especiesFaunaRes.data);
       if (especiesFloraRes.data) setEspeciesFlora(especiesFloraRes.data as unknown as EspecieFlora[]);
