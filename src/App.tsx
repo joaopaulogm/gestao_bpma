@@ -88,7 +88,9 @@ function App() {
               
               {/* Página inicial pública - sem login */}
               <Route path="/" element={<LandingPage />} />
-              <Route path="/inicio" element={<ProtectedRoute requiredRoles={['operador', 'operador_radio']}><SidebarLayout><Index /></SidebarLayout></ProtectedRoute>} />
+              {/* Área do Operador (página inicial autenticada); /inicio redireciona para manter links antigos */}
+              <Route path="/area-do-operador" element={<ProtectedRoute requiredRoles={['admin', 'operador', 'operador_radio']}><SidebarLayout><Index /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/inicio" element={<Navigate to="/area-do-operador" replace />} />
               
               {/* Operador level - requires authentication */}
               <Route path="/resgate-cadastro" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><ResgateCadastro /></SidebarLayout></ProtectedRoute>} />

@@ -102,7 +102,7 @@ const Sidebar = () => {
   };
 
   const isActive = (path: string) =>
-    location.pathname === path || (path !== '/' && path !== '/inicio' && location.pathname.startsWith(path + '/'));
+    location.pathname === path || (path !== '/' && path !== '/area-do-operador' && location.pathname.startsWith(path + '/'));
 
   // ADMIN vê todos os itens do menu (hasAccess já retorna true para admin).
   const showItem = (item: NavItem): boolean => {
@@ -141,7 +141,7 @@ const Sidebar = () => {
     let best: { el: HTMLAnchorElement; path: string } | null = null;
     for (const el of links) {
       const path = el.getAttribute('data-path') || '';
-      const match = pathname === path || (path !== '/' && path !== '/inicio' && pathname.startsWith(path + '/'));
+      const match = pathname === path || (path !== '/' && path !== '/area-do-operador' && pathname.startsWith(path + '/'));
       if (match && (!best || path.length > best.path.length)) best = { el, path };
     }
     if (!best) {

@@ -358,7 +358,7 @@ const POP = () => {
       </div>
 
       <div className="mt-8 text-center">
-        <Button variant="outline" onClick={() => navigate("/inicio")}>
+        <Button variant="outline" onClick={() => navigate("/area-do-operador")}>
           <Home className="h-4 w-4 mr-2" />
           Voltar ao Sistema
         </Button>

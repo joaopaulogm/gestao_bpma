@@ -193,7 +193,7 @@ const Login = () => {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/inicio');
+      navigate('/area-do-operador');
     }
   }, [isAuthenticated, navigate]);
 
@@ -329,7 +329,7 @@ const Login = () => {
       
       // Redirecionar para página inicial
       setTimeout(() => {
-        navigate('/inicio');
+        navigate('/area-do-operador');
       }, 100);
     } catch (error: unknown) {
       console.error('Login com senha error:', error);
@@ -392,7 +392,7 @@ const Login = () => {
       
       // Redirecionar para página inicial
       setTimeout(() => {
-        navigate('/inicio');
+        navigate('/area-do-operador');
       }, 100);
     } catch (error: unknown) {
       console.error('Password change error:', error);

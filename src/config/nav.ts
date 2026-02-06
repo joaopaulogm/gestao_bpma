@@ -52,14 +52,14 @@ export interface NavSection {
   items: NavItem[];
 }
 
-/** Fonte única de verdade para navegação: sidebar, /inicio e homes das seções */
+/** Fonte única de verdade para navegação: sidebar, /area-do-operador e homes das seções */
 export const navSections: NavSection[] = [
   {
     title: 'Início',
-    items: [{ path: '/inicio', label: 'Página Inicial', icon: Home }],
+    items: [{ path: '/area-do-operador', label: 'Página Inicial', icon: Home }],
   },
   {
-    title: 'Atividade Operacional',
+    title: 'Área do Operador',
     icon: BookOpen,
     items: [
       { path: '/login', label: 'Fazer Login', icon: LogIn, roles: ['guest'] },
@@ -196,7 +196,7 @@ export function getSectionByPath(sectionPath: string): NavSection | null {
 }
 
 /**
- * Retorna itens para cards de uma seção pelo título (ex: "Atividade Operacional").
+ * Retorna itens para cards de uma seção pelo título (ex: "Área do Operador").
  * Achata: itens com children viram [item, ...children], sem children viram [item].
  */
 export function getSectionFlatCardItemsByTitle(sectionTitle: string): NavItem[] {
@@ -214,7 +214,7 @@ export function getSectionFlatCardItemsByTitle(sectionTitle: string): NavItem[] 
 }
 
 /**
- * Retorna itens para exibir como cards na home (/inicio), alinhados ao sidebar e às homes das seções.
+ * Retorna itens para exibir como cards na home (/area-do-operador), alinhados ao sidebar e às homes das seções.
  * Para itens com children (ex: Comando, Seção Operacional), retorna os children.
  * Para itens sem children, retorna o próprio item.
  */

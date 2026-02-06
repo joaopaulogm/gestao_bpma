@@ -42,7 +42,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       <div className="flex h-screen items-center justify-center flex-col gap-4">
         <div className="text-2xl font-bold text-destructive">Acesso Negado</div>
         <p className="text-muted-foreground">Você não tem permissão para acessar esta página.</p>
-        <a href="/inicio" className="text-primary underline">Voltar para a página inicial</a>
+        <a href="/area-do-operador" className="text-primary underline">Voltar para a página inicial</a>
       </div>
     );
   }
@@ -53,7 +53,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       <div className="flex h-screen items-center justify-center flex-col gap-4">
         <div className="text-2xl font-bold text-destructive">Acesso Negado</div>
         <p className="text-muted-foreground">Você não tem permissão para acessar esta página.</p>
-        <a href="/inicio" className="text-primary underline">Voltar para a página inicial</a>
+        <a href="/area-do-operador" className="text-primary underline">Voltar para a página inicial</a>
       </div>
     );
   }

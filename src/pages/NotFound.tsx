@@ -24,7 +24,7 @@ const NotFound = () => {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button asChild variant="default">
-            <Link to="/inicio" className="flex items-center gap-2">
+            <Link to="/area-do-operador" className="flex items-center gap-2">
               <Home size={16} />
               Ir para Home
             </Link>
