@@ -22,54 +22,60 @@ import {
   CRIMES_TABLE_COLUMNS,
 } from '@/components/radio-operador';
 
-import type { FatResgateRow, FatCrimeRow } from './RadioOperador.types';
+import type { FatControleResgateRow, FatControleCrimeRow } from './RadioOperador.types';
+import { formatTimeStr, formatIntervalStr } from './RadioOperador.types';
 
 const SHEET_RESGATES = 'Resgates de Fauna';
 const SHEET_CRIMES = 'Crimes Ambientais';
 
-function formatFatDate(d: string | null, ano: number | null, mes: number | null, dia: number | null): string {
-  if (d) return format(new Date(d + 'T12:00:00'), 'dd/MM/yyyy');
-  if (ano != null && mes != null && dia != null)
-    return `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
-  return '';
+const RESGATE_SELECT = '*, dim_equipe!equipe_id(nome), dim_local!local_id(nome), dim_grupamento!grupamento_id(nome), dim_desfecho!desfecho_id(nome), dim_destinacao!destinacao_id(nome)';
+
+function formatDataControle(d: string | null): string {
+  if (!d) return '';
+  return format(new Date(d + 'T12:00:00'), 'dd/MM/yyyy');
 }
 
-function fatRowToRadioRow(fat: FatResgateRow | FatCrimeRow, sheetName: string, index: number): RadioRow {
+function fatControleToRadioRow(
+  fat: FatControleResgateRow | FatControleCrimeRow,
+  sheetName: string,
+  index: number
+): RadioRow {
   const isCrime = sheetName === SHEET_CRIMES;
+  const equipeNome = fat.dim_equipe?.nome ?? '';
+  const localNome = fat.dim_local?.nome ?? '';
+  const grupamentoNome = fat.dim_grupamento?.nome ?? '';
+  const desfechoNome = fat.dim_desfecho?.nome ?? '';
+  const destinacaoNome = fat.dim_destinacao?.nome ?? '';
   const data: Record<string, unknown> = {
-    'Data': formatFatDate(fat.data_ocorrencia, fat.ano, fat.mes, fat.dia),
-    'Equipe': fat.equipe ?? '',
+    'Data': formatDataControle(fat.data),
+    'Equipe': equipeNome,
     'FAUNA': fat.fauna ?? '',
-    'CRIME': fat.fauna ?? '',
-    'LOCAL': fat.local ?? '',
-    'Desfecho': fat.desfecho ?? '',
-    'DESTINAÇÃO': fat.destinacao ?? '',
-    'N° OCORRÊNCIA COPOM': fat.n_ocorrencia_copom ?? '',
-    'Hora cadastro': fat.hora_cadastro ?? '',
-    'Hora recebido COPOM': fat.hora_recebido_copom ?? '',
-    'Despacho RO': fat.hora_despacho_ro ?? '',
-    'Hora finalização': fat.hora_finalizacao ?? '',
+    'CRIME': isCrime && 'crime' in fat ? (fat as FatControleCrimeRow).crime ?? '' : fat.fauna ?? '',
+    'LOCAL': localNome,
+    'Desfecho': desfechoNome,
+    'DESTINAÇÃO': destinacaoNome,
+    'N° OCORRÊNCIA COPOM': fat.ocorrencia_copom ?? '',
+    'Hora cadastro': formatTimeStr(fat.hora_cadastro_ocorrencia),
+    'Hora recebido COPOM': formatTimeStr(fat.hora_recebido_copom_central),
+    'Despacho RO': formatTimeStr(fat.hora_despacho_ro),
+    'Hora finalização': formatTimeStr(fat.hora_finalizacao_ocorrencia),
     'Telefone': fat.telefone ?? '',
     'PREFIXO': fat.prefixo ?? '',
-    'GRUPAMENTO': fat.grupamento ?? '',
+    'GRUPAMENTO': grupamentoNome,
     'CMT VTR': fat.cmt_vtr ?? '',
-    'N° RAP': fat.n_rap ?? '',
-    'Duração cadastro/encaminhamento': fat.duracao_cadastro_encaminhamento ?? '',
-    'Duração despacho/finalização': fat.duracao_despacho_finalizacao ?? '',
+    'N° RAP': fat.numero_rap ?? '',
+    'Duração cadastro/encaminhamento': formatIntervalStr(fat.duracao_cadastro_190_encaminhamento_copom),
+    'Duração despacho/finalização': formatIntervalStr(fat.duracao_despacho_finalizacao),
   };
-  
-  // Add N° TCO for crimes
-  if (isCrime && 'n_tco' in fat) {
-    data['N° TCO'] = (fat as FatCrimeRow).n_tco ?? '';
+  if (isCrime && 'numero_tco_pmdf_ou_tco_apf_pcdf' in fat) {
+    data['N° TCO'] = (fat as FatControleCrimeRow).numero_tco_pmdf_ou_tco_apf_pcdf ?? '';
   }
-  
   return {
     id: fat.id,
-    synced_at: '',
+    synced_at: fat.created_at ?? '',
     row_index: index + 1,
     sheet_name: sheetName,
     data,
-    dados_origem_id: fat.dados_origem_id ?? undefined,
   };
 }
 
@@ -132,27 +138,32 @@ const RadioOperador: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [resResgates, resCrimes, resSync] = await Promise.all([
+      const [resResgates, resCrimes] = await Promise.all([
         supabase
-          .from('fat_ocorrencias_resgate_fauna_2026')
-          .select('*')
-          .order('data_ocorrencia', { ascending: false, nullsFirst: false })
+          .from('fat_controle_ocorrencias_resgate_2026')
+          .select(RESGATE_SELECT)
+          .order('data', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false }),
         supabase
-          .from('fat_ocorrencias_crimes_ambientais_2026')
-          .select('*')
-          .order('data_ocorrencia', { ascending: false, nullsFirst: false })
+          .from('fat_controle_ocorrencias_crime_ambientais_2026')
+          .select(RESGATE_SELECT)
+          .order('data', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false }),
-        supabase.from('radio_operador_data').select('synced_at').limit(1).order('synced_at', { ascending: false }).maybeSingle(),
       ]);
       if (resResgates.error) throw resResgates.error;
       if (resCrimes.error) throw resCrimes.error;
-      const resgatesFat = (resResgates.data || []) as FatResgateRow[];
-      const crimesFat = (resCrimes.data || []) as FatCrimeRow[];
-      const resgatesMapped = resgatesFat.map((r, i) => fatRowToRadioRow(r, SHEET_RESGATES, i));
-      const crimesMapped = crimesFat.map((r, i) => fatRowToRadioRow(r, SHEET_CRIMES, i));
+      const resgatesFat = (resResgates.data || []) as FatControleResgateRow[];
+      const crimesFat = (resCrimes.data || []) as FatControleCrimeRow[];
+      const resgatesMapped = resgatesFat.map((r, i) => fatControleToRadioRow(r, SHEET_RESGATES, i));
+      const crimesMapped = crimesFat.map((r, i) => fatControleToRadioRow(r, SHEET_CRIMES, i));
       setRows([...resgatesMapped, ...crimesMapped]);
-      setLastSync(resSync.data?.synced_at ?? null);
+      const lastCreated =
+        [...resgatesFat, ...crimesFat]
+          .map((r) => r.created_at)
+          .filter(Boolean)
+          .sort()
+          .pop() ?? null;
+      setLastSync(lastCreated ?? null);
     } catch (e) {
       console.error(e);
       toast.error('Erro ao carregar dados do Rádio Operador');
@@ -166,24 +177,10 @@ const RadioOperador: React.FC = () => {
   const handleSync = useCallback(async () => {
     setSyncing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('sync-radio-operador');
-      if (error) throw error;
-      if (data?.success) {
-        const inserted = data.rows_inserted ?? 0;
-        const updated = data.rows_updated ?? 0;
-        const deleted = data.rows_deleted ?? 0;
-        if (inserted > 0 || updated > 0 || deleted > 0) {
-          toast.success(`Sincronização: ${inserted} novos, ${updated} atualizados, ${deleted} removidos`);
-        } else {
-          toast.info('Dados já atualizados');
-        }
-        fetchData();
-      } else {
-        toast.error(data?.error || 'Falha na sincronização');
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error('Erro ao sincronizar com a planilha');
+      await fetchData();
+      toast.success('Dados atualizados');
+    } catch {
+      // fetchData já mostra toast de erro
     } finally {
       setSyncing(false);
     }
@@ -257,55 +254,16 @@ const RadioOperador: React.FC = () => {
     );
   }, []);
 
-  const openEditFromFat = useCallback(async (row: RadioRow, sheetName: string) => {
-    if (!row.dados_origem_id) {
-      toast.info('Edição disponível apenas para registros com origem na planilha.');
-      return;
-    }
-    try {
-      const [rowRes, headerRes] = await Promise.all([
-        supabase.from('radio_operador_data').select('id, synced_at, row_index, sheet_name, data').eq('id', row.dados_origem_id).single(),
-        supabase.from('radio_operador_data').select('data').eq('sheet_name', sheetName).eq('row_index', 1).maybeSingle(),
-      ]);
-      if (rowRes.error || !rowRes.data) {
-        toast.error('Registro de origem não encontrado.');
-        return;
-      }
-      const origRow = rowRes.data as RadioRow;
-      const headerRow = headerRes.data as { data?: { _headers?: string[] } } | null;
-      const headerKeys = (headerRow?.data?._headers ?? Object.keys(origRow.data || {}).filter((k) => k !== '_headers')) as string[];
-      openEdit(origRow, headerKeys, headerKeys);
-    } catch (e) {
-      console.error(e);
-      toast.error('Erro ao carregar registro para edição.');
-    }
-  }, [openEdit]);
+  const openEditFromFat = useCallback((_row: RadioRow, _sheetName: string) => {
+    toast.info('Edição de registros deve ser feita nas telas de Seção Operacional.');
+  }, []);
 
   const handleSaveEdit = useCallback(async () => {
     if (!editingRow) return;
-    setSaving(true);
-    try {
-      const dataToSave: Record<string, unknown> = { ...editingRow.data };
-      editingHeaderKeys.forEach((k) => {
-        const v = editFormData[k];
-        dataToSave[k] = v != null && v.trim() !== '' ? v.trim() : null;
-      });
-      delete (dataToSave as Record<string, unknown>)._headers;
-      const { error } = await supabase
-        .from('radio_operador_data')
-        .update({ data: dataToSave as any })
-        .eq('id', editingRow.id);
-      if (error) throw error;
-      toast.success('Registro atualizado com sucesso!');
-      setEditingRow(null);
-      fetchData();
-    } catch (e) {
-      console.error(e);
-      toast.error('Erro ao salvar alterações.');
-    } finally {
-      setSaving(false);
-    }
-  }, [editingRow, editingHeaderKeys, editFormData, fetchData]);
+    setSaving(false);
+    toast.info('Edição de registros deve ser feita nas telas de Seção Operacional.');
+    setEditingRow(null);
+  }, [editingRow]);
 
   const handleExport = useCallback((tabOverride?: 'resgates' | 'crimes') => {
     const tab = tabOverride ?? (activeTab === SHEET_CRIMES ? 'crimes' : 'resgates');
@@ -335,10 +293,6 @@ const RadioOperador: React.FC = () => {
 
   const handleView = useCallback((row: RadioRow) => setViewRow(row), []);
   const handleEditFromTable = useCallback((row: RadioRow, sheetName: string) => {
-    if (!row.dados_origem_id) {
-      toast.info('Edição disponível apenas para registros com origem na planilha.');
-      return;
-    }
     openEditFromFat(row, sheetName);
   }, [openEditFromFat]);
 
@@ -380,7 +334,7 @@ const RadioOperador: React.FC = () => {
                 </div>
                 <p className="text-lg font-semibold text-foreground">Nenhum dado carregado</p>
                 <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-                  Use o botão Atualizar para sincronizar os dados da planilha ou importe via script.
+                  Os dados vêm das tabelas de controle de ocorrências. Use o botão Atualizar para recarregar.
                 </p>
                 <Button 
                   variant="outline" 
@@ -423,7 +377,7 @@ const RadioOperador: React.FC = () => {
                     
                     {lastSync && (
                       <span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-lg">
-                        Última sincronização: {format(new Date(lastSync), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        Última atualização: {format(new Date(lastSync), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                       </span>
                     )}
                   </div>
