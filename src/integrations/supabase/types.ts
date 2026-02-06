@@ -2402,6 +2402,7 @@ export type Database = {
           mes: number | null
           n_ocorrencia_copom: string | null
           n_rap: string | null
+          n_tco: string | null
           prefixo: string | null
           telefone: string | null
         }
@@ -2428,6 +2429,7 @@ export type Database = {
           mes?: number | null
           n_ocorrencia_copom?: string | null
           n_rap?: string | null
+          n_tco?: string | null
           prefixo?: string | null
           telefone?: string | null
         }
@@ -2454,6 +2456,7 @@ export type Database = {
           mes?: number | null
           n_ocorrencia_copom?: string | null
           n_rap?: string | null
+          n_tco?: string | null
           prefixo?: string | null
           telefone?: string | null
         }
