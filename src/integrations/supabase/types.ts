@@ -125,6 +125,21 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_desfecho_resgate_radio: {
+        Row: {
+          id: number
+          nome: string
+        }
+        Insert: {
+          id?: number
+          nome: string
+        }
+        Update: {
+          id?: number
+          nome?: string
+        }
+        Relationships: []
+      }
       dim_desfecho_resgates: {
         Row: {
           created_at: string | null
@@ -160,6 +175,21 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      dim_destinacao_radio: {
+        Row: {
+          id: number
+          nome: string
+        }
+        Insert: {
+          id?: number
+          nome: string
+        }
+        Update: {
+          id?: number
           nome?: string
         }
         Relationships: []
@@ -297,6 +327,21 @@ export type Database = {
             referencedColumns: ["id_tipo_de_crime"]
           },
         ]
+      }
+      dim_equipe_radio: {
+        Row: {
+          id: number
+          nome: string
+        }
+        Insert: {
+          id?: number
+          nome: string
+        }
+        Update: {
+          id?: number
+          nome?: string
+        }
+        Relationships: []
       }
       dim_equipes: {
         Row: {
@@ -540,6 +585,21 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      dim_fauna_tipo_radio: {
+        Row: {
+          id: number
+          nome: string
+        }
+        Insert: {
+          id?: number
+          nome: string
+        }
+        Update: {
+          id?: number
           nome?: string
         }
         Relationships: []
@@ -2314,6 +2374,184 @@ export type Database = {
             columns: ["id_ocorrencia"]
             isOneToOne: false
             referencedRelation: "fat_crimes_comuns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_ocorrencias_crimes_ambientais_2026: {
+        Row: {
+          ano: number | null
+          cmt_vtr: string | null
+          created_at: string
+          dados_origem_id: string | null
+          data_ocorrencia: string | null
+          desfecho: string | null
+          destinacao: string | null
+          dia: number | null
+          duracao_cadastro_encaminhamento: string | null
+          duracao_despacho_finalizacao: string | null
+          equipe: string | null
+          fauna: string | null
+          grupamento: string | null
+          hora_cadastro: string | null
+          hora_despacho_ro: string | null
+          hora_finalizacao: string | null
+          hora_recebido_copom: string | null
+          id: string
+          local: string | null
+          mes: number | null
+          n_ocorrencia_copom: string | null
+          n_rap: string | null
+          prefixo: string | null
+          telefone: string | null
+        }
+        Insert: {
+          ano?: number | null
+          cmt_vtr?: string | null
+          created_at?: string
+          dados_origem_id?: string | null
+          data_ocorrencia?: string | null
+          desfecho?: string | null
+          destinacao?: string | null
+          dia?: number | null
+          duracao_cadastro_encaminhamento?: string | null
+          duracao_despacho_finalizacao?: string | null
+          equipe?: string | null
+          fauna?: string | null
+          grupamento?: string | null
+          hora_cadastro?: string | null
+          hora_despacho_ro?: string | null
+          hora_finalizacao?: string | null
+          hora_recebido_copom?: string | null
+          id?: string
+          local?: string | null
+          mes?: number | null
+          n_ocorrencia_copom?: string | null
+          n_rap?: string | null
+          prefixo?: string | null
+          telefone?: string | null
+        }
+        Update: {
+          ano?: number | null
+          cmt_vtr?: string | null
+          created_at?: string
+          dados_origem_id?: string | null
+          data_ocorrencia?: string | null
+          desfecho?: string | null
+          destinacao?: string | null
+          dia?: number | null
+          duracao_cadastro_encaminhamento?: string | null
+          duracao_despacho_finalizacao?: string | null
+          equipe?: string | null
+          fauna?: string | null
+          grupamento?: string | null
+          hora_cadastro?: string | null
+          hora_despacho_ro?: string | null
+          hora_finalizacao?: string | null
+          hora_recebido_copom?: string | null
+          id?: string
+          local?: string | null
+          mes?: number | null
+          n_ocorrencia_copom?: string | null
+          n_rap?: string | null
+          prefixo?: string | null
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_ocorrencias_crimes_ambientais_2026_dados_origem_id_fkey"
+            columns: ["dados_origem_id"]
+            isOneToOne: false
+            referencedRelation: "radio_operador_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_ocorrencias_resgate_fauna_2026: {
+        Row: {
+          ano: number | null
+          cmt_vtr: string | null
+          created_at: string
+          dados_origem_id: string | null
+          data_ocorrencia: string | null
+          desfecho: string | null
+          destinacao: string | null
+          dia: number | null
+          duracao_cadastro_encaminhamento: string | null
+          duracao_despacho_finalizacao: string | null
+          equipe: string | null
+          fauna: string | null
+          grupamento: string | null
+          hora_cadastro: string | null
+          hora_despacho_ro: string | null
+          hora_finalizacao: string | null
+          hora_recebido_copom: string | null
+          id: string
+          local: string | null
+          mes: number | null
+          n_ocorrencia_copom: string | null
+          n_rap: string | null
+          prefixo: string | null
+          telefone: string | null
+        }
+        Insert: {
+          ano?: number | null
+          cmt_vtr?: string | null
+          created_at?: string
+          dados_origem_id?: string | null
+          data_ocorrencia?: string | null
+          desfecho?: string | null
+          destinacao?: string | null
+          dia?: number | null
+          duracao_cadastro_encaminhamento?: string | null
+          duracao_despacho_finalizacao?: string | null
+          equipe?: string | null
+          fauna?: string | null
+          grupamento?: string | null
+          hora_cadastro?: string | null
+          hora_despacho_ro?: string | null
+          hora_finalizacao?: string | null
+          hora_recebido_copom?: string | null
+          id?: string
+          local?: string | null
+          mes?: number | null
+          n_ocorrencia_copom?: string | null
+          n_rap?: string | null
+          prefixo?: string | null
+          telefone?: string | null
+        }
+        Update: {
+          ano?: number | null
+          cmt_vtr?: string | null
+          created_at?: string
+          dados_origem_id?: string | null
+          data_ocorrencia?: string | null
+          desfecho?: string | null
+          destinacao?: string | null
+          dia?: number | null
+          duracao_cadastro_encaminhamento?: string | null
+          duracao_despacho_finalizacao?: string | null
+          equipe?: string | null
+          fauna?: string | null
+          grupamento?: string | null
+          hora_cadastro?: string | null
+          hora_despacho_ro?: string | null
+          hora_finalizacao?: string | null
+          hora_recebido_copom?: string | null
+          id?: string
+          local?: string | null
+          mes?: number | null
+          n_ocorrencia_copom?: string | null
+          n_rap?: string | null
+          prefixo?: string | null
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_ocorrencias_resgate_fauna_2026_dados_origem_id_fkey"
+            columns: ["dados_origem_id"]
+            isOneToOne: false
+            referencedRelation: "radio_operador_data"
             referencedColumns: ["id"]
           },
         ]
@@ -5042,6 +5280,10 @@ export type Database = {
         }[]
       }
       get_current_user_efetivo_id: { Args: never; Returns: string }
+      get_data_key: {
+        Args: { data: Json; key_pattern: string }
+        Returns: string
+      }
       get_efetivo_counts: {
         Args: { p_efetivo_ids: string[] }
         Returns: {
@@ -5113,6 +5355,24 @@ export type Database = {
       month_to_int: { Args: { m: string }; Returns: number }
       norm_txt: { Args: { t: string }; Returns: string }
       normalize_text: { Args: { input_text: string }; Returns: string }
+      popula_fat_radio_operador: {
+        Args: never
+        Returns: {
+          dim_desfecho: number
+          dim_destinacao: number
+          dim_equipe: number
+          dim_fauna: number
+          inserted_crimes: number
+          inserted_resgates: number
+        }[]
+      }
+      radio_operador_import_sheet: {
+        Args: { p_headers: string[]; p_rows: Json[]; p_sheet_name: string }
+        Returns: {
+          inserted_header: boolean
+          inserted_rows: number
+        }[]
+      }
       redefinir_senha_com_token: {
         Args: { p_nova_senha: string; p_token: string }
         Returns: {
