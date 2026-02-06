@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { PawPrint, Scale } from 'lucide-react';
+import { PawPrint, Scale, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -27,11 +27,6 @@ import type { FatResgateRow, FatCrimeRow } from './RadioOperador.types';
 const SHEET_RESGATES = 'Resgates de Fauna';
 const SHEET_CRIMES = 'Crimes Ambientais';
 
-const MESES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-];
-
 function formatFatDate(d: string | null, ano: number | null, mes: number | null, dia: number | null): string {
   if (d) return format(new Date(d + 'T12:00:00'), 'dd/MM/yyyy');
   if (ano != null && mes != null && dia != null)
@@ -40,10 +35,12 @@ function formatFatDate(d: string | null, ano: number | null, mes: number | null,
 }
 
 function fatRowToRadioRow(fat: FatResgateRow | FatCrimeRow, sheetName: string, index: number): RadioRow {
+  const isCrime = sheetName === SHEET_CRIMES;
   const data: Record<string, unknown> = {
     'Data': formatFatDate(fat.data_ocorrencia, fat.ano, fat.mes, fat.dia),
     'Equipe': fat.equipe ?? '',
     'FAUNA': fat.fauna ?? '',
+    'CRIME': fat.fauna ?? '',
     'LOCAL': fat.local ?? '',
     'Desfecho': fat.desfecho ?? '',
     'DESTINAÇÃO': fat.destinacao ?? '',
@@ -60,6 +57,12 @@ function fatRowToRadioRow(fat: FatResgateRow | FatCrimeRow, sheetName: string, i
     'Duração cadastro/encaminhamento': fat.duracao_cadastro_encaminhamento ?? '',
     'Duração despacho/finalização': fat.duracao_despacho_finalizacao ?? '',
   };
+  
+  // Add N° TCO for crimes
+  if (isCrime && 'n_tco' in fat) {
+    data['N° TCO'] = (fat as FatCrimeRow).n_tco ?? '';
+  }
+  
   return {
     id: fat.id,
     synced_at: '',
@@ -293,7 +296,7 @@ const RadioOperador: React.FC = () => {
         .update({ data: dataToSave as any })
         .eq('id', editingRow.id);
       if (error) throw error;
-      toast.success('Registro atualizado. Execute no SQL: SELECT * FROM popula_fat_radio_operador(); para atualizar totais.');
+      toast.success('Registro atualizado com sucesso!');
       setEditingRow(null);
       fetchData();
     } catch (e) {
@@ -313,7 +316,7 @@ const RadioOperador: React.FC = () => {
       .map((row) =>
         cols
           .map((c) => {
-            const raw = (row.data[c.key] ?? '') || (row.data['CRIME'] ?? '');
+            const raw = row.data[c.key] ?? '';
             return String(raw).replace(/;/g, ',');
           })
           .join(';')
@@ -340,68 +343,94 @@ const RadioOperador: React.FC = () => {
   }, [openEditFromFat]);
 
   const hasData = rows.length > 0;
+  const totalOcorrencias = resgatesDataRows.length + crimesDataRows.length;
 
   return (
-    <div className="min-h-screen bg-background/80">
-      <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-[1600px]">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="container mx-auto p-4 md:p-6 space-y-5 max-w-[1800px]">
+        {/* Page Header */}
         <PageHeader
           title="Controle de Ocorrências"
+          subtitle={totalOcorrencias > 0 ? `${totalOcorrencias} ocorrências registradas` : undefined}
           searchValue={searchQuery}
           onSearchChange={setSearchQuery}
           onRefresh={handleSync}
           refreshing={syncing}
-          onExport={() => handleExport('resgates')}
+          onExport={() => handleExport(activeTab === SHEET_CRIMES ? 'crimes' : 'resgates')}
           onAdd={undefined}
         />
 
-        <Card className="overflow-hidden rounded-2xl border border-border/60 bg-card/70 backdrop-blur-md shadow-lg transition-shadow duration-200">
+        {/* Main Content Card */}
+        <Card className="overflow-hidden rounded-2xl border border-border/40 bg-card/70 backdrop-blur-xl shadow-xl transition-all duration-300">
           <CardContent className="p-0">
             {loading && !hasData ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                <p className="text-sm text-muted-foreground">Carregando ocorrências...</p>
+              <div className="flex flex-col items-center justify-center py-24 gap-4">
+                <div className="relative">
+                  <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-full bg-primary/10" />
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground font-medium">Carregando ocorrências...</p>
               </div>
             ) : !hasData ? (
-              <div className="text-center py-20 px-6">
-                <p className="text-foreground font-medium">Nenhum dado carregado</p>
-                <p className="text-sm text-muted-foreground mt-1">Use Atualizar para sincronizar ou importe via script.</p>
-                <Button variant="outline" className="mt-6" onClick={handleSync} disabled={syncing}>
-                  Atualizar
+              <div className="text-center py-24 px-6">
+                <div className="mx-auto w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mb-6">
+                  <AlertTriangle className="h-10 w-10 text-muted-foreground/50" />
+                </div>
+                <p className="text-lg font-semibold text-foreground">Nenhum dado carregado</p>
+                <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+                  Use o botão Atualizar para sincronizar os dados da planilha ou importe via script.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="mt-6 rounded-xl" 
+                  onClick={handleSync} 
+                  disabled={syncing}
+                >
+                  Atualizar Dados
                 </Button>
               </div>
             ) : (
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <div className="px-4 py-3 border-b border-border/60 bg-muted/20 backdrop-blur-sm flex flex-wrap items-center gap-3">
-                  <TabsList className="h-10 bg-transparent p-0 gap-1">
-                    <TabsTrigger
-                      value={SHEET_RESGATES}
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl px-4 transition-colors duration-200"
-                    >
-                      <PawPrint className="h-4 w-4 mr-1.5" />
-                      Resgate de Fauna
-                      <Badge variant="secondary" className="ml-1.5 text-xs font-normal">
-                        {resgatesDataRows.length}
-                      </Badge>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value={SHEET_CRIMES}
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl px-4 transition-colors duration-200"
-                    >
-                      <Scale className="h-4 w-4 mr-1.5" />
-                      Crimes Ambientais
-                      <Badge variant="secondary" className="ml-1.5 text-xs font-normal">
-                        {crimesDataRows.length}
-                      </Badge>
-                    </TabsTrigger>
-                  </TabsList>
-                  {lastSync && (
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      Última sync: {format(new Date(lastSync), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                    </span>
-                  )}
+                {/* Tabs Header */}
+                <div className="px-4 md:px-6 py-4 border-b border-border/40 bg-muted/10 backdrop-blur-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <TabsList className="h-11 bg-muted/50 backdrop-blur-sm rounded-xl p-1 gap-1">
+                      <TabsTrigger
+                        value={SHEET_RESGATES}
+                        className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg px-4 h-9 transition-all duration-200"
+                      >
+                        <PawPrint className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Resgate de Fauna</span>
+                        <span className="sm:hidden">Resgates</span>
+                        <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs font-normal bg-primary/10 text-primary">
+                          {resgatesDataRows.length}
+                        </Badge>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value={SHEET_CRIMES}
+                        className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg px-4 h-9 transition-all duration-200"
+                      >
+                        <Scale className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Crimes Ambientais</span>
+                        <span className="sm:hidden">Crimes</span>
+                        <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs font-normal bg-primary/10 text-primary">
+                          {crimesDataRows.length}
+                        </Badge>
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    {lastSync && (
+                      <span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-lg">
+                        Última sincronização: {format(new Date(lastSync), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="p-4 space-y-4">
+                {/* Filters and Content */}
+                <div className="p-4 md:p-6 space-y-4">
                   <FiltersBar
                     filters={filters}
                     onFiltersChange={setFilters}
@@ -414,9 +443,12 @@ const RadioOperador: React.FC = () => {
                   />
 
                   <TabsContent value={SHEET_RESGATES} className="mt-0">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {resgatesFiltered.length} {resgatesFiltered.length === 1 ? 'ocorrência' : 'ocorrências'}
-                    </p>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">{resgatesFiltered.length}</span>
+                        {' '}{resgatesFiltered.length === 1 ? 'ocorrência encontrada' : 'ocorrências encontradas'}
+                      </p>
+                    </div>
                     <OcorrenciasTable
                       data={resgatesFiltered}
                       columns={RESGATE_TABLE_COLUMNS}
@@ -424,14 +456,17 @@ const RadioOperador: React.FC = () => {
                       loading={false}
                       onView={handleView}
                       onEdit={(row) => handleEditFromTable(row, SHEET_RESGATES)}
-                      emptyMessage="Nenhuma ocorrência de resgate de fauna."
+                      emptyMessage="Nenhuma ocorrência de resgate de fauna encontrada."
                     />
                   </TabsContent>
 
                   <TabsContent value={SHEET_CRIMES} className="mt-0">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {crimesFiltered.length} {crimesFiltered.length === 1 ? 'ocorrência' : 'ocorrências'}
-                    </p>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">{crimesFiltered.length}</span>
+                        {' '}{crimesFiltered.length === 1 ? 'ocorrência encontrada' : 'ocorrências encontradas'}
+                      </p>
+                    </div>
                     <OcorrenciasTable
                       data={crimesFiltered}
                       columns={CRIMES_TABLE_COLUMNS}
@@ -439,7 +474,7 @@ const RadioOperador: React.FC = () => {
                       loading={false}
                       onView={handleView}
                       onEdit={(row) => handleEditFromTable(row, SHEET_CRIMES)}
-                      emptyMessage="Nenhuma ocorrência de crimes ambientais."
+                      emptyMessage="Nenhuma ocorrência de crimes ambientais encontrada."
                       isCrimes
                     />
                   </TabsContent>
@@ -450,6 +485,7 @@ const RadioOperador: React.FC = () => {
         </Card>
       </div>
 
+      {/* View Modal */}
       <OcorrenciaViewModal
         open={!!viewRow}
         onOpenChange={(open) => !open && setViewRow(null)}
@@ -460,10 +496,11 @@ const RadioOperador: React.FC = () => {
         }}
       />
 
+      {/* Edit Modal */}
       <OcorrenciaFormModal
         open={!!editingRow}
         onOpenChange={(open) => !open && setEditingRow(null)}
-        title="Editar ocorrência"
+        title="Editar Ocorrência"
         headerKeys={editingHeaderKeys}
         headerLabels={editingHeaderLabels}
         formData={editFormData}

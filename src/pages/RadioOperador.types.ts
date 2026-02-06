@@ -25,4 +25,7 @@ export interface FatResgateRow {
   dados_origem_id: string | null;
 }
 
-export type FatCrimeRow = FatResgateRow;
+/** Linha da tabela fato crimes (inclui n_tco). */
+export interface FatCrimeRow extends FatResgateRow {
+  n_tco?: string | null;
+}
