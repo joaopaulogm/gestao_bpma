@@ -99,7 +99,7 @@ function App() {
               <Route path="/ranking" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><RankingOcorrencias /></SidebarLayout></ProtectedRoute>} />
               <Route path="/perfil" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><Perfil /></SidebarLayout></ProtectedRoute>} />
               <Route path="/mapa-localizacao" element={<ProtectedRoute requiredRoles={['operador']}><SidebarLayout><MapaLocalizacao /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/radio-operador" element={<ProtectedRoute requiredRoles={['operador_radio', 'operador']}><SidebarLayout><RadioOperador /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/radio-operador" element={<ProtectedRoute requiredRoles={['admin', 'operador_radio', 'operador']}><SidebarLayout><RadioOperador /></SidebarLayout></ProtectedRoute>} />
               
               {/* Admin only */}
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />
