@@ -86,6 +86,21 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_desfecho: {
+        Row: {
+          id: string
+          nome: string
+        }
+        Insert: {
+          id: string
+          nome: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       dim_desfecho_crime_ambientais: {
         Row: {
           created_at: string | null
@@ -327,6 +342,21 @@ export type Database = {
             referencedColumns: ["id_tipo_de_crime"]
           },
         ]
+      }
+      dim_equipe: {
+        Row: {
+          id: string
+          nome: string
+        }
+        Insert: {
+          id: string
+          nome: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+        }
+        Relationships: []
       }
       dim_equipe_radio: {
         Row: {
@@ -762,6 +792,21 @@ export type Database = {
           },
         ]
       }
+      dim_grupamento: {
+        Row: {
+          id: string
+          nome: string
+        }
+        Insert: {
+          id: string
+          nome: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       dim_grupamento_servico: {
         Row: {
           característica: string | null
@@ -825,6 +870,21 @@ export type Database = {
           Item?: string
           "Tipo de Crime"?: string
           "Uso Ilicito"?: string
+        }
+        Relationships: []
+      }
+      dim_local: {
+        Row: {
+          id: string
+          nome: string
+        }
+        Insert: {
+          id: string
+          nome: string
+        }
+        Update: {
+          id?: string
+          nome?: string
         }
         Relationships: []
       }
@@ -1592,6 +1652,219 @@ export type Database = {
             columns: ["equipe_id"]
             isOneToOne: false
             referencedRelation: "dim_equipes_campanha"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_controle_ocorrencias_crime_ambientais_2026: {
+        Row: {
+          cmt_vtr: string | null
+          created_at: string
+          crime: string | null
+          data: string
+          desfecho_id: string | null
+          destinacao_id: string | null
+          duracao_cadastro_190_encaminhamento_copom: unknown
+          duracao_despacho_finalizacao: unknown
+          equipe_id: string | null
+          grupamento_id: string | null
+          hora_cadastro_ocorrencia: string | null
+          hora_despacho_ro: string | null
+          hora_finalizacao_ocorrencia: string | null
+          hora_recebido_copom_central: string | null
+          id: string
+          local_id: string | null
+          numero_rap: string | null
+          numero_tco_pmdf_ou_tco_apf_pcdf: string | null
+          ocorrencia_copom: string | null
+          prefixo: string | null
+          telefone: string | null
+        }
+        Insert: {
+          cmt_vtr?: string | null
+          created_at?: string
+          crime?: string | null
+          data: string
+          desfecho_id?: string | null
+          destinacao_id?: string | null
+          duracao_cadastro_190_encaminhamento_copom?: unknown
+          duracao_despacho_finalizacao?: unknown
+          equipe_id?: string | null
+          grupamento_id?: string | null
+          hora_cadastro_ocorrencia?: string | null
+          hora_despacho_ro?: string | null
+          hora_finalizacao_ocorrencia?: string | null
+          hora_recebido_copom_central?: string | null
+          id?: string
+          local_id?: string | null
+          numero_rap?: string | null
+          numero_tco_pmdf_ou_tco_apf_pcdf?: string | null
+          ocorrencia_copom?: string | null
+          prefixo?: string | null
+          telefone?: string | null
+        }
+        Update: {
+          cmt_vtr?: string | null
+          created_at?: string
+          crime?: string | null
+          data?: string
+          desfecho_id?: string | null
+          destinacao_id?: string | null
+          duracao_cadastro_190_encaminhamento_copom?: unknown
+          duracao_despacho_finalizacao?: unknown
+          equipe_id?: string | null
+          grupamento_id?: string | null
+          hora_cadastro_ocorrencia?: string | null
+          hora_despacho_ro?: string | null
+          hora_finalizacao_ocorrencia?: string | null
+          hora_recebido_copom_central?: string | null
+          id?: string
+          local_id?: string | null
+          numero_rap?: string | null
+          numero_tco_pmdf_ou_tco_apf_pcdf?: string | null
+          ocorrencia_copom?: string | null
+          prefixo?: string | null
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_controle_ocorrencias_crime_ambientais_20_destinacao_id_fkey"
+            columns: ["destinacao_id"]
+            isOneToOne: false
+            referencedRelation: "dim_destinacao"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_controle_ocorrencias_crime_ambientais_20_grupamento_id_fkey"
+            columns: ["grupamento_id"]
+            isOneToOne: false
+            referencedRelation: "dim_grupamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_controle_ocorrencias_crime_ambientais_2026_desfecho_id_fkey"
+            columns: ["desfecho_id"]
+            isOneToOne: false
+            referencedRelation: "dim_desfecho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_controle_ocorrencias_crime_ambientais_2026_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "dim_equipe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_controle_ocorrencias_crime_ambientais_2026_local_id_fkey"
+            columns: ["local_id"]
+            isOneToOne: false
+            referencedRelation: "dim_local"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_controle_ocorrencias_resgate_2026: {
+        Row: {
+          cmt_vtr: string | null
+          created_at: string
+          data: string
+          desfecho_id: string | null
+          destinacao_id: string | null
+          duracao_cadastro_190_encaminhamento_copom: unknown
+          duracao_despacho_finalizacao: unknown
+          equipe_id: string | null
+          fauna: string | null
+          grupamento_id: string | null
+          hora_cadastro_ocorrencia: string | null
+          hora_despacho_ro: string | null
+          hora_finalizacao_ocorrencia: string | null
+          hora_recebido_copom_central: string | null
+          id: string
+          local_id: string | null
+          numero_rap: string | null
+          ocorrencia_copom: string | null
+          prefixo: string | null
+          telefone: string | null
+        }
+        Insert: {
+          cmt_vtr?: string | null
+          created_at?: string
+          data: string
+          desfecho_id?: string | null
+          destinacao_id?: string | null
+          duracao_cadastro_190_encaminhamento_copom?: unknown
+          duracao_despacho_finalizacao?: unknown
+          equipe_id?: string | null
+          fauna?: string | null
+          grupamento_id?: string | null
+          hora_cadastro_ocorrencia?: string | null
+          hora_despacho_ro?: string | null
+          hora_finalizacao_ocorrencia?: string | null
+          hora_recebido_copom_central?: string | null
+          id?: string
+          local_id?: string | null
+          numero_rap?: string | null
+          ocorrencia_copom?: string | null
+          prefixo?: string | null
+          telefone?: string | null
+        }
+        Update: {
+          cmt_vtr?: string | null
+          created_at?: string
+          data?: string
+          desfecho_id?: string | null
+          destinacao_id?: string | null
+          duracao_cadastro_190_encaminhamento_copom?: unknown
+          duracao_despacho_finalizacao?: unknown
+          equipe_id?: string | null
+          fauna?: string | null
+          grupamento_id?: string | null
+          hora_cadastro_ocorrencia?: string | null
+          hora_despacho_ro?: string | null
+          hora_finalizacao_ocorrencia?: string | null
+          hora_recebido_copom_central?: string | null
+          id?: string
+          local_id?: string | null
+          numero_rap?: string | null
+          ocorrencia_copom?: string | null
+          prefixo?: string | null
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_controle_ocorrencias_resgate_2026_desfecho_id_fkey"
+            columns: ["desfecho_id"]
+            isOneToOne: false
+            referencedRelation: "dim_desfecho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_controle_ocorrencias_resgate_2026_destinacao_id_fkey"
+            columns: ["destinacao_id"]
+            isOneToOne: false
+            referencedRelation: "dim_destinacao"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_controle_ocorrencias_resgate_2026_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "dim_equipe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_controle_ocorrencias_resgate_2026_grupamento_id_fkey"
+            columns: ["grupamento_id"]
+            isOneToOne: false
+            referencedRelation: "dim_grupamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_controle_ocorrencias_resgate_2026_local_id_fkey"
+            columns: ["local_id"]
+            isOneToOne: false
+            referencedRelation: "dim_local"
             referencedColumns: ["id"]
           },
         ]
@@ -2383,7 +2656,6 @@ export type Database = {
           ano: number | null
           cmt_vtr: string | null
           created_at: string
-          dados_origem_id: string | null
           data_ocorrencia: string | null
           desfecho: string | null
           destinacao: string | null
@@ -2410,7 +2682,6 @@ export type Database = {
           ano?: number | null
           cmt_vtr?: string | null
           created_at?: string
-          dados_origem_id?: string | null
           data_ocorrencia?: string | null
           desfecho?: string | null
           destinacao?: string | null
@@ -2437,7 +2708,6 @@ export type Database = {
           ano?: number | null
           cmt_vtr?: string | null
           created_at?: string
-          dados_origem_id?: string | null
           data_ocorrencia?: string | null
           desfecho?: string | null
           destinacao?: string | null
@@ -2460,22 +2730,13 @@ export type Database = {
           prefixo?: string | null
           telefone?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fat_ocorrencias_crimes_ambientais_2026_dados_origem_id_fkey"
-            columns: ["dados_origem_id"]
-            isOneToOne: false
-            referencedRelation: "radio_operador_data"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       fat_ocorrencias_resgate_fauna_2026: {
         Row: {
           ano: number | null
           cmt_vtr: string | null
           created_at: string
-          dados_origem_id: string | null
           data_ocorrencia: string | null
           desfecho: string | null
           destinacao: string | null
@@ -2501,7 +2762,6 @@ export type Database = {
           ano?: number | null
           cmt_vtr?: string | null
           created_at?: string
-          dados_origem_id?: string | null
           data_ocorrencia?: string | null
           desfecho?: string | null
           destinacao?: string | null
@@ -2527,7 +2787,6 @@ export type Database = {
           ano?: number | null
           cmt_vtr?: string | null
           created_at?: string
-          dados_origem_id?: string | null
           data_ocorrencia?: string | null
           desfecho?: string | null
           destinacao?: string | null
@@ -2549,15 +2808,7 @@ export type Database = {
           prefixo?: string | null
           telefone?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fat_ocorrencias_resgate_fauna_2026_dados_origem_id_fkey"
-            columns: ["dados_origem_id"]
-            isOneToOne: false
-            referencedRelation: "radio_operador_data"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       fat_ordens_servico: {
         Row: {
@@ -4034,33 +4285,6 @@ export type Database = {
         }
         Relationships: []
       }
-      radio_operador_data: {
-        Row: {
-          data: Json
-          data_hash: string | null
-          id: string
-          row_index: number
-          sheet_name: string | null
-          synced_at: string
-        }
-        Insert: {
-          data?: Json
-          data_hash?: string | null
-          id?: string
-          row_index: number
-          sheet_name?: string | null
-          synced_at?: string
-        }
-        Update: {
-          data?: Json
-          data_hash?: string | null
-          id?: string
-          row_index?: number
-          sheet_name?: string | null
-          synced_at?: string
-        }
-        Relationships: []
-      }
       rap_processados: {
         Row: {
           confidence_score: number | null
@@ -5358,17 +5582,6 @@ export type Database = {
       month_to_int: { Args: { m: string }; Returns: number }
       norm_txt: { Args: { t: string }; Returns: string }
       normalize_text: { Args: { input_text: string }; Returns: string }
-      popula_fat_radio_operador: {
-        Args: never
-        Returns: {
-          dim_desfecho: number
-          dim_destinacao: number
-          dim_equipe: number
-          dim_fauna: number
-          inserted_crimes: number
-          inserted_resgates: number
-        }[]
-      }
       radio_operador_import_sheet: {
         Args: { p_headers: string[]; p_rows: Json[]; p_sheet_name: string }
         Returns: {

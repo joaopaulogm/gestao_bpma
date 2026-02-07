@@ -139,12 +139,12 @@ const RadioOperador: React.FC = () => {
     setLoading(true);
     try {
       const [resResgates, resCrimes] = await Promise.all([
-        supabase
+        (supabase as any)
           .from('fat_controle_ocorrencias_resgate_2026')
           .select(RESGATE_SELECT)
           .order('data', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false }),
-        supabase
+        (supabase as any)
           .from('fat_controle_ocorrencias_crime_ambientais_2026')
           .select(RESGATE_SELECT)
           .order('data', { ascending: false, nullsFirst: false })
