@@ -95,10 +95,6 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
     const itemSelecionado = itensDisponiveis.find(i => i.id === selectedItem);
     if (!itemSelecionado) return;
 
-    // Verificar se já existe
-    const existe = bensApreendidos.some(b => b.itemId === selectedItem);
-    if (existe) return;
-
     const novoBem: BemApreendido = {
       id: crypto.randomUUID(),
       itemId: itemSelecionado.id,
@@ -210,7 +206,6 @@ const BensApreendidosSection: React.FC<BensApreendidosSectionProps> = ({
                   <SelectItem 
                     key={item.id} 
                     value={item.id}
-                    disabled={bensApreendidos.some(b => b.itemId === item.id)}
                   >
                     {item.Item}
                   </SelectItem>
