@@ -50,3 +50,9 @@ verify_jwt = false
 
 [functions.rap-import]
 verify_jwt = false
+
+[functions.sync-radio-operador]
+verify_jwt = false
+
+[functions.get-calendar-events]
+verify_jwt = false
