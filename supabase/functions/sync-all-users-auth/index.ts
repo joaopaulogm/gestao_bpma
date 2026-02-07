@@ -92,8 +92,8 @@ serve(async (req) => {
       throw new Error(`Erro ao listar usuários: ${listError.message}`);
     }
 
-    const existingAuthUsers = new Map(
-      authUsersList?.users?.map((u) => [u.email?.toLowerCase(), u]) || []
+    const existingAuthUsers = new Map<string, { id: string }>(
+      (authUsersList?.users?.map((u) => [u.email?.toLowerCase() ?? '', u] as [string, { id: string }]) || [])
     );
 
     for (const ur of userRoles) {
