@@ -3171,13 +3171,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fat_registros_de_crime_desfecho_id_fkey"
-            columns: ["desfecho_id"]
-            isOneToOne: false
-            referencedRelation: "dim_desfecho_resgates"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fat_registros_de_crime_regiao_administrativa_id_fkey"
             columns: ["regiao_administrativa_id"]
             isOneToOne: false
@@ -3189,6 +3182,13 @@ export type Database = {
             columns: ["tipo_area_id"]
             isOneToOne: false
             referencedRelation: "dim_tipo_de_area"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_registros_de_crimes_ambientais_desfecho_id_fkey"
+            columns: ["desfecho_id"]
+            isOneToOne: false
+            referencedRelation: "dim_desfecho_crime_ambientais"
             referencedColumns: ["id"]
           },
           {
