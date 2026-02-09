@@ -2,8 +2,8 @@
 // Edge Function: Sync Google Sheets (gid-based) -> Supabase facts + dimensions
 // - Header is ALWAYS on row 2 in both sheets (Google Sheets row numbering), i.e. allRows[1]
 // - Data starts on row 3, i.e. allRows[2]
-// - Resgate: aba com gid=0 (sheetId=0) por padrão -> fat_controle_ocorrencias_resgate_2026
-// - Crimes: aba por CRIMES_GID ou fallback por nome "CRIMES" -> fat_controle_ocorrencias_crime_ambientais_2026
+// - Resgate sheet is selected by gid=0 (sheetId=0) by default
+// - Crimes sheet can be selected by CRIMES_GID env var (recommended). Fallback: title contains "CRIMES"
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
@@ -18,15 +18,17 @@ const SPREADSHEET_ID =
   Deno.env.get("SPREADSHEET_ID") ??
   "16xtQDV3bppeJS_32RkXot4TyxaVPCA2nVqUXP8RyEfI";
 
-// gid=0 = primeira aba (Resgates de Fauna)
+// gid=0 from your link
 const RESGATE_GID = Number(Deno.env.get("RESGATE_GID") ?? 0);
+// Set this in env to avoid ambiguity (recommended)
 const CRIMES_GID_ENV = Deno.env.get("CRIMES_GID");
 const CRIMES_GID = CRIMES_GID_ENV != null && CRIMES_GID_ENV !== ""
   ? Number(CRIMES_GID_ENV)
   : null;
 
-const HEADER_ROW_INDEX = 1;
-const DATA_START_INDEX = 2;
+// Google Sheets layout: row 2 is header in both tabs
+const HEADER_ROW_INDEX = 1; // line 2
+const DATA_START_INDEX = 2; // line 3
 
 // ── Google Auth ──
 async function getAccessToken(): Promise<string> {
@@ -53,6 +55,7 @@ async function getAccessToken(): Promise<string> {
 
   const signingInput = `${b64url(header)}.${b64url(claimSet)}`;
 
+  // PEM -> DER bytes
   const pem = String(sa.private_key || "");
   const b64 = pem
     .replace(/-----BEGIN PRIVATE KEY-----/g, "")
@@ -108,12 +111,14 @@ function parseDate(v: unknown): string | null {
   if (!v) return null;
   const s = String(v).trim();
 
+  // DD/MM/YYYY
   const m = s.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})$/);
   if (m) {
     const [, dd, mm, yyyy] = m;
     return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
   }
 
+  // Already YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
 
   return null;
@@ -131,6 +136,19 @@ function parseInterval(v: unknown): string | null {
   if (!v) return null;
   const s = String(v).trim();
   if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(s)) return s.length <= 5 ? `${s}:00` : s;
+  return null;
+}
+
+function normalizePhone(v: unknown): string | null {
+  if (!v) return null;
+  let s = String(v).trim();
+  const digits = s.replace(/\D/g, "");
+  // If pure digits 11 -> format
+  if (digits.length === 11) {
+    s = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  }
+  // Accept only (XX) XXXXX-XXXX
+  if (/^\(\d{2}\)\s?\d{5}-\d{4}$/.test(s)) return s;
   return null;
 }
 
@@ -152,6 +170,7 @@ async function findOrCreate(
 
   if (cache.has(key)) return cache.get(key)!;
 
+  // Try exact match first (fast, deterministic)
   const { data: found, error: findErr } = await supabase
     .from(table)
     .select("id")
@@ -167,6 +186,7 @@ async function findOrCreate(
     return found.id;
   }
 
+  // Create new
   const { data: created, error: insErr } = await supabase
     .from(table)
     .insert({ [nameField]: raw })
@@ -296,6 +316,7 @@ serve(async (req) => {
       );
     }
 
+    // Pre-load dimension caches
     const equipeCache = await loadDimCache(supabase, "dim_equipe", "nome");
     const localCache = await loadDimCache(supabase, "dim_local", "nome");
     const grupamentoCache = await loadDimCache(
@@ -312,7 +333,7 @@ serve(async (req) => {
 
     const results: any[] = [];
 
-    // ── RESGATE: aba por gid=0 -> fat_controle_ocorrencias_resgate_2026 ──
+    // ── RESGATE (gid=0 by default) ──
     {
       const sheetName = resgateMeta.title;
       const allRows = await fetchSheetValues(token, sheetName);
@@ -326,6 +347,7 @@ serve(async (req) => {
       );
       ensureHeaderOk(headers, sheetName);
 
+      // Map header positions by pattern matching
       const iData = colIdx(headers, ["DATA"]);
       const iEquipe = colIdx(headers, ["EQUIPE"]);
       const iCopom = colIdx(headers, ["COPOM", "OCORRÊNCIA", "OCORRENCIA"]);
@@ -345,6 +367,7 @@ serve(async (req) => {
       const iDur1 = colIdx(headers, ["190"]);
       const iDur2 = findSecondDuracao(headers, iDur1);
 
+      // Hard guards: if these aren't found, we prefer to throw (avoids inserting null junk)
       for (const [name, idx] of Object.entries({
         DATA: iData,
         EQUIPE: iEquipe,
@@ -359,9 +382,29 @@ serve(async (req) => {
 
       console.log(
         "[sync-radio-operador] Resgate column mapping:",
-        { iData, iEquipe, iCopom, iFauna, iLocal, iDesfecho, iDestinacao },
+        {
+          iData,
+          iEquipe,
+          iCopom,
+          iFauna,
+          iHCadastro,
+          iHRecebido,
+          iHDespacho,
+          iHFinal,
+          iTelefone,
+          iLocal,
+          iPrefixo,
+          iGrupamento,
+          iCmtVtr,
+          iDesfecho,
+          iDestinacao,
+          iRap,
+          iDur1,
+          iDur2,
+        },
       );
 
+      // Delete existing resgate data
       const { error: delErr } = await supabase
         .from("fat_controle_ocorrencias_resgate_2026")
         .delete()
@@ -450,7 +493,7 @@ serve(async (req) => {
           hora_recebido_copom_central: parseTime(getCell(row, iHRecebido)),
           hora_despacho_ro: parseTime(getCell(row, iHDespacho)),
           hora_finalizacao_ocorrencia: parseTime(getCell(row, iHFinal)),
-          telefone: String(getCell(row, iTelefone) ?? "").trim() || null,
+          telefone: normalizePhone(getCell(row, iTelefone)),
           local_id,
           prefixo: String(getCell(row, iPrefixo) ?? "").trim() || null,
           grupamento_id,
@@ -465,6 +508,7 @@ serve(async (req) => {
         });
       }
 
+      // Batch insert in chunks of 50 (log per-chunk errors)
       let inserted = 0;
       const chunkErrors: any[] = [];
 
@@ -479,6 +523,7 @@ serve(async (req) => {
             `[sync-radio-operador] Resgate insert chunk ${i} error:`,
             error.message,
           );
+          // Store first 3 sample rows to help debug constraints (e.g., phone CHECK)
           chunkErrors.push({
             at: i,
             message: error.message,
@@ -504,7 +549,7 @@ serve(async (req) => {
       );
     }
 
-    // ── CRIMES: aba por CRIMES_GID ou fallback -> fat_controle_ocorrencias_crime_ambientais_2026 ──
+    // ── CRIMES (by CRIMES_GID or fallback) ──
     if (crimesMeta) {
       const sheetName = crimesMeta.title;
       const allRows = await fetchSheetValues(token, sheetName);
@@ -547,6 +592,7 @@ serve(async (req) => {
         { iData, iEquipe, iCopom, iCrime, iTco, iLocal, iDur1, iDur2 },
       );
 
+      // Delete existing crimes data
       const { error: delErr } = await supabase
         .from("fat_controle_ocorrencias_crime_ambientais_2026")
         .delete()
@@ -565,7 +611,7 @@ serve(async (req) => {
         const row = allRows[i] || [];
         const data = parseDate(getCell(row, iData));
         if (!data) {
-          skipped++;
+          skipped++
           continue;
         }
 
@@ -634,7 +680,7 @@ serve(async (req) => {
           hora_recebido_copom_central: parseTime(getCell(row, iHRecebido)),
           hora_despacho_ro: parseTime(getCell(row, iHDespacho)),
           hora_finalizacao_ocorrencia: parseTime(getCell(row, iHFinal)),
-          telefone: String(getCell(row, iTelefone) ?? "").trim() || null,
+          telefone: normalizePhone(getCell(row, iTelefone)),
           local_id,
           prefixo: String(getCell(row, iPrefixo) ?? "").trim() || null,
           grupamento_id,
