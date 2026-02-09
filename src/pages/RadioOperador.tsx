@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { PawPrint, Scale, AlertTriangle, Search, ChevronDown } from 'lucide-react';
+import { PawPrint, Scale, AlertTriangle, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -23,8 +22,6 @@ import RadioOperadorLayout from '@/components/radio-operador/RadioOperadorLayout
 import OcorrenciaViewModal from '@/components/radio-operador/OcorrenciaViewModal';
 import {
   type RadioRow,
-  type RadioFilters,
-  EMPTY_RADIO_FILTERS,
   RESGATE_TABLE_COLUMNS,
   CRIMES_TABLE_COLUMNS,
   getDisplayVal,
@@ -38,8 +35,6 @@ const SHEET_RESGATES = 'Resgates de Fauna';
 const SHEET_CRIMES = 'Crimes Ambientais';
 const RESGATE_SELECT =
   '*, dim_equipe!equipe_id(nome), dim_local!local_id(nome), dim_grupamento!grupamento_id(nome), dim_desfecho!desfecho_id(nome), dim_destinacao!destinacao_id(nome)';
-
-export type StatusFilter = 'open' | 'in_review' | 'closed' | 'all';
 
 function formatDataControle(d: string | null): string {
   if (!d) return '';
@@ -151,12 +146,9 @@ const RadioOperador: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
-  const [filters, setFilters] = useState<RadioFilters>(EMPTY_RADIO_FILTERS);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('open');
   const [activeTab, setActiveTab] = useState<string>(SHEET_RESGATES);
   const [viewRow, setViewRow] = useState<RadioRow | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -239,51 +231,20 @@ const RadioOperador: React.FC = () => {
     [activeTab, crimesDataRows, resgatesDataRows]
   );
 
-  const filteredByStatus = useMemo(() => {
-    if (statusFilter === 'all') return currentRows;
-    const statusMap = {
-      open: 'Aberto',
-      in_review: 'Em análise',
-      closed: 'Encerrado',
-    };
-    const target = statusMap[statusFilter];
-    return currentRows.filter((r) => (r as RadioRowWithStatus).status === target);
-  }, [currentRows, statusFilter]);
-
   const filteredBySearch = useMemo(() => {
-    if (!searchQuery.trim()) return filteredByStatus;
+    if (!searchQuery.trim()) return currentRows;
     const q = searchQuery.toLowerCase().trim();
-    return filteredByStatus.filter((row) => {
+    return currentRows.filter((row) => {
       const str = Object.values(row.data)
         .filter((v) => v != null)
         .join(' ')
         .toLowerCase();
       return str.includes(q);
     });
-  }, [filteredByStatus, searchQuery]);
-
-  const toggleSelect = useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const toggleSelectAll = useCallback(() => {
-    if (selectedIds.size === filteredBySearch.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filteredBySearch.map((r) => r.id)));
-    }
-  }, [filteredBySearch, selectedIds.size]);
-
-  const deselectAll = useCallback(() => setSelectedIds(new Set()), []);
+  }, [currentRows, searchQuery]);
 
   const handleView = useCallback((row: RadioRow) => setViewRow(row), []);
   const hasData = rows.length > 0;
-  const totalOcorrencias = resgatesDataRows.length + crimesDataRows.length;
 
   const statusBadgeClass = (status: string) => {
     switch (status) {
@@ -301,93 +262,44 @@ const RadioOperador: React.FC = () => {
   return (
     <RadioOperadorLayout>
       <div className="px-6 py-5">
-        {/* Abas Start | Views (igual à imagem) */}
-        <Tabs value="views" className="w-full">
-          <TabsList className="h-9 bg-transparent p-0 gap-0 border-b border-gray-200 rounded-none mb-6">
-            <TabsTrigger
-              value="start"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none text-gray-500 data-[state=active]:text-gray-700 px-4 pb-2"
-            >
-              Início
-            </TabsTrigger>
-            <TabsTrigger
-              value="views"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#071d49] data-[state=active]:bg-transparent data-[state=active]:shadow-none text-gray-500 data-[state=active]:text-[#071d49] data-[state=active]:font-medium px-4 pb-2"
-            >
-              Visualizações
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="inline-flex">
+            <TabsList className="h-9 bg-gray-100 p-0.5 rounded-lg inline-flex">
+              <TabsTrigger
+                value={SHEET_RESGATES}
+                className="rounded-md px-3 h-8 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              >
+                <PawPrint className="h-4 w-4 mr-1.5" />
+                Resgate de Fauna
+                <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-[10px] rounded bg-[#071d49]/10 text-[#071d49]">
+                  {resgatesDataRows.length}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger
+                value={SHEET_CRIMES}
+                className="rounded-md px-3 h-8 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              >
+                <Scale className="h-4 w-4 mr-1.5" />
+                Crimes Ambientais
+                <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-[10px] rounded bg-[#071d49]/10 text-[#071d49]">
+                  {crimesDataRows.length}
+                </Badge>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              type="search"
+              placeholder="Pesquisar..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 bg-white border-gray-300 rounded-lg text-sm"
+            />
+          </div>
+        </div>
 
-          <TabsContent value="views" className="mt-0">
-            {/* Seção "Ocorrências abertas" + pills + search */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-              <div>
-                <h2 className="text-base font-semibold text-gray-900 mb-3">
-                  Ocorrências abertas
-                </h2>
-                <div className="flex flex-wrap items-center gap-2">
-                  {(
-                    [
-                      { key: 'open' as const, label: 'Aberto' },
-                      { key: 'in_review' as const, label: 'Em análise' },
-                      { key: 'closed' as const, label: 'Encerrado' },
-                      { key: 'all' as const, label: 'Todas' },
-                    ] as const
-                  ).map(({ key, label }) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setStatusFilter(key)}
-                      className={cn(
-                        'px-4 py-2 rounded-lg text-sm font-medium border transition-colors',
-                        statusFilter === key
-                          ? 'bg-[#071d49] text-white border-[#071d49]'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                      )}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <Input
-                  type="search"
-                  placeholder="Pesquisar..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 bg-white border-gray-300 rounded-lg text-sm"
-                />
-              </div>
-            </div>
-
-            {/* "Ocorrências abertas e atribuídas" + botões */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
-              <h2 className="text-base font-semibold text-gray-900">
-                Ocorrências abertas e atribuídas
-              </h2>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={deselectAll}
-                  className="h-9 px-3 rounded-lg border-gray-300 text-gray-700 bg-white"
-                >
-                  Desmarcar todas
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => toast.info('Edição deve ser feita na Seção Operacional.')}
-                  className="h-9 px-3 rounded-lg bg-[#071d49] hover:bg-[#071d49]/90 text-white"
-                >
-                  Editar ocorrências
-                  <ChevronDown className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </div>
-
-            {loading && !hasData ? (
+        {loading && !hasData ? (
               <div className="flex flex-col items-center justify-center py-24 gap-3">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#071d49]/30 border-t-[#071d49]" />
                 <p className="text-sm text-gray-500">Carregando ocorrências...</p>
@@ -408,159 +320,78 @@ const RadioOperador: React.FC = () => {
               </div>
             ) : (
               <>
-                {/* Tabs Resgate | Crimes (dentro da área de conteúdo) */}
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-3">
-                  <TabsList className="h-9 bg-gray-100 p-0.5 rounded-lg inline-flex">
-                    <TabsTrigger
-                      value={SHEET_RESGATES}
-                      className="rounded-md px-3 h-8 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                    >
-                      <PawPrint className="h-4 w-4 mr-1.5" />
-                      Resgate de Fauna
-                      <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-[10px] rounded bg-[#071d49]/10 text-[#071d49]">
-                        {resgatesDataRows.length}
-                      </Badge>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value={SHEET_CRIMES}
-                      className="rounded-md px-3 h-8 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                    >
-                      <Scale className="h-4 w-4 mr-1.5" />
-                      Crimes Ambientais
-                      <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-[10px] rounded bg-[#071d49]/10 text-[#071d49]">
-                        {crimesDataRows.length}
-                      </Badge>
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-
-                {/* Tabela no estilo da imagem */}
-                <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-gray-200 bg-gray-50/80 hover:bg-gray-50/80">
-                        <TableHead className="w-12 h-11 px-4">
-                          <Checkbox
-                            checked={
-                              filteredBySearch.length > 0 &&
-                              selectedIds.size === filteredBySearch.length
-                            }
-                            onCheckedChange={toggleSelectAll}
-                            aria-label="Selecionar todas"
-                          />
+                <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b border-gray-200 bg-gray-50/80 hover:bg-gray-50/80">
+                      <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider h-11 px-4 whitespace-nowrap">
+                        STATUS
+                      </TableHead>
+                      {(activeTab === SHEET_CRIMES ? CRIMES_TABLE_COLUMNS : RESGATE_TABLE_COLUMNS).map((col) => (
+                        <TableHead
+                          key={col.id}
+                          className="text-xs font-semibold text-gray-600 uppercase tracking-wider h-11 px-4 whitespace-pre-line min-w-[80px]"
+                        >
+                          {col.header}
                         </TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider h-11 px-4">
-                          Status
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider h-11 px-4">
-                          ID
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider h-11 px-4">
-                          Assunto
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider h-11 px-4">
-                          Solicitante
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider h-11 px-4">
-                          Requerido
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider h-11 px-4">
-                          Atualização
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider h-11 px-4">
-                          Grupo
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider h-11 px-4">
-                          Agente atribuído
-                        </TableHead>
-                        <TableHead className="w-16" />
+                      ))}
+                      <TableHead className="w-16" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredBySearch.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={(activeTab === SHEET_CRIMES ? CRIMES_TABLE_COLUMNS : RESGATE_TABLE_COLUMNS).length + 2}
+                          className="py-12 text-center text-gray-500"
+                        >
+                          Nenhuma ocorrência encontrada.
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredBySearch.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={10}
-                            className="py-12 text-center text-gray-500"
+                    ) : (
+                      filteredBySearch.map((row) => {
+                        const status = (row as RadioRowWithStatus).status ?? 'Aberto';
+                        const columns = row.sheet_name === SHEET_CRIMES ? CRIMES_TABLE_COLUMNS : RESGATE_TABLE_COLUMNS;
+                        return (
+                          <TableRow
+                            key={row.id}
+                            className="border-b border-gray-100 hover:bg-gray-50/50"
                           >
-                            Nenhuma ocorrência encontrada.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredBySearch.map((row) => {
-                          const status = (row as RadioRowWithStatus).status ?? 'Aberto';
-                          const assunto =
-                            row.sheet_name === SHEET_CRIMES
-                              ? getDisplayVal(getRowData(row, 'CRIME') ?? row.data['CRIME'])
-                              : getDisplayVal(getRowData(row, 'FAUNA') ?? row.data['FAUNA']);
-                          const dataStr = getDisplayVal(row.data['Data']);
-                          const requerido = dataStr;
-                          const solicitante = getDisplayVal(row.data['Equipe']);
-                          const grupo =
-                            getDisplayVal(row.data['GRUPAMENTO']) !== '—'
-                              ? getDisplayVal(row.data['GRUPAMENTO'])
-                              : row.sheet_name ?? '—';
-                          return (
-                            <TableRow
-                              key={row.id}
-                              className="border-b border-gray-100 hover:bg-gray-50/50"
-                            >
-                              <TableCell className="px-4 py-3">
-                                <Checkbox
-                                  checked={selectedIds.has(row.id)}
-                                  onCheckedChange={() => toggleSelect(row.id)}
-                                  aria-label={`Selecionar #${String(row.row_index).padStart(3, '0')}`}
-                                />
-                              </TableCell>
-                              <TableCell className="px-4 py-3">
-                                <span
-                                  className={cn(
-                                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                                    statusBadgeClass(status)
-                                  )}
-                                >
-                                  {status}
-                                </span>
-                              </TableCell>
-                              <TableCell className="px-4 py-3 text-sm text-gray-900 font-medium">
-                                #{String(row.row_index).padStart(3, '0')}
-                              </TableCell>
-                              <TableCell className="px-4 py-3 text-sm text-gray-900 max-w-[200px] truncate">
-                                {assunto}
-                              </TableCell>
-                              <TableCell className="px-4 py-3 text-sm text-gray-700">
-                                {solicitante}
-                              </TableCell>
-                              <TableCell className="px-4 py-3 text-sm text-gray-700">
-                                {requerido}
-                              </TableCell>
-                              <TableCell className="px-4 py-3 text-sm text-gray-700">
-                                {requerido}
-                              </TableCell>
-                              <TableCell className="px-4 py-3 text-sm text-gray-700">
-                                {grupo}
-                              </TableCell>
-                              <TableCell className="px-4 py-3 text-sm text-gray-700">
-                                {solicitante}
-                              </TableCell>
-                              <TableCell className="px-4 py-3">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 text-gray-600 hover:text-[#071d49]"
-                                  onClick={() => handleView(row)}
-                                >
-                                  Ver
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
-                      )}
-                    </TableBody>
-                  </Table>
+                            <TableCell className="px-4 py-3 whitespace-nowrap">
+                              <span
+                                className={cn(
+                                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                                  statusBadgeClass(status)
+                                )}
+                              >
+                                {status}
+                              </span>
+                            </TableCell>
+                            {columns.map((col) => {
+                              const val = col.key === 'FAUNA' || col.key === 'CRIME' ? getRowData(row, col.key) : row.data[col.key];
+                              return (
+                                <TableCell key={col.id} className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap max-w-[200px] truncate" title={getDisplayVal(val)}>
+                                  {getDisplayVal(val)}
+                                </TableCell>
+                              );
+                            })}
+                            <TableCell className="px-4 py-3 whitespace-nowrap">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 text-gray-600 hover:text-[#071d49]"
+                                onClick={() => handleView(row)}
+                              >
+                                Ver
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
                 </div>
-
                 {lastSync && (
                   <p className="mt-3 text-xs text-gray-500">
                     Atualizado:{' '}
@@ -571,8 +402,6 @@ const RadioOperador: React.FC = () => {
                 )}
               </>
             )}
-          </TabsContent>
-        </Tabs>
       </div>
 
       <OcorrenciaViewModal

@@ -79,12 +79,12 @@ export const CRIMES_COLUMN_KEYS = [
 export const RESGATE_TABLE_COLUMNS = [
   { id: 'Data', header: 'DATA', key: 'Data' },
   { id: 'Equipe', header: 'EQUIPE', key: 'Equipe' },
-  { id: 'N° OCORRÊNCIA COPOM', header: 'N° COPOM', key: 'N° OCORRÊNCIA COPOM' },
+  { id: 'N° OCORRÊNCIA COPOM', header: 'N° OCORRÊNCIA COPOM', key: 'N° OCORRÊNCIA COPOM' },
   { id: 'FAUNA', header: 'FAUNA', key: 'FAUNA' },
-  { id: 'Hora cadastro', header: 'HORA CADASTRO', key: 'Hora cadastro' },
-  { id: 'Hora recebido COPOM', header: 'HORA COPOM', key: 'Hora recebido COPOM' },
-  { id: 'Despacho RO', header: 'DESPACHO RO', key: 'Despacho RO' },
-  { id: 'Hora finalização', header: 'FINALIZAÇÃO', key: 'Hora finalização' },
+  { id: 'Hora cadastro', header: 'HORA (Cadastro da Ocorrência)', key: 'Hora cadastro' },
+  { id: 'Hora recebido COPOM', header: 'HORA (Recebido COPOM na Central)', key: 'Hora recebido COPOM' },
+  { id: 'Despacho RO', header: 'HORA (Despacho RO)', key: 'Despacho RO' },
+  { id: 'Hora finalização', header: 'HORA (Finalização Ocorrência)', key: 'Hora finalização' },
   { id: 'Telefone', header: 'TELEFONE', key: 'Telefone' },
   { id: 'LOCAL', header: 'LOCAL', key: 'LOCAL' },
   { id: 'PREFIXO', header: 'PREFIXO', key: 'PREFIXO' },
@@ -93,20 +93,20 @@ export const RESGATE_TABLE_COLUMNS = [
   { id: 'Desfecho', header: 'DESFECHO', key: 'Desfecho' },
   { id: 'DESTINAÇÃO', header: 'DESTINAÇÃO', key: 'DESTINAÇÃO' },
   { id: 'N° RAP', header: 'N° RAP', key: 'N° RAP' },
-  { id: 'Duração cadastro/encaminhamento', header: 'DURAÇÃO CAD-ENC', key: 'Duração cadastro/encaminhamento' },
-  { id: 'Duração despacho/finalização', header: 'DURAÇÃO DESP-FIN', key: 'Duração despacho/finalização' },
+  { id: 'Duração cadastro/encaminhamento', header: 'DURAÇÃO (Cadastro do 190 - Encaminhamento do COPOM)', key: 'Duração cadastro/encaminhamento' },
+  { id: 'Duração despacho/finalização', header: 'DURAÇÃO (Despacho da Ocorrência - Finalização)', key: 'Duração despacho/finalização' },
 ];
 
 /** Colunas da tabela Crimes Ambientais. */
 export const CRIMES_TABLE_COLUMNS = [
   { id: 'Data', header: 'DATA', key: 'Data' },
   { id: 'Equipe', header: 'EQUIPE', key: 'Equipe' },
-  { id: 'N° OCORRÊNCIA COPOM', header: 'N° COPOM', key: 'N° OCORRÊNCIA COPOM' },
+  { id: 'N° OCORRÊNCIA COPOM', header: 'N° OCORRÊNCIA COPOM', key: 'N° OCORRÊNCIA COPOM' },
   { id: 'CRIME', header: 'CRIME', key: 'CRIME' },
-  { id: 'Hora cadastro', header: 'HORA CADASTRO', key: 'Hora cadastro' },
-  { id: 'Hora recebido COPOM', header: 'HORA COPOM', key: 'Hora recebido COPOM' },
-  { id: 'Despacho RO', header: 'DESPACHO RO', key: 'Despacho RO' },
-  { id: 'Hora finalização', header: 'FINALIZAÇÃO', key: 'Hora finalização' },
+  { id: 'Hora cadastro', header: 'HORA (Cadastro da Ocorrência)', key: 'Hora cadastro' },
+  { id: 'Hora recebido COPOM', header: 'HORA (Recebido COPOM na Central)', key: 'Hora recebido COPOM' },
+  { id: 'Despacho RO', header: 'HORA (Despacho RO)', key: 'Despacho RO' },
+  { id: 'Hora finalização', header: 'HORA (Finalização Ocorrência)', key: 'Hora finalização' },
   { id: 'Telefone', header: 'TELEFONE', key: 'Telefone' },
   { id: 'LOCAL', header: 'LOCAL', key: 'LOCAL' },
   { id: 'PREFIXO', header: 'PREFIXO', key: 'PREFIXO' },
@@ -115,9 +115,9 @@ export const CRIMES_TABLE_COLUMNS = [
   { id: 'Desfecho', header: 'DESFECHO', key: 'Desfecho' },
   { id: 'DESTINAÇÃO', header: 'DESTINAÇÃO', key: 'DESTINAÇÃO' },
   { id: 'N° RAP', header: 'N° RAP', key: 'N° RAP' },
-  { id: 'N° TCO', header: 'N° TCO', key: 'N° TCO' },
-  { id: 'Duração cadastro/encaminhamento', header: 'DURAÇÃO CAD-ENC', key: 'Duração cadastro/encaminhamento' },
-  { id: 'Duração despacho/finalização', header: 'DURAÇÃO DESP-FIN', key: 'Duração despacho/finalização' },
+  { id: 'N° TCO', header: 'N° TCO - PMDF\nOU\nN° TCO/APF-PCDF', key: 'N° TCO' },
+  { id: 'Duração cadastro/encaminhamento', header: 'DURAÇÃO (Cadastro do 190 - Encaminhamento do COPOM)', key: 'Duração cadastro/encaminhamento' },
+  { id: 'Duração despacho/finalização', header: 'DURAÇÃO (Despacho da Ocorrência - Finalização)', key: 'Duração despacho/finalização' },
 ];
 
 export function getDisplayVal(val: unknown): string {

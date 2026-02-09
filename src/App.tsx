@@ -103,7 +103,7 @@ function App() {
               <Route path="/perfil" element={<ProtectedRoute requiredRoles={['operador', 'secao_pessoas', 'secao_operacional', 'secao_logistica', 'comando']}><SidebarLayout><Perfil /></SidebarLayout></ProtectedRoute>} />
               <Route path="/mapa-localizacao" element={<ProtectedRoute requiredRoles={['operador', 'secao_pessoas', 'secao_operacional', 'secao_logistica', 'comando']}><SidebarLayout><MapaLocalizacao /></SidebarLayout></ProtectedRoute>} />
               {/* Rádio Operador: apenas operador_radio, secao_operacional, comando */}
-              <Route path="/radio-operador" element={<ProtectedRoute requiredRoles={['operador_radio', 'secao_operacional', 'comando']}><RadioOperador /></ProtectedRoute>} />
+              <Route path="/radio-operador" element={<ProtectedRoute requiredRoles={['operador_radio', 'secao_operacional', 'comando']}><SidebarLayout><RadioOperador /></SidebarLayout></ProtectedRoute>} />
               
               {/* Admin only */}
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />
