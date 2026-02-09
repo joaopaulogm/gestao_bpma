@@ -347,7 +347,20 @@ const RegistrosUnificados: React.FC = () => {
       setDimensionCache(cache);
     } catch (error) {
       console.error('❌ [DimensionCache] Erro ao carregar cache de dimensões:', error);
-      toast.error('Erro ao carregar dados auxiliares');
+      toast.error('Erro ao carregar dados auxiliares. Carregando registros sem nomes de dimensões.');
+      // Fallback: cache vazio para permitir carregar os registros (nomes aparecerão como "Não identificado" onde falhar)
+      const emptyCache = {
+        regioes: new Map<string, string>(),
+        especies: new Map<string, { nome_popular: string; nome_cientifico: string; classe_taxonomica: string }>(),
+        destinacoes: new Map<string, string>(),
+        estadosSaude: new Map<string, string>(),
+        tiposCrime: new Map<string, string>(),
+        tiposPenal: new Map<string, string>(),
+        desfechosResgates: new Map<string, string>(),
+        desfechosCrimesComuns: new Map<string, string>(),
+        tiposAtividade: new Map<string, { nome: string; categoria: string }>(),
+      };
+      setDimensionCache(emptyCache);
     }
   };
 

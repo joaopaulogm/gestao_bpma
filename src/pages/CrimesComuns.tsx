@@ -221,25 +221,37 @@ const CrimesComuns = () => {
     }
   };
 
-  // Equipe functions
+  // Equipe functions: busca por matrícula OU por nome (nome completo ou nome de guerra)
   const buscarPolicial = useCallback(async () => {
     if (!matriculaInput.trim()) {
-      toast.error('Digite uma matrícula');
+      toast.error('Digite uma matrícula ou nome');
       return;
     }
-    const matriculaSemZeros = matriculaInput.replace(/^0+/, '');
-    if (membrosEquipe.some(m => m.matricula === matriculaSemZeros || m.matricula === matriculaInput)) {
+    const termo = matriculaInput.trim();
+    const matriculaSemZeros = termo.replace(/^0+/, '');
+    const jaAdicionado = membrosEquipe.some(
+      (m) => m.matricula === matriculaSemZeros || m.matricula === termo || (m.nome_guerra && termo.toUpperCase().includes(m.nome_guerra.toUpperCase()))
+    );
+    if (jaAdicionado) {
       toast.error('Este policial já foi adicionado');
       return;
     }
     setIsSearchingMembro(true);
     try {
-      const { data: policialData, error } = await supabase
+      const apenasNumeros = /^\d+$/.test(termo.replace(/\s/g, ''));
+      let query = supabase
         .from('dim_efetivo')
-        .select('id, matricula, posto_graduacao, nome_guerra')
-        .or(`matricula.eq.${matriculaInput},matricula.eq.${matriculaSemZeros}`)
-        .limit(1)
-        .single();
+        .select('id, matricula, posto_graduacao, nome_guerra, nome');
+
+      if (apenasNumeros) {
+        query = query.or(`matricula.eq.${termo},matricula.eq.${matriculaSemZeros}`);
+      } else {
+        const escaped = termo.replace(/'/g, "''");
+        query = query.or(`nome.ilike.%${escaped}%,nome_guerra.ilike.%${escaped}%`);
+      }
+
+      const { data: policialData, error } = await query.limit(1).maybeSingle();
+
       if (error || !policialData) {
         toast.error('Policial não encontrado');
         return;
