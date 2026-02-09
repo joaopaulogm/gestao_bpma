@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Apple HIG - SF Pro Font (fallback to Inter): carregado via <link> em index.html */
+/* Tipografia PMDF (Regulamento Identidade Visual 1.15–1.16): Myriad Pro padrão; Nirmala UI secundária; Source Sans 3 fallback web */
 
 @layer base {
   :root {
@@ -19,7 +19,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 15%;
 
-    /* Primary - Navy Blue #071d49 (RGB 7 29 73, Pantone 2768 C) */
+    /* Primary - Azul PMDF (Regulamento Identidade Visual: CMYK 100 92 38 45, RGB 7 29 73, Pantone 2768 C, #071d49) */
     --primary: 220 83% 16%; /* #071d49 */
     --primary-foreground: 0 0% 100%;
 
@@ -31,7 +31,7 @@
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%; /* #8E8E93 */
 
-    /* Accent - Yellow #ffcc00 (maintained from original) */
+    /* Accent - Amarelo PMDF (Regulamento Identidade Visual: CMYK 0 20 100 0, RGB 255 205 5, Pantone 2035 C, #ffcc00) */
     --accent: 48 100% 50%;
     --accent-foreground: 0 0% 15%;
 
@@ -124,8 +124,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-    /* Apple system fonts with Inter fallback */
+    font-family: "Myriad Pro", "Myriad Web", "Source Sans 3", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

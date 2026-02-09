@@ -2,23 +2,11 @@ import { Link } from 'react-router-dom';
 import { Lock, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import logoBpma from '@/assets/logo-bpma.svg';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useViewportCompact } from '@/hooks/use-viewport-compact';
 import { navSections, getHomeCardItemsForSection } from '@/config/nav';
 import type { NavItem } from '@/config/nav';
 import type { AppRole } from '@/config/nav';
-const CheckeredDivider = () => {
-  const isMobile = useIsMobile();
-  const count = isMobile ? 10 : 20;
-  return <div className="flex gap-[2px] sm:gap-[3px]">
-      {Array.from({
-      length: count
-    }).map((_, i) => <div key={`checkered-${i}`} className="flex flex-col gap-[2px] sm:gap-[3px]">
-          <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 ${i % 2 === 0 ? 'bg-primary' : 'bg-transparent'}`} />
-          <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 ${i % 2 === 1 ? 'bg-primary' : 'bg-transparent'}`} />
-        </div>)}
-    </div>;
-};
+import SillitoeTartan from '@/components/SillitoeTartan';
 import type { ElementType } from 'react';
 interface HomeCardProps {
   title: string;
@@ -88,11 +76,11 @@ const Index = () => {
           </div>
         </div>
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-4">
-          <CheckeredDivider />
+          <SillitoeTartan rows={2} variant="blueWhite" squareSize={10} gap={2} columns={12} className="flex-shrink-0" />
           <h1 className="text-2xl sm:text-3xl md:text-3xl lg:text-3xl xl:text-4xl font-bold text-[#071d49] whitespace-nowrap tracking-tight">
             Gestão - BPMA
           </h1>
-          <CheckeredDivider />
+          <SillitoeTartan rows={2} variant="blueWhite" squareSize={10} gap={2} columns={12} className="flex-shrink-0" />
         </div>
         <p className="text-muted-foreground text-base sm:text-lg px-4">Sistema de Gestão de Administrativa e Operacional</p>
       </div>

@@ -19,6 +19,11 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				/* Regulamento Identidade Visual PMDF 1.15: Myriad Pro padrão; fallback Source Sans 3 */
+				pmdf: ['"Myriad Pro"', '"Myriad Web"', '"Source Sans 3"', '"Source Sans Pro"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+				pmdfSecondary: ['"Nirmala UI"', '"Myriad Pro"', '"Source Sans 3"', 'sans-serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
