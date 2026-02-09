@@ -50,6 +50,7 @@ const AtividadesPrevencao = lazy(() => import(/* webpackChunkName: "atividades-p
 const DashboardPublico = lazy(() => import(/* webpackChunkName: "dashboard-publico" */ '@/pages/DashboardPublico'));
 const ControleOS = lazy(() => import(/* webpackChunkName: "controle-os" */ '@/pages/ControleOS'));
 const RegistrosUnificados = lazy(() => import(/* webpackChunkName: "registros-unificados" */ '@/pages/RegistrosUnificados'));
+const RegistroDetalhes = lazy(() => import(/* webpackChunkName: "registro-detalhes" */ '@/pages/RegistroDetalhes'));
 const MonitorarRAPs = lazy(() => import(/* webpackChunkName: "monitorar-raps" */ '@/pages/MonitorarRAPs'));
 const Perfil = lazy(() => import(/* webpackChunkName: "perfil" */ '@/pages/Perfil'));
 const MapaLocalizacao = lazy(() => import(/* webpackChunkName: "mapa-localizacao" */ '@/pages/MapaLocalizacao'));
@@ -120,6 +121,7 @@ function App() {
               <Route path="/secao-operacional/hotspots" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><Hotspots /></SidebarLayout></ProtectedRoute>} />
               {/* Página Unificada de Registros */}
               <Route path="/secao-operacional/registros" element={<ProtectedRoute requiredRoles={['secao_operacional']}><SidebarLayout><RegistrosUnificados /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/registro-detalhes/:id" element={<ProtectedRoute requiredRoles={['secao_operacional', 'comando']}><SidebarLayout><RegistroDetalhes /></SidebarLayout></ProtectedRoute>} />
               {/* Redirecionamentos para compatibilidade */}
               <Route path="/secao-operacional/registros-resgates" element={<Navigate to="/secao-operacional/registros" replace />} />
               <Route path="/secao-operacional/registros-crimes-ambientais" element={<Navigate to="/secao-operacional/registros" replace />} />
