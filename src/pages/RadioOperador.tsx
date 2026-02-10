@@ -173,9 +173,18 @@ const RadioOperador: React.FC = () => {
 
   const handleSync = useCallback(async () => {
     setSyncing(true);
-    try { await fetchData(); toast.success('Dados atualizados'); }
-    catch { /* */ }
-    finally { setSyncing(false); }
+    try {
+      const { data, error } = await (supabase as any).functions.invoke('sync-radio-operador');
+      if (error) throw error;
+      if (data && data.success === false) throw new Error(data.error ?? 'Erro na sincronização');
+      await fetchData();
+      if (data?.synced_at) setLastSync(data.synced_at);
+      toast.success('Dados sincronizados com a planilha');
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Erro ao sincronizar. Tente novamente.');
+    } finally {
+      setSyncing(false);
+    }
   }, [fetchData]);
 
   // Separate rows by tab
@@ -481,12 +490,12 @@ const RadioOperador: React.FC = () => {
                     !isAberto && !isEncerrado && 'border-l-4 border-l-amber-400 border-t-slate-200 border-r-slate-200 border-b-slate-200',
                   )}
                 >
-                  <div className="flex items-start sm:items-center gap-4 p-4">
+                  <div className="flex items-center gap-4 sm:gap-6 p-4 sm:p-5">
                     {/* Status */}
-                    <div className="shrink-0">
+                    <div className="shrink-0 w-20 sm:w-24">
                       <span
                         className={cn(
-                          'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider',
+                          'inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider',
                           isAberto && 'bg-red-100 text-red-700',
                           isEncerrado && 'bg-[#071d49]/10 text-[#071d49]',
                           !isAberto && !isEncerrado && 'bg-amber-100 text-amber-700',
@@ -496,41 +505,41 @@ const RadioOperador: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Main info */}
-                    <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-x-4 gap-y-2">
-                      <div>
+                    {/* Main info: layout com larguras mínimas para evitar truncamento */}
+                    <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-x-6 gap-y-3 sm:gap-y-2">
+                      <div className="min-w-0">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Data</p>
                         <p className="text-sm font-medium text-slate-800">{dataVal}</p>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Equipe</p>
-                        <p className="text-sm font-medium text-slate-800">{equipeVal}</p>
+                        <p className="text-sm font-medium text-slate-800 break-words">{equipeVal}</p>
                       </div>
-                      <div>
+                      <div className="min-w-[140px]">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">COPOM</p>
-                        <p className="text-sm font-medium text-slate-800">{copomVal}</p>
+                        <p className="text-sm font-medium text-slate-800 break-all" title={copomVal}>{copomVal}</p>
                       </div>
-                      <div>
+                      <div className="min-w-[120px]">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                           {activeTab === SHEET_CRIMES ? 'Crime' : 'Fauna'}
                         </p>
-                        <p className="text-sm font-medium text-emerald-700 truncate" title={mainVal}>{mainVal}</p>
+                        <p className="text-sm font-medium text-emerald-700 break-words" title={mainVal}>{mainVal}</p>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Horários</p>
                         <p className="text-xs text-slate-600">
-                          <Clock className="inline h-3 w-3 mr-0.5 text-slate-400" />
+                          <Clock className="inline h-3 w-3 mr-0.5 text-slate-400 shrink-0" />
                           {horaCadastro} → {horaRecebido}
                         </p>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Local</p>
-                        <p className="text-xs text-slate-600 truncate" title={localVal}>
-                          <MapPin className="inline h-3 w-3 mr-0.5 text-slate-400" />
+                        <p className="text-xs text-slate-600 break-words" title={localVal}>
+                          <MapPin className="inline h-3 w-3 mr-0.5 text-slate-400 shrink-0" />
                           {localVal}
                         </p>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Desfecho</p>
                         {desfechoVal !== '—' ? (
                           <Badge
@@ -550,11 +559,11 @@ const RadioOperador: React.FC = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="shrink-0 flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                    <div className="shrink-0 flex items-center gap-0.5 sm:gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-lg hover:bg-blue-50 hover:text-blue-600"
+                        className="h-9 w-9 rounded-lg hover:bg-blue-50 hover:text-blue-600"
                         onClick={() => setViewRow(row)}
                         title="Visualizar"
                       >
@@ -563,7 +572,7 @@ const RadioOperador: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-lg hover:bg-amber-50 hover:text-amber-600"
+                        className="h-9 w-9 rounded-lg hover:bg-amber-50 hover:text-amber-600"
                         onClick={() => handleEditOpen(row)}
                         title="Editar"
                       >
@@ -572,7 +581,7 @@ const RadioOperador: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-600"
+                        className="h-9 w-9 rounded-lg hover:bg-red-50 hover:text-red-600"
                         onClick={() => setDeleteRow(row)}
                         title="Excluir"
                       >
