@@ -6,6 +6,7 @@ export interface RadioRow {
   sheet_name: string | null;
   data: Record<string, unknown> & { _headers?: string[] };
   dados_origem_id?: string | null;
+  status?: 'Aberto' | 'Em análise' | 'Encerrado';
 }
 
 export interface RadioFilters {
@@ -14,6 +15,9 @@ export interface RadioFilters {
   day: string;
   equipe: string;
   desfecho?: string;
+  destinacao?: string;
+  prefixo?: string;
+  cmtVtr?: string;
   search?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -25,55 +29,13 @@ export const EMPTY_RADIO_FILTERS: RadioFilters = {
   day: '',
   equipe: '',
   desfecho: '',
+  destinacao: '',
+  prefixo: '',
+  cmtVtr: '',
   search: '',
   dateFrom: '',
   dateTo: '',
 };
-
-/** Chaves de coluna usadas no row.data (Resgate de Fauna). */
-export const RESGATE_COLUMN_KEYS = [
-  'Data',
-  'Equipe',
-  'N° OCORRÊNCIA COPOM',
-  'FAUNA',
-  'Hora cadastro',
-  'Hora recebido COPOM',
-  'Despacho RO',
-  'Hora finalização',
-  'Telefone',
-  'LOCAL',
-  'PREFIXO',
-  'GRUPAMENTO',
-  'CMT VTR',
-  'Desfecho',
-  'DESTINAÇÃO',
-  'N° RAP',
-  'Duração cadastro/encaminhamento',
-  'Duração despacho/finalização',
-] as const;
-
-/** Crimes Ambientais: CRIME em vez de FAUNA; inclui N° TCO. */
-export const CRIMES_COLUMN_KEYS = [
-  'Data',
-  'Equipe',
-  'N° OCORRÊNCIA COPOM',
-  'CRIME',
-  'Hora cadastro',
-  'Hora recebido COPOM',
-  'Despacho RO',
-  'Hora finalização',
-  'Telefone',
-  'LOCAL',
-  'PREFIXO',
-  'GRUPAMENTO',
-  'CMT VTR',
-  'Desfecho',
-  'DESTINAÇÃO',
-  'N° RAP',
-  'N° TCO',
-  'Duração cadastro/encaminhamento',
-  'Duração despacho/finalização',
-] as const;
 
 /** Colunas da tabela Resgate de Fauna (id, header, key em row.data). */
 export const RESGATE_TABLE_COLUMNS = [
@@ -81,10 +43,10 @@ export const RESGATE_TABLE_COLUMNS = [
   { id: 'Equipe', header: 'EQUIPE', key: 'Equipe' },
   { id: 'N° OCORRÊNCIA COPOM', header: 'N° OCORRÊNCIA COPOM', key: 'N° OCORRÊNCIA COPOM' },
   { id: 'FAUNA', header: 'FAUNA', key: 'FAUNA' },
-  { id: 'Hora cadastro', header: 'HORA (Cadastro da Ocorrência)', key: 'Hora cadastro' },
-  { id: 'Hora recebido COPOM', header: 'HORA (Recebido COPOM na Central)', key: 'Hora recebido COPOM' },
-  { id: 'Despacho RO', header: 'HORA (Despacho RO)', key: 'Despacho RO' },
-  { id: 'Hora finalização', header: 'HORA (Finalização Ocorrência)', key: 'Hora finalização' },
+  { id: 'Hora cadastro', header: 'HORA\n(Cadastro da Ocorrência)', key: 'Hora cadastro' },
+  { id: 'Hora recebido COPOM', header: 'HORA\n(Recebido COPOM na Central)', key: 'Hora recebido COPOM' },
+  { id: 'Despacho RO', header: 'HORA\n(Despacho RO)', key: 'Despacho RO' },
+  { id: 'Hora finalização', header: 'HORA\n(Finalização Ocorrência)', key: 'Hora finalização' },
   { id: 'Telefone', header: 'TELEFONE', key: 'Telefone' },
   { id: 'LOCAL', header: 'LOCAL', key: 'LOCAL' },
   { id: 'PREFIXO', header: 'PREFIXO', key: 'PREFIXO' },
@@ -93,8 +55,8 @@ export const RESGATE_TABLE_COLUMNS = [
   { id: 'Desfecho', header: 'DESFECHO', key: 'Desfecho' },
   { id: 'DESTINAÇÃO', header: 'DESTINAÇÃO', key: 'DESTINAÇÃO' },
   { id: 'N° RAP', header: 'N° RAP', key: 'N° RAP' },
-  { id: 'Duração cadastro/encaminhamento', header: 'DURAÇÃO (Cadastro do 190 - Encaminhamento do COPOM)', key: 'Duração cadastro/encaminhamento' },
-  { id: 'Duração despacho/finalização', header: 'DURAÇÃO (Despacho da Ocorrência - Finalização)', key: 'Duração despacho/finalização' },
+  { id: 'Duração cadastro/encaminhamento', header: 'DURAÇÃO\n(Cadastro do 190 - Encaminhamento do COPOM)', key: 'Duração cadastro/encaminhamento' },
+  { id: 'Duração despacho/finalização', header: 'DURAÇÃO\n(Despacho da Ocorrência - Finalização)', key: 'Duração despacho/finalização' },
 ];
 
 /** Colunas da tabela Crimes Ambientais. */
@@ -103,10 +65,10 @@ export const CRIMES_TABLE_COLUMNS = [
   { id: 'Equipe', header: 'EQUIPE', key: 'Equipe' },
   { id: 'N° OCORRÊNCIA COPOM', header: 'N° OCORRÊNCIA COPOM', key: 'N° OCORRÊNCIA COPOM' },
   { id: 'CRIME', header: 'CRIME', key: 'CRIME' },
-  { id: 'Hora cadastro', header: 'HORA (Cadastro da Ocorrência)', key: 'Hora cadastro' },
-  { id: 'Hora recebido COPOM', header: 'HORA (Recebido COPOM na Central)', key: 'Hora recebido COPOM' },
-  { id: 'Despacho RO', header: 'HORA (Despacho RO)', key: 'Despacho RO' },
-  { id: 'Hora finalização', header: 'HORA (Finalização Ocorrência)', key: 'Hora finalização' },
+  { id: 'Hora cadastro', header: 'HORA\n(Cadastro da Ocorrência)', key: 'Hora cadastro' },
+  { id: 'Hora recebido COPOM', header: 'HORA\n(Recebido COPOM na Central)', key: 'Hora recebido COPOM' },
+  { id: 'Despacho RO', header: 'HORA\n(Despacho RO)', key: 'Despacho RO' },
+  { id: 'Hora finalização', header: 'HORA\n(Finalização Ocorrência)', key: 'Hora finalização' },
   { id: 'Telefone', header: 'TELEFONE', key: 'Telefone' },
   { id: 'LOCAL', header: 'LOCAL', key: 'LOCAL' },
   { id: 'PREFIXO', header: 'PREFIXO', key: 'PREFIXO' },
@@ -116,8 +78,8 @@ export const CRIMES_TABLE_COLUMNS = [
   { id: 'DESTINAÇÃO', header: 'DESTINAÇÃO', key: 'DESTINAÇÃO' },
   { id: 'N° RAP', header: 'N° RAP', key: 'N° RAP' },
   { id: 'N° TCO', header: 'N° TCO - PMDF\nOU\nN° TCO/APF-PCDF', key: 'N° TCO' },
-  { id: 'Duração cadastro/encaminhamento', header: 'DURAÇÃO (Cadastro do 190 - Encaminhamento do COPOM)', key: 'Duração cadastro/encaminhamento' },
-  { id: 'Duração despacho/finalização', header: 'DURAÇÃO (Despacho da Ocorrência - Finalização)', key: 'Duração despacho/finalização' },
+  { id: 'Duração cadastro/encaminhamento', header: 'DURAÇÃO\n(Cadastro do 190 - Encaminhamento do COPOM)', key: 'Duração cadastro/encaminhamento' },
+  { id: 'Duração despacho/finalização', header: 'DURAÇÃO\n(Despacho da Ocorrência - Finalização)', key: 'Duração despacho/finalização' },
 ];
 
 export function getDisplayVal(val: unknown): string {
