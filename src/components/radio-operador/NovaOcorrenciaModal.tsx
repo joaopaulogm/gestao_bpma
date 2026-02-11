@@ -1,50 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Save, X, Loader2, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import type { useRadioDimensions } from './useRadioDimensions';
 
 interface NovaOcorrenciaModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: 'resgate' | 'crime';
+  dims: ReturnType<typeof useRadioDimensions>;
   onSaved: () => void;
 }
 
-interface EquipeOption {
-  id: number;
-  nome: string;
-}
-
 const NovaOcorrenciaModal: React.FC<NovaOcorrenciaModalProps> = ({
-  open,
-  onOpenChange,
-  type,
-  onSaved,
+  open, onOpenChange, type, dims, onSaved,
 }) => {
   const [saving, setSaving] = useState(false);
-  const [equipes, setEquipes] = useState<EquipeOption[]>([]);
-
-  // Form fields
-  const [dataOcorrencia, setDataOcorrencia] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [dataOcorrencia, setDataOcorrencia] = useState('');
   const [equipeId, setEquipeId] = useState('');
   const [ocorrenciaCopom, setOcorrenciaCopom] = useState('');
   const [faunaOuCrime, setFaunaOuCrime] = useState('');
@@ -59,17 +42,8 @@ const NovaOcorrenciaModal: React.FC<NovaOcorrenciaModalProps> = ({
       setFaunaOuCrime('');
       setHoraCadastro('');
       setHoraRecebidoCopom('');
-      loadEquipes();
     }
   }, [open]);
-
-  const loadEquipes = async () => {
-    const { data } = await (supabase as any)
-      .from('dim_equipe_radio')
-      .select('id, nome')
-      .order('id');
-    if (data) setEquipes(data);
-  };
 
   const handleSave = async () => {
     if (!dataOcorrencia || !ocorrenciaCopom.trim() || !faunaOuCrime.trim() || !horaCadastro || !horaRecebidoCopom) {
@@ -79,24 +53,9 @@ const NovaOcorrenciaModal: React.FC<NovaOcorrenciaModalProps> = ({
 
     setSaving(true);
     try {
-      // Find equipe FK in dim_equipe
-      let equipe_id_fk: string | null = null;
-      if (equipeId) {
-        const eq = equipes.find(e => String(e.id) === equipeId);
-        if (eq) {
-          const { data: dimEq } = await (supabase as any)
-            .from('dim_equipe')
-            .select('id')
-            .ilike('nome', eq.nome)
-            .limit(1)
-            .maybeSingle();
-          if (dimEq) equipe_id_fk = dimEq.id;
-        }
-      }
-
-      const baseRecord = {
+      const baseRecord: any = {
         data: dataOcorrencia,
-        equipe_id: equipe_id_fk,
+        equipe_id: equipeId || null,
         ocorrencia_copom: ocorrenciaCopom.trim(),
         hora_cadastro_ocorrencia: horaCadastro + ':00',
         hora_recebido_copom_central: horaRecebidoCopom + ':00',
@@ -137,9 +96,7 @@ const NovaOcorrenciaModal: React.FC<NovaOcorrenciaModalProps> = ({
               <DialogTitle className="text-lg font-semibold text-white">
                 Nova Ocorrência - {type === 'resgate' ? 'Resgate de Fauna' : 'Crime Ambiental'}
               </DialogTitle>
-              <p className="text-sm text-white/70 mt-0.5">
-                Preencha os campos obrigatórios
-              </p>
+              <p className="text-sm text-white/70 mt-0.5">Preencha os campos obrigatórios</p>
             </div>
           </div>
         </DialogHeader>
@@ -147,81 +104,42 @@ const NovaOcorrenciaModal: React.FC<NovaOcorrenciaModalProps> = ({
         <ScrollArea className="max-h-[60vh]">
           <div className="px-6 py-5 space-y-4">
             <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Data *
-              </Label>
-              <Input
-                type="date"
-                value={dataOcorrencia}
-                onChange={(e) => setDataOcorrencia(e.target.value)}
-                className="h-10 rounded-xl"
-              />
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Data *</Label>
+              <Input type="date" value={dataOcorrencia} onChange={(e) => setDataOcorrencia(e.target.value)} className="h-10 rounded-xl" />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Equipe
-              </Label>
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Equipe</Label>
               <Select value={equipeId} onValueChange={setEquipeId}>
-                <SelectTrigger className="h-10 rounded-xl">
-                  <SelectValue placeholder="Selecione a equipe" />
-                </SelectTrigger>
+                <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder="Selecione a equipe" /></SelectTrigger>
                 <SelectContent>
-                  {equipes.map((eq) => (
-                    <SelectItem key={eq.id} value={String(eq.id)}>
-                      {eq.nome}
-                    </SelectItem>
+                  {dims.equipes.map((eq) => (
+                    <SelectItem key={eq.id} value={eq.id}>{eq.nome}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                N° Ocorrência COPOM *
-              </Label>
-              <Input
-                value={ocorrenciaCopom}
-                onChange={(e) => setOcorrenciaCopom(e.target.value)}
-                placeholder="Ex: 123456"
-                className="h-10 rounded-xl"
-              />
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">N° Ocorrência COPOM *</Label>
+              <Input value={ocorrenciaCopom} onChange={(e) => setOcorrenciaCopom(e.target.value)} placeholder="Ex: 123456" className="h-10 rounded-xl" />
             </div>
 
             <div className="space-y-2">
               <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {type === 'resgate' ? 'Fauna *' : 'Crime *'}
               </Label>
-              <Input
-                value={faunaOuCrime}
-                onChange={(e) => setFaunaOuCrime(e.target.value)}
-                placeholder={type === 'resgate' ? 'Ex: Serpente' : 'Ex: Desmatamento'}
-                className="h-10 rounded-xl"
-              />
+              <Input value={faunaOuCrime} onChange={(e) => setFaunaOuCrime(e.target.value)} placeholder={type === 'resgate' ? 'Ex: Serpente' : 'Ex: Desmatamento'} className="h-10 rounded-xl" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Hora Cadastro *
-                </Label>
-                <Input
-                  type="time"
-                  value={horaCadastro}
-                  onChange={(e) => setHoraCadastro(e.target.value)}
-                  className="h-10 rounded-xl"
-                />
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hora Cadastro *</Label>
+                <Input type="time" value={horaCadastro} onChange={(e) => setHoraCadastro(e.target.value)} className="h-10 rounded-xl" />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Hora Recebido COPOM *
-                </Label>
-                <Input
-                  type="time"
-                  value={horaRecebidoCopom}
-                  onChange={(e) => setHoraRecebidoCopom(e.target.value)}
-                  className="h-10 rounded-xl"
-                />
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hora Recebido COPOM *</Label>
+                <Input type="time" value={horaRecebidoCopom} onChange={(e) => setHoraRecebidoCopom(e.target.value)} className="h-10 rounded-xl" />
               </div>
             </div>
           </div>
@@ -229,25 +147,10 @@ const NovaOcorrenciaModal: React.FC<NovaOcorrenciaModalProps> = ({
 
         <DialogFooter className="px-6 py-4 border-t gap-2 sm:gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving} className="rounded-xl">
-            <X className="h-4 w-4 mr-2" />
-            Cancelar
+            <X className="h-4 w-4 mr-2" /> Cancelar
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            className="rounded-xl bg-gradient-to-r from-[#071d49] to-[#0d3a7a] text-white hover:opacity-90"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Registrar Ocorrência
-              </>
-            )}
+          <Button onClick={handleSave} disabled={saving} className="rounded-xl bg-gradient-to-r from-[#071d49] to-[#0d3a7a] text-white hover:opacity-90">
+            {saving ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</>) : (<><Save className="h-4 w-4 mr-2" />Registrar Ocorrência</>)}
           </Button>
         </DialogFooter>
       </DialogContent>

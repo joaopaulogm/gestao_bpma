@@ -6,7 +6,7 @@ export interface RadioRow {
   sheet_name: string | null;
   data: Record<string, unknown> & { _headers?: string[] };
   dados_origem_id?: string | null;
-  status?: 'Aberto' | 'Em análise' | 'Encerrado';
+  status?: 'Aberto' | 'Encerrado';
 }
 
 export interface RadioFilters {
@@ -18,26 +18,20 @@ export interface RadioFilters {
   destinacao?: string;
   prefixo?: string;
   cmtVtr?: string;
+  grupamento?: string;
+  local?: string;
   search?: string;
   dateFrom?: string;
   dateTo?: string;
 }
 
 export const EMPTY_RADIO_FILTERS: RadioFilters = {
-  year: '',
-  month: '',
-  day: '',
-  equipe: '',
-  desfecho: '',
-  destinacao: '',
-  prefixo: '',
-  cmtVtr: '',
-  search: '',
-  dateFrom: '',
-  dateTo: '',
+  year: '', month: '', day: '', equipe: '',
+  desfecho: '', destinacao: '', prefixo: '', cmtVtr: '',
+  grupamento: '', local: '', search: '', dateFrom: '', dateTo: '',
 };
 
-/** Colunas da tabela Resgate de Fauna (id, header, key em row.data). */
+/** Colunas da tabela Resgate de Fauna. */
 export const RESGATE_TABLE_COLUMNS = [
   { id: 'Data', header: 'DATA', key: 'Data' },
   { id: 'Equipe', header: 'EQUIPE', key: 'Equipe' },

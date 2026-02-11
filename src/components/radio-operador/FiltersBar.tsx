@@ -2,11 +2,7 @@ import React from 'react';
 import { X, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { RadioFilters } from './types';
@@ -28,23 +24,18 @@ interface FiltersBarProps {
   uniqueDestinacoes?: string[];
   uniquePrefixos?: string[];
   uniqueCmtVtrs?: string[];
+  uniqueGrupamentos?: string[];
+  uniqueLocais?: string[];
   onClear: () => void;
   className?: string;
 }
 
 const FiltersBar: React.FC<FiltersBarProps> = ({
-  filters,
-  onFiltersChange,
-  uniqueYears,
-  uniqueMonths,
-  uniqueDays,
-  uniqueEquipes,
-  uniqueDesfechos = [],
-  uniqueDestinacoes = [],
-  uniquePrefixos = [],
-  uniqueCmtVtrs = [],
-  onClear,
-  className,
+  filters, onFiltersChange,
+  uniqueYears, uniqueMonths, uniqueDays, uniqueEquipes,
+  uniqueDesfechos = [], uniqueDestinacoes = [], uniquePrefixos = [],
+  uniqueCmtVtrs = [], uniqueGrupamentos = [], uniqueLocais = [],
+  onClear, className,
 }) => {
   const set = (key: keyof RadioFilters, value: string) => {
     onFiltersChange({ ...filters, [key]: value });
@@ -53,7 +44,20 @@ const FiltersBar: React.FC<FiltersBarProps> = ({
   const activeFiltersCount = [
     filters.year, filters.month, filters.day, filters.equipe,
     filters.desfecho, filters.destinacao, filters.prefixo, filters.cmtVtr,
+    filters.grupamento, filters.local,
   ].filter(Boolean).length;
+
+  const renderSelect = (key: keyof RadioFilters, label: string, options: string[], width = 'w-[110px]', formatter?: (v: string) => string) => (
+    <Select value={(filters[key] as string) || '__todos__'} onValueChange={(v) => set(key, v === '__todos__' ? '' : v)}>
+      <SelectTrigger className={cn('h-8 rounded-lg border-slate-200 bg-white text-xs', width)}>
+        <SelectValue placeholder={label} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="__todos__">{label}</SelectItem>
+        {options.map((o) => <SelectItem key={o} value={o}>{formatter ? formatter(o) : o}</SelectItem>)}
+      </SelectContent>
+    </Select>
+  );
 
   return (
     <div className={cn('flex flex-wrap items-center gap-2 p-3 bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-xl border border-slate-200/60', className)}>
@@ -61,104 +65,24 @@ const FiltersBar: React.FC<FiltersBarProps> = ({
         <Filter className="h-3.5 w-3.5 text-[#071d49]/60" />
         <span className="text-xs font-semibold text-[#071d49]/70 uppercase tracking-wide">Filtros</span>
         {activeFiltersCount > 0 && (
-          <Badge className="h-5 px-1.5 text-[10px] rounded-full bg-[#071d49] text-white">
-            {activeFiltersCount}
-          </Badge>
+          <Badge className="h-5 px-1.5 text-[10px] rounded-full bg-[#071d49] text-white">{activeFiltersCount}</Badge>
         )}
       </div>
 
-      <Select value={filters.year || '__todos__'} onValueChange={(v) => set('year', v === '__todos__' ? '' : v)}>
-        <SelectTrigger className="h-8 w-[80px] rounded-lg border-slate-200 bg-white text-xs">
-          <SelectValue placeholder="Ano" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__todos__">Ano</SelectItem>
-          {uniqueYears.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-        </SelectContent>
-      </Select>
-
-      <Select value={filters.month || '__todos__'} onValueChange={(v) => set('month', v === '__todos__' ? '' : v)}>
-        <SelectTrigger className="h-8 w-[110px] rounded-lg border-slate-200 bg-white text-xs">
-          <SelectValue placeholder="Mês" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__todos__">Mês</SelectItem>
-          {uniqueMonths.map((m) => <SelectItem key={m} value={m}>{MESES[parseInt(m, 10) - 1] ?? m}</SelectItem>)}
-        </SelectContent>
-      </Select>
-
-      <Select value={filters.day || '__todos__'} onValueChange={(v) => set('day', v === '__todos__' ? '' : v)}>
-        <SelectTrigger className="h-8 w-[70px] rounded-lg border-slate-200 bg-white text-xs">
-          <SelectValue placeholder="Dia" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__todos__">Dia</SelectItem>
-          {uniqueDays.map((d) => <SelectItem key={d} value={d}>{d.padStart(2, '0')}</SelectItem>)}
-        </SelectContent>
-      </Select>
-
-      <Select value={filters.equipe || '__todos__'} onValueChange={(v) => set('equipe', v === '__todos__' ? '' : v)}>
-        <SelectTrigger className="h-8 w-[110px] rounded-lg border-slate-200 bg-white text-xs">
-          <SelectValue placeholder="Equipe" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__todos__">Equipe</SelectItem>
-          {uniqueEquipes.map((eq) => <SelectItem key={eq} value={eq}>{eq}</SelectItem>)}
-        </SelectContent>
-      </Select>
-
-      {uniquePrefixos.length > 0 && (
-        <Select value={filters.prefixo || '__todos__'} onValueChange={(v) => set('prefixo', v === '__todos__' ? '' : v)}>
-          <SelectTrigger className="h-8 w-[100px] rounded-lg border-slate-200 bg-white text-xs">
-            <SelectValue placeholder="Prefixo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__todos__">Prefixo</SelectItem>
-            {uniquePrefixos.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      )}
-
-      {uniqueDesfechos.length > 0 && (
-        <Select value={filters.desfecho || '__todos__'} onValueChange={(v) => set('desfecho', v === '__todos__' ? '' : v)}>
-          <SelectTrigger className="h-8 w-[120px] rounded-lg border-slate-200 bg-white text-xs">
-            <SelectValue placeholder="Desfecho" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__todos__">Desfecho</SelectItem>
-            {uniqueDesfechos.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      )}
-
-      {uniqueDestinacoes.length > 0 && (
-        <Select value={filters.destinacao || '__todos__'} onValueChange={(v) => set('destinacao', v === '__todos__' ? '' : v)}>
-          <SelectTrigger className="h-8 w-[120px] rounded-lg border-slate-200 bg-white text-xs">
-            <SelectValue placeholder="Destinação" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__todos__">Destinação</SelectItem>
-            {uniqueDestinacoes.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      )}
-
-      {uniqueCmtVtrs.length > 0 && (
-        <Select value={filters.cmtVtr || '__todos__'} onValueChange={(v) => set('cmtVtr', v === '__todos__' ? '' : v)}>
-          <SelectTrigger className="h-8 w-[120px] rounded-lg border-slate-200 bg-white text-xs">
-            <SelectValue placeholder="CMT VTR" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__todos__">CMT VTR</SelectItem>
-            {uniqueCmtVtrs.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      )}
+      {renderSelect('year', 'Ano', uniqueYears, 'w-[80px]')}
+      {renderSelect('month', 'Mês', uniqueMonths, 'w-[110px]', (m) => MESES[parseInt(m, 10) - 1] ?? m)}
+      {renderSelect('day', 'Dia', uniqueDays, 'w-[70px]', (d) => d.padStart(2, '0'))}
+      {renderSelect('equipe', 'Equipe', uniqueEquipes)}
+      {uniquePrefixos.length > 0 && renderSelect('prefixo', 'Prefixo', uniquePrefixos, 'w-[100px]')}
+      {uniqueGrupamentos.length > 0 && renderSelect('grupamento', 'Grupamento', uniqueGrupamentos, 'w-[130px]')}
+      {uniqueDesfechos.length > 0 && renderSelect('desfecho', 'Desfecho', uniqueDesfechos, 'w-[140px]')}
+      {uniqueDestinacoes.length > 0 && renderSelect('destinacao', 'Destinação', uniqueDestinacoes, 'w-[140px]')}
+      {uniqueCmtVtrs.length > 0 && renderSelect('cmtVtr', 'CMT VTR', uniqueCmtVtrs, 'w-[120px]')}
+      {uniqueLocais.length > 0 && renderSelect('local', 'Local (RA)', uniqueLocais, 'w-[150px]')}
 
       {activeFiltersCount > 0 && (
         <Button variant="ghost" size="sm" className="h-8 text-xs text-red-500 hover:text-red-700 hover:bg-red-50" onClick={onClear}>
-          <X className="h-3.5 w-3.5 mr-1" />
-          Limpar
+          <X className="h-3.5 w-3.5 mr-1" /> Limpar
         </Button>
       )}
     </div>

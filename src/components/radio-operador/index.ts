@@ -5,3 +5,4 @@ export { default as OcorrenciaViewModal } from './OcorrenciaViewModal';
 export { default as OcorrenciaFormModal } from './OcorrenciaFormModal';
 export { default as NovaOcorrenciaModal } from './NovaOcorrenciaModal';
 export * from './types';
+export * from './useRadioDimensions';

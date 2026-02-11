@@ -828,6 +828,36 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_horario_minuto: {
+        Row: {
+          created_at: string
+          hora: number
+          horario: string
+          id: string
+          label_hhmm: string
+          minuto: number
+          total_minutos: number
+        }
+        Insert: {
+          created_at?: string
+          hora: number
+          horario: string
+          id?: string
+          label_hhmm: string
+          minuto: number
+          total_minutos: number
+        }
+        Update: {
+          created_at?: string
+          hora?: number
+          horario?: string
+          id?: string
+          label_hhmm?: string
+          minuto?: number
+          total_minutos?: number
+        }
+        Relationships: []
+      }
       dim_indicador_bpma: {
         Row: {
           categoria: string | null
