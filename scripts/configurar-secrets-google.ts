@@ -154,14 +154,10 @@ async function main() {
     getCredentialsPaths().forEach(p => console.log(`  - ${p}`));
     console.log('\n💡 Dica: Você pode passar o caminho como argumento:');
     console.log('   npm run configurar-secrets-google "G:\\Meu Drive\\JP\\app BPMA\\Nova pasta"');
-    console.log('\n📋 Mesmo sem os arquivos, aqui estão os valores que você precisa configurar:\n');
-    console.log('   GOOGLE_CLIENT_ID: 26282009322-6l59ltfic13fipnbpqk4tlv7elfa8r8e.apps.googleusercontent.com');
-    console.log('   GOOGLE_CLIENT_SECRET: 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\n');
-    console.log('   (Valores extraídos do arquivo credentials.json que você mencionou)');
-    generateManualInstructionsFromValues(
-      '26282009322-6l59ltfic13fipnbpqk4tlv7elfa8r8e.apps.googleusercontent.com',
-      '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'
-    );
+    console.log('\n📋 Para configurar manualmente, extraia os valores do arquivo credentials.json:');
+    console.log('   - GOOGLE_CLIENT_ID: use o valor de web.client_id');
+    console.log('   - GOOGLE_CLIENT_SECRET: use o valor de web.client_secret');
+    console.log('\n   Rote os arquivos para: "Meu Drive/JP/app BPMA/Nova pasta/" ou passe o caminho como argumento.\n');
     process.exit(0);
   }
 

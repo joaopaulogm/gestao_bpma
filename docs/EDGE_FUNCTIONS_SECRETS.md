@@ -5,7 +5,7 @@ Configure estes secrets no **Supabase Dashboard** → **Project Settings** → *
 ## Obrigatórios (funções em uso)
 
 | Secret | Função(ões) | Descrição |
-|--------|-------------|-----------|
+| --- | --- | --- |
 | `GOOGLE_MAPS_API_KEY` | get-google-maps-token | Chave da API Google Maps (Mapas e Google Earth) |
 | `LOVABLE_API_KEY` | parse-rap, identify-species, process-os-folder, process-raps-folder | Chave da API Lovable AI (se a app usar Lovable) |
 | `GOOGLE_CLIENT_ID` | process-os-folder, process-raps-folder, get-drive-image | OAuth Google: Client ID |
@@ -24,7 +24,7 @@ Estes são definidos pelo Supabase e não precisam ser criados:
 ## sync-radio-operador (Controle de Ocorrências)
 
 | Secret/Env | Obrigatório | Descrição |
-|-----------|-------------|-----------|
+| --- | --- | --- |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Sim | JSON da Service Account com acesso à planilha Google Sheets |
 | `SPREADSHEET_ID` | Não | ID da planilha (padrão: 16xtQDV3bppeJS_32RkXot4TyxaVPCA2nVqUXP8RyEfl) |
 | `RESGATE_GID` | Não | gid da aba Resgate (padrão: 0) |
@@ -35,7 +35,7 @@ Estes são definidos pelo Supabase e não precisam ser criados:
 ## Opcionais
 
 | Variável | Função | Descrição |
-|----------|--------|-----------|
+| --- | --- | --- |
 | `R_API_URL` | analyze-data | URL da API em R (análise de dados); se vazia, usa fallback em Deno |
 | `ALLOWED_ORIGINS` | (futuro) | Origens CORS adicionais; hoje as funções usam lista fixa (lovable.dev, localhost, etc.) |
 
@@ -55,12 +55,14 @@ Você possui dois arquivos JSON com credenciais do Google OAuth:
 ### Extrair valores dos arquivos JSON
 
 Do arquivo `credentials.json`:
-- **GOOGLE_CLIENT_ID**: `web.client_id` → `26282009322-6l59ltfic13fipnbpqk4tlv7elfa8r8e.apps.googleusercontent.com`
-- **GOOGLE_CLIENT_SECRET**: `web.client_secret` → `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`
+
+- **GOOGLE_CLIENT_ID**: extraia o valor de `web.client_id` (formato: `*.apps.googleusercontent.com`)
+- **GOOGLE_CLIENT_SECRET**: extraia o valor de `web.client_secret` (formato: `GOCSPX-...`)
 
 Do arquivo `chave secreta auth plataform.json`:
-- **GOOGLE_CLIENT_ID** (alternativo): `web.client_id` → `1040541360632-hu7plf69ckngfrqhsiq2uc8ocjbj9gja.apps.googleusercontent.com`
-- **GOOGLE_CLIENT_SECRET** (alternativo): `web.client_secret` → `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`
+
+- **GOOGLE_CLIENT_ID** (alternativo): extraia o valor de `web.client_id`
+- **GOOGLE_CLIENT_SECRET** (alternativo): extraia o valor de `web.client_secret`
 
 ### Configurar no Supabase Dashboard
 
@@ -81,6 +83,7 @@ O refresh token é obtido após o primeiro fluxo OAuth. Você pode:
 ### Configurar OAuth no Google Cloud Console
 
 Certifique-se de que no Google Cloud Console (projeto "buscaespecies"):
+
 - **Redirect URIs** incluem: `https://oiwwptnqaunsyhpkwbrz.supabase.co/auth/v1/callback`
 - **JavaScript origins** incluem: `https://oiwwptnqaunsyhpkwbrz.supabase.co`
 
@@ -89,12 +92,12 @@ Certifique-se de que no Google Cloud Console (projeto "buscaespecies"):
 ```env
 GOOGLE_MAPS_API_KEY=...
 LOVABLE_API_KEY=...
-GOOGLE_CLIENT_ID=26282009322-6l59ltfic13fipnbpqk4tlv7elfa8r8e.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=<seu_client_id>.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-...
 GOOGLE_REFRESH_TOKEN=...
 # GOOGLE_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
 ```
 
 **Nota:** `GOOGLE_SERVICE_ACCOUNT_JSON` é um JSON em uma única linha. No Dashboard, crie o secret com o valor completo do JSON.
 
-**⚠️ IMPORTANTE:** Nunca commite os arquivos `credentials.json` ou `chave secreta auth plataform.json` no repositório. Eles estão no `.gitignore`.
+**⚠️ IMPORTANTE:** Nunca commite os arquivos `credentials.json` ou `chave secreta auth plataform.json` no repositório. Eles estão no `.gitignore`. Nunca inclua valores reais de `client_id` ou `client_secret` na documentação.
