@@ -23,53 +23,101 @@ interface NovaOcorrenciaModalProps {
   onSaved: () => void;
 }
 
+const timeToDb = (v: string) => (v && v.trim() ? (v.split(':').length < 3 ? v + ':00' : v) : null);
+
 const NovaOcorrenciaModal: React.FC<NovaOcorrenciaModalProps> = ({
   open, onOpenChange, type, dims, onSaved,
 }) => {
   const [saving, setSaving] = useState(false);
-  const [dataOcorrencia, setDataOcorrencia] = useState('');
-  const [equipeId, setEquipeId] = useState('');
-  const [ocorrenciaCopom, setOcorrenciaCopom] = useState('');
-  const [faunaOuCrime, setFaunaOuCrime] = useState('');
-  const [horaCadastro, setHoraCadastro] = useState('');
-  const [horaRecebidoCopom, setHoraRecebidoCopom] = useState('');
+  const [form, setForm] = useState({
+    data: '',
+    equipe_id: '',
+    ocorrencia_copom: '',
+    fauna_crime: '',
+    hora_cadastro: '',
+    hora_recebido: '',
+    hora_despacho: '',
+    hora_finalizacao: '',
+    telefone: '',
+    local_id: '',
+    prefixo: '',
+    grupamento_id: '',
+    cmt_vtr: '',
+    desfecho_id: '',
+    destinacao_id: '',
+    numero_rap: '',
+    numero_tco: '',
+  });
+
+  const set = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }));
 
   useEffect(() => {
     if (open) {
-      setDataOcorrencia(format(new Date(), 'yyyy-MM-dd'));
-      setEquipeId('');
-      setOcorrenciaCopom('');
-      setFaunaOuCrime('');
-      setHoraCadastro('');
-      setHoraRecebidoCopom('');
+      setForm({
+        data: format(new Date(), 'yyyy-MM-dd'),
+        equipe_id: '',
+        ocorrencia_copom: '',
+        fauna_crime: '',
+        hora_cadastro: '',
+        hora_recebido: '',
+        hora_despacho: '',
+        hora_finalizacao: '',
+        telefone: '',
+        local_id: '',
+        prefixo: '',
+        grupamento_id: '',
+        cmt_vtr: '',
+        desfecho_id: '',
+        destinacao_id: '',
+        numero_rap: '',
+        numero_tco: '',
+      });
     }
   }, [open]);
 
+  const desfechosForTab = type === 'resgate' ? dims.getDesfechosForTab('resgate') : dims.getDesfechosForTab('crime');
+  const destinacoesForTab = type === 'resgate' ? dims.getDestinacoesForTab('resgate') : dims.getDestinacoesForTab('crime');
+  const grupamentosForTab = type === 'resgate' ? dims.getGrupamentosForTab('resgate') : dims.getGrupamentosForTab('crime');
+
   const handleSave = async () => {
-    if (!dataOcorrencia || !ocorrenciaCopom.trim() || !faunaOuCrime.trim() || !horaCadastro || !horaRecebidoCopom) {
-      toast.error('Preencha todos os campos obrigatórios');
+    if (!form.data || !form.ocorrencia_copom.trim() || !form.fauna_crime.trim()) {
+      toast.error('Preencha Data, N° Ocorrência COPOM e ' + (type === 'resgate' ? 'Fauna' : 'Crime'));
       return;
     }
 
     setSaving(true);
     try {
       const baseRecord: any = {
-        data: dataOcorrencia,
-        equipe_id: equipeId || null,
-        ocorrencia_copom: ocorrenciaCopom.trim(),
-        hora_cadastro_ocorrencia: horaCadastro + ':00',
-        hora_recebido_copom_central: horaRecebidoCopom + ':00',
+        data: form.data,
+        equipe_id: form.equipe_id || null,
+        ocorrencia_copom: form.ocorrencia_copom.trim(),
+        fauna: type === 'resgate' ? form.fauna_crime.trim() : undefined,
+        crime: type === 'crime' ? form.fauna_crime.trim() : undefined,
+        hora_cadastro_ocorrencia: timeToDb(form.hora_cadastro),
+        hora_recebido_copom_central: timeToDb(form.hora_recebido),
+        hora_despacho_ro: timeToDb(form.hora_despacho),
+        hora_finalizacao_ocorrencia: timeToDb(form.hora_finalizacao),
+        telefone: form.telefone?.trim() || null,
+        local_id: form.local_id || null,
+        prefixo: form.prefixo?.trim() || null,
+        grupamento_id: form.grupamento_id || null,
+        cmt_vtr: form.cmt_vtr?.trim() || null,
+        desfecho_id: form.desfecho_id || null,
+        destinacao_id: form.destinacao_id || null,
+        numero_rap: form.numero_rap?.trim() || null,
       };
 
       if (type === 'resgate') {
         const { error } = await (supabase as any)
           .from('fat_controle_ocorrencias_resgate_2026')
-          .insert({ ...baseRecord, fauna: faunaOuCrime.trim() });
+          .insert(baseRecord);
         if (error) throw error;
       } else {
+        baseRecord.numero_tco_pmdf_ou_tco_apf_pcdf = form.numero_tco?.trim() || null;
+        delete baseRecord.fauna;
         const { error } = await (supabase as any)
           .from('fat_controle_ocorrencias_crime_ambientais_2026')
-          .insert({ ...baseRecord, crime: faunaOuCrime.trim() });
+          .insert(baseRecord);
         if (error) throw error;
       }
 
@@ -83,6 +131,26 @@ const NovaOcorrenciaModal: React.FC<NovaOcorrenciaModalProps> = ({
       setSaving(false);
     }
   };
+
+  const renderSelect = (label: string, key: string, options: { id: string; nome: string }[], placeholder: string) => (
+    <div className="space-y-2">
+      <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</Label>
+      <Select value={form[key] || '__none__'} onValueChange={(v) => set(key, v === '__none__' ? '' : v)}>
+        <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder={placeholder} /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__none__">— Nenhum —</SelectItem>
+          {options.map(o => <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const renderInput = (label: string, key: string, type = 'text', placeholder = '') => (
+    <div className="space-y-2">
+      <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</Label>
+      <Input type={type} value={form[key] ?? ''} onChange={(e) => set(key, e.target.value)} placeholder={placeholder} className="h-10 rounded-xl" />
+    </div>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,44 +171,24 @@ const NovaOcorrenciaModal: React.FC<NovaOcorrenciaModalProps> = ({
 
         <ScrollArea className="max-h-[60vh]">
           <div className="px-6 py-5 space-y-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Data *</Label>
-              <Input type="date" value={dataOcorrencia} onChange={(e) => setDataOcorrencia(e.target.value)} className="h-10 rounded-xl" />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Equipe</Label>
-              <Select value={equipeId} onValueChange={setEquipeId}>
-                <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder="Selecione a equipe" /></SelectTrigger>
-                <SelectContent>
-                  {dims.equipes.map((eq) => (
-                    <SelectItem key={eq.id} value={eq.id}>{eq.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">N° Ocorrência COPOM *</Label>
-              <Input value={ocorrenciaCopom} onChange={(e) => setOcorrenciaCopom(e.target.value)} placeholder="Ex: 123456" className="h-10 rounded-xl" />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {type === 'resgate' ? 'Fauna *' : 'Crime *'}
-              </Label>
-              <Input value={faunaOuCrime} onChange={(e) => setFaunaOuCrime(e.target.value)} placeholder={type === 'resgate' ? 'Ex: Serpente' : 'Ex: Desmatamento'} className="h-10 rounded-xl" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hora Cadastro *</Label>
-                <Input type="time" value={horaCadastro} onChange={(e) => setHoraCadastro(e.target.value)} className="h-10 rounded-xl" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hora Recebido COPOM *</Label>
-                <Input type="time" value={horaRecebidoCopom} onChange={(e) => setHoraRecebidoCopom(e.target.value)} className="h-10 rounded-xl" />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {renderInput('Data *', 'data', 'date')}
+              {renderSelect('Equipe', 'equipe_id', dims.equipes, 'Selecione')}
+              {renderInput('N° Ocorrência COPOM *', 'ocorrencia_copom', 'text', 'Ex: 123456')}
+              {renderInput(type === 'resgate' ? 'Fauna *' : 'Crime *', 'fauna_crime', 'text', type === 'resgate' ? 'Ex: Serpente' : 'Ex: Desmatamento')}
+              {renderInput('Hora Cadastro', 'hora_cadastro', 'time')}
+              {renderInput('Hora Recebido COPOM', 'hora_recebido', 'time')}
+              {renderInput('Hora Despacho RO', 'hora_despacho', 'time')}
+              {renderInput('Hora Finalização', 'hora_finalizacao', 'time')}
+              {renderInput('Telefone', 'telefone', 'tel', '(61) 99999-9999')}
+              {renderSelect('Local (RA)', 'local_id', dims.locaisFromRegioes, 'Selecione')}
+              {renderInput('Prefixo', 'prefixo')}
+              {renderSelect('Grupamento', 'grupamento_id', grupamentosForTab, 'Selecione')}
+              {renderInput('CMT VTR', 'cmt_vtr')}
+              {renderSelect('Desfecho', 'desfecho_id', desfechosForTab, 'Selecione')}
+              {renderSelect('Destinação', 'destinacao_id', destinacoesForTab, 'Selecione')}
+              {renderInput('N° RAP', 'numero_rap')}
+              {type === 'crime' && renderInput('N° TCO - PMDF ou TCO/APF-PCDF', 'numero_tco')}
             </div>
           </div>
         </ScrollArea>

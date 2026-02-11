@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DimOption {
@@ -25,6 +25,9 @@ export const DESTINACAO_CRIME = [
   'CETAS (APREENSÃO)', 'BPMA (APREENSÃO)', 'PCDF (APREENSÃO)', 'LIBERADO NO LOCAL',
 ];
 
+export const GRUPAMENTO_RESGATE = ['RP AMBIENTAL', 'SVG', 'GOC', 'GTA', 'LACUSTRE', 'NÃO HOUVE'];
+export const GRUPAMENTO_CRIME = ['RP AMBIENTAL', 'SVG', 'GOC', 'GTA', 'LACUSTRE'];
+
 export function useRadioDimensions() {
   const [equipes, setEquipes] = useState<DimOption[]>([]);
   const [grupamentos, setGrupamentos] = useState<DimOption[]>([]);
@@ -36,6 +39,9 @@ export function useRadioDimensions() {
 
   useEffect(() => {
     const load = async () => {
+      // Sincronizar dim_regiao_administrativa -> dim_local antes de carregar
+      await (supabase as any).rpc('sync_dim_local_from_ra').then(() => {}).catch(() => {});
+
       const [eqRes, grRes, dfRes, dsRes, lcRes, raRes] = await Promise.all([
         (supabase as any).from('dim_equipe').select('id, nome').order('nome'),
         (supabase as any).from('dim_grupamento').select('id, nome').order('nome'),
@@ -65,6 +71,21 @@ export function useRadioDimensions() {
     return destinacoes.filter(d => whitelist.includes(d.nome));
   };
 
+  const getGrupamentosForTab = (tab: 'resgate' | 'crime') => {
+    const whitelist = tab === 'resgate' ? GRUPAMENTO_RESGATE : GRUPAMENTO_CRIME;
+    return grupamentos.filter(g => whitelist.includes(g.nome));
+  };
+
+  /** Locais mapeados a partir de regioes (RA) - para Select Local que usa dim_regiao_administrativa */
+  const locaisFromRegioes = useMemo(() => {
+    return regioes
+      .map(r => {
+        const loc = locais.find(l => l.nome === r.nome);
+        return loc ? { id: loc.id, nome: r.nome } : null;
+      })
+      .filter((x): x is { id: string; nome: string } => x != null);
+  }, [regioes, locais]);
+
   /** Ensure a dim_local row exists for a given RA name, return the local_id */
   const ensureLocalByName = async (nome: string): Promise<string | null> => {
     if (!nome.trim()) return null;
@@ -85,7 +106,9 @@ export function useRadioDimensions() {
 
   return {
     equipes, grupamentos, desfechos, destinacoes, locais, regioes, loaded,
-    getDesfechosForTab, getDestinacoesForTab, ensureLocalByName,
+    getDesfechosForTab, getDestinacoesForTab, getGrupamentosForTab,
+    locaisFromRegioes,
+    ensureLocalByName,
   };
 }
 

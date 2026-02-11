@@ -16,15 +16,15 @@ const corsHeaders = {
 
 const SPREADSHEET_ID =
   Deno.env.get("SPREADSHEET_ID") ??
-  "16xtQDV3bppeJS_32RkXot4TyxaVPCA2nVqUXP8RyEfI";
+  "16xtQDV3bppeJS_32RkXot4TyxaVPCA2nVqUXP8RyEfl";
 
-// gid=0 from your link
+// gid=0 = primeira aba (Resgate). Ajuste RESGATE_GID/CRIMES_GID via env se necessário.
 const RESGATE_GID = Number(Deno.env.get("RESGATE_GID") ?? 0);
-// Set this in env to avoid ambiguity (recommended)
+// gid da aba Crimes Ambientais (ex: 646142210 na planilha 2026 - CONTROLE DE OCORRÊNCIAS - BPMA)
 const CRIMES_GID_ENV = Deno.env.get("CRIMES_GID");
 const CRIMES_GID = CRIMES_GID_ENV != null && CRIMES_GID_ENV !== ""
   ? Number(CRIMES_GID_ENV)
-  : null;
+  : 646142210;
 
 // Google Sheets layout: row 2 is header in both tabs
 const HEADER_ROW_INDEX = 1; // line 2
@@ -295,6 +295,27 @@ serve(async (req) => {
   );
 
   try {
+    // Sync dim_regiao_administrativa -> dim_local (garantir que RAs existam em dim_local)
+    const { data: raRows } = await supabase
+      .from("dim_regiao_administrativa")
+      .select("id, nome");
+    if (raRows?.length) {
+      for (const ra of raRows) {
+        const nome = String(ra.nome ?? "").trim();
+        if (!nome) continue;
+        const { data: existing } = await supabase
+          .from("dim_local")
+          .select("id")
+          .eq("nome", nome)
+          .limit(1)
+          .maybeSingle();
+        if (!existing?.id) {
+          await supabase.from("dim_local").insert({ nome });
+        }
+      }
+      console.log("[sync-radio-operador] Synced dim_regiao_administrativa -> dim_local");
+    }
+
     const token = await getAccessToken();
     console.log("[sync-radio-operador] Got access token");
 

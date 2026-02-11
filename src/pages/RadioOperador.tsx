@@ -448,12 +448,12 @@ const RadioOperador: React.FC = () => {
                       <div className="min-w-0">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Durações</p>
                         <div className="flex flex-col gap-0.5">
-                          <span className={cn('text-xs', dur1Alert && 'text-red-600 font-bold')}>
-                            {dur1Alert && <AlertCircle className="inline h-3 w-3 mr-0.5 text-red-500" />}
+                          <span className={cn('text-xs px-1.5 py-0.5 rounded', dur1Alert && 'bg-red-100 text-red-700 font-bold')}>
+                            {dur1Alert && <AlertCircle className="inline h-3 w-3 mr-0.5 text-red-600" />}
                             190: {formatIntervalHHMM(dur1 as string)}
                           </span>
-                          <span className={cn('text-xs', dur2Alert && 'text-red-600 font-bold')}>
-                            {dur2Alert && <AlertCircle className="inline h-3 w-3 mr-0.5 text-red-500" />}
+                          <span className={cn('text-xs px-1.5 py-0.5 rounded', dur2Alert && 'bg-red-100 text-red-700 font-bold')}>
+                            {dur2Alert && <AlertCircle className="inline h-3 w-3 mr-0.5 text-red-600" />}
                             Desp: {formatIntervalHHMM(dur2 as string)}
                           </span>
                         </div>

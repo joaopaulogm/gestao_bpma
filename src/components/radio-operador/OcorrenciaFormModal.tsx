@@ -74,6 +74,7 @@ const OcorrenciaFormModal: React.FC<OcorrenciaFormModalProps> = ({
 
   const desfechosForTab = isCrime ? dims.getDesfechosForTab('crime') : dims.getDesfechosForTab('resgate');
   const destinacoesForTab = isCrime ? dims.getDestinacoesForTab('crime') : dims.getDestinacoesForTab('resgate');
+  const grupamentosForTab = isCrime ? dims.getGrupamentosForTab('crime') : dims.getGrupamentosForTab('resgate');
 
   const handleSave = async () => {
     if (!form.data) { toast.error('Data é obrigatória'); return; }
@@ -170,9 +171,9 @@ const OcorrenciaFormModal: React.FC<OcorrenciaFormModalProps> = ({
               {renderInput('Hora Despacho RO', 'hora_despacho', 'time')}
               {renderInput('Hora Finalização', 'hora_finalizacao', 'time')}
               {renderInput('Telefone', 'telefone', 'tel')}
-              {renderSelect('Local (RA)', 'local_id', dims.locais, 'Selecione')}
+              {renderSelect('Local (RA)', 'local_id', dims.locaisFromRegioes, 'Selecione')}
               {renderInput('Prefixo', 'prefixo')}
-              {renderSelect('Grupamento', 'grupamento_id', dims.grupamentos, 'Selecione')}
+              {renderSelect('Grupamento', 'grupamento_id', grupamentosForTab, 'Selecione')}
               {renderInput('CMT VTR', 'cmt_vtr')}
               {renderSelect('Desfecho', 'desfecho_id', desfechosForTab, 'Selecione')}
               {renderSelect('Destinação', 'destinacao_id', destinacoesForTab, 'Selecione')}
