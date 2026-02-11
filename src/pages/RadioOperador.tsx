@@ -179,13 +179,18 @@ const RadioOperador: React.FC = () => {
     setSyncing(true);
     try {
       const { data, error } = await (supabase as any).functions.invoke('sync-radio-operador');
-      if (error) throw error;
       if (data && data.success === false) throw new Error(data.error ?? 'Erro na sincronização');
+      if (error) {
+        const msg = data?.error ?? error?.message ?? (error as any)?.context?.body ?? 'Erro na sincronização';
+        throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      }
       await fetchData();
       if (data?.synced_at) setLastSync(data.synced_at);
       toast.success('Dados sincronizados com a planilha');
     } catch (e: any) {
-      toast.error(e?.message ?? 'Erro ao sincronizar. Tente novamente.');
+      const msg = e?.message ?? 'Erro ao sincronizar. Tente novamente.';
+      toast.error(msg);
+      console.error('[sync-radio-operador]', msg, e);
     } finally {
       setSyncing(false);
     }

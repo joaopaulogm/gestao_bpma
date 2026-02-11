@@ -16,7 +16,7 @@ const corsHeaders = {
 
 const SPREADSHEET_ID =
   Deno.env.get("SPREADSHEET_ID") ??
-  "16xtQDV3bppeJS_32RkXot4TyxaVPCA2nVqUXP8RyEfl";
+  "16xtQDV3bppeJS_32RkXot4TyxaVPCA2nVqUXP8RyEfI";
 
 // gid=0 = primeira aba (Resgate). Ajuste RESGATE_GID/CRIMES_GID via env se necessário.
 const RESGATE_GID = Number(Deno.env.get("RESGATE_GID") ?? 0);
@@ -251,7 +251,15 @@ async function fetchSheetMetas(token: string): Promise<SheetMeta[]> {
     `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties(title,sheetId)`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
-  if (!metaRes.ok) throw new Error(`Sheet meta error: ${await metaRes.text()}`);
+  if (!metaRes.ok) {
+    const body = await metaRes.text();
+    if (metaRes.status === 404) {
+      throw new Error(
+        `Planilha não encontrada (404). Verifique: 1) SPREADSHEET_ID correto na URL (ex: docs.google.com/spreadsheets/d/ID/edit); 2) Planilha compartilhada com o e-mail da Service Account (editor ou visualizador). ID usado: ${SPREADSHEET_ID}. Detalhe: ${body}`,
+      );
+    }
+    throw new Error(`Sheet meta error: ${body}`);
+  }
   const meta = await metaRes.json();
   const metas: SheetMeta[] = (meta.sheets || [])
     .map((s: any) => s?.properties)
@@ -767,12 +775,13 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("[sync-radio-operador] Error:", error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error("[sync-radio-operador] Error:", errMsg, error);
     return new Response(
-      JSON.stringify({ success: false, error: String(error) }),
+      JSON.stringify({ success: false, error: errMsg }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
+        status: 200,
       },
     );
   }

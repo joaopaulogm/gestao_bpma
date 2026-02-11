@@ -11,7 +11,7 @@ Configure estes secrets no **Supabase Dashboard** → **Project Settings** → *
 | `GOOGLE_CLIENT_ID` | process-os-folder, process-raps-folder, get-drive-image | OAuth Google: Client ID |
 | `GOOGLE_CLIENT_SECRET` | process-os-folder, process-raps-folder, get-drive-image | OAuth Google: Client Secret |
 | `GOOGLE_REFRESH_TOKEN` | process-os-folder, process-raps-folder, get-drive-image | OAuth Google: Refresh Token |
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | sync-afastamentos-sheets | JSON da Service Account (Google Sheets) |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | sync-afastamentos-sheets, **sync-radio-operador** | JSON da Service Account (Google Sheets) |
 
 ## Automáticos (Supabase)
 
@@ -20,6 +20,17 @@ Estes são definidos pelo Supabase e não precisam ser criados:
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+
+## sync-radio-operador (Controle de Ocorrências)
+
+| Secret/Env | Obrigatório | Descrição |
+|-----------|-------------|-----------|
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | Sim | JSON da Service Account com acesso à planilha Google Sheets |
+| `SPREADSHEET_ID` | Não | ID da planilha (padrão: 16xtQDV3bppeJS_32RkXot4TyxaVPCA2nVqUXP8RyEfl) |
+| `RESGATE_GID` | Não | gid da aba Resgate (padrão: 0) |
+| `CRIMES_GID` | Não | gid da aba Crimes Ambientais (padrão: 646142210) |
+
+**Como obter a Service Account:** Google Cloud Console → APIs & Services → Credentials → Create Service Account → Download JSON. Compartilhe a planilha com o e-mail da service account (ex: `xxx@projeto.iam.gserviceaccount.com`).
 
 ## Opcionais
 
