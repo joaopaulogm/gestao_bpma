@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   PawPrint, Scale, AlertTriangle, Search, Plus, RefreshCw,
-  Eye, Pencil, Trash2, ChevronLeft, ChevronRight, Radio,
-  Clock, MapPin, AlertCircle,
+  Eye, Pencil, Trash2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Radio,
+  Clock, MapPin, AlertCircle, Phone,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -148,8 +148,18 @@ const RadioOperador: React.FC = () => {
   const [showNewModal, setShowNewModal] = useState(false);
   const [filters, setFilters] = useState<RadioFilters>(EMPTY_RADIO_FILTERS);
   const [pageIndex, setPageIndex] = useState(0);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const dims = useRadioDimensions();
+
+  const toggleRowExpand = (id: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -379,6 +389,7 @@ const RadioOperador: React.FC = () => {
           <div className="space-y-2">
             {paginatedRows.map((row) => {
               const isAberto = row.status === 'Aberto';
+              const isExpanded = expandedRows.has(row.id);
               const dataVal = getDisplayVal(row.data['Data']);
               const equipeVal = getDisplayVal(row.data['Equipe']);
               const copomVal = getDisplayVal(row.data['N° OCORRÊNCIA COPOM']);
@@ -387,11 +398,13 @@ const RadioOperador: React.FC = () => {
                 : getDisplayVal(getRowData(row, 'FAUNA'));
               const horaCadastro = getDisplayVal(row.data['Hora cadastro']);
               const horaRecebido = getDisplayVal(row.data['Hora recebido COPOM']);
+              const horaDespacho = getDisplayVal(row.data['Despacho RO']);
+              const horaFinal = getDisplayVal(row.data['Hora finalização']);
               const localVal = getDisplayVal(row.data['LOCAL']);
               const desfechoNome = String(row.data['Desfecho'] ?? '').trim();
               const desfechoDisplay = desfechoNome || 'Sem desfecho';
 
-              // Duration alerts
+              // Duration alerts - alto contraste (fundo vermelho, texto branco)
               const dur1 = row.data['Duração cadastro/encaminhamento'];
               const dur2 = row.data['Duração despacho/finalização'];
               const dur1Min = intervalToMinutes(dur1 as string);
@@ -409,56 +422,56 @@ const RadioOperador: React.FC = () => {
                   )}
                 >
                   <div className="flex items-center gap-4 sm:gap-6 p-4 sm:p-5">
-                    {/* Main info */}
+                    {/* Colunas principais */}
                     <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-x-5 gap-y-3 sm:gap-y-2">
                       <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Data</p>
-                        <p className="text-sm font-medium text-slate-800">{dataVal}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Data</p>
+                        <p className="text-sm font-medium text-slate-900">{dataVal}</p>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Equipe</p>
-                        <p className="text-sm font-medium text-slate-800 break-words">{equipeVal}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Equipe</p>
+                        <p className="text-sm font-medium text-slate-900 break-words">{equipeVal}</p>
                       </div>
                       <div className="min-w-[120px]">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">COPOM</p>
-                        <p className="text-sm font-medium text-slate-800 break-all" title={copomVal}>{copomVal}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">N° COPOM</p>
+                        <p className="text-sm font-medium text-slate-900 break-all" title={copomVal}>{copomVal}</p>
                       </div>
                       <div className="min-w-[100px]">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                           {activeTab === SHEET_CRIMES ? 'Crime' : 'Fauna'}
                         </p>
-                        <p className="text-sm font-medium text-emerald-700 break-words" title={mainVal}>{mainVal}</p>
+                        <p className="text-sm font-medium text-emerald-800 break-words" title={mainVal}>{mainVal}</p>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Horários</p>
-                        <p className="text-xs text-slate-600">
-                          <Clock className="inline h-3 w-3 mr-0.5 text-slate-400 shrink-0" />
-                          {horaCadastro} → {horaRecebido}
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Horários</p>
+                        <p className="text-xs text-slate-700">
+                          <Clock className="inline h-3 w-3 mr-0.5 text-slate-500 shrink-0" />
+                          {horaCadastro} → {horaRecebido} → {horaDespacho} → {horaFinal}
                         </p>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Local</p>
-                        <p className="text-xs text-slate-600 break-words" title={localVal}>
-                          <MapPin className="inline h-3 w-3 mr-0.5 text-slate-400 shrink-0" />{localVal}
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Local</p>
+                        <p className="text-xs text-slate-700 break-words" title={localVal}>
+                          <MapPin className="inline h-3 w-3 mr-0.5 text-slate-500 shrink-0" />{localVal}
                         </p>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Desfecho</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Desfecho</p>
                         {desfechoNome ? (
                           <Badge className="text-[10px] font-medium mt-0.5 bg-[#071d49]/10 text-[#071d49] border-[#071d49]/20">{desfechoDisplay}</Badge>
                         ) : (
-                          <span className="text-xs text-red-500 font-semibold">Sem desfecho</span>
+                          <span className="text-xs font-semibold text-red-600">Sem desfecho</span>
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Durações</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Durações</p>
                         <div className="flex flex-col gap-0.5">
-                          <span className={cn('text-xs px-1.5 py-0.5 rounded', dur1Alert && 'bg-red-100 text-red-700 font-bold')}>
-                            {dur1Alert && <AlertCircle className="inline h-3 w-3 mr-0.5 text-red-600" />}
+                          <span className={cn('text-xs px-1.5 py-0.5 rounded font-medium', dur1Alert ? 'bg-red-600 text-white' : 'text-slate-700')}>
+                            {dur1Alert && <AlertCircle className="inline h-3 w-3 mr-0.5 text-white" />}
                             190: {formatIntervalHHMM(dur1 as string)}
                           </span>
-                          <span className={cn('text-xs px-1.5 py-0.5 rounded', dur2Alert && 'bg-red-100 text-red-700 font-bold')}>
-                            {dur2Alert && <AlertCircle className="inline h-3 w-3 mr-0.5 text-red-600" />}
+                          <span className={cn('text-xs px-1.5 py-0.5 rounded font-medium', dur2Alert ? 'bg-red-600 text-white' : 'text-slate-700')}>
+                            {dur2Alert && <AlertCircle className="inline h-3 w-3 mr-0.5 text-white" />}
                             Desp: {formatIntervalHHMM(dur2 as string)}
                           </span>
                         </div>
@@ -477,6 +490,53 @@ const RadioOperador: React.FC = () => {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
+                  </div>
+
+                  {/* Detalhes expansíveis (Telefone, Prefixo, Grupamento, CMT VTR, Destinação, N° RAP, N° TCO) */}
+                  <div className="border-t border-slate-100">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full h-8 text-xs text-slate-600 hover:bg-slate-50 rounded-none"
+                      onClick={() => toggleRowExpand(row.id)}
+                    >
+                      {isExpanded ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
+                      {isExpanded ? 'Ocultar detalhes' : 'Ver mais detalhes'}
+                    </Button>
+                    {isExpanded && (
+                      <div className="px-4 pb-4 pt-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 bg-slate-50/50">
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Telefone</p>
+                          <p className="text-sm text-slate-800 flex items-center gap-1"><Phone className="h-3 w-3" />{getDisplayVal(row.data['Telefone'])}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Prefixo</p>
+                          <p className="text-sm text-slate-800">{getDisplayVal(row.data['PREFIXO'])}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Grupamento</p>
+                          <p className="text-sm text-slate-800">{getDisplayVal(row.data['GRUPAMENTO'])}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">CMT VTR</p>
+                          <p className="text-sm text-slate-800">{getDisplayVal(row.data['CMT VTR'])}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Destinação</p>
+                          <p className="text-sm text-slate-800">{getDisplayVal(row.data['DESTINAÇÃO'])}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">N° RAP</p>
+                          <p className="text-sm text-slate-800">{getDisplayVal(row.data['N° RAP'])}</p>
+                        </div>
+                        {activeTab === SHEET_CRIMES && (
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">N° TCO</p>
+                            <p className="text-sm text-slate-800">{getDisplayVal(row.data['N° TCO'])}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               );

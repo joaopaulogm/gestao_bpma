@@ -103,8 +103,8 @@ function App() {
               <Route path="/ranking" element={<ProtectedRoute requiredRoles={['operador', 'secao_pessoas', 'secao_operacional', 'secao_logistica', 'comando']}><SidebarLayout><RankingOcorrencias /></SidebarLayout></ProtectedRoute>} />
               <Route path="/perfil" element={<ProtectedRoute requiredRoles={['operador', 'secao_pessoas', 'secao_operacional', 'secao_logistica', 'comando']}><SidebarLayout><Perfil /></SidebarLayout></ProtectedRoute>} />
               <Route path="/mapa-localizacao" element={<ProtectedRoute requiredRoles={['operador', 'secao_pessoas', 'secao_operacional', 'secao_logistica', 'comando']}><SidebarLayout><MapaLocalizacao /></SidebarLayout></ProtectedRoute>} />
-              {/* Rádio Operador: apenas operador_radio, secao_operacional, comando */}
-              <Route path="/radio-operador" element={<ProtectedRoute requiredRoles={['operador_radio', 'secao_operacional', 'comando']}><SidebarLayout><RadioOperador /></SidebarLayout></ProtectedRoute>} />
+              {/* Rádio Operador: operador, operador_radio, admin, secao_operacional, secao_pessoas, comando */}
+              <Route path="/radio-operador" element={<ProtectedRoute requiredRoles={['operador', 'operador_radio', 'admin', 'secao_operacional', 'secao_pessoas', 'comando']}><SidebarLayout><RadioOperador /></SidebarLayout></ProtectedRoute>} />
               
               {/* Admin only */}
               <Route path="/gerenciar-permissoes" element={<ProtectedRoute requireAdmin><SidebarLayout><GerenciarPermissoes /></SidebarLayout></ProtectedRoute>} />

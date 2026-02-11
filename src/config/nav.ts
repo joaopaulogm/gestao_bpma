@@ -77,7 +77,7 @@ export const navSections: NavSection[] = [
       },
       { path: '/mapa-localizacao', label: 'Mapa e Localização', icon: MapPin, roles: ['operador', 'secao_pessoas', 'secao_operacional', 'secao_logistica', 'comando'] },
       { path: '/ranking', label: 'Ranking de Ocorrências', icon: Trophy, roles: ['operador', 'secao_pessoas', 'secao_operacional', 'secao_logistica', 'comando'] },
-      { path: '/radio-operador', label: 'Rádio Operador', icon: Radio, roles: ['operador_radio', 'secao_operacional', 'comando'] },
+      { path: '/radio-operador', label: 'Rádio Operador', icon: Radio, roles: ['operador', 'operador_radio', 'admin', 'secao_operacional', 'secao_pessoas', 'comando'] },
     ],
   },
   {

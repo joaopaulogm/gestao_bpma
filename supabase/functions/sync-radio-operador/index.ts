@@ -272,6 +272,14 @@ function pickSheetByGid(metas: SheetMeta[], gid: number): SheetMeta | null {
   return metas.find((m) => Number(m.sheetId) === Number(gid)) ?? null;
 }
 
+function pickResgateSheetFallback(metas: SheetMeta[]): SheetMeta | null {
+  return metas.find((m) => normalizeText(m.title).includes("RESGATE DE FAUNA")) ??
+    metas.find((m) => normalizeText(m.title).includes("RESGATE")) ??
+    metas.find((m) => normalizeText(m.title).includes("FAUNA")) ??
+    metas[0] ?? // fallback: primeira aba
+    null;
+}
+
 function pickCrimesSheetFallback(metas: SheetMeta[]): SheetMeta | null {
   return metas.find((m) => normalizeText(m.title).includes("CRIMES")) ??
     metas.find((m) => normalizeText(m.title).includes("AMBIENT")) ??
@@ -330,10 +338,15 @@ serve(async (req) => {
     const metas = await fetchSheetMetas(token);
     console.log("[sync-radio-operador] Sheets:", metas);
 
-    const resgateMeta = pickSheetByGid(metas, RESGATE_GID);
+    const resgateMeta =
+      (RESGATE_GID >= 0 ? pickSheetByGid(metas, RESGATE_GID) : null) ??
+      pickResgateSheetFallback(metas);
     if (!resgateMeta) {
-      throw new Error(`Aba de resgate com gid=${RESGATE_GID} não encontrada.`);
+      throw new Error(
+        `Aba de Resgate de Fauna não encontrada. Verifique RESGATE_GID (env) ou se a planilha tem aba com nome contendo "Resgate" ou "Fauna". Abas encontradas: ${metas.map((m) => m.title).join(", ")}`,
+      );
     }
+    console.log("[sync-radio-operador] Resgate sheet:", resgateMeta.title, "gid:", resgateMeta.sheetId);
 
     const crimesMeta =
       (CRIMES_GID != null ? pickSheetByGid(metas, CRIMES_GID) : null) ??
@@ -343,6 +356,34 @@ serve(async (req) => {
       console.warn(
         "[sync-radio-operador] Aba de crimes não encontrada (CRIMES_GID não setado e fallback por nome falhou).",
       );
+    }
+
+    // Seed dimensões obrigatórias (UPSERT por nome)
+    const seedRows = [
+      { table: "dim_equipe", names: ["ALFA", "BRAVO", "CHARLIE", "DELTA"] },
+      { table: "dim_grupamento", names: ["RP AMBIENTAL", "SVG", "GOC", "GTA", "LACUSTRE", "NÃO HOUVE"] },
+      {
+        table: "dim_desfecho",
+        names: [
+          "RESGATADO", "EXÓTICO", "EVADIDO", "VIDA LIVRE", "ÓBITO", "SEM CONTATO",
+          "NINHO", "INACESSÍVEL", "OUTRO ÓRGÃO", "NADA CONSTATADO",
+          "TCO (PMDF)", "TCO (PCDF)", "PRISÃO FLAGRANTE (PCDF)", "RESOLVIDO NO LOCAL", "EM APURAÇÃO",
+        ],
+      },
+      {
+        table: "dim_destinacao",
+        names: [
+          "CETAS", "HFAUS", "HVET/UnB", "CEAPA", "SOLTURA", "SEM DESTINAÇÃO",
+          "CETAS (APREENSÃO)", "BPMA (APREENSÃO)", "PCDF (APREENSÃO)", "LIBERADO NO LOCAL",
+        ],
+      },
+    ];
+    for (const { table, names } of seedRows) {
+      for (const nome of names) {
+        if (!nome.trim()) continue;
+        const { error } = await supabase.from(table).upsert({ nome }, { onConflict: "nome", ignoreDuplicates: true });
+        if (error) console.warn(`[sync] seed ${table} "${nome}":`, error.message);
+      }
     }
 
     // Pre-load dimension caches
@@ -381,8 +422,8 @@ serve(async (req) => {
       const iEquipe = colIdx(headers, ["EQUIPE"]);
       const iCopom = colIdx(headers, ["COPOM", "OCORRÊNCIA", "OCORRENCIA"]);
       const iFauna = colIdx(headers, ["FAUNA"]);
-      const iHCadastro = colIdx(headers, ["CADASTRO"]);
-      const iHRecebido = colIdx(headers, ["RECEBIDO", "COPOM"]);
+      const iHCadastro = colIdx(headers, ["CADASTRO", "HORA"]);
+      const iHRecebido = colIdx(headers, ["RECEBIDO", "CENTRAL"]); // evitar "COPOM" que bate em N° OCORRÊNCIA COPOM
       const iHDespacho = colIdx(headers, ["DESPACHO"]);
       const iHFinal = colIdx(headers, ["FINALIZAÇÃO", "FINALIZACAO"]);
       const iTelefone = colIdx(headers, ["TELEFONE"]);
@@ -530,10 +571,7 @@ serve(async (req) => {
           desfecho_id,
           destinacao_id,
           numero_rap: String(getCell(row, iRap) ?? "").trim() || null,
-          duracao_cadastro_190_encaminhamento_copom: parseInterval(
-            getCell(row, iDur1),
-          ),
-          duracao_despacho_finalizacao: parseInterval(getCell(row, iDur2)),
+          // Durações calculadas pelo trigger calc_duracoes_resgate (não ler da planilha)
         });
       }
 
@@ -596,8 +634,8 @@ serve(async (req) => {
       const iEquipe = colIdx(headers, ["EQUIPE"]);
       const iCopom = colIdx(headers, ["COPOM", "OCORRÊNCIA", "OCORRENCIA"]);
       const iCrime = colIdx(headers, ["CRIME"]);
-      const iHCadastro = colIdx(headers, ["CADASTRO"]);
-      const iHRecebido = colIdx(headers, ["RECEBIDO", "COPOM"]);
+      const iHCadastro = colIdx(headers, ["CADASTRO", "HORA"]);
+      const iHRecebido = colIdx(headers, ["RECEBIDO", "CENTRAL"]); // evitar "COPOM" que bate em N° OCORRÊNCIA COPOM
       const iHDespacho = colIdx(headers, ["DESPACHO"]);
       const iHFinal = colIdx(headers, ["FINALIZAÇÃO", "FINALIZACAO"]);
       const iTelefone = colIdx(headers, ["TELEFONE"]);
@@ -719,10 +757,7 @@ serve(async (req) => {
           numero_rap: String(getCell(row, iRap) ?? "").trim() || null,
           numero_tco_pmdf_ou_tco_apf_pcdf:
             String(getCell(row, iTco) ?? "").trim() || null,
-          duracao_cadastro_190_encaminhamento_copom: parseInterval(
-            getCell(row, iDur1),
-          ),
-          duracao_despacho_finalizacao: parseInterval(getCell(row, iDur2)),
+          // Durações calculadas pelo trigger calc_duracoes_crime (não ler da planilha)
         });
       }
 

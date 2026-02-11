@@ -81,19 +81,19 @@ const OcorrenciaViewModal: React.FC<OcorrenciaViewModalProps> = ({
                     key={col.id}
                     className={cn(
                       'space-y-1.5 p-3 rounded-xl border border-border/30',
-                      alert ? 'bg-red-50 border-red-200' : 'bg-muted/30',
+                      alert ? 'bg-red-600 border-red-700' : 'bg-muted/30',
                       col.id === 'LOCAL' && 'sm:col-span-2',
                     )}
                   >
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <Label className={cn('text-xs font-medium uppercase tracking-wide', alert ? 'text-red-100' : 'text-muted-foreground')}>
                       {col.header.replace(/\n/g, ' ')}
                     </Label>
                     <div className="flex items-center gap-1">
-                      {alert && <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />}
+                      {alert && <AlertCircle className="h-4 w-4 text-white shrink-0" />}
                       {col.id === 'Desfecho' && !String(val ?? '').trim() ? (
-                        <span className="text-sm font-medium text-red-500">Sem desfecho</span>
+                        <span className="text-sm font-medium text-red-600">Sem desfecho</span>
                       ) : (
-                        <p className={cn('text-sm font-medium text-foreground leading-relaxed', alert && 'text-red-600 font-bold')}>
+                        <p className={cn('text-sm font-medium leading-relaxed', alert ? 'text-white font-bold' : 'text-foreground')}>
                           {displayStr}
                         </p>
                       )}
