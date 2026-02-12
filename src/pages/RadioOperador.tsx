@@ -458,7 +458,7 @@ const RadioOperador: React.FC = () => {
                       <div className="min-w-0">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Desfecho</p>
                         {desfechoNome ? (
-                          <Badge className="text-[10px] font-medium mt-0.5 bg-[#071d49]/10 text-[#071d49] border-[#071d49]/20">{desfechoDisplay}</Badge>
+                          <Badge className="text-[10px] font-medium mt-0.5 bg-[#071d49] text-white border-[#071d49]">{desfechoDisplay}</Badge>
                         ) : (
                           <span className="text-xs font-semibold text-red-600">Sem desfecho</span>
                         )}
