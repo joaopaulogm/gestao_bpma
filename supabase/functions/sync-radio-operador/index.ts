@@ -143,6 +143,26 @@ function normalizePhone(v: unknown): string | null {
   if (!v) return null;
   const s = String(v).trim();
   if (!s) return null;
+  // Strip everything that isn't a digit
+  const digits = s.replace(/\D/g, "");
+  if (!digits) return s; // keep original if no digits at all
+  // If 11 digits: (XX) XXXXX-XXXX
+  if (digits.length === 11) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  }
+  // If 10 digits (landline): (XX) XXXX-XXXX
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  }
+  // If 9 digits (no DDD, mobile): default (61)
+  if (digits.length === 9) {
+    return `(61) ${digits.slice(0, 5)}-${digits.slice(5)}`;
+  }
+  // If 8 digits (no DDD, landline): default (61)
+  if (digits.length === 8) {
+    return `(61) ${digits.slice(0, 4)}-${digits.slice(4)}`;
+  }
+  // Fallback: return original trimmed
   return s;
 }
 
