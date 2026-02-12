@@ -4351,6 +4351,21 @@ export type Database = {
         }
         Relationships: []
       }
+      ref_regiao_administrativa: {
+        Row: {
+          id: string
+          nome: string
+        }
+        Insert: {
+          id: string
+          nome: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       stg_abono_2026: {
         Row: {
           ano: number | null
@@ -5612,6 +5627,7 @@ export type Database = {
       month_to_int: { Args: { m: string }; Returns: number }
       norm_txt: { Args: { t: string }; Returns: string }
       normalize_text: { Args: { input_text: string }; Returns: string }
+      radio_operador_can_read: { Args: { _user_id: string }; Returns: boolean }
       radio_operador_import_sheet: {
         Args: { p_headers: string[]; p_rows: Json[]; p_sheet_name: string }
         Returns: {
@@ -5644,6 +5660,7 @@ export type Database = {
         Args: { p_source_sheet?: string }
         Returns: Json
       }
+      sync_dim_local_from_ra: { Args: never; Returns: undefined }
       sync_dm_2026_from_stg: {
         Args: { p_source_sheet?: string }
         Returns: Json
