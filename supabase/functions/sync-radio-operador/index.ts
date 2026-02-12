@@ -141,15 +141,9 @@ function parseInterval(v: unknown): string | null {
 
 function normalizePhone(v: unknown): string | null {
   if (!v) return null;
-  let s = String(v).trim();
-  const digits = s.replace(/\D/g, "");
-  // If pure digits 11 -> format
-  if (digits.length === 11) {
-    s = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  }
-  // Accept only (XX) XXXXX-XXXX
-  if (/^\(\d{2}\)\s?\d{5}-\d{4}$/.test(s)) return s;
-  return null;
+  const s = String(v).trim();
+  if (!s) return null;
+  return s;
 }
 
 // ── Dimension lookup with cache + find-or-create ──
@@ -381,7 +375,7 @@ serve(async (req) => {
     for (const { table, names } of seedRows) {
       for (const nome of names) {
         if (!nome.trim()) continue;
-        const { error } = await supabase.from(table).upsert({ nome }, { onConflict: "nome", ignoreDuplicates: true });
+        const { error } = await supabase.from(table).upsert({ nome }, { onConflict: "nome" });
         if (error) console.warn(`[sync] seed ${table} "${nome}":`, error.message);
       }
     }
@@ -422,12 +416,14 @@ serve(async (req) => {
       const iEquipe = colIdx(headers, ["EQUIPE"]);
       const iCopom = colIdx(headers, ["COPOM", "OCORRÊNCIA", "OCORRENCIA"]);
       const iFauna = colIdx(headers, ["FAUNA"]);
-      const iHCadastro = colIdx(headers, ["CADASTRO", "HORA"]);
-      const iHRecebido = colIdx(headers, ["RECEBIDO", "CENTRAL"]); // evitar "COPOM" que bate em N° OCORRÊNCIA COPOM
-      const iHDespacho = colIdx(headers, ["DESPACHO"]);
-      const iHFinal = colIdx(headers, ["FINALIZAÇÃO", "FINALIZACAO"]);
+      // For HORA columns, use more specific matching to avoid overlap
+      const iHCadastro = headers.findIndex((h) => h.includes("CADASTRO") && h.includes("HORA"));
+      const iHRecebido = headers.findIndex((h) => h.includes("RECEBIDO"));
+      const iHDespacho = headers.findIndex((h) => h.includes("DESPACHO"));
+      const iHFinal = headers.findIndex((h) => h.includes("FINALIZAÇÃO") || h.includes("FINALIZACAO"));
       const iTelefone = colIdx(headers, ["TELEFONE"]);
-      const iLocal = colIdx(headers, ["LOCAL", "RA", "REGIAO"]);
+      // LOCAL column - avoid matching "HORA" which contains "RA"
+      const iLocal = headers.findIndex((h) => h === "LOCAL" || (h.includes("LOCAL") && !h.includes("HORA")));
       const iPrefixo = colIdx(headers, ["PREFIXO"]);
       const iGrupamento = colIdx(headers, ["GRUPAMENTO"]);
       const iCmtVtr = colIdx(headers, ["CMT"]);
@@ -634,12 +630,12 @@ serve(async (req) => {
       const iEquipe = colIdx(headers, ["EQUIPE"]);
       const iCopom = colIdx(headers, ["COPOM", "OCORRÊNCIA", "OCORRENCIA"]);
       const iCrime = colIdx(headers, ["CRIME"]);
-      const iHCadastro = colIdx(headers, ["CADASTRO", "HORA"]);
-      const iHRecebido = colIdx(headers, ["RECEBIDO", "CENTRAL"]); // evitar "COPOM" que bate em N° OCORRÊNCIA COPOM
-      const iHDespacho = colIdx(headers, ["DESPACHO"]);
-      const iHFinal = colIdx(headers, ["FINALIZAÇÃO", "FINALIZACAO"]);
+      const iHCadastro = headers.findIndex((h) => h.includes("CADASTRO") && h.includes("HORA"));
+      const iHRecebido = headers.findIndex((h) => h.includes("RECEBIDO"));
+      const iHDespacho = headers.findIndex((h) => h.includes("DESPACHO"));
+      const iHFinal = headers.findIndex((h) => h.includes("FINALIZAÇÃO") || h.includes("FINALIZACAO"));
       const iTelefone = colIdx(headers, ["TELEFONE"]);
-      const iLocal = colIdx(headers, ["LOCAL", "RA", "REGIAO"]);
+      const iLocal = headers.findIndex((h) => h === "LOCAL" || (h.includes("LOCAL") && !h.includes("HORA")));
       const iPrefixo = colIdx(headers, ["PREFIXO"]);
       const iGrupamento = colIdx(headers, ["GRUPAMENTO"]);
       const iCmtVtr = colIdx(headers, ["CMT"]);
