@@ -149,6 +149,7 @@ const RadioOperador: React.FC = () => {
   const [filters, setFilters] = useState<RadioFilters>(EMPTY_RADIO_FILTERS);
   const [pageIndex, setPageIndex] = useState(0);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<'todas' | 'abertas' | 'encerradas'>('todas');
 
   const dims = useRadioDimensions();
 
@@ -261,13 +262,15 @@ const RadioOperador: React.FC = () => {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter(r => Object.values(r.data).filter(v => v != null).join(' ').toLowerCase().includes(q));
     }
+    if (statusFilter === 'abertas') result = result.filter(r => r.status === 'Aberto');
+    if (statusFilter === 'encerradas') result = result.filter(r => r.status === 'Encerrado');
     return result;
-  }, [currentRows, filters, searchQuery]);
+  }, [currentRows, filters, searchQuery, statusFilter]);
 
   const pageCount = Math.ceil(filteredRows.length / PAGE_SIZE);
   const paginatedRows = filteredRows.slice(pageIndex * PAGE_SIZE, (pageIndex + 1) * PAGE_SIZE);
 
-  useEffect(() => { setPageIndex(0); }, [activeTab, filters, searchQuery]);
+  useEffect(() => { setPageIndex(0); setStatusFilter('todas'); }, [activeTab, filters, searchQuery]);
 
   const handleDelete = async () => {
     if (!deleteRow) return;
@@ -351,21 +354,37 @@ const RadioOperador: React.FC = () => {
           onClear={() => setFilters(EMPTY_RADIO_FILTERS)}
         />
 
-        {/* Stats bar */}
-        <div className="flex items-center gap-4 text-sm">
+        {/* Stats bar with status filter */}
+        <div className="flex items-center gap-4 text-sm flex-wrap">
           <span className="text-slate-500">{filteredRows.length} ocorrência{filteredRows.length !== 1 ? 's' : ''}</span>
-          {filteredRows.length > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-xs font-medium text-red-600">{filteredRows.filter(r => r.status === 'Aberto').length} Abertas</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#071d49]" />
-                <span className="text-xs font-medium text-[#071d49]">{filteredRows.filter(r => r.status === 'Encerrado').length} Encerradas</span>
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant={statusFilter === 'todas' ? 'default' : 'outline'}
+              size="sm"
+              className={cn('h-7 rounded-lg text-xs px-3', statusFilter === 'todas' && 'bg-[#071d49] text-white hover:bg-[#071d49]/90')}
+              onClick={() => setStatusFilter('todas')}
+            >
+              Todas ({currentRows.length})
+            </Button>
+            <Button
+              variant={statusFilter === 'abertas' ? 'default' : 'outline'}
+              size="sm"
+              className={cn('h-7 rounded-lg text-xs px-3', statusFilter === 'abertas' && 'bg-red-600 text-white hover:bg-red-700')}
+              onClick={() => setStatusFilter('abertas')}
+            >
+              <span className="h-2 w-2 rounded-full bg-red-400 mr-1.5 animate-pulse" />
+              Abertas ({currentRows.filter(r => r.status === 'Aberto').length})
+            </Button>
+            <Button
+              variant={statusFilter === 'encerradas' ? 'default' : 'outline'}
+              size="sm"
+              className={cn('h-7 rounded-lg text-xs px-3', statusFilter === 'encerradas' && 'bg-[#071d49] text-white hover:bg-[#071d49]/90')}
+              onClick={() => setStatusFilter('encerradas')}
+            >
+              <span className="h-2 w-2 rounded-full bg-[#071d49] mr-1.5" />
+              Encerradas ({currentRows.filter(r => r.status === 'Encerrado').length})
+            </Button>
+          </div>
         </div>
 
         {/* Content */}

@@ -104,7 +104,10 @@ function normalizeText(v: unknown): string {
 
 function getCell(row: any[], idx: number): unknown {
   if (idx == null || idx < 0) return null;
-  return row[idx];
+  if (idx >= row.length) return null; // sparse row – column not present
+  const val = row[idx];
+  if (val === undefined || val === null) return null;
+  return val;
 }
 
 function parseDate(v: unknown): string | null {
@@ -304,7 +307,7 @@ async function fetchSheetValues(
   token: string,
   sheetName: string,
 ): Promise<any[][]> {
-  const range = encodeURIComponent(`'${sheetName.replace(/'/g, "''")}'!A:Z`);
+  const range = encodeURIComponent(`'${sheetName.replace(/'/g, "''")}'!A:AZ`);
   const dataRes = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`,
     { headers: { Authorization: `Bearer ${token}` } },
