@@ -169,6 +169,65 @@ function normalizePhone(v: unknown): string | null {
   return s;
 }
 
+// ── RA canonical name resolver ──
+// The spreadsheet uses short names like "Plano Piloto", "Sobradinho", "Guará"
+// but dim_local requires canonical names like "Sobradinho (RA V)" via trigger.
+// We load all RA names and try to match short names to canonical ones.
+type RAMap = Map<string, string>; // shortNameUpper -> canonicalName
+
+async function loadRAMap(supabase: any): Promise<RAMap> {
+  const map: RAMap = new Map();
+  const { data, error } = await supabase
+    .from("dim_regiao_administrativa")
+    .select("nome");
+  if (error) {
+    console.error("[loadRAMap] error:", error.message);
+    return map;
+  }
+  for (const row of (data || [])) {
+    const nome = String(row.nome ?? "").trim();
+    if (!nome) continue;
+    // Map both the full canonical name and the short prefix (before " (RA")
+    map.set(nome.toUpperCase(), nome);
+    const shortMatch = nome.match(/^(.+?)\s*\(RA\s/i);
+    if (shortMatch) {
+      const shortName = shortMatch[1]!.trim().toUpperCase();
+      // Only set if not already mapped (prefer first/main entry)
+      if (!map.has(shortName)) {
+        map.set(shortName, nome);
+      }
+    }
+    // Also map variants without accents or common abbreviations
+    const shortMatch2 = nome.match(/^(.+?)\s*-\s*.+\s*\(RA/i);
+    if (shortMatch2) {
+      const parentName = shortMatch2[1]!.trim().toUpperCase();
+      if (!map.has(parentName)) {
+        map.set(parentName, nome);
+      }
+    }
+  }
+  // Special cases
+  if (!map.has("BRASÍLIA")) {
+    const pp = map.get("PLANO PILOTO - ASA NORTE (RA I)") ?? map.get("PLANO PILOTO - ASA SUL (RA I)");
+    if (pp) map.set("BRASÍLIA", pp);
+  }
+  return map;
+}
+
+function resolveLocalName(raw: string, raMap: RAMap): string {
+  const key = raw.toUpperCase().trim();
+  // Direct match (full canonical or short name)
+  if (raMap.has(key)) return raMap.get(key)!;
+  // Try startsWith match
+  for (const [k, v] of raMap) {
+    if (k.startsWith(key) || key.startsWith(k.split(" (RA")[0]?.toUpperCase() ?? "")) {
+      return v;
+    }
+  }
+  // Return original if no match found
+  return raw;
+}
+
 // ── Dimension lookup with cache + find-or-create ──
 type DimCache = Map<string, string>;
 
@@ -178,10 +237,16 @@ async function findOrCreate(
   nameField: string,
   value: string,
   cache: DimCache,
+  raMap?: RAMap,
 ): Promise<string | null> {
   if (!value) return null;
-  const raw = String(value).trim();
-  if (!raw || raw === "-" || raw === "--" || raw === "---") return null;
+  let raw = String(value).trim();
+  if (!raw || raw === "-" || raw === "--" || raw === "---" || /^-+$/.test(raw)) return null;
+
+  // For dim_local, resolve short names to canonical RA names
+  if (table === "dim_local" && raMap) {
+    raw = resolveLocalName(raw, raMap);
+  }
 
   const key = raw.toUpperCase();
 
@@ -403,6 +468,10 @@ serve(async (req) => {
       }
     }
 
+    // Pre-load RA map for fuzzy LOCAL matching
+    const raMap = await loadRAMap(supabase);
+    console.log(`[sync-radio-operador] Loaded ${raMap.size} RA name mappings`);
+
     // Pre-load dimension caches
     const equipeCache = await loadDimCache(supabase, "dim_equipe", "nome");
     const localCache = await loadDimCache(supabase, "dim_local", "nome");
@@ -518,10 +587,17 @@ serve(async (req) => {
         }
 
         const equipeText = normalizeText(getCell(row, iEquipe));
-        const localText = String(getCell(row, iLocal) ?? "").trim();
+        const rawLocal = getCell(row, iLocal);
+        const localText = String(rawLocal ?? "").trim();
         const grupText = normalizeText(getCell(row, iGrupamento));
         const desfText = normalizeText(getCell(row, iDesfecho));
         const destText = normalizeText(getCell(row, iDestinacao));
+
+        // Debug: log rows where LOCAL is missing but row has data
+        if (!localText && row.length > 0) {
+          const copom = String(getCell(row, iCopom) ?? "");
+          console.log(`[sync] Row ${i}: LOCAL empty. rawLocal=${JSON.stringify(rawLocal)}, rowLen=${row.length}, iLocal=${iLocal}, copom=${copom}, rawCells[8..11]=${JSON.stringify(row.slice(8, 12))}`);
+        }
 
         const equipe_id = equipeText
           ? await findOrCreate(
@@ -540,6 +616,7 @@ serve(async (req) => {
             "nome",
             localText,
             localCache,
+            raMap,
           )
           : null;
 
@@ -724,6 +801,7 @@ serve(async (req) => {
             "nome",
             localText,
             localCache,
+            raMap,
           )
           : null;
 
