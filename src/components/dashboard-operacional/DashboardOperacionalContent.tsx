@@ -13,6 +13,7 @@ import DashboardOperacionalOrdemPorClasse, { ClasseOrdemData } from './Dashboard
 import DashboardOperacionalSazonalidade, { SazonalidadeHistorico, SazonalidadeData } from './DashboardOperacionalSazonalidade';
 import DashboardOperacionalRecordes, { RecordeApreensao } from './DashboardOperacionalRecordes';
 import DashboardOperacionalHorarioChart from './DashboardOperacionalHorarioChart';
+import DashboardOperacionalGrupamentos from './DashboardOperacionalGrupamentos';
 import DashboardComparativoAnos from '@/components/dashboard/DashboardComparativoAnos';
 import DashboardMapaCalor from '@/components/dashboard/DashboardMapaCalor';
 import DashboardRankingEspecies from '@/components/dashboard/DashboardRankingEspecies';
@@ -284,7 +285,8 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
         const byMonth: Record<number, { resgates: number; solturas: number; obitos: number; feridos: number }> = {};
         
         (data || []).forEach(row => {
-          const month = new Date(row.data).getMonth() + 1;
+          // Usar split para evitar problema de timezone: '2026-01-15' -> mês 1
+          const month = parseInt(row.data.split('-')[1], 10);
           const qty = row.quantidade_total || (row.quantidade_adulto || 0) + (row.quantidade_filhote || 0) || 1;
           const destinacaoNome = row.destinacao_id ? destinacoesMap.get(row.destinacao_id) : null;
           const desfechoNome = row.desfecho_id ? desfechosMap.get(row.desfecho_id) : null;
@@ -918,6 +920,11 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
         <DashboardOperacionalRecordes recordes={recordesApreensao!} year={year} />
       )}
       
+      {/* Indicadores por Grupamento (apenas 2026+) */}
+      {!isHistorico && (
+        <DashboardOperacionalGrupamentos year={year} />
+      )}
+
       {/* KPIs de Fauna */}
       <div className="space-y-2">
         <h3 className="text-lg font-semibold">Resgate de Fauna Silvestre - {year}</h3>
