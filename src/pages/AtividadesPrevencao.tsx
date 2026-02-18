@@ -30,7 +30,11 @@ interface TipoAtividade {
   ordem: number;
 }
 
-const AtividadesPrevencao: React.FC = () => {
+interface AtividadesPrevencaoProps {
+  embedded?: boolean;
+}
+
+const AtividadesPrevencao: React.FC<AtividadesPrevencaoProps> = ({ embedded = false }) => {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit') || null;
   
@@ -299,18 +303,21 @@ const AtividadesPrevencao: React.FC = () => {
     selectedActivity.nome.toLowerCase().includes('incendios florestais')
   );
   
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
+    embedded ? <>{children}</> : <Layout title="Atividades de Prevenção e Policiamento Comunitário" showBackButton>{children}</Layout>;
+
   if (isLoading || loadingEdit) {
     return (
-      <Layout title="Atividades de Prevenção e Policiamento Comunitário" showBackButton>
+      <Wrapper>
         <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </Layout>
+      </Wrapper>
     );
   }
   
   return (
-    <Layout title="Atividades de Prevenção" showBackButton>
+    <Wrapper>
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 animate-fade-in">
         {/* Tabs de Categorias */}
         <Card>
@@ -700,7 +707,7 @@ const AtividadesPrevencao: React.FC = () => {
           </Button>
         </div>
       </form>
-    </Layout>
+    </Wrapper>
   );
 };
 

@@ -47,7 +47,7 @@ interface ItemApreendido {
   Aplicacao: string;
 }
 
-const CrimesComuns = () => {
+const CrimesComuns = ({ embedded = false }: { embedded?: boolean }) => {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit') || null;
   const [loadingEdit, setLoadingEdit] = useState(!!editId);
@@ -412,19 +412,22 @@ const CrimesComuns = () => {
     return acc;
   }, {} as Record<string, ItemApreendido[]>);
 
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
+    embedded ? <>{children}</> : <Layout title="Crimes Comuns" showBackButton>{children}</Layout>;
+
   if (loadingEdit) {
     return (
-      <Layout title="Crimes Comuns" showBackButton>
+      <Wrapper>
         <div className="flex items-center justify-center min-h-[200px]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="ml-2">Carregando registro...</span>
         </div>
-      </Layout>
+      </Wrapper>
     );
   }
 
   return (
-    <Layout title="Crimes Comuns" showBackButton>
+    <Wrapper>
       <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
         
         {/* Card: Informações Gerais */}
@@ -920,7 +923,7 @@ const CrimesComuns = () => {
           </Button>
         </div>
       </form>
-    </Layout>
+    </Wrapper>
   );
 };
 
