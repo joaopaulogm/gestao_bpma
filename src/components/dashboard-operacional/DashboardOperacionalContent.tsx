@@ -703,7 +703,7 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
       
       const { data, error } = await supabase
         .from('fat_registros_de_resgate')
-        .select('created_at, quantidade_total, quantidade_adulto, quantidade_filhote')
+        .select('horario_acionamento, quantidade_total, quantidade_adulto, quantidade_filhote')
         .gte('data', startDate).lte('data', endDate);
       
       if (error || !data) return [];
@@ -722,8 +722,11 @@ const DashboardOperacionalContent: React.FC<DashboardOperacionalContentProps> = 
       const contagem = faixas.map(f => ({ ...f, quantidade: 0 }));
       
       data.forEach(row => {
-        if (!row.created_at) return;
-        const hora = new Date(row.created_at).getHours();
+        // Usar horario_acionamento (campo real do formulário) e não created_at (hora do cadastro)
+        if (!row.horario_acionamento) return;
+        // horario_acionamento vem no formato "HH:MM:SS" — extrair apenas a hora
+        const hora = parseInt((row.horario_acionamento as string).split(':')[0], 10);
+        if (isNaN(hora)) return;
         const qty = row.quantidade_total || (row.quantidade_adulto || 0) + (row.quantidade_filhote || 0) || 1;
         
         for (const faixa of contagem) {
