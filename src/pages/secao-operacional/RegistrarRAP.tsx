@@ -65,27 +65,27 @@ const RegistrarRAP: React.FC = () => {
             </TabsList>
             <TabsContent value="resgate" className="mt-4">
               <Suspense fallback={<PageFallback />}>
-                <ResgateCadastro />
+                <ResgateCadastro embedded />
               </Suspense>
             </TabsContent>
             <TabsContent value="crimes-ambientais" className="mt-4">
               <Suspense fallback={<PageFallback />}>
-                <CrimesAmbientaisCadastro />
+                <CrimesAmbientaisCadastro embedded />
               </Suspense>
             </TabsContent>
             <TabsContent value="crimes-comuns" className="mt-4">
               <Suspense fallback={<PageFallback />}>
-                <CrimesComuns />
+                <CrimesComuns embedded />
               </Suspense>
             </TabsContent>
             <TabsContent value="atividades-prevencao" className="mt-4">
               <Suspense fallback={<PageFallback />}>
-                <AtividadesPrevencao />
+                <AtividadesPrevencao embedded />
               </Suspense>
             </TabsContent>
             <TabsContent value="bens-apreendidos" className="mt-4">
               <Suspense fallback={<PageFallback />}>
-                <BensApreendidosCadastro />
+                <BensApreendidosCadastro embedded />
               </Suspense>
             </TabsContent>
           </Tabs>

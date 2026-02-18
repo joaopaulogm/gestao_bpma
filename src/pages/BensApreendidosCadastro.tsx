@@ -27,7 +27,7 @@ const tiposCrimeOptions = [
   'Crimes contra o ordenamento urbano e o patrimônio cultural'
 ];
 
-const BensApreendidosCadastro = () => {
+const BensApreendidosCadastro = ({ embedded = false }: { embedded?: boolean }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [itens, setItens] = useState<ItemApreensao[]>([]);
@@ -184,9 +184,11 @@ const BensApreendidosCadastro = () => {
     acc[tipo].push(item);
     return acc;
   }, {} as Record<string, ItemApreensao[]>);
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
+    embedded ? <>{children}</> : <Layout title="Cadastro de Bens Apreendidos" showBackButton>{children}</Layout>;
 
   return (
-    <Layout title="Cadastro de Bens Apreendidos" showBackButton>
+    <Wrapper>
       <div className="space-y-6 animate-fade-in">
         {/* Formulário de Cadastro */}
         <FormSection title="Novo Item de Apreensão">
@@ -402,7 +404,7 @@ const BensApreendidosCadastro = () => {
           )}
         </FormSection>
       </div>
-    </Layout>
+    </Wrapper>
   );
 };
 
