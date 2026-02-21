@@ -162,29 +162,70 @@ const RadioOperador: React.FC = () => {
     });
   };
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  // Fetch all rows handling Supabase 1000-row default limit
+  const fetchAllFromTable = useCallback(async (table: string) => {
+    const allData: any[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    while (true) {
+      const { data, error } = await (supabase as any)
+        .from(table)
+        .select(RESGATE_SELECT)
+        .order('data', { ascending: false })
+        .order('created_at', { ascending: false })
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      allData.push(...data);
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
+    return allData;
+  }, []);
+
+  const fetchData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
-      const [resResgates, resCrimes] = await Promise.all([
-        (supabase as any).from('fat_controle_ocorrencias_resgate_2026').select(RESGATE_SELECT).order('data', { ascending: false }).order('created_at', { ascending: false }),
-        (supabase as any).from('fat_controle_ocorrencias_crime_ambientais_2026').select(RESGATE_SELECT).order('data', { ascending: false }).order('created_at', { ascending: false }),
+      const [resgateData, crimesData] = await Promise.all([
+        fetchAllFromTable('fat_controle_ocorrencias_resgate_2026'),
+        fetchAllFromTable('fat_controle_ocorrencias_crime_ambientais_2026'),
       ]);
-      if (resResgates.error) throw resResgates.error;
-      if (resCrimes.error) throw resCrimes.error;
-      const resgatesMapped = (resResgates.data || []).map((r: any, i: number) => fatToRadioRow(r, SHEET_RESGATES, i));
-      const crimesMapped = (resCrimes.data || []).map((r: any, i: number) => fatToRadioRow(r, SHEET_CRIMES, i));
+      const resgatesMapped = resgateData.map((r: any, i: number) => fatToRadioRow(r, SHEET_RESGATES, i));
+      const crimesMapped = crimesData.map((r: any, i: number) => fatToRadioRow(r, SHEET_CRIMES, i));
       setRows([...resgatesMapped, ...crimesMapped]);
-      const allCreated = [...(resResgates.data || []), ...(resCrimes.data || [])].map((r: any) => r.created_at).filter(Boolean).sort().pop();
+      const allCreated = [...resgateData, ...crimesData].map((r: any) => r.created_at).filter(Boolean).sort().pop();
       setLastSync(allCreated ?? null);
     } catch (e) {
       console.error(e);
-      toast.error('Erro ao carregar dados do Rádio Operador');
+      if (!silent) toast.error('Erro ao carregar dados do Rádio Operador');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchAllFromTable]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  // Initial fetch + auto-refresh every 60 seconds + Supabase Realtime
+  useEffect(() => {
+    fetchData();
+
+    // Auto-refresh every 60 seconds
+    const interval = setInterval(() => fetchData(true), 60_000);
+
+    // Supabase Realtime: listen for changes on both tables
+    const channel = supabase
+      .channel('radio-operador-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_controle_ocorrencias_resgate_2026' }, () => {
+        fetchData(true);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fat_controle_ocorrencias_crime_ambientais_2026' }, () => {
+        fetchData(true);
+      })
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData]);
 
   const handleSync = useCallback(async () => {
     setSyncing(true);
