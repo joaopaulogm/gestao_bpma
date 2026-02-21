@@ -1,0 +1,2 @@
+
+ALTER PUBLICATION supabase_realtime ADD TABLE fat_controle_ocorrencias_resgate_2026, fat_controle_ocorrencias_crime_ambientais_2026;
